@@ -1,0 +1,30 @@
+# Changelog
+
+All notable changes to `laradocs` will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+## [1.0.0] - 2026-06-02
+
+### Added
+- Filesystem document loader with recursive scanning and ignore patterns.
+- CommonMark-based markdown rendering (GFM, attributes, footnotes).
+- Typed front-matter metadata: `title`, `description`, `slug`, `order`,
+  `hidden`, `group`, `badge`, `icon`, `tags`, `updated_at`, `author`, `layout`,
+  `image`, `redirect`.
+- Multi-level navigation tree with `_index.md` section landing pages.
+- Configurable routing (filename / metadata / both), prefix, domain, middleware.
+- Polished, responsive default UI with dark mode, sidebar, breadcrumbs,
+  on-page table of contents and prev/next navigation.
+- Variables (`{{ key }}`) and macros (`@docs(...)`) with a service-provider API.
+- Rich content: callouts, syntax-highlighted code with copy buttons, lazy
+  images with captions, and local/YouTube/Vimeo video embeds.
+- Cache layer with mtime-based invalidation and `optimize` integration.
+- Artisan commands: `docs:install`, `make:doc`, `docs:cache`, `docs:clear`.
+- Publishable config, views and assets; `php artisan about` integration.
+
+[Unreleased]: https://github.com/pete/laradocs/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/pete/laradocs/releases/tag/v1.0.0

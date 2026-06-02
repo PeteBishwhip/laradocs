@@ -1,0 +1,47 @@
+name: quality
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    name: Coverage (100%)
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: dom, libxml, mbstring
+          coverage: pcov
+      - run: composer install --prefer-dist --no-interaction
+      - name: Enforce 100% coverage
+        run: vendor/bin/pest --coverage --min=100
+
+  static-analysis:
+    runs-on: ubuntu-latest
+    name: PHPStan (max)
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: dom, libxml, mbstring
+          coverage: none
+      - run: composer install --prefer-dist --no-interaction
+      - run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G
+
+  code-style:
+    runs-on: ubuntu-latest
+    name: Pint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+      - run: composer install --prefer-dist --no-interaction
+      - run: vendor/bin/pint --test

@@ -1,0 +1,10 @@
+/vendor
+/build
+/.phpunit.cache
+.phpunit.result.cache
+composer.lock
+.DS_Store
+/workbench/.env
+/.idea
+/.vscode
+/.claude

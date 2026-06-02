@@ -1,0 +1,9 @@
+providers:
+  - Laradocs\LaradocsServiceProvider
+
+workbench:
+  start: '/docs'
+  install: true
+  discovers:
+    web: true
+    config: true
