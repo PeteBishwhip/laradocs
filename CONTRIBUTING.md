@@ -19,7 +19,7 @@ composer test:coverage   # enforces 100% coverage
 ## Setup
 
 ```bash
-git clone https://github.com/pete/laradocs
+git clone https://github.com/petebishwhip/laradocs
 cd laradocs
 composer install
 composer serve   # preview the bundled docs site

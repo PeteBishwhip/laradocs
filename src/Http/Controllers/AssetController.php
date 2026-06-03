@@ -30,7 +30,6 @@ final class AssetController
 
         return new Response((string) file_get_contents($path), 200, [
             'Content-Type' => self::ASSETS[$file],
-            'Cache-Control' => 'public, max-age=86400',
         ]);
     }
 }

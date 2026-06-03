@@ -13,17 +13,15 @@
   }
 
   function currentTheme() {
-    try {
-      return localStorage.getItem(STORAGE_KEY) || 'auto';
-    } catch (e) {
-      return 'auto';
-    }
+    try { return localStorage.getItem(STORAGE_KEY) || 'auto'; }
+    catch (e) { return 'auto'; }
   }
 
   function initTheme() {
     applyTheme(currentTheme());
     var toggle = document.querySelector('[data-laradocs-theme-toggle]');
     if (!toggle) return;
+    toggle.setAttribute('data-theme-state', currentTheme());
     toggle.addEventListener('click', function () {
       var order = ['auto', 'light', 'dark'];
       var next = order[(order.indexOf(currentTheme()) + 1) % order.length];
@@ -31,18 +29,17 @@
       applyTheme(next);
       toggle.setAttribute('data-theme-state', next);
     });
-    toggle.setAttribute('data-theme-state', currentTheme());
   }
 
   function initCopy() {
     document.querySelectorAll('.laradocs-code-copy').forEach(function (button) {
+      var original = button.textContent;
       button.addEventListener('click', function () {
         var block = button.closest('.laradocs-code');
         var code = block ? block.querySelector('pre') : null;
         if (!code) return;
         navigator.clipboard.writeText(code.innerText).then(function () {
-          var original = button.textContent;
-          button.textContent = 'Copied!';
+          button.textContent = 'Copied';
           setTimeout(function () { button.textContent = original; }, 1500);
         });
       });
@@ -51,48 +48,192 @@
 
   function initMobileNav() {
     var shell = document.querySelector('.laradocs-shell');
-    var button = document.querySelector('.laradocs-menu-btn');
+    var button = document.querySelector('[data-laradocs-menu]');
+    var backdrop = document.querySelector('[data-laradocs-backdrop]');
     if (!shell || !button) return;
-    button.addEventListener('click', function () {
-      shell.classList.toggle('nav-open');
-    });
+    function close() { shell.classList.remove('nav-open'); }
+    function toggle() { shell.classList.toggle('nav-open'); }
+    button.addEventListener('click', toggle);
+    if (backdrop) backdrop.addEventListener('click', close);
     document.querySelectorAll('.laradocs-sidebar a').forEach(function (link) {
-      link.addEventListener('click', function () { shell.classList.remove('nav-open'); });
+      link.addEventListener('click', close);
     });
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') shell.classList.remove('nav-open');
+      if (e.key === 'Escape') close();
     });
   }
 
   function initScrollSpy() {
     var links = Array.prototype.slice.call(document.querySelectorAll('.laradocs-toc a'));
-    if (!links.length || !('IntersectionObserver' in window)) return;
+    if (!links.length) return;
     var byId = {};
+    var ids = [];
     links.forEach(function (link) {
       var id = link.getAttribute('href').slice(1);
       byId[id] = link;
+      ids.push(id);
     });
-    var observer = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        if (entry.isIntersecting) {
-          links.forEach(function (l) { l.classList.remove('is-active'); });
-          var active = byId[entry.target.id];
-          if (active) active.classList.add('is-active');
+    var triggerOffset = 140;
+
+    function update() {
+      var doc = document.documentElement;
+      var scrollY = window.scrollY;
+      var maxScroll = Math.max(1, doc.scrollHeight - window.innerHeight);
+
+      var heads = [];
+      for (var i = 0; i < ids.length; i++) {
+        var el = document.getElementById(ids[i]);
+        if (!el) continue;
+        heads.push({ id: ids[i], y: el.getBoundingClientRect().top + scrollY });
+      }
+      if (!heads.length) return;
+
+      var activations = heads.map(function (h) { return Math.max(0, h.y - triggerOffset); });
+
+      // Headings whose natural activation point is past maxScroll can never highlight.
+      // Redistribute them evenly across the remaining scroll range so each owns a slice.
+      var firstUnreachable = -1;
+      for (var k = 0; k < activations.length; k++) {
+        if (activations[k] > maxScroll) { firstUnreachable = k; break; }
+      }
+      if (firstUnreachable >= 0) {
+        var start = firstUnreachable === 0 ? 0 : activations[firstUnreachable - 1];
+        var n = heads.length - firstUnreachable;
+        var step = Math.max(1, (maxScroll - start) / n);
+        for (var j = 0; j < n; j++) {
+          activations[firstUnreachable + j] = start + step * (j + 1);
         }
-      });
-    }, { rootMargin: '0px 0px -75% 0px' });
-    Object.keys(byId).forEach(function (id) {
-      var el = document.getElementById(id);
-      if (el) observer.observe(el);
-    });
+      }
+
+      var active = null;
+      for (var m = 0; m < heads.length; m++) {
+        if (activations[m] <= scrollY) active = heads[m].id;
+        else break;
+      }
+
+      links.forEach(function (l) { l.classList.remove('is-active'); });
+      if (active && byId[active]) byId[active].classList.add('is-active');
+    }
+
+    var raf = null;
+    function schedule() {
+      if (raf !== null) return;
+      raf = requestAnimationFrame(function () { raf = null; update(); });
+    }
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
+    update();
+  }
+
+  function initProgress() {
+    var bar = document.querySelector('.laradocs-progress');
+    if (!bar) return;
+    var rafId = null;
+    function update() {
+      var doc = document.documentElement;
+      var scrolled = doc.scrollTop || document.body.scrollTop;
+      var max = (doc.scrollHeight || document.body.scrollHeight) - doc.clientHeight;
+      var pct = max > 0 ? Math.min(100, Math.max(0, (scrolled / max) * 100)) : 0;
+      bar.style.setProperty('--dc-progress', pct + '%');
+      rafId = null;
+    }
+    function schedule() {
+      if (rafId === null) rafId = requestAnimationFrame(update);
+    }
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
+    update();
   }
 
   function initZoom() {
-    document.querySelectorAll('img[data-zoomable]').forEach(function (img) {
+    document.querySelectorAll('img.laradocs-image').forEach(function (img) {
       img.addEventListener('click', function () {
         img.classList.toggle('is-zoomed');
       });
     });
+  }
+
+  function initSidebarIndex() {
+    var items = document.querySelectorAll('.laradocs-sidebar li');
+    items.forEach(function (li, i) {
+      li.style.setProperty('--i', String(i));
+    });
+  }
+
+  function initSearchShortcut() {
+    var input = document.querySelector('[data-laradocs-search]');
+    if (!input) return;
+    document.addEventListener('keydown', function (e) {
+      if (e.key === '/' && document.activeElement !== input && !/input|textarea/i.test((document.activeElement || {}).tagName || '')) {
+        e.preventDefault();
+        input.focus();
+      }
+    });
+  }
+
+  function initPalette() {
+    var palette = document.querySelector('[data-laradocs-palette]');
+    var input = document.querySelector('[data-laradocs-palette-input]');
+    var results = document.querySelector('[data-laradocs-palette-results]');
+    if (!palette || !input || !results) return;
+
+    var items = Array.prototype.slice.call(results.querySelectorAll('li a'));
+    var activeIndex = -1;
+
+    function setActive(i) {
+      var visible = items.filter(function (a) { return !a.parentNode.hasAttribute('hidden'); });
+      if (!visible.length) return;
+      activeIndex = Math.max(0, Math.min(visible.length - 1, i));
+      items.forEach(function (a) { a.classList.remove('is-active'); });
+      visible[activeIndex].classList.add('is-active');
+      visible[activeIndex].scrollIntoView({ block: 'nearest' });
+    }
+
+    function open() {
+      palette.removeAttribute('hidden');
+      input.value = '';
+      filter('');
+      setTimeout(function () { input.focus(); }, 10);
+    }
+    function close() {
+      palette.setAttribute('hidden', '');
+      activeIndex = -1;
+    }
+    function filter(q) {
+      q = q.trim().toLowerCase();
+      items.forEach(function (a) {
+        var label = a.getAttribute('data-label') || '';
+        var match = !q || label.indexOf(q) !== -1;
+        a.parentNode.toggleAttribute('hidden', !match);
+        a.classList.remove('is-active');
+      });
+      setActive(0);
+    }
+
+    document.addEventListener('keydown', function (e) {
+      var inField = /input|textarea/i.test((document.activeElement || {}).tagName || '');
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        if (palette.hasAttribute('hidden')) open(); else close();
+        return;
+      }
+      if (palette.hasAttribute('hidden')) return;
+      if (e.key === 'Escape') { e.preventDefault(); close(); }
+      else if (e.key === 'ArrowDown') { e.preventDefault(); setActive(activeIndex + 1); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(activeIndex - 1); }
+      else if (e.key === 'Enter' && document.activeElement === input) {
+        var visible = items.filter(function (a) { return !a.parentNode.hasAttribute('hidden'); });
+        if (visible[activeIndex]) { e.preventDefault(); window.location.href = visible[activeIndex].href; }
+      }
+    });
+
+    document.querySelectorAll('[data-laradocs-palette-open]').forEach(function (btn) {
+      btn.addEventListener('click', open);
+    });
+    document.querySelectorAll('[data-laradocs-palette-close]').forEach(function (el) {
+      el.addEventListener('click', close);
+    });
+    input.addEventListener('input', function () { filter(input.value); });
   }
 
   function boot() {
@@ -100,7 +241,11 @@
     initCopy();
     initMobileNav();
     initScrollSpy();
+    initProgress();
     initZoom();
+    initSidebarIndex();
+    initSearchShortcut();
+    initPalette();
   }
 
   if (document.readyState !== 'loading') {

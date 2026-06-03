@@ -10,7 +10,7 @@
         <nav class="laradocs-breadcrumbs" aria-label="Breadcrumb">
             <a href="{{ route('laradocs.index') }}">Home</a>
             @foreach($breadcrumbs as $crumb)
-                <span aria-hidden="true">/</span>
+                <span aria-hidden="true">·</span>
                 @if($loop->last)
                     <span>{{ $crumb->title }}</span>
                 @elseif($crumb->isLink())
