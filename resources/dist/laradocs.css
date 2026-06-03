@@ -894,6 +894,111 @@ body.laradocs {
 .laradocs-footer-links a { color: var(--dc-muted) !important; }
 .laradocs-footer-links a:hover { color: var(--dc-fg) !important; }
 
+/* ─────────────────────── mobile TOC disclosure ─────────────────────── */
+.laradocs-toc-mobile {
+  display: none;
+  margin: 1.25rem 0 2rem;
+  border: 1px solid var(--dc-rule);
+  border-radius: var(--dc-radius-lg);
+  background: var(--dc-bg-elev);
+  overflow: hidden;
+}
+.laradocs-toc-mobile > summary {
+  display: flex; align-items: center; gap: .65rem;
+  padding: .75rem 1rem;
+  cursor: pointer;
+  list-style: none;
+  font-size: .82rem;
+  font-weight: 500;
+  color: var(--dc-fg);
+}
+.laradocs-toc-mobile > summary::-webkit-details-marker { display: none; }
+.laradocs-toc-mobile-label { flex: 1; }
+.laradocs-toc-mobile-count {
+  font-family: var(--dc-mono);
+  font-size: .72rem;
+  padding: .12rem .4rem;
+  border: 1px solid var(--dc-rule);
+  border-radius: 3px;
+  background: var(--dc-paper);
+  color: var(--dc-muted);
+}
+.laradocs-toc-mobile-caret {
+  width: 16px; height: 16px;
+  color: var(--dc-muted);
+  transition: transform .15s ease;
+}
+.laradocs-toc-mobile[open] .laradocs-toc-mobile-caret { transform: rotate(180deg); }
+.laradocs-toc-mobile ul {
+  list-style: none; margin: 0; padding: .25rem 0 .65rem;
+  border-top: 1px solid var(--dc-rule);
+  max-height: 60vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.laradocs-toc-mobile li { margin: 0; }
+.laradocs-toc-mobile a {
+  display: block;
+  padding: .4rem 1rem;
+  font-size: .87rem;
+  color: var(--dc-muted) !important;
+  text-decoration: none;
+}
+.laradocs-toc-mobile a:hover { color: var(--dc-fg) !important; background: var(--dc-bg); }
+.laradocs-toc-mobile .lvl-3 a { padding-left: 2rem; font-size: .82rem; }
+
+/* Show the inline disclosure only when the right-hand TOC is hidden. */
+@media (max-width: 1180px) {
+  .laradocs-toc-mobile { display: block; }
+}
+
+/* ─────────────────────── narrow viewport polish ─────────────────────── */
+@media (max-width: 860px) {
+  /* Sidebar hidden by default; the drawer appears via menu button. Tabs
+     can now sit flush with the content's horizontal padding. */
+  .laradocs-tabs-inner { padding: 0 1.25rem; }
+  .laradocs-content { padding: 2rem 1.25rem 3.5rem; }
+
+  /* Stack the prev/next pager and let it breathe. */
+  .laradocs-pager { grid-template-columns: 1fr; gap: .65rem; margin-top: 3rem; }
+  .laradocs-pager .next { text-align: left; }
+
+  /* Header tightens up; theme toggle stays visible. */
+  .laradocs-header { gap: .5rem; padding: 0 .9rem; }
+  .laradocs-brand-tag { display: none; }
+  .laradocs-brand-title { font-size: .92rem; }
+
+  /* Page title scales slightly so it doesn't dominate small screens. */
+  .laradocs-page-title { font-size: 1.85rem; }
+  .laradocs-page-description { font-size: 1rem; }
+
+  /* Footer stacks. */
+  .laradocs-footer {
+    flex-direction: column; align-items: flex-start; gap: .6rem;
+    padding: 1.5rem 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .laradocs-content { padding: 1.75rem 1rem 3rem; }
+  .laradocs-tabs-inner { padding: 0 1rem; }
+  .laradocs-page-title { font-size: 1.65rem; }
+  .laradocs-empty { padding: 0 1rem; margin-top: 3rem; }
+  .laradocs-empty h1 { font-size: 1.85rem; }
+  .laradocs-callout { padding: .8rem .95rem; }
+  .laradocs-code pre { padding: .85rem 1rem; }
+}
+
+/* Tables that exceed their container scroll horizontally on small
+   screens rather than forcing the whole page to grow. */
+@media (max-width: 860px) {
+  .laradocs-prose table {
+    display: block;
+    overflow-x: auto;
+    max-width: 100%;
+  }
+}
+
 /* ─────────────────────── reduced motion ─────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

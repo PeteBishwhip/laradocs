@@ -127,11 +127,20 @@ Show an "Edit this page" link in the page footer pointing at your
 source:
 
 ```dotenv
-LARADOCS_EDIT_URL="https://github.com/you/repo/edit/main/docs/{path}"
+LARADOCS_EDIT_URL="https://github.com/you/repo/edit/main/docs/{file}"
 LARADOCS_EDIT_LABEL="Edit on GitHub"
 ```
 
-`{path}` is replaced by the document's path relative to `docs.path`.
+The template supports three placeholders:
+
+| Placeholder | Expands to |
+|---|---|
+| `{file}` | The real path on disk including the extension — `guide/routing.md`. Recommended. |
+| `{path}` | Same as `{file}` but with the `.md` / `.markdown` extension stripped — `guide/routing`. Useful when you want to add the extension yourself. |
+| `{ext}` | Just the extension — `md` or `markdown`. |
+
+`{file}` correctly handles section landing pages too (`guide/_index.md`)
+and works whether your docs use `.md` or `.markdown`.
 
 ## Sidebar behaviour
 

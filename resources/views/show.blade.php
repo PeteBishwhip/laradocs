@@ -35,6 +35,8 @@
         @endif
     </header>
 
+    @include('laradocs::partials.toc-mobile', ['toc' => $toc])
+
     @php
         // If the body opens with an <h1> whose text matches the page title,
         // strip it to avoid duplicating the page-header title above. The

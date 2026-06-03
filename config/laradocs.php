@@ -186,8 +186,12 @@ return [
 
         /*
         | Edit-this-page link rendered on every document. The url template
-        | accepts the {path} placeholder which expands to the document slug.
-        |   LARADOCS_EDIT_URL=https://github.com/me/app/edit/main/docs/{path}.md
+        | accepts the following placeholders:
+        |   {file} — relative path on disk including extension (recommended)
+        |   {path} — same as {file} with the .md / .markdown extension stripped
+        |   {ext}  — just the extension, e.g. "md"
+        |
+        |   LARADOCS_EDIT_URL=https://github.com/me/app/edit/main/docs/{file}
         */
         'edit' => [
             'url' => env('LARADOCS_EDIT_URL'),
