@@ -1,6 +1,6 @@
 ---
 title: Rich Content
-description: Callouts, code, images, video and formatting.
+description: Callouts, code, tables, images, video, footnotes and attribute lists.
 order: 3
 ---
 
@@ -8,52 +8,130 @@ order: 3
 
 ## Formatting
 
-**Bold**, _italic_, ~~strikethrough~~, `inline code`, [links](https://laravel.com)
-and > blockquotes all render with sensible default styling.
+**Bold**, _italic_, ~~strikethrough~~, `inline code`,
+[links](https://laravel.com) and blockquotes all render with sensible
+default styling. GFM tables and task lists also work:
+
+```markdown
+| Strategy | Behaviour |
+|---|---|
+| `filename` | Slug from path. |
+| `metadata` | Slug from front-matter. |
+
+- [x] Done
+- [ ] Pending
+```
 
 ## Callouts
 
-Use GitHub-style alerts:
+GitHub-style alerts produce coloured blocks with a matching icon:
 
 ```markdown
 > [!NOTE]
 > Useful information users should know.
 
+> [!TIP]
+> A helpful suggestion.
+
+> [!IMPORTANT]
+> A non-obvious detail.
+
 > [!WARNING]
 > Something that needs caution.
+
+> [!DANGER]
+> A destructive action — proceed carefully.
+
+> [!CAUTION]
+> An older synonym for danger; same styling.
 ```
 
 > [!NOTE]
 > Useful information users should know.
 
+> [!TIP]
+> A helpful suggestion.
+
+> [!WARNING]
+> Something that needs caution.
+
 > [!DANGER]
 > A destructive action — proceed carefully.
+
+Each callout uses its own accent colour driven by `--dc-callout-color`.
 
 ## Code blocks
 
 Fenced code blocks get a language label and a copy button:
 
+````markdown
 ```php
 Route::get('/docs', function () {
     return view('laradocs::layout');
 });
 ```
+````
+
+Code without a language renders as plain `<pre>` with no header chrome.
+Tilde fences (`~~~`) are recognised the same as backtick fences. Inline
+`` `code` `` keeps a soft background and hairline border so it stands
+out without shouting.
 
 ## Images
 
-Images are lazy-loaded; a markdown title becomes a caption:
+Images are lazy-loaded and a markdown title becomes a caption:
 
 ```markdown
 ![A diagram](/img/architecture.png "Figure 1: request lifecycle")
 ```
 
+Images inside the prose are clickable to zoom — they expand to fill the
+viewport with a darkened backdrop and clicking again dismisses.
+
 ## Video
 
-Local files become a `<video>` player, and YouTube / Vimeo links become
-responsive embeds:
+Local files become a `<video>` player, and YouTube / Vimeo links
+become responsive embeds:
 
 ```markdown
 ![demo](/media/demo.mp4)
 
 [Watch the intro](https://youtu.be/dQw4w9WgXcQ)
 ```
+
+Only the YouTube and Vimeo hosts are embedded — other video links are
+left as plain hyperlinks.
+
+## Footnotes
+
+```markdown
+Markdown supports footnotes[^1] — the link jumps to the definition at
+the bottom of the page.
+
+[^1]: Like this one.
+```
+
+## Attribute lists
+
+Append `{.class #id key=value}` to a block to attach attributes:
+
+```markdown
+This paragraph has an id. {#hero}
+
+> A blockquote with a custom class. {.callout-special}
+```
+
+This pairs nicely with the published CSS — add a class in markdown,
+style it in your CSS overrides.
+
+## Heading anchors
+
+Every `<h2>` and `<h3>` gets an auto-generated `id` and a hover-revealed
+`#` link, making any heading deep-linkable.
+
+## Table of contents
+
+When a page has at least `parser.toc.min_headings` headings inside the
+`parser.toc.min_level`–`parser.toc.max_level` range (defaults `2`/`2`/`3`),
+the right-hand TOC populates automatically and scrollspy keeps the
+current section highlighted.

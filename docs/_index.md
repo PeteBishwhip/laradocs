@@ -19,8 +19,15 @@ the features they describe.
 
 - **Markdown-first.** Author content in plain `.md` files with YAML front-matter.
 - **Zero-config routing.** Drop files in `docs/`, get routes at `/docs`.
-- **Multi-level structure.** Nested folders become nested navigation.
-- **Batteries included.** Callouts, code highlighting, video embeds, variables,
-  macros, dark mode and a responsive UI — all out of the box.
+- **Multi-level structure.** Nested folders become nested navigation, with
+  sectioned tabs across the top for the major groups.
+- **Built-in command palette.** Press `⌘K` (or click the search box) to jump
+  between pages with fuzzy matching.
+- **Batteries included.** Callouts, code highlighting, footnotes, attribute
+  lists, video embeds, variables, macros, dark mode, a scroll-spying TOC,
+  reading-progress bar, prev/next pager, edit links, and three layout
+  presets — all out of the box.
+- **Inter + Laravel red.** Modern type, clean hairline borders, the brand
+  accent built in. Override any token from config.
 
 @docs('button', text: 'Get started', href: '/docs/getting-started')

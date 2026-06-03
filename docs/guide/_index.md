@@ -1,15 +1,19 @@
 ---
 title: Guide
-description: Core concepts — routing, metadata and caching.
+description: Core concepts — routing, metadata, caching, CLI, and the PHP API.
 order: 4
 ---
 
 # Guide
 
 The guide covers the everyday concepts you'll reach for when organising a
-documentation set: how URLs are generated, the metadata you can attach to each
-page, and how rendering is cached.
+documentation set: how URLs are generated, the metadata you can attach
+to each page, how rendering is cached, and the commands and PHP API for
+programmatic access.
 
-- [Routing](/docs/guide/routing)
-- [Metadata](/docs/guide/metadata)
-- [Caching](/docs/guide/caching)
+- [Routing](/docs/guide/routing) — strategies, prefixes, middleware,
+  named routes and redirects.
+- [Metadata](/docs/guide/metadata) — every front-matter field.
+- [Caching](/docs/guide/caching) — render caching and invalidation.
+- [CLI](/docs/guide/cli) — every Artisan command.
+- [PHP API](/docs/guide/api) — the `Laradocs` facade and service.

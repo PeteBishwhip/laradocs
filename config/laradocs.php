@@ -137,7 +137,7 @@ return [
     'ui' => [
         'theme' => env('LARADOCS_THEME', 'auto'),
         'preset' => env('LARADOCS_UI_PRESET', 'classic'),
-        'accent' => env('LARADOCS_ACCENT', '#2563eb'),
+        'accent' => env('LARADOCS_ACCENT', '#FF2D20'),
         'fonts' => [
             'sans' => env('LARADOCS_FONT_SANS'),
             'mono' => env('LARADOCS_FONT_MONO'),
