@@ -37,10 +37,13 @@
 
     @php
         // If the body opens with an <h1> whose text matches the page title,
-        // strip it to avoid duplicating the page-header title above.
+        // strip it to avoid duplicating the page-header title above. The
+        // rendered heading may include a permalink anchor whose "#" text
+        // leaks into strip_tags, so trim it before comparing.
         $html = (string) $document->html;
         if (preg_match('~^\s*<h1\b[^>]*>(?<inner>.*?)</h1>\s*~is', $html, $m)) {
             $bodyTitle = trim(strip_tags(html_entity_decode($m['inner'], ENT_QUOTES | ENT_HTML5)));
+            $bodyTitle = trim(ltrim($bodyTitle, '#'));
             if (mb_strtolower($bodyTitle) === mb_strtolower($document->title())) {
                 $html = (string) preg_replace('~^\s*<h1\b[^>]*>.*?</h1>\s*~is', '', $html, 1);
             }
