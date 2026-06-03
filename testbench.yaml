@@ -1,6 +1,10 @@
 providers:
   - Laradocs\LaradocsServiceProvider
 
+env:
+  - CACHE_STORE=array
+  - SESSION_DRIVER=array
+
 workbench:
   start: '/docs'
   install: true
