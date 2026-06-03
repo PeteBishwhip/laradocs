@@ -8,3 +8,6 @@ composer.lock
 /.idea
 /.vscode
 /.claude
+/.agents
+/.codex
+/.mcp.json
