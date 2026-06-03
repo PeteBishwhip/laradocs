@@ -9,7 +9,7 @@ use Laradocs\Laradocs;
 it('shows the empty state when there are no documents', function () {
     config()->set('laradocs.docs.path', '/definitely/not/here');
 
-    $this->get('/docs')->assertOk()->assertSee('Your docs live here.');
+    $this->get('/docs')->assertOk()->assertSee('Your documentation, ready when you are.');
 });
 
 it('falls back to the first visible doc when there is no root index', function () {
