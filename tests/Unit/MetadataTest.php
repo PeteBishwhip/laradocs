@@ -48,3 +48,11 @@ it('round-trips through toArray()', function () {
         ->and($array['order'])->toBe(2)
         ->and($array['extra_key'])->toBe('e');
 });
+
+it('is searchable by default and honours search: false', function () {
+    expect(Metadata::fromArray([])->searchable)->toBeTrue()
+        ->and(Metadata::fromArray(['search' => false])->searchable)->toBeFalse()
+        ->and(Metadata::fromArray(['search' => 'no'])->searchable)->toBeFalse()
+        ->and(Metadata::fromArray(['search' => false])->toArray()['search'])->toBeFalse()
+        ->and(Metadata::fromArray(['search' => false])->extra)->toBe([]);
+});

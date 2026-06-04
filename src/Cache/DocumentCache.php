@@ -43,12 +43,7 @@ final class DocumentCache
      */
     public function rememberTree(DocumentCollection $documents, Closure $build): DocumentTree
     {
-        $signature = $documents
-            ->map(fn (Document $doc): string => $doc->relativePath . ':' . $doc->modifiedAt)
-            ->sort()
-            ->implode('|');
-
-        $key = $this->prefix . ':tree:' . md5($signature);
+        $key = $this->prefix . ':tree:' . $this->signature($documents);
 
         if (! $this->enabled) {
             return $build();
@@ -74,6 +69,22 @@ final class DocumentCache
     }
 
     /**
+     * Cache the pre-rendered search index, keyed by the combined document
+     * mtimes so it busts whenever any file changes. Stored as a plain array
+     * of scalars, which is unaffected by `cache.serializable_classes`.
+     *
+     * @param  DocumentCollection<int, Document>  $documents
+     * @param  Closure(): array<int, array{slug: string, title: string, group: string, content: string}>  $build
+     * @return array<int, array{slug: string, title: string, group: string, content: string}>
+     */
+    public function rememberSearchIndex(DocumentCollection $documents, Closure $build): array
+    {
+        $key = $this->prefix . ':search:' . $this->signature($documents);
+
+        return $this->remember($key, $build);
+    }
+
+    /**
      * Remove every entry this package has written.
      */
     public function flush(): void
@@ -93,6 +104,20 @@ final class DocumentCache
     public function documentKey(Document $document): string
     {
         return $this->prefix . ':doc:' . md5($document->path) . ':' . $document->modifiedAt;
+    }
+
+    /**
+     * A stable hash of the collection's files and mtimes, shared by every
+     * collection-wide artifact (tree, search index) so they all bust together.
+     *
+     * @param  DocumentCollection<int, Document>  $documents
+     */
+    private function signature(DocumentCollection $documents): string
+    {
+        return md5($documents
+            ->map(fn (Document $doc): string => $doc->relativePath . ':' . $doc->modifiedAt)
+            ->sort()
+            ->implode('|'));
     }
 
     /**

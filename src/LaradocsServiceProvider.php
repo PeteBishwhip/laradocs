@@ -13,6 +13,7 @@ use Illuminate\Support\ServiceProvider;
 use Laradocs\Cache\DocumentCache;
 use Laradocs\Console\CacheCommand;
 use Laradocs\Console\ClearCommand;
+use Laradocs\Console\IndexCommand;
 use Laradocs\Console\InstallCommand;
 use Laradocs\Console\MakeDocCommand;
 use Laradocs\Contracts\DocumentLoader;
@@ -33,8 +34,13 @@ use Laradocs\Metadata\FrontMatterMetadataResolver;
 use Laradocs\Parsers\MarkdownParser;
 use Laradocs\Routing\DocumentRouter;
 use Laradocs\Routing\SlugResolver;
+use Laradocs\Search\Contracts\SearchEngine;
+use Laradocs\Search\JsonSearchEngine;
+use Laradocs\Search\ScoutSearchEngine;
+use Laradocs\Search\SearchManager;
 use Laradocs\Support\Config;
 use Laradocs\Variables\VariableRegistry;
+use Laravel\Scout\EngineManager;
 use League\CommonMark\Environment\Environment;
 use League\CommonMark\Extension\Attributes\AttributesExtension;
 use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
@@ -51,6 +57,7 @@ final class LaradocsServiceProvider extends ServiceProvider
         $this->registerRegistries();
         $this->registerPipeline();
         $this->registerCore();
+        $this->registerSearch();
     }
 
     public function boot(): void
@@ -141,7 +148,28 @@ final class LaradocsServiceProvider extends ServiceProvider
             $app->make(VariableRegistry::class),
             $app->make(MacroRegistry::class),
             Config::string('laradocs.docs.index', '_index'),
+            Config::int('laradocs.search.max_chars', 10000),
         ));
+    }
+
+    private function registerSearch(): void
+    {
+        $this->app->singleton(SearchManager::class, function (Application $app): SearchManager {
+            $index = Config::string('laradocs.search.index', 'laradocs');
+
+            return new SearchManager(
+                Config::string('laradocs.search.driver', 'auto'),
+                class_exists(EngineManager::class),
+                Config::nullableString('scout.driver') !== null,
+                fn (): SearchEngine => new ScoutSearchEngine($app->make(EngineManager::class), $index),
+                new JsonSearchEngine,
+            );
+        });
+
+        $this->app->bind(
+            SearchEngine::class,
+            fn (Application $app): SearchEngine => $app->make(SearchManager::class)->engine(),
+        );
     }
 
     private function buildConverter(Application $app): MarkdownConverter
@@ -269,6 +297,7 @@ final class LaradocsServiceProvider extends ServiceProvider
             MakeDocCommand::class,
             CacheCommand::class,
             ClearCommand::class,
+            IndexCommand::class,
         ]);
 
         $this->optimizes('laradocs:cache', 'laradocs:clear');
@@ -280,6 +309,7 @@ final class LaradocsServiceProvider extends ServiceProvider
             'Route Prefix' => '/' . Config::string('laradocs.route.prefix'),
             'Docs Path' => Config::string('laradocs.docs.path'),
             'Caching' => Config::bool('laradocs.cache.enabled') ? 'enabled' : 'disabled',
+            'Search Driver' => Config::string('laradocs.search.driver'),
             'Theme' => Config::string('laradocs.ui.theme'),
         ]);
     }
