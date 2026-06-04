@@ -103,7 +103,7 @@ final class DocumentCache
 
     public function documentKey(Document $document): string
     {
-        return $this->prefix . ':doc:' . md5($document->path) . ':' . $document->modifiedAt;
+        return $this->prefix . ':doc:' . hash('sha256', $document->path) . ':' . $document->modifiedAt;
     }
 
     /**
@@ -114,7 +114,7 @@ final class DocumentCache
      */
     private function signature(DocumentCollection $documents): string
     {
-        return md5($documents
+        return hash('sha256', $documents
             ->map(fn (Document $doc): string => $doc->relativePath . ':' . $doc->modifiedAt)
             ->sort()
             ->implode('|'));
