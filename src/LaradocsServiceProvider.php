@@ -271,7 +271,7 @@ final class LaradocsServiceProvider extends ServiceProvider
             ClearCommand::class,
         ]);
 
-        $this->optimizes('docs:cache', 'docs:clear');
+        $this->optimizes('laradocs:cache', 'laradocs:clear');
     }
 
     private function registerAbout(): void

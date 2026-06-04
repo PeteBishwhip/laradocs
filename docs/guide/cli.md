@@ -9,10 +9,10 @@ order: 4
 Laradocs registers four Artisan commands. Run any of them with
 `php artisan {name}`.
 
-## `docs:install`
+## `laradocs:install`
 
 ```bash
-php artisan docs:install [--force]
+php artisan laradocs:install [--force]
 ```
 
 Publishes `config/laradocs.php`, ensures `docs.path` exists, and writes
@@ -40,20 +40,20 @@ slug-style path you want (e.g. `guide/installation` or
 The output is produced from a Blade stub you can publish and edit — see
 [Customising stubs](/docs/customising-stubs).
 
-## `docs:cache`
+## `laradocs:cache`
 
 ```bash
-php artisan docs:cache
+php artisan laradocs:cache
 ```
 
 Pre-renders every visible document, warms the cache, and stores the
 navigation tree. Hooked into Laravel's optimizer, so `php artisan
 optimize` calls it automatically.
 
-## `docs:clear`
+## `laradocs:clear`
 
 ```bash
-php artisan docs:clear
+php artisan laradocs:clear
 ```
 
 Flushes all cached HTML and the navigation tree. Hooked into

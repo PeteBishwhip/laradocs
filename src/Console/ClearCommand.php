@@ -9,7 +9,7 @@ use Laradocs\Cache\DocumentCache;
 
 final class ClearCommand extends Command
 {
-    protected $signature = 'docs:clear';
+    protected $signature = 'laradocs:clear';
 
     protected $description = 'Clear all cached documentation HTML and navigation data';
 

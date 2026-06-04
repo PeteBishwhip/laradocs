@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rich content: callouts, syntax-highlighted code with copy buttons, lazy
   images with captions, and local/YouTube/Vimeo video embeds.
 - Cache layer with mtime-based invalidation and `optimize` integration.
-- Artisan commands: `docs:install`, `make:doc`, `docs:cache`, `docs:clear`.
+- Artisan commands: `laradocs:install`, `make:doc`, `laradocs:cache`, `laradocs:clear`.
 - Publishable config, views and assets; `php artisan about` integration.
 
 [Unreleased]: https://github.com/pete/laradocs/compare/v1.0.0...HEAD

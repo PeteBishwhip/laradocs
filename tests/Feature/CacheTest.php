@@ -122,11 +122,11 @@ it('survives a cache store that forbids unserializing objects', function () {
         ->and($hit)->not->toBeInstanceOf(__PHP_Incomplete_Class::class);
 });
 
-it('docs:cache warms the cache and docs:clear empties it', function () {
+it('laradocs:cache warms the cache and laradocs:clear empties it', function () {
     config()->set('laradocs.cache.enabled', true);
     config()->set('laradocs.cache.store', 'array');
     $this->makeDocs(['a.md' => '# A', 'b.md' => '# B']);
 
-    $this->artisan('docs:cache')->expectsOutputToContain('Cached 2')->assertSuccessful();
-    $this->artisan('docs:clear')->assertSuccessful();
+    $this->artisan('laradocs:cache')->expectsOutputToContain('Cached 2')->assertSuccessful();
+    $this->artisan('laradocs:clear')->assertSuccessful();
 });
