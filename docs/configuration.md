@@ -130,6 +130,17 @@ See [Rich Content](/docs/features/rich-content) for what each extension enables.
 See [Customising the UI](/docs/customising-the-ui) for what each value does
 visually.
 
+## Analytics
+
+| Option | Env | Default |
+|---|---|---|
+| `analytics.fathom.site` | `LARADOCS_FATHOM_SITE` | `null` |
+| `analytics.fathom.script` | `LARADOCS_FATHOM_SCRIPT` | `https://cdn.usefathom.com/script.js` |
+| `analytics.fathom.spa` | `LARADOCS_FATHOM_SPA` | `null` |
+
+Set the site identifier to enable a provider — leave it `null` to opt out.
+See [Analytics](/docs/guide/analytics) for details.
+
 ## Cache
 
 | Option | Env | Default |

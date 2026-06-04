@@ -52,6 +52,7 @@
             }
         </style>
     @endif
+    @include('laradocs::partials.analytics')
     @stack('head')
 </head>
 <body class="laradocs" data-preset="{{ $preset }}">

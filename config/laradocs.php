@@ -205,6 +205,28 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Analytics
+    |--------------------------------------------------------------------------
+    |
+    | Drop-in analytics integrations. Each provider is opt-in: set the site
+    | identifier and a small script tag is injected into every docs page.
+    |
+    | "fathom.site"   Your Fathom site ID (e.g. "ABCDEFGH").
+    | "fathom.script" Override the script URL (defaults to cdn.usefathom.com).
+    | "fathom.spa"    SPA mode: "auto", "history", "hash" — see Fathom docs.
+    |
+    */
+
+    'analytics' => [
+        'fathom' => [
+            'site' => env('LARADOCS_FATHOM_SITE'),
+            'script' => env('LARADOCS_FATHOM_SCRIPT', 'https://cdn.usefathom.com/script.js'),
+            'spa' => env('LARADOCS_FATHOM_SPA'),
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Caching
     |--------------------------------------------------------------------------
     |
