@@ -37,7 +37,21 @@ final class SearchableDocument
 
     public function getScoutKey(): string
     {
-        return $this->slug;
+        return self::scoutKeyFor($this->slug);
+    }
+
+    /**
+     * Map a docs slug to a Scout-engine-safe primary key.
+     *
+     * Meilisearch (and Algolia's objectID) only accept primary keys made of
+     * a-z, A-Z, 0-9, hyphens and underscores. Doc slugs are routed paths
+     * like "guide/routing", so we encode the path separator as "__" — a
+     * sequence vanishingly unlikely to appear in a real slug — and apply
+     * the same transform on the read side to map hits back to entries.
+     */
+    public static function scoutKeyFor(string $slug): string
+    {
+        return str_replace('/', '__', $slug);
     }
 
     /**

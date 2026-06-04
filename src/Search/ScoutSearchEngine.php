@@ -36,17 +36,17 @@ final class ScoutSearchEngine implements SearchEngine
         /** @var array<int, string> $keys */
         $keys = $this->engines->engine()->keys($builder)->all();
 
-        $bySlug = [];
+        $byScoutKey = [];
 
         foreach ($index as $entry) {
-            $bySlug[$entry['slug']] = $entry;
+            $byScoutKey[SearchableDocument::scoutKeyFor($entry['slug'])] = $entry;
         }
 
         $results = [];
 
         foreach ($keys as $key) {
-            if (isset($bySlug[$key])) {
-                $results[] = $bySlug[$key];
+            if (isset($byScoutKey[$key])) {
+                $results[] = $byScoutKey[$key];
             }
         }
 

@@ -139,6 +139,16 @@ it('exposes the scout searchable surface', function () {
         ]);
 });
 
+it('encodes path-style slugs into engine-safe primary keys', function () {
+    // Meilisearch / Algolia primary keys only allow [a-zA-Z0-9_-], so the "/"
+    // in routed slugs like "guide/routing" must be encoded before indexing.
+    $doc = new SearchableDocument('idx', 'guide/routing', 'Routing', 'Body', 'Guide');
+
+    expect($doc->getScoutKey())->toBe('guide__routing')
+        ->and(SearchableDocument::scoutKeyFor('guide/routing'))->toBe('guide__routing')
+        ->and(SearchableDocument::scoutKeyFor('plain-slug'))->toBe('plain-slug');
+});
+
 it('resolves the configured search engine', function () {
     $json = stubEngine('json');
     $scout = stubEngine('scout');

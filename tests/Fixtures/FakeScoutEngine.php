@@ -29,9 +29,14 @@ final class FakeScoutEngine extends Engine
     public function update($models): void
     {
         foreach ($models as $model) {
+            // Mirror Scout's real engines (Meilisearch/Algolia/Typesense):
+            // the searchable payload is laid down first, then the scout-key
+            // entry is merged on top, so the stored "id" reflects whatever
+            // the engine would actually persist as the primary key.
             $this->documents[] = array_merge(
-                [$model->getScoutKeyName() => $model->getScoutKey()],
                 $model->toSearchableArray(),
+                $model->scoutMetadata(),
+                [$model->getScoutKeyName() => $model->getScoutKey()],
             );
         }
     }
