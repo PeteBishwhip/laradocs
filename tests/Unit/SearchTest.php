@@ -37,10 +37,15 @@ function stubEngine(string $name): SearchEngine
             return [];
         }
 
-        // No-op: this stub only needs a name() for engine-resolution tests.
-        public function sync(array $index): void {}
+        public function sync(array $index): void
+        {
+            // No-op: this stub only needs name() for engine-resolution tests.
+        }
 
-        public function flush(): void {}
+        public function flush(): void
+        {
+            // No-op: this stub only needs name() for engine-resolution tests.
+        }
 
         public function name(): string
         {
