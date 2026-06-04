@@ -10,7 +10,7 @@ use Laradocs\Laradocs;
 
 final class CacheCommand extends Command
 {
-    protected $signature = 'docs:cache';
+    protected $signature = 'laradocs:cache';
 
     protected $description = 'Pre-render and cache all documentation pages and the navigation tree';
 

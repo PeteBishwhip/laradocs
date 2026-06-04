@@ -11,7 +11,7 @@ serves a polished docs site at `/docs` (or wherever you like).
 
 ```bash
 composer require petebishwhip/laradocs
-php artisan docs:install
+php artisan laradocs:install
 ```
 
 Then open `/docs`.
@@ -80,10 +80,10 @@ Laradocs::macro('tweet', fn (array $args) => "<a href=\"...\">@{$args['user']}</
 
 | Command | Description |
 |---|---|
-| `docs:install` | Publish config and scaffold a starter page |
+| `laradocs:install` | Publish config and scaffold a starter page |
 | `make:doc {name}` | Scaffold a new markdown page with front-matter |
-| `docs:cache` | Pre-render and cache every page |
-| `docs:clear` | Clear the documentation cache |
+| `laradocs:cache` | Pre-render and cache every page |
+| `laradocs:clear` | Clear the documentation cache |
 
 ## Publishing
 

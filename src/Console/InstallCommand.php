@@ -11,7 +11,7 @@ use Laradocs\Support\Config;
 
 final class InstallCommand extends Command
 {
-    protected $signature = 'docs:install {--force : Overwrite existing files}';
+    protected $signature = 'laradocs:install {--force : Overwrite existing files}';
 
     protected $description = 'Publish the Laradocs config and scaffold a starter docs folder';
 

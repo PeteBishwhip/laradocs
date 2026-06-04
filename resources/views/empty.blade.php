@@ -16,7 +16,7 @@
                 <span class="num">01</span>
                 <div>
                     <strong>Scaffold a starter page</strong>
-                    Run <code>php artisan docs:install</code> to drop a welcome page and folder into your docs directory.
+                    Run <code>php artisan laradocs:install</code> to drop a welcome page and folder into your docs directory.
                 </div>
             </div>
             <div class="laradocs-empty-step">

@@ -17,7 +17,7 @@ composer require petebishwhip/laradocs
 Run the installer to publish the config file and scaffold a starter page:
 
 ```bash
-php artisan docs:install
+php artisan laradocs:install
 ```
 
 That's it. Visit `/docs` in your browser and you'll see your documentation.

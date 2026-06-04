@@ -14,10 +14,10 @@ clearing during development.
 
 ```bash
 # Pre-render and cache every page (great for deploys)
-php artisan docs:cache
+php artisan laradocs:cache
 
 # Clear all cached documentation
-php artisan docs:clear
+php artisan laradocs:clear
 ```
 
 Laradocs also hooks into Laravel's optimizer:

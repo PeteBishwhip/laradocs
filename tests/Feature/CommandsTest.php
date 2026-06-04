@@ -5,12 +5,12 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\ServiceProvider;
 
-it('scaffolds a starter document with docs:install', function () {
+it('scaffolds a starter document with laradocs:install', function () {
     $path = sys_get_temp_dir() . '/laradocs-install-' . bin2hex(random_bytes(4));
     config()->set('laradocs.docs.path', $path);
     $this->tempDocs[] = $path;
 
-    $this->artisan('docs:install')->assertSuccessful();
+    $this->artisan('laradocs:install')->assertSuccessful();
 
     expect(File::exists($path . '/index.md'))->toBeTrue()
         ->and(File::get($path . '/index.md'))->toContain('title: Welcome');
@@ -23,7 +23,7 @@ it('does not clobber an existing index without --force', function () {
     File::ensureDirectoryExists($path);
     File::put($path . '/index.md', 'ORIGINAL');
 
-    $this->artisan('docs:install')->assertSuccessful();
+    $this->artisan('laradocs:install')->assertSuccessful();
 
     expect(File::get($path . '/index.md'))->toBe('ORIGINAL');
 });

@@ -1,13 +1,13 @@
 ---
 title: Customising stubs
-description: Override the scaffolds that docs:install and make:doc write.
+description: Override the scaffolds that laradocs:install and make:doc write.
 order: 7
 group: Advanced
 ---
 
 # Customising stubs
 
-`docs:install` and `make:doc` both write markdown files from Blade templates
+`laradocs:install` and `make:doc` both write markdown files from Blade templates
 that ship with the package. Publish those templates to control exactly what
 new pages look like in your project.
 
@@ -21,7 +21,7 @@ Two files land in `stubs/laradocs/`:
 
 | File | Used by | Receives |
 |---|---|---|
-| `welcome.blade.php` | `docs:install` | _(no variables)_ |
+| `welcome.blade.php` | `laradocs:install` | _(no variables)_ |
 | `page.blade.php` | `make:doc` | `$title`, `$group`, `$order`, `$name` |
 
 The commands always prefer a published stub over the package's copy, so any

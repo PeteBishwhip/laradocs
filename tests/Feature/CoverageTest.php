@@ -75,7 +75,7 @@ it('reinstalls over an existing file with --force', function () {
     File::ensureDirectoryExists($path);
     File::put($path . '/index.md', 'OLD');
 
-    $this->artisan('docs:install', ['--force' => true])->assertSuccessful();
+    $this->artisan('laradocs:install', ['--force' => true])->assertSuccessful();
 
     expect(File::get($path . '/index.md'))->toContain('Welcome');
 });
