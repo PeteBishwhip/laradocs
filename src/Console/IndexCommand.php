@@ -7,6 +7,7 @@ namespace Laradocs\Console;
 use Illuminate\Console\Command;
 use Laradocs\Laradocs;
 use Laradocs\Search\Contracts\SearchEngine;
+use Throwable;
 
 final class IndexCommand extends Command
 {
@@ -18,7 +19,18 @@ final class IndexCommand extends Command
     {
         $index = $laradocs->searchIndex();
 
-        $engine->sync($index);
+        try {
+            $engine->sync($index);
+        } catch (Throwable $e) {
+            $this->error(sprintf(
+                'Failed to index %d page(s) for search (%s engine).',
+                count($index),
+                $engine->name(),
+            ));
+            $this->error('  ' . $e->getMessage());
+
+            return self::FAILURE;
+        }
 
         $this->components->info(sprintf(
             'Indexed %d page(s) for search (%s engine).',

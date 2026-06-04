@@ -14,7 +14,7 @@ use Laravel\Scout\Engines\Engine;
  * naive substring match so the Scout-backed search path can be exercised
  * without a real Meilisearch / Typesense / Algolia service.
  */
-final class FakeScoutEngine extends Engine
+class FakeScoutEngine extends Engine
 {
     /**
      * @var array<int, array<string, mixed>>

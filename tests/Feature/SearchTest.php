@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Laradocs\LaradocsServiceProvider;
+use Laradocs\Search\Contracts\SearchEngine;
+use Laradocs\Search\ScoutSearchEngine;
 use Laradocs\Search\SearchManager;
 use Laradocs\Tests\Fixtures\FakeScoutEngine;
 use Laravel\Scout\EngineManager;
@@ -195,4 +197,103 @@ it('auto driver picks scout when a non-default driver is configured', function (
     app()->forgetInstance(SearchManager::class);
 
     expect(app(SearchManager::class)->engine()->name())->toBe('scout');
+});
+
+it('laradocs:index surfaces engine failures as a non-zero exit', function () {
+    $this->makeDocs(['a.md' => ALPHA_DOC]);
+
+    app()->bind(SearchEngine::class, fn (): SearchEngine => new class implements SearchEngine
+    {
+        public function search(string $query, array $index, int $limit): array
+        {
+            return [];
+        }
+
+        public function sync(array $index): void
+        {
+            throw new RuntimeException('engine unreachable');
+        }
+
+        public function flush(): void {}
+
+        public function name(): string
+        {
+            return 'broken';
+        }
+    });
+
+    $this->artisan('laradocs:index')
+        ->expectsOutputToContain('Failed to index')
+        ->expectsOutputToContain('engine unreachable')
+        ->assertFailed();
+});
+
+it('ScoutSearchEngine surfaces failed Meilisearch tasks queued during sync', function () {
+    // Stand-in for the Meilisearch SDK client. Tracks the tasks we pretend
+    // Meilisearch has queued/finished so we can assert sync() raises when a
+    // task from this run lands in the failed bucket.
+    $client = new class
+    {
+        /** @var array<int, array<string, mixed>> */
+        public array $tasks = [];
+
+        /** @param array<string, mixed> $query */
+        public function getTasks(array $query): object
+        {
+            $statuses = (array) ($query['statuses'] ?? []);
+            $matching = array_values(array_filter(
+                $this->tasks,
+                fn (array $task): bool => $statuses === [] || in_array($task['status'], $statuses, true),
+            ));
+
+            return new class($matching)
+            {
+                /** @param array<int, array<string, mixed>> $results */
+                public function __construct(private readonly array $results) {}
+
+                /** @return array<int, array<string, mixed>> */
+                public function getResults(): array
+                {
+                    return $this->results;
+                }
+            };
+        }
+
+        public function waitForTask(int $uid): void
+        {
+            foreach ($this->tasks as $i => $task) {
+                if (($task['uid'] ?? null) === $uid && ($task['status'] ?? null) !== 'failed') {
+                    $this->tasks[$i]['status'] = 'succeeded';
+                }
+            }
+        }
+    };
+
+    // A Scout engine that mirrors MeilisearchEngine's public `meilisearch`
+    // property so ScoutSearchEngine's duck-typed check picks it up.
+    $scoutEngine = new class($client) extends FakeScoutEngine
+    {
+        public function __construct(public object $meilisearch) {}
+    };
+
+    config()->set('scout.driver', 'fake-meili');
+
+    $manager = new EngineManager(app());
+    $manager->extend('fake-meili', fn (): object => $scoutEngine);
+    app()->instance(EngineManager::class, $manager);
+
+    // Baseline lookup returns the highest existing task UID; anything > 10
+    // counts as part of "this sync" for the failure check.
+    $client->tasks = [['uid' => 10, 'status' => 'succeeded']];
+
+    $engine = new ScoutSearchEngine($manager, 'laradocs-test');
+
+    // Simulate Meilisearch accepting addDocuments but later failing the task
+    // (the exact scenario from the slug primary-key bug).
+    $client->tasks[] = ['uid' => 11, 'status' => 'failed', 'type' => 'documentAdditionOrUpdate', 'error' => ['message' => 'invalid primary key']];
+
+    expect(fn () => $engine->sync([
+        ['slug' => 'a', 'title' => 'A', 'group' => '', 'content' => 'body'],
+    ]))
+        ->toThrow(RuntimeException::class, 'invalid primary key');
 });
