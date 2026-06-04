@@ -127,6 +127,7 @@ it('exposes the scout searchable surface', function () {
     $doc = new SearchableDocument('idx', 'slug-a', 'Title', 'Body', 'Group');
 
     expect($doc->searchableAs())->toBe('idx')
+        ->and($doc->indexableAs())->toBe('idx')
         ->and($doc->getScoutKeyName())->toBe('slug')
         ->and($doc->getScoutKey())->toBe('slug-a')
         ->and($doc->scoutMetadata())->toBe([])

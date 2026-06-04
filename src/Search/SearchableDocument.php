@@ -25,6 +25,11 @@ final class SearchableDocument
         return $this->index;
     }
 
+    public function indexableAs(): string
+    {
+        return $this->index;
+    }
+
     public function getScoutKeyName(): string
     {
         return 'slug';
