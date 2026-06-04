@@ -160,7 +160,7 @@ final class LaradocsServiceProvider extends ServiceProvider
             return new SearchManager(
                 Config::string('laradocs.search.driver', 'auto'),
                 class_exists(EngineManager::class),
-                Config::nullableString('scout.driver') !== null,
+                self::scoutIsConfigured(),
                 fn (): SearchEngine => new ScoutSearchEngine($app->make(EngineManager::class), $index),
                 new JsonSearchEngine,
             );
@@ -170,6 +170,33 @@ final class LaradocsServiceProvider extends ServiceProvider
             SearchEngine::class,
             fn (Application $app): SearchEngine => $app->make(SearchManager::class)->engine(),
         );
+    }
+
+    /**
+     * Treat Scout as "configured" only when there's a real intent signal.
+     *
+     * Scout's package config merges a default of `'algolia'` whenever it's
+     * installed, so `config('scout.driver')` alone isn't reliable — auto-
+     * mode would pick Scout on hosts that never wired it up, then fail at
+     * query time when Algolia has no credentials. Instead we treat any
+     * driver other than the bare default as intent (the user picked it),
+     * and for the `'algolia'` default we also require an Algolia App ID.
+     * This works in both cached-config and live-env setups.
+     */
+    public static function scoutIsConfigured(): bool
+    {
+        $driver = Config::nullableString('scout.driver');
+
+        if ($driver === null || $driver === '') {
+            return false;
+        }
+
+        if ($driver === 'algolia') {
+            return Config::nullableString('scout.algolia.id') !== null
+                && Config::nullableString('scout.algolia.id') !== '';
+        }
+
+        return true;
     }
 
     private function buildConverter(Application $app): MarkdownConverter

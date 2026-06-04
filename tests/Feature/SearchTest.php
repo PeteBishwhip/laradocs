@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Laradocs\LaradocsServiceProvider;
+use Laradocs\Search\SearchManager;
 use Laradocs\Tests\Fixtures\FakeScoutEngine;
 use Laravel\Scout\EngineManager;
 
@@ -151,4 +153,46 @@ it('searches through the configured scout engine end to end', function () {
     $this->getJson('/docs/_laradocs/search?q=composer')
         ->assertOk()
         ->assertJsonPath('results.0.slug', 'guide/install');
+});
+
+it('scoutIsConfigured requires a real intent signal, not just the algolia default', function () {
+    // Scout absent / no driver set at all.
+    config()->set('scout.driver', null);
+    expect(LaradocsServiceProvider::scoutIsConfigured())->toBeFalse();
+
+    // Scout merges 'algolia' as the package default whenever it's installed —
+    // by itself that doesn't mean the host has configured anything.
+    config()->set('scout.driver', 'algolia');
+    config()->set('scout.algolia.id', '');
+    expect(LaradocsServiceProvider::scoutIsConfigured())->toBeFalse();
+
+    // Algolia with credentials counts as intent.
+    config()->set('scout.algolia.id', 'app-xyz');
+    expect(LaradocsServiceProvider::scoutIsConfigured())->toBeTrue();
+
+    // Any non-default driver is itself a signal — the user picked it.
+    config()->set('scout.driver', 'meilisearch');
+    expect(LaradocsServiceProvider::scoutIsConfigured())->toBeTrue();
+});
+
+it('auto driver falls back to json when scout looks like the unconfigured default', function () {
+    config()->set('laradocs.search.driver', 'auto');
+    config()->set('scout.driver', 'algolia');
+    config()->set('scout.algolia.id', '');
+
+    app()->forgetInstance(SearchManager::class);
+
+    expect(app(SearchManager::class)->engine()->name())->toBe('json');
+});
+
+it('auto driver picks scout when a non-default driver is configured', function () {
+    config()->set('laradocs.search.driver', 'auto');
+    config()->set('scout.driver', 'fake');
+
+    $manager = new EngineManager(app());
+    $manager->extend('fake', fn (): FakeScoutEngine => new FakeScoutEngine);
+    app()->instance(EngineManager::class, $manager);
+    app()->forgetInstance(SearchManager::class);
+
+    expect(app(SearchManager::class)->engine()->name())->toBe('scout');
 });
