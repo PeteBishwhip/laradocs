@@ -1,7 +1,7 @@
 # Laradocs
 
-[![tests](https://github.com/pete/laradocs/actions/workflows/tests.yml/badge.svg)](https://github.com/pete/laradocs/actions/workflows/tests.yml)
-[![quality](https://github.com/pete/laradocs/actions/workflows/quality.yml/badge.svg)](https://github.com/pete/laradocs/actions/workflows/quality.yml)
+[![tests](https://github.com/PeteBishwhip/laradocs/actions/workflows/tests.yml/badge.svg)](https://github.com/PeteBishwhip/laradocs/actions/workflows/tests.yml)
+[![quality](https://github.com/PeteBishwhip/laradocs/actions/workflows/quality.yml/badge.svg)](https://github.com/PeteBishwhip/laradocs/actions/workflows/quality.yml)
 [![Latest Version](https://img.shields.io/packagist/v/petebishwhip/laradocs.svg)](https://packagist.org/packages/petebishwhip/laradocs)
 [![License](https://img.shields.io/packagist/l/petebishwhip/laradocs.svg)](LICENSE.md)
 
@@ -58,7 +58,7 @@ group: Basics
 
 Everything is configurable in `config/laradocs.php` and via environment
 variables — route prefix/domain, docs path, routing strategy, theme, caching and
-more. See the [Configuration docs](docs/configuration.md).
+more. See the [Configuration docs](https://laradocs.dev/docs/configuration).
 
 ```dotenv
 LARADOCS_ROUTE_PREFIX=docs
@@ -101,8 +101,24 @@ composer test
 
 ## Documentation
 
-This package documents itself — the [`docs/`](docs) folder is a live Laradocs
-site. Browse it on disk or serve it with `composer serve`.
+The full docs live at **[laradocs.dev/docs](https://laradocs.dev/docs)** — and
+are themselves built with Laradocs. Highlights:
+
+- [Getting started](https://laradocs.dev/docs/getting-started)
+- [Configuration](https://laradocs.dev/docs/configuration)
+- [Routing](https://laradocs.dev/docs/guide/routing)
+- [Metadata](https://laradocs.dev/docs/guide/metadata)
+- [Caching](https://laradocs.dev/docs/guide/caching)
+- [CLI reference](https://laradocs.dev/docs/guide/cli)
+- [PHP API](https://laradocs.dev/docs/guide/api)
+- [Variables](https://laradocs.dev/docs/features/variables) ·
+  [Macros](https://laradocs.dev/docs/features/macros) ·
+  [Rich content](https://laradocs.dev/docs/features/rich-content)
+- [Customising the UI](https://laradocs.dev/docs/customising-the-ui) ·
+  [Customising stubs](https://laradocs.dev/docs/customising-stubs)
+
+The source for those pages lives in [`docs/`](docs); browse there or serve a
+local copy with `composer serve`.
 
 ## Contributing & Security
 
