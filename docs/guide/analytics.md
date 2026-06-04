@@ -33,6 +33,33 @@ That's it — page views start arriving in your Fathom dashboard.
 to side-step ad-blockers. `spa` accepts `auto`, `history`, or `hash` — see
 Fathom's docs if you've layered client-side routing on top of Laradocs.
 
+## Google Analytics
+
+[Google Analytics 4](https://analytics.google.com) is the default for many
+teams already invested in the Google ecosystem.
+
+```dotenv
+LARADOCS_GA_MEASUREMENT_ID=G-XXXXXXXXXX
+```
+
+The official `gtag.js` snippet is injected and a `config` call is fired on
+load. To anonymise visitor IPs (recommended if you serve EU traffic):
+
+```dotenv
+LARADOCS_GA_ANONYMIZE_IP=true
+```
+
+### Options
+
+| Option | Env | Default |
+|---|---|---|
+| `analytics.google.measurement_id` | `LARADOCS_GA_MEASUREMENT_ID` | `null` |
+| `analytics.google.anonymize_ip` | `LARADOCS_GA_ANONYMIZE_IP` | `false` |
+
+> [!NOTE]
+> Fathom and Google Analytics can both be enabled at the same time — they
+> coexist happily and you'll see traffic in both dashboards.
+
 ## Disabling
 
 Unset the env var (or set `analytics.<provider>.site` to `null`) and the

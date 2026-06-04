@@ -211,9 +211,11 @@ return [
     | Drop-in analytics integrations. Each provider is opt-in: set the site
     | identifier and a small script tag is injected into every docs page.
     |
-    | "fathom.site"   Your Fathom site ID (e.g. "ABCDEFGH").
-    | "fathom.script" Override the script URL (defaults to cdn.usefathom.com).
-    | "fathom.spa"    SPA mode: "auto", "history", "hash" — see Fathom docs.
+    | "fathom.site"      Your Fathom site ID (e.g. "ABCDEFGH").
+    | "fathom.script"    Override the script URL (defaults to cdn.usefathom.com).
+    | "fathom.spa"       SPA mode: "auto", "history", "hash" — see Fathom docs.
+    | "google.measurement_id" GA4 measurement ID (e.g. "G-XXXXXXXXXX").
+    | "google.anonymize_ip"   Anonymise visitor IPs (recommended in the EU).
     |
     */
 
@@ -222,6 +224,10 @@ return [
             'site' => env('LARADOCS_FATHOM_SITE'),
             'script' => env('LARADOCS_FATHOM_SCRIPT', 'https://cdn.usefathom.com/script.js'),
             'spa' => env('LARADOCS_FATHOM_SPA'),
+        ],
+        'google' => [
+            'measurement_id' => env('LARADOCS_GA_MEASUREMENT_ID'),
+            'anonymize_ip' => (bool) env('LARADOCS_GA_ANONYMIZE_IP', false),
         ],
     ],
 

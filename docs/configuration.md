@@ -137,8 +137,10 @@ visually.
 | `analytics.fathom.site` | `LARADOCS_FATHOM_SITE` | `null` |
 | `analytics.fathom.script` | `LARADOCS_FATHOM_SCRIPT` | `https://cdn.usefathom.com/script.js` |
 | `analytics.fathom.spa` | `LARADOCS_FATHOM_SPA` | `null` |
+| `analytics.google.measurement_id` | `LARADOCS_GA_MEASUREMENT_ID` | `null` |
+| `analytics.google.anonymize_ip` | `LARADOCS_GA_ANONYMIZE_IP` | `false` |
 
-Set the site identifier to enable a provider — leave it `null` to opt out.
+Set the identifier to enable a provider — leave it `null` to opt out.
 See [Analytics](/docs/guide/analytics) for details.
 
 ## Cache
