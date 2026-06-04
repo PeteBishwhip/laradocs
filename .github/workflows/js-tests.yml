@@ -16,6 +16,9 @@ on:
       - 'package.json'
       - '.github/workflows/js-tests.yml'
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
