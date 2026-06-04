@@ -5,6 +5,8 @@ declare(strict_types=1);
 use Laradocs\Tests\Fixtures\FakeScoutEngine;
 use Laravel\Scout\EngineManager;
 
+const ALPHA_DOC = "---\ntitle: Alpha\n---\nbody\n";
+
 /**
  * Point the package at a shared, in-memory Scout engine. EngineManager isn't a
  * shared singleton under Testbench, so we bind a pre-extended instance to make
@@ -85,7 +87,7 @@ it('returns an empty excerpt for a body-less page matched by title', function ()
 });
 
 it('returns nothing for queries shorter than the minimum', function () {
-    $this->makeDocs(['a.md' => "---\ntitle: Alpha\n---\nbody\n"]);
+    $this->makeDocs(['a.md' => ALPHA_DOC]);
 
     $this->getJson('/docs/_laradocs/search?q=a')
         ->assertOk()
@@ -93,7 +95,7 @@ it('returns nothing for queries shorter than the minimum', function () {
 });
 
 it('ignores a non-string query parameter', function () {
-    $this->makeDocs(['a.md' => "---\ntitle: Alpha\n---\nbody\n"]);
+    $this->makeDocs(['a.md' => ALPHA_DOC]);
 
     $this->getJson('/docs/_laradocs/search?q[]=x')
         ->assertOk()
@@ -102,13 +104,13 @@ it('ignores a non-string query parameter', function () {
 
 it('404s the search endpoint when search is disabled', function () {
     config()->set('laradocs.ui.search.enabled', false);
-    $this->makeDocs(['a.md' => "---\ntitle: Alpha\n---\nbody\n"]);
+    $this->makeDocs(['a.md' => ALPHA_DOC]);
 
     $this->getJson('/docs/_laradocs/search?q=alpha')->assertNotFound();
 });
 
 it('laradocs:index reports the indexed page count and engine', function () {
-    $this->makeDocs(['a.md' => "---\ntitle: Alpha\n---\nbody\n", 'b.md' => "---\ntitle: Beta\n---\nbody\n"]);
+    $this->makeDocs(['a.md' => ALPHA_DOC, 'b.md' => "---\ntitle: Beta\n---\nbody\n"]);
 
     $this->artisan('laradocs:index')
         ->expectsOutputToContain('Indexed 2 page(s) for search (json engine).')
@@ -118,7 +120,7 @@ it('laradocs:index reports the indexed page count and engine', function () {
 it('laradocs:cache also rebuilds the search index', function () {
     config()->set('laradocs.cache.enabled', true);
     config()->set('laradocs.cache.store', 'array');
-    $this->makeDocs(['a.md' => "---\ntitle: Alpha\n---\nbody\n"]);
+    $this->makeDocs(['a.md' => ALPHA_DOC]);
 
     $this->artisan('laradocs:cache')
         ->expectsOutputToContain('Cached 1')
@@ -128,7 +130,7 @@ it('laradocs:cache also rebuilds the search index', function () {
 
 it('laradocs:clear flushes the search engine', function () {
     $fake = bindFakeScout();
-    $this->makeDocs(['a.md' => "---\ntitle: Alpha\n---\nbody\n"]);
+    $this->makeDocs(['a.md' => ALPHA_DOC]);
 
     $this->artisan('laradocs:clear')->assertSuccessful();
 

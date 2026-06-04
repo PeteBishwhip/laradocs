@@ -24,26 +24,9 @@ final class JsonSearchEngine implements SearchEngine
         $scored = [];
 
         foreach ($index as $entry) {
-            $title = mb_strtolower($entry['title']);
-            $content = mb_strtolower($entry['content']);
+            $score = $this->score($entry, $terms);
 
-            $score = 0;
-            $matchesAll = true;
-
-            foreach ($terms as $term) {
-                $inTitle = str_contains($title, $term);
-                $inContent = str_contains($content, $term);
-
-                if (! $inTitle && ! $inContent) {
-                    $matchesAll = false;
-
-                    break;
-                }
-
-                $score += ($inTitle ? 3 : 0) + ($inContent ? 1 : 0);
-            }
-
-            if ($matchesAll) {
+            if ($score !== null) {
                 $scored[] = ['score' => $score, 'entry' => $entry];
             }
         }
@@ -70,6 +53,35 @@ final class JsonSearchEngine implements SearchEngine
     public function name(): string
     {
         return 'json';
+    }
+
+    /**
+     * Weighted match score for one entry — title hits outweigh body hits.
+     * Returns null when any query term is absent, since every term must
+     * appear somewhere on the page for it to match.
+     *
+     * @param  array{title: string, content: string}  $entry
+     * @param  array<int, string>  $terms
+     */
+    private function score(array $entry, array $terms): ?int
+    {
+        $title = mb_strtolower($entry['title']);
+        $content = mb_strtolower($entry['content']);
+
+        $score = 0;
+
+        foreach ($terms as $term) {
+            $inTitle = str_contains($title, $term);
+            $inContent = str_contains($content, $term);
+
+            if (! $inTitle && ! $inContent) {
+                return null;
+            }
+
+            $score += ($inTitle ? 3 : 0) + ($inContent ? 1 : 0);
+        }
+
+        return $score;
     }
 
     /**

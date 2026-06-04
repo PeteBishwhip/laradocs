@@ -41,7 +41,7 @@ final class FakeScoutEngine extends Engine
      */
     public function delete($models): void
     {
-        //
+        // No-op: tests flush and re-index wholesale, so per-model deletes are unused.
     }
 
     public function search(Builder $builder): mixed
@@ -94,11 +94,11 @@ final class FakeScoutEngine extends Engine
 
     public function createIndex($name, array $options = []): void
     {
-        //
+        // No-op: this in-memory engine needs no index provisioning.
     }
 
     public function deleteIndex($name): void
     {
-        //
+        // No-op: documents live in memory and are cleared via flush().
     }
 }
