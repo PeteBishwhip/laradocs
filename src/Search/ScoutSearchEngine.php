@@ -8,6 +8,8 @@ use Illuminate\Support\Collection;
 use Laradocs\Search\Contracts\SearchEngine;
 use Laravel\Scout\Builder;
 use Laravel\Scout\EngineManager;
+use ReflectionException;
+use ReflectionProperty;
 use RuntimeException;
 
 /**
@@ -190,8 +192,9 @@ final class ScoutSearchEngine implements SearchEngine
     }
 
     /**
-     * Scout's MeilisearchEngine exposes its SDK client as a public `meilisearch`
-     * property. We duck-type rather than type-hint so the codebase doesn't take
+     * Scout's MeilisearchEngine stores its SDK client on a `protected
+     * $meilisearch` property, so we read it via reflection rather than direct
+     * access. We duck-type rather than type-hint so the codebase doesn't take
      * a hard dependency on the optional meilisearch/meilisearch-php package.
      */
     private function meilisearchClient(object $scoutEngine): ?object
@@ -200,7 +203,11 @@ final class ScoutSearchEngine implements SearchEngine
             return null;
         }
 
-        $client = $scoutEngine->meilisearch;
+        try {
+            $client = (new ReflectionProperty($scoutEngine, 'meilisearch'))->getValue($scoutEngine);
+        } catch (ReflectionException) {
+            return null;
+        }
 
         if (! is_object($client) || ! method_exists($client, 'getTasks') || ! method_exists($client, 'waitForTask')) {
             return null;

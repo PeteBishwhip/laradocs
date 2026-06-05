@@ -243,7 +243,7 @@ it('ScoutSearchEngine surfaces failed Meilisearch tasks queued during sync', fun
             $statuses = (array) ($query['statuses'] ?? []);
             $matching = array_values(array_filter(
                 $this->tasks,
-                fn (array $task): bool => $statuses === [] || in_array($task['status'], $statuses, true),
+                fn (array $task): bool => $statuses === [] || in_array($task['status'] ?? null, $statuses, true),
             ));
 
             return new class($matching)
@@ -261,19 +261,21 @@ it('ScoutSearchEngine surfaces failed Meilisearch tasks queued during sync', fun
 
         public function waitForTask(int $uid): void
         {
-            foreach ($this->tasks as $i => $task) {
+            foreach ($this->tasks as &$task) {
                 if (($task['uid'] ?? null) === $uid && ($task['status'] ?? null) !== 'failed') {
-                    $this->tasks[$i]['status'] = 'succeeded';
+                    $task['status'] = 'succeeded';
                 }
             }
+            unset($task);
         }
     };
 
-    // A Scout engine that mirrors MeilisearchEngine's public `meilisearch`
-    // property so ScoutSearchEngine's duck-typed check picks it up.
+    // A Scout engine that mirrors MeilisearchEngine's `meilisearch` property
+    // (protected on the real class — we expose it here so the production
+    // ReflectionProperty lookup in ScoutSearchEngine still resolves it).
     $scoutEngine = new class($client) extends FakeScoutEngine
     {
-        public function __construct(public object $meilisearch) {}
+        public function __construct(protected object $meilisearch) {}
     };
 
     config()->set('scout.driver', 'fake-meili');
