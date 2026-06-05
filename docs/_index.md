@@ -27,6 +27,9 @@ the features they describe.
   lists, video embeds, variables, macros, dark mode, a scroll-spying TOC,
   reading-progress bar, prev/next pager, edit links, and three layout
   presets — all out of the box.
+- **SEO without the busywork.** Titles, meta descriptions, Open Graph and
+  Twitter cards, canonical URLs and JSON-LD are generated for every page —
+  with per-page front-matter overrides. See [SEO](/docs/guide/seo).
 - **Inter + Laravel red.** Modern type, clean hairline borders, the brand
   accent built in. Override any token from config.
 

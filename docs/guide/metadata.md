@@ -93,6 +93,47 @@ the page footer (`Last updated 2026-06-01`). The rest are available via
 `$document->metadata->author`, `$document->metadata->image`, and
 `$document->metadata->tags` — wire them into custom views as needed.
 
+`author`, `image` and `tags` also feed the page's SEO meta (see below).
+
+### SEO and social meta
+
+`title`, `description`, `image`, `author` and `tags` are used to build each
+page's `<title>`, meta description, Open Graph / Twitter cards and JSON-LD
+automatically. For SEO-specific control that shouldn't change what renders
+*on* the page, add a dedicated `seo:` block — its values win:
+
+```markdown
+---
+title: Internal Notes
+description: Shown as the page subtitle.
+seo:
+  title: A different title, just for search engines
+  description: A different description, just for the meta tags.
+  image: /og/custom.png
+  robots: noindex, nofollow
+  canonical: https://acme.test/canonical/url
+  type: article
+  section: Guides
+---
+```
+
+| `seo:` key | Purpose |
+|---|---|
+| `title` | Override the SEO/social title only (the on-page `<h1>` is unchanged). |
+| `description` | Override the meta / social description only. |
+| `image` | Open Graph / Twitter image. |
+| `author` | Author meta + schema. |
+| `tags` | `article:tag` entries. |
+| `robots` | Robots directive, e.g. `noindex, nofollow`. |
+| `canonical` | Canonical URL for this page. |
+| `type` | Open Graph type (`article`, `website`, …). |
+| `section` | Open Graph `article:section`; defaults to `group`. |
+
+Two shortcuts are also recognised at the top level: `noindex: true`
+(expands to `robots: noindex, nofollow`) and `published_at:` / `date:`
+(sets the Open Graph article publication time). See the full
+[SEO guide](/docs/guide/seo) for site-wide defaults and examples.
+
 ### `layout`
 
 Override the Blade layout used for this page:

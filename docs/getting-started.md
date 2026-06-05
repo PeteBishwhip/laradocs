@@ -51,6 +51,7 @@ right-hand TOC to jump between headings on the current page.
 - Configure routes, caching and the UI in
   [Configuration](/docs/configuration).
 - Learn how URLs are generated in [Routing](/docs/guide/routing).
+- Tune titles, social cards and structured data in [SEO](/docs/guide/seo).
 - Discover every Artisan command in [CLI](/docs/guide/cli).
 - Inject dynamic values with [Variables](/docs/features/variables).
 - Restyle the bundled views in
