@@ -171,6 +171,70 @@
     });
   }
 
+  // Split a raw query into lowercased, non-empty terms for highlighting.
+  function queryTerms(q) {
+    return q.trim().toLowerCase().split(/\s+/).filter(function (t) { return t; });
+  }
+
+  function escapeRegExp(s) {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  // Return a DocumentFragment of `text` with every case-insensitive occurrence
+  // of any term wrapped in <mark>. Built entirely from text nodes and created
+  // elements — the source text is never parsed as HTML, so server-supplied
+  // titles and excerpts can be highlighted without an injection risk.
+  function highlight(text, terms) {
+    var fragment = document.createDocumentFragment();
+    text = text || '';
+    var cleaned = (terms || []).filter(function (t) { return t; }).map(escapeRegExp);
+    if (text === '' || !cleaned.length) {
+      if (text !== '') fragment.appendChild(document.createTextNode(text));
+      return fragment;
+    }
+    var re = new RegExp('(' + cleaned.join('|') + ')', 'ig');
+    var lastIndex = 0;
+    var match;
+    while ((match = re.exec(text)) !== null) {
+      if (match.index > lastIndex) {
+        fragment.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+      }
+      var mark = document.createElement('mark');
+      mark.className = 'laradocs-palette-mark';
+      mark.textContent = match[0];
+      fragment.appendChild(mark);
+      lastIndex = match.index + match[0].length;
+    }
+    if (lastIndex < text.length) {
+      fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
+    }
+    return fragment;
+  }
+
+  // A result's ancestor trail. Prefer the server-built breadcrumb; fall back to
+  // the flat group, or to nothing, so older payloads still render sensibly.
+  function crumbsOf(r) {
+    if (Array.isArray(r.breadcrumb)) return r.breadcrumb;
+    return r.group ? [r.group] : [];
+  }
+  function sectionOf(r) {
+    return crumbsOf(r)[0] || '';
+  }
+
+  // Cluster results by their top-level section, preserving the rank order both
+  // of sections (by first appearance) and of hits within each section.
+  function groupBySection(list) {
+    var buckets = new Map();
+    list.forEach(function (r) {
+      var section = sectionOf(r);
+      if (!buckets.has(section)) buckets.set(section, []);
+      buckets.get(section).push(r);
+    });
+    var out = [];
+    buckets.forEach(function (items) { out = out.concat(items); });
+    return out;
+  }
+
   function initPalette() {
     var palette = document.querySelector('[data-laradocs-palette]');
     var input = document.querySelector('[data-laradocs-palette-input]');
@@ -212,7 +276,7 @@
     function restore() {
       results.innerHTML = originalHtml;
     }
-    function renderResults(list) {
+    function renderResults(list, terms) {
       results.innerHTML = '';
       if (!list.length) {
         var empty = document.createElement('li');
@@ -222,25 +286,43 @@
         activeIndex = -1;
         return;
       }
-      list.forEach(function (r) {
+      var lastSection = null;
+      groupBySection(list).forEach(function (r) {
+        var crumbs = crumbsOf(r);
+        var section = crumbs[0] || '';
+        // Emit a header the first time each section's run begins. Headers are
+        // header <li>s with no anchor, so keyboard navigation skips them.
+        if (section !== lastSection) {
+          lastSection = section;
+          if (section !== '') {
+            var header = document.createElement('li');
+            header.className = 'laradocs-palette-section';
+            header.setAttribute('aria-hidden', 'true');
+            header.textContent = section;
+            results.appendChild(header);
+          }
+        }
         var li = document.createElement('li');
         var a = document.createElement('a');
         a.href = r.url;
         a.setAttribute('data-label', (r.title || '').toLowerCase());
         var title = document.createElement('span');
         title.className = 'laradocs-palette-title';
-        title.textContent = r.title || '';
+        title.appendChild(highlight(r.title || '', terms));
         a.appendChild(title);
-        if (r.group) {
-          var group = document.createElement('span');
-          group.className = 'laradocs-palette-group';
-          group.textContent = r.group;
-          a.appendChild(group);
+        // The deeper trail beneath the section header (if any) becomes the
+        // per-item breadcrumb, so the section name isn't repeated on each row.
+        var sub = crumbs.slice(1);
+        if (sub.length) {
+          var breadcrumb = document.createElement('span');
+          breadcrumb.className = 'laradocs-palette-breadcrumb';
+          breadcrumb.textContent = sub.join(' › ');
+          a.appendChild(breadcrumb);
         }
         if (r.excerpt) {
           var excerpt = document.createElement('span');
           excerpt.className = 'laradocs-palette-excerpt';
-          excerpt.textContent = r.excerpt;
+          excerpt.appendChild(highlight(r.excerpt, terms));
           a.appendChild(excerpt);
         }
         li.appendChild(a);
@@ -254,7 +336,7 @@
         .then(function (res) { return res.json(); })
         .then(function (data) {
           if (id !== requestId) return;
-          renderResults((data && data.results) || []);
+          renderResults((data && data.results) || [], queryTerms(q));
         })
         .catch(function () {
           if (id !== requestId) return;

@@ -120,7 +120,7 @@ test('short queries restore the pre-rendered list without firing a request', asy
   assert.deepEqual(visibleHrefs(results), ['/docs/install', '/docs/config', '/docs/search']);
 });
 
-test('remote search is debounced and rendered with title, group and excerpt', async () => {
+test('remote search is debounced and rendered with title, section header and excerpt', async () => {
   const { window, input, results } = await bootPalette();
   const calls = [];
   window.fetch = (url) => {
@@ -131,6 +131,7 @@ test('remote search is debounced and rendered with title, group and excerpt', as
           slug: 'guide/install',
           title: 'Installation',
           group: 'Guide',
+          breadcrumb: ['Guide'],
           url: '/docs/guide/install',
           excerpt: '…run composer require…',
         }],
@@ -149,12 +150,174 @@ test('remote search is debounced and rendered with title, group and excerpt', as
   assert.equal(calls.length, 1, 'exactly one request fires after the debounce window');
   assert.match(calls[0], /\?q=comp$/);
 
-  const items = results.querySelectorAll('li');
-  assert.equal(items.length, 1);
-  assert.equal(items[0].querySelector('.laradocs-palette-title').textContent, 'Installation');
-  assert.equal(items[0].querySelector('.laradocs-palette-group').textContent, 'Guide');
-  assert.equal(items[0].querySelector('.laradocs-palette-excerpt').textContent, '…run composer require…');
-  assert.equal(items[0].querySelector('a').getAttribute('href'), '/docs/guide/install');
+  // One section header ("Guide") followed by one result row.
+  const section = results.querySelector('.laradocs-palette-section');
+  assert.equal(section.textContent, 'Guide');
+  assert.equal(section.getAttribute('aria-hidden'), 'true');
+  assert.equal(results.querySelectorAll('li a').length, 1, 'the header carries no anchor');
+
+  const row = results.querySelector('li a');
+  assert.equal(row.querySelector('.laradocs-palette-title').textContent, 'Installation');
+  // The section is the only crumb, so no per-row breadcrumb is repeated.
+  assert.equal(row.querySelector('.laradocs-palette-breadcrumb'), null);
+  assert.equal(row.querySelector('.laradocs-palette-excerpt').textContent, '…run composer require…');
+  assert.equal(row.getAttribute('href'), '/docs/guide/install');
+});
+
+test('matched query terms are wrapped in <mark> within the title and excerpt', async () => {
+  const { window, input, results } = await bootPalette();
+  window.fetch = () => Promise.resolve({
+    json: () => ({
+      results: [{
+        slug: 'guide/install',
+        title: 'Composer Install',
+        breadcrumb: ['Guide'],
+        url: '/docs/guide/install',
+        excerpt: 'Run composer require to add it.',
+      }],
+    }),
+  });
+
+  fireInput(window, input, 'composer');
+  await tick(window, 200);
+
+  // Case-insensitive: "Composer" in the title and "composer" in the excerpt
+  // both highlight, and the surrounding text is preserved verbatim.
+  const titleMark = results.querySelector('.laradocs-palette-title mark');
+  assert.equal(titleMark.textContent, 'Composer');
+  assert.equal(titleMark.className, 'laradocs-palette-mark');
+  assert.equal(results.querySelector('.laradocs-palette-title').textContent, 'Composer Install');
+
+  const excerptMark = results.querySelector('.laradocs-palette-excerpt mark');
+  assert.equal(excerptMark.textContent, 'composer');
+  assert.equal(results.querySelector('.laradocs-palette-excerpt').textContent, 'Run composer require to add it.');
+});
+
+test('every whitespace-separated term highlights, and regex metacharacters are matched literally', async () => {
+  const { window, input, results } = await bootPalette();
+  window.fetch = () => Promise.resolve({
+    json: () => ({
+      results: [{
+        slug: 'a',
+        title: 'Map c() over a.b list',
+        breadcrumb: [],
+        url: '/docs/a',
+        excerpt: '',
+      }],
+    }),
+  });
+
+  // "c()" and "a.b" contain regex metacharacters; they must match literally,
+  // not as patterns — and both terms highlight independently.
+  fireInput(window, input, 'c() a.b');
+  await tick(window, 200);
+
+  const marks = [...results.querySelectorAll('.laradocs-palette-title mark')].map((m) => m.textContent);
+  assert.deepEqual(marks, ['c()', 'a.b']);
+});
+
+test('hits are grouped under section headers, preserving rank order across sections', async () => {
+  const { window, input, results } = await bootPalette();
+  window.fetch = () => Promise.resolve({
+    json: () => ({
+      results: [
+        { slug: 'guide/install', title: 'Install', breadcrumb: ['Guide'], url: '/docs/guide/install', excerpt: '' },
+        { slug: 'api/auth', title: 'Auth', breadcrumb: ['API'], url: '/docs/api/auth', excerpt: '' },
+        { slug: 'guide/config', title: 'Config', breadcrumb: ['Guide'], url: '/docs/guide/config', excerpt: '' },
+      ],
+    }),
+  });
+
+  fireInput(window, input, 'in');
+  await tick(window, 200);
+
+  // Guide appears first (top-ranked hit), and its second hit is pulled up
+  // beside the first rather than re-emitting the header. API follows.
+  const order = [...results.querySelectorAll('li')].map((li) =>
+    li.classList.contains('laradocs-palette-section')
+      ? `#${li.textContent}`
+      : li.querySelector('a').getAttribute('href'),
+  );
+  assert.deepEqual(order, ['#Guide', '/docs/guide/install', '/docs/guide/config', '#API', '/docs/api/auth']);
+
+  // Exactly two headers, one per distinct section.
+  assert.equal(results.querySelectorAll('.laradocs-palette-section').length, 2);
+});
+
+test('a deeper breadcrumb trail renders beneath the section header on the row', async () => {
+  const { window, input, results } = await bootPalette();
+  window.fetch = () => Promise.resolve({
+    json: () => ({
+      results: [{
+        slug: 'guide/advanced/routing',
+        title: 'Routing',
+        breadcrumb: ['Guide', 'Advanced'],
+        url: '/docs/guide/advanced/routing',
+        excerpt: '',
+      }],
+    }),
+  });
+
+  fireInput(window, input, 'route');
+  await tick(window, 200);
+
+  assert.equal(results.querySelector('.laradocs-palette-section').textContent, 'Guide');
+  // The leading crumb is the header; the remainder hangs off the row.
+  assert.equal(results.querySelector('.laradocs-palette-breadcrumb').textContent, 'Advanced');
+});
+
+test('sectionless results render flat, falling back to a flat group when no breadcrumb is sent', async () => {
+  const { window, input, results } = await bootPalette();
+  window.fetch = () => Promise.resolve({
+    json: () => ({
+      results: [
+        // No breadcrumb at all and no group → no header, listed flat.
+        { slug: 'overview', title: 'Overview', url: '/docs/overview', excerpt: '' },
+        // Legacy payload: only a flat group, used as the section fallback.
+        { slug: 'legacy', title: 'Legacy', group: 'Reference', url: '/docs/legacy', excerpt: '' },
+      ],
+    }),
+  });
+
+  fireInput(window, input, 'ov');
+  await tick(window, 200);
+
+  const order = [...results.querySelectorAll('li')].map((li) =>
+    li.classList.contains('laradocs-palette-section')
+      ? `#${li.textContent}`
+      : li.querySelector('a').getAttribute('href'),
+  );
+  assert.deepEqual(order, ['/docs/overview', '#Reference', '/docs/legacy']);
+});
+
+test('keyboard navigation skips section headers and lands only on result rows', async () => {
+  const { window, document, input, palette, results } = await bootPalette();
+  window.fetch = () => Promise.resolve({
+    json: () => ({
+      results: [
+        { slug: 'guide/install', title: 'Install', breadcrumb: ['Guide'], url: '/docs/guide/install', excerpt: '' },
+        { slug: 'api/auth', title: 'Auth', breadcrumb: ['API'], url: '/docs/api/auth', excerpt: '' },
+      ],
+    }),
+  });
+
+  palette.removeAttribute('hidden');
+  input.focus();
+
+  fireInput(window, input, 'in');
+  await tick(window, 200);
+
+  const links = () => [...results.querySelectorAll('a')];
+  assert.equal(links()[0].classList.contains('is-active'), true, 'first row active despite the leading header');
+
+  // Two sections, two headers, two rows — ArrowDown moves header-to-header
+  // across rows without ever activating a header.
+  pressKey(window, document, 'ArrowDown');
+  assert.equal(links()[1].classList.contains('is-active'), true);
+  assert.equal(results.querySelector('.laradocs-palette-section.is-active'), null);
+
+  pressKey(window, document, 'Enter');
+  assert.equal(window.__navTo, '/docs/api/auth');
 });
 
 test('empty server result renders the "No results" placeholder', async () => {

@@ -767,10 +767,22 @@ body.laradocs {
 }
 .laradocs-palette-results {
   list-style: none; margin: 0; padding: .35rem 0;
+  /* A stable floor + ceiling keeps the panel from resizing as the result list
+     is swapped out on each query — no layout shift while results stream in. */
+  min-height: 8rem;
   max-height: 50vh;
   overflow-y: auto;
+  scrollbar-gutter: stable;
 }
 .laradocs-palette-results li { margin: 0; }
+.laradocs-palette-section {
+  padding: .5rem 1rem .2rem;
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--dc-muted);
+}
 .laradocs-palette-results a {
   display: flex; align-items: baseline; gap: .75rem; flex-wrap: wrap;
   padding: .55rem 1rem;
@@ -795,9 +807,16 @@ body.laradocs {
 }
 .laradocs-palette-results a.is-active { color: var(--dc-accent) !important; }
 .laradocs-palette-title { flex: 1; }
-.laradocs-palette-group {
+.laradocs-palette-group,
+.laradocs-palette-breadcrumb {
   font-size: .72rem;
   color: var(--dc-muted);
+}
+.laradocs-palette-mark {
+  background: color-mix(in srgb, var(--dc-accent) 22%, transparent);
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 .1em;
 }
 .laradocs-palette-footer {
   display: flex; gap: 1rem;
