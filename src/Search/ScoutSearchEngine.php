@@ -9,6 +9,7 @@ use Laradocs\Search\Contracts\SearchEngine;
 use Laravel\Scout\Builder;
 use Laravel\Scout\EngineManager;
 use Meilisearch\Client as MeilisearchClient;
+use Meilisearch\Contracts\TasksQuery;
 use ReflectionProperty;
 use RuntimeException;
 
@@ -241,15 +242,15 @@ final class ScoutSearchEngine implements SearchEngine
      *
      * @param  array<string, mixed>  $query
      */
-    private function buildTasksQuery(array $query): ?\Meilisearch\Contracts\TasksQuery
+    private function buildTasksQuery(array $query): ?TasksQuery
     {
-        $class = \Meilisearch\Contracts\TasksQuery::class;
+        $class = TasksQuery::class;
 
         if (! class_exists($class)) {
             return null;
         }
 
-        $tasksQuery = new $class();
+        $tasksQuery = new $class;
 
         if (isset($query['indexUids']) && is_array($query['indexUids'])) {
             $tasksQuery->setIndexUids($query['indexUids']);
