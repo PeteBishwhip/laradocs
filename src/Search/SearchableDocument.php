@@ -44,13 +44,22 @@ final class SearchableDocument
      * Map a docs slug to a Scout-engine-safe primary key.
      *
      * Meilisearch (and Algolia's objectID) only accept primary keys made of
-     * a-z, A-Z, 0-9, hyphens and underscores. Doc slugs are routed paths
-     * like "guide/routing", so we encode the path separator as "__" — a
-     * sequence vanishingly unlikely to appear in a real slug — and apply
-     * the same transform on the read side to map hits back to entries.
+     * a-z, A-Z, 0-9, hyphens and underscores, and reject the empty string.
+     * Doc slugs are routed paths like "guide/routing", so we encode the path
+     * separator as "__" — a sequence vanishingly unlikely to appear in a
+     * real slug — and apply the same transform on the read side to map hits
+     * back to entries. The root index page has an empty slug, which we map
+     * to a fixed sentinel so it has a valid primary key. The sentinel can't
+     * collide with a real slug: SlugResolver strips leading slashes and
+     * Str::slug() never emits leading underscores, so no derived key starts
+     * with "__".
      */
     public static function scoutKeyFor(string $slug): string
     {
+        if ($slug === '') {
+            return '__index__';
+        }
+
         return str_replace('/', '__', $slug);
     }
 

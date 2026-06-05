@@ -149,6 +149,16 @@ it('encodes path-style slugs into engine-safe primary keys', function () {
         ->and(SearchableDocument::scoutKeyFor('plain-slug'))->toBe('plain-slug');
 });
 
+it('maps the root index slug to a non-empty primary key', function () {
+    // The root index document has an empty slug, but Meilisearch rejects an
+    // empty primary key with "Document identifier `\"\"` is invalid", so the
+    // empty slug must map to a fixed, engine-safe sentinel.
+    $doc = new SearchableDocument('idx', '', 'Home', 'Body', '');
+
+    expect($doc->getScoutKey())->toBe('__index__')
+        ->and(SearchableDocument::scoutKeyFor(''))->toBe('__index__');
+});
+
 it('resolves the configured search engine', function () {
     $json = stubEngine('json');
     $scout = stubEngine('scout');
