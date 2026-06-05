@@ -44,13 +44,19 @@ redirect: null
 | `updated_at` | string | Last-update timestamp; rendered in the page footer. |
 | `author` | string | Author name; exposed to custom views. |
 | `layout` | string | Override the Blade layout used to render this page. |
-| `image` | string | Social / OG image URL. |
+| `image` | string | Social / OG image URL — see [SEO](/docs/guide/seo). |
 | `redirect` | string | 301-redirect this slug to another page or absolute URL. |
 
 > [!IMPORTANT]
 > Unknown keys are preserved and reachable via
 > `$document->metadata->get('your_key')` — useful for custom views or
 > macros without forking the package.
+
+> [!NOTE]
+> `title`, `description`, `image`, `author` and `tags` also feed the page's
+> SEO and social meta. For SEO-specific control — a different search title,
+> `robots`, a `canonical` URL or a `noindex` flag — add a dedicated `seo:`
+> block. See the [SEO guide](/docs/guide/seo) for the full reference.
 
 ## How fields are used
 

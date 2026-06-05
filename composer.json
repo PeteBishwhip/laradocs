@@ -21,6 +21,7 @@
         "illuminate/contracts": "^11.14 || ^12.0 || ^13.0",
         "illuminate/support": "^11.14 || ^12.0 || ^13.0",
         "league/commonmark": "^2.4",
+        "ralphjsmit/laravel-seo": "^1.8",
         "spatie/yaml-front-matter": "^2.0"
     },
     "require-dev": {
