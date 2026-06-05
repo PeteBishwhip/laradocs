@@ -13,7 +13,7 @@
   --dc-rule:          rgba(10, 10, 10, .08);
   --dc-rule-strong:   rgba(10, 10, 10, .14);
   --dc-sidebar-bg:    #ffffff;
-  --dc-tabs-h:        3.5rem;
+  --dc-tabs-h:        0px;
   --dc-accent:        #ff2d20;
   --dc-accent-fg:     #ffffff;
   --dc-accent-soft:   color-mix(in srgb, var(--dc-accent) 8%, transparent);
@@ -36,6 +36,7 @@
   --dc-display: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
   --dc-mono:    "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 }
+:root:has(.laradocs-tabs) { --dc-tabs-h: 3.5rem; }
 
 [data-theme="dark"] {
   --dc-bg:            #0a0a0a;
@@ -350,6 +351,20 @@ body.laradocs {
   border-radius: 3px;
 }
 
+/* Desktop: fixed so the footer can't push the sidebar above the header */
+@media (min-width: 1025px) {
+  .laradocs-sidebar {
+    position: fixed;
+    top: calc(var(--dc-header-h) + var(--dc-tabs-h));
+    left: max(0px, calc((100vw - var(--dc-sidebar-w) - var(--dc-content-w) - var(--dc-toc-w) - 6rem) / 2));
+    height: calc(100vh - var(--dc-header-h) - var(--dc-tabs-h));
+    z-index: 3;
+  }
+  .laradocs-shell {
+    padding-left: var(--dc-sidebar-w);
+  }
+}
+
 @media (max-width: 1024px) {
   .laradocs-sidebar {
     position: fixed;
@@ -362,7 +377,7 @@ body.laradocs {
     border-right: 1px solid var(--dc-rule);
     box-shadow: var(--dc-shadow-pop);
   }
-  .laradocs-shell.nav-open .laradocs-sidebar { transform: translateX(0); }
+  .laradocs-shell.nav-open ~ .laradocs-sidebar { transform: translateX(0); }
 }
 
 /* ─────────────────────── main + content ─────────────────────── */
@@ -924,6 +939,9 @@ body.laradocs {
 .laradocs-footer-links { display: flex; gap: 1rem; }
 .laradocs-footer-links a { color: var(--dc-muted) !important; }
 .laradocs-footer-links a:hover { color: var(--dc-fg) !important; }
+@media (min-width: 1025px) {
+  .laradocs-footer { padding-left: calc(var(--dc-sidebar-w) + 1.5rem); }
+}
 
 /* ─────────────────────── mobile TOC disclosure ─────────────────────── */
 .laradocs-toc-mobile {
