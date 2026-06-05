@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Laradocs\Exceptions\MeilisearchIndexingException;
 use Laradocs\LaradocsServiceProvider;
 use Laradocs\Search\Contracts\SearchEngine;
 use Laradocs\Search\ScoutSearchEngine;
@@ -309,7 +310,7 @@ it('ScoutSearchEngine surfaces failed Meilisearch tasks queued during sync', fun
     expect(fn () => $engine->sync([
         ['slug' => 'a', 'title' => 'A', 'group' => '', 'content' => 'body'],
     ]))
-        ->toThrow(RuntimeException::class, 'invalid primary key');
+        ->toThrow(MeilisearchIndexingException::class, 'invalid primary key');
 });
 
 it('laradocs:index fails when Meilisearch rejects a queued indexing task', function () {

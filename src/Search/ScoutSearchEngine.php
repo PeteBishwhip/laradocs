@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Laradocs\Search;
 
 use Illuminate\Support\Collection;
+use Laradocs\Exceptions\MeilisearchIndexingException;
 use Laradocs\Search\Contracts\SearchEngine;
 use Laravel\Scout\Builder;
 use Laravel\Scout\EngineManager;
 use Meilisearch\Client as MeilisearchClient;
 use Meilisearch\Contracts\TasksQuery;
 use ReflectionProperty;
-use RuntimeException;
 
 /**
  * Delegates search to whichever Scout engine the host application has
@@ -184,9 +184,7 @@ final class ScoutSearchEngine implements SearchEngine
             $newFailures,
         );
 
-        throw new RuntimeException(
-            'Meilisearch rejected indexing tasks: ' . implode('; ', $messages)
-        );
+        throw MeilisearchIndexingException::rejectedTasks($messages);
     }
 
     /**
