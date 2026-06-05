@@ -27,7 +27,7 @@ final class ApiSearchController
         $query = is_string($raw) ? trim($raw) : '';
 
         if (mb_strlen($query) < Config::int('laradocs.search.min_chars', 2)) {
-            return new JsonResponse(['version' => 1, 'data' => []]);
+            return $this->envelope($request, []);
         }
 
         $results = $this->engine->search(
@@ -36,16 +36,31 @@ final class ApiSearchController
             Config::int('laradocs.search.limit', 20),
         );
 
-        return new JsonResponse([
-            'version' => 1,
-            'data' => array_map(fn (array $entry): array => [
-                'slug' => $entry['slug'],
+        $data = array_map(fn (array $entry): array => [
+            'type' => 'page',
+            'id' => $entry['slug'] === '' ? '_root' : $entry['slug'],
+            'attributes' => [
                 'title' => $entry['title'],
+                'slug' => $entry['slug'],
                 'url' => DocumentUrl::toSlug($entry['slug']),
                 'group' => $entry['group'],
                 'excerpt' => $this->excerpt($entry['content'], $query),
-            ], $results),
-        ]);
+            ],
+        ], $results);
+
+        return $this->envelope($request, $data);
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $data
+     */
+    private function envelope(Request $request, array $data): JsonResponse
+    {
+        return (new JsonResponse([
+            'jsonapi' => ['version' => '1.0'],
+            'links' => ['self' => $request->fullUrl()],
+            'data' => $data,
+        ]))->header('Content-Type', 'application/vnd.api+json');
     }
 
     private function excerpt(string $content, string $query): string
