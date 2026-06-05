@@ -1,5 +1,7 @@
 @extends('laradocs::layout')
 
+@use('Laradocs\Routing\DocumentUrl')
+
 @section('title', $document->title())
 @if($document->metadata->description)
     @section('description', $document->metadata->description)
@@ -8,13 +10,13 @@
 @section('content')
     @if(count($breadcrumbs) > 1)
         <nav class="laradocs-breadcrumbs" aria-label="Breadcrumb">
-            <a href="{{ route('laradocs.index') }}">Home</a>
+            <a href="{{ DocumentUrl::index() }}">Home</a>
             @foreach($breadcrumbs as $crumb)
                 <span aria-hidden="true">·</span>
                 @if($loop->last)
                     <span>{{ $crumb->title }}</span>
                 @elseif($crumb->isLink())
-                    <a href="{{ route('laradocs.show', ['path' => $crumb->slug]) }}">{{ $crumb->title }}</a>
+                    <a href="{{ DocumentUrl::toSlug($crumb->slug) }}">{{ $crumb->title }}</a>
                 @else
                     <span>{{ $crumb->title }}</span>
                 @endif
@@ -73,12 +75,12 @@
     @if($previous || $next)
         <nav class="laradocs-pager" aria-label="Pagination">
             @if($previous)
-                <a class="prev" href="{{ route('laradocs.show', ['path' => $previous->slug]) }}">
+                <a class="prev" href="{{ DocumentUrl::toSlug($previous->slug) }}">
                     <span>Previous</span>{{ $previous->title }}
                 </a>
             @endif
             @if($next)
-                <a class="next" href="{{ route('laradocs.show', ['path' => $next->slug]) }}">
+                <a class="next" href="{{ DocumentUrl::toSlug($next->slug) }}">
                     <span>Next</span>{{ $next->title }}
                 </a>
             @endif

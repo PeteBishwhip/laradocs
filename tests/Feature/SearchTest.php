@@ -50,6 +50,20 @@ it('returns full-text matches with a url, group and excerpt', function () {
     expect($response->json('results.0.excerpt'))->toContain('composer');
 });
 
+it('links a matched landing page to the index route, not an empty show param', function () {
+    // The docs root has an empty slug and lives on the index route. A hit on it
+    // must resolve to route('laradocs.index'); building route('laradocs.show',
+    // ['path' => '']) instead throws UrlGenerationException and 500s the request.
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\n---\n# Home\nRun an artisan command here.\n",
+    ]);
+
+    $response = $this->getJson('/docs/_laradocs/search?q=command')->assertOk();
+
+    $response->assertJsonPath('results.0.slug', '')
+        ->assertJsonPath('results.0.url', url('/docs'));
+});
+
 it('returns a humanised breadcrumb derived from the slug and group', function () {
     $this->makeDocs([
         // Ancestor segment + group: the section name supersedes the path.

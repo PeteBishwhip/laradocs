@@ -1,6 +1,7 @@
+@use('Laradocs\Routing\DocumentUrl')
 <li>
     @if($node->isLink())
-        <a href="{{ route('laradocs.show', ['path' => $node->slug]) }}"
+        <a href="{{ DocumentUrl::toSlug($node->slug) }}"
            class="{{ ($active ?? null) === $node->slug ? 'is-active' : '' }}">
             {{ $node->title }}
             @if($node->document?->metadata->badge)

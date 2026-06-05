@@ -31,7 +31,7 @@ When `false`, no routes are registered and every docs URL returns `404`.
 | `route.prefix` | `LARADOCS_ROUTE_PREFIX` | `docs` |
 | `route.domain` | `LARADOCS_ROUTE_DOMAIN` | `null` |
 | `route.middleware` | — | `['web']` |
-| `route.name` | — | `laradocs.` |
+| `route.name` | `LARADOCS_ROUTE_NAME` | `laradocs.` |
 
 `middleware` accepts any Laravel middleware aliases or class names. Use it to
 gate docs behind auth in non-public projects.

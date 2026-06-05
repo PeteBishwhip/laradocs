@@ -1,3 +1,4 @@
+@use('Laradocs\Routing\DocumentUrl')
 @php
     /** @var array<int, array<string, mixed>> $links */
     $links = (array) config('laradocs.ui.header.links', []);
@@ -9,7 +10,7 @@
         </svg>
     </button>
 
-    <a class="laradocs-brand" href="{{ route('laradocs.index') }}">
+    <a class="laradocs-brand" href="{{ DocumentUrl::index() }}">
         @if(! empty($brand['logo']))
             <img src="{{ $brand['logo'] }}" alt="{{ $title }}">
         @else

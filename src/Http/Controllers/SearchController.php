@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Laradocs\Laradocs;
+use Laradocs\Routing\DocumentUrl;
 use Laradocs\Search\Contracts\SearchEngine;
 use Laradocs\Support\Config;
 
@@ -49,7 +50,7 @@ final class SearchController
                 'title' => $entry['title'],
                 'group' => $entry['group'],
                 'breadcrumb' => $this->breadcrumb($entry['slug'], $entry['group']),
-                'url' => route('laradocs.show', ['path' => $entry['slug']]),
+                'url' => DocumentUrl::toSlug($entry['slug']),
                 'excerpt' => $this->excerpt($entry['content'], $query),
             ], $results),
         ]);

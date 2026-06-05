@@ -1,3 +1,4 @@
+@use('Laradocs\Routing\DocumentUrl')
 @php
     $active = $activeSlug ?? null;
     $showRoot = (bool) config('laradocs.ui.sidebar.show_root', true);
@@ -9,7 +10,7 @@
             @if($showRoot && $tree->rootDocument)
                 <ul>
                     <li>
-                        <a href="{{ route('laradocs.index') }}" class="{{ ($active === '' || $active === null) ? 'is-active' : '' }}">
+                        <a href="{{ DocumentUrl::index() }}" class="{{ ($active === '' || $active === null) ? 'is-active' : '' }}">
                             {{ $tree->rootDocument->title() }}
                         </a>
                     </li>
