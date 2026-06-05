@@ -50,6 +50,31 @@ it('returns full-text matches with a url, group and excerpt', function () {
     expect($response->json('results.0.excerpt'))->toContain('composer');
 });
 
+it('returns a humanised breadcrumb derived from the slug and group', function () {
+    $this->makeDocs([
+        // Ancestor segment + group: the section name supersedes the path.
+        'guide/install.md' => "---\ntitle: Installation\ngroup: Guide\n---\nUnique aardvark term.\n",
+        // Deeper nesting: each ancestor past the section is humanised.
+        'guide/advanced/routing.md' => "---\ntitle: Routing\ngroup: Guide\n---\nUnique boomerang term.\n",
+        // Ancestor segment, no group: humanise the slug segment itself.
+        'api/auth.md' => "---\ntitle: Auth\n---\nUnique crocodile term.\n",
+        // Top-level page with a group: collapses to just the group.
+        'intro.md' => "---\ntitle: Intro\ngroup: Basics\n---\nUnique dingo term.\n",
+        // Top-level page with neither ancestors nor a group: empty trail.
+        'overview.md' => "---\ntitle: Overview\n---\nUnique elephant term.\n",
+    ]);
+
+    $breadcrumb = fn (string $term): mixed => $this->getJson("/docs/_laradocs/search?q={$term}")
+        ->assertOk()
+        ->json('results.0.breadcrumb');
+
+    expect($breadcrumb('aardvark'))->toBe(['Guide'])
+        ->and($breadcrumb('boomerang'))->toBe(['Guide', 'Advanced'])
+        ->and($breadcrumb('crocodile'))->toBe(['Api'])
+        ->and($breadcrumb('dingo'))->toBe(['Basics'])
+        ->and($breadcrumb('elephant'))->toBe([]);
+});
+
 it('builds an excerpt around the matched term with ellipses', function () {
     $body = str_repeat('lorem ipsum ', 40) . 'needle ' . str_repeat('dolor sit ', 40);
 

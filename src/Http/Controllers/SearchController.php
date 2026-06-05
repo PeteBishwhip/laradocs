@@ -48,10 +48,45 @@ final class SearchController
                 'slug' => $entry['slug'],
                 'title' => $entry['title'],
                 'group' => $entry['group'],
+                'breadcrumb' => $this->breadcrumb($entry['slug'], $entry['group']),
                 'url' => route('laradocs.show', ['path' => $entry['slug']]),
                 'excerpt' => $this->excerpt($entry['content'], $query),
             ], $results),
         ]);
+    }
+
+    /**
+     * The trail of ancestor sections a page lives under, used by the palette to
+     * render a breadcrumb and to group hits. Built from the slug's parent
+     * segments (the leaf is the page itself), humanised for display. An explicit
+     * `group:` supersedes the humanised top-level segment so authored section
+     * names win over the path. A top-level page collapses to just its group, or
+     * to an empty trail when it has neither ancestors nor a group.
+     *
+     * @return array<int, string>
+     */
+    private function breadcrumb(string $slug, string $group): array
+    {
+        $segments = array_values(array_filter(
+            explode('/', $slug),
+            static fn (string $segment): bool => $segment !== '',
+        ));
+
+        array_pop($segments);
+
+        $crumbs = array_map(static fn (string $segment): string => Str::headline($segment), $segments);
+
+        if ($group === '') {
+            return $crumbs;
+        }
+
+        if ($crumbs === []) {
+            return [$group];
+        }
+
+        $crumbs[0] = $group;
+
+        return $crumbs;
     }
 
     /**

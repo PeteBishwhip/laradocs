@@ -25,6 +25,22 @@ to your configured engine (Meilisearch, Typesense or Algolia) automatically.
 3. The palette queries `{prefix}/_laradocs/search?q=...`, which returns JSON
    results from whichever engine is active.
 
+## In the palette
+
+Results render the way you'd expect a docs search to:
+
+- **Highlighted matches** — every query term is marked in both the title and the
+  excerpt, so you can see *why* a page matched at a glance.
+- **Breadcrumbs** — each hit shows the section trail it lives under (its
+  `group:`, then any deeper folders), so same-named pages are easy to tell apart.
+- **Grouped by section** — hits are clustered under their section heading while
+  keeping rank order, so related pages sit together.
+
+Keyboard navigation (<kbd>↑</kbd>/<kbd>↓</kbd> to move, <kbd>↵</kbd> to open)
+skips the section headings and lands only on results. If JavaScript or the index
+is unavailable, the palette degrades gracefully to title-only matching over the
+pre-rendered page list.
+
 ## Choosing an engine
 
 Configure the driver in `config/laradocs.php`:
