@@ -39,21 +39,31 @@ final class SeoFactory
 
         $title = self::asString($this->pick($seo, $meta, 'title')) ?? $document->title();
         $description = self::asString($this->pick($seo, $meta, 'description'))
-            ?? $this->autoDescription($document);
+            ?? $this->autoDescription($document)
+            ?? $this->fallbackDescription();
 
-        return $this->build(
-            title: $title,
+        return new SEOData(
+            title: $this->suffixedTitle($title),
             description: $description,
-            image: self::asString($this->pick($seo, $meta, 'image')) ?? $this->stringOrNull('laradocs.seo.image'),
             author: self::asString($this->pick($seo, $meta, 'author')) ?? $this->stringOrNull('laradocs.seo.author'),
-            type: self::asString($this->pick($seo, $meta, 'type')) ?? $this->stringOrNull('laradocs.seo.type') ?? 'article',
-            robots: $this->resolveRobots($seo, $meta),
-            canonical: self::asString($this->pick($seo, $meta, 'canonical')),
-            tags: $this->resolveTags($seo, $meta),
+            image: self::asString($this->pick($seo, $meta, 'image')) ?? $this->stringOrNull('laradocs.seo.image'),
+            // We bake the suffix into the title (above) and disable the SEO
+            // package's own suffixing, which would otherwise also drag the
+            // brand into og:title / twitter:title. Social cards instead read
+            // the clean title from openGraphTitle below.
+            enableTitleSuffix: false,
+            published_time: $this->publishedTime($seo, $meta),
+            modified_time: $this->timestamp($document->modifiedAt),
             section: self::asString($this->pick($seo, $meta, 'section')) ?? $meta->group,
-            publishedTime: $this->publishedTime($seo, $meta),
-            modifiedTime: $this->timestamp($document->modifiedAt),
+            tags: $this->resolveTags($seo, $meta),
+            twitter_username: $this->stringOrNull('laradocs.seo.twitter'),
             schema: $this->schema($breadcrumbs),
+            type: self::asString($this->pick($seo, $meta, 'type')) ?? $this->stringOrNull('laradocs.seo.type') ?? 'article',
+            site_name: $this->siteName(),
+            favicon: $this->stringOrNull('laradocs.ui.brand.favicon'),
+            robots: $this->resolveRobots($seo, $meta),
+            canonical_url: self::asString($this->pick($seo, $meta, 'canonical')),
+            openGraphTitle: $title,
         );
     }
 
@@ -63,57 +73,18 @@ final class SeoFactory
      */
     public function forPage(?string $title = null, ?string $description = null): SEOData
     {
-        return $this->build(
-            title: $title ?? $this->siteName(),
-            description: $description,
-            image: $this->stringOrNull('laradocs.seo.image'),
-            author: $this->stringOrNull('laradocs.seo.author'),
-            type: 'website',
-        );
-    }
+        $title ??= $this->siteName();
 
-    /**
-     * Assemble a {@see SEOData} from resolved per-page values layered over the
-     * site-wide defaults.
-     *
-     * @param  array<int, string>|null  $tags
-     * @param  SchemaCollection<array-key>|null  $schema
-     */
-    private function build(
-        string $title,
-        ?string $description,
-        ?string $image,
-        ?string $author,
-        string $type,
-        ?string $robots = null,
-        ?string $canonical = null,
-        ?array $tags = null,
-        ?string $section = null,
-        ?CarbonInterface $publishedTime = null,
-        ?CarbonInterface $modifiedTime = null,
-        ?SchemaCollection $schema = null,
-    ): SEOData {
         return new SEOData(
             title: $this->suffixedTitle($title),
             description: $description ?? $this->fallbackDescription(),
-            author: $author,
-            image: $image,
-            // We bake the suffix into the title (above) and disable the SEO
-            // package's own suffixing, which would otherwise also drag the
-            // brand into og:title / twitter:title. Social cards instead read
-            // the clean title from openGraphTitle below.
+            author: $this->stringOrNull('laradocs.seo.author'),
+            image: $this->stringOrNull('laradocs.seo.image'),
             enableTitleSuffix: false,
-            published_time: $publishedTime,
-            modified_time: $modifiedTime,
-            section: $section,
-            tags: $tags,
             twitter_username: $this->stringOrNull('laradocs.seo.twitter'),
-            schema: $schema,
-            type: $type,
+            type: 'website',
             site_name: $this->siteName(),
             favicon: $this->stringOrNull('laradocs.ui.brand.favicon'),
-            robots: $robots,
-            canonical_url: $canonical,
             // Social cards read the clean, un-suffixed title.
             openGraphTitle: $title,
         );

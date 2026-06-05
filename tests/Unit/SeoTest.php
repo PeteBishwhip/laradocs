@@ -6,6 +6,10 @@ use Laradocs\Documents\TreeNode;
 use Laradocs\Seo\Excerpt;
 use Laradocs\Seo\SeoFactory;
 
+const SEO_SITE_NAME = 'Acme Docs';
+const SEO_SLUG = 'guide/intro';
+const SEO_NOINDEX = 'noindex, nofollow';
+
 describe('Excerpt', function () {
     it('lifts the first prose paragraph, skipping headings and code', function () {
         $markdown = <<<'MD'
@@ -53,20 +57,20 @@ describe('Excerpt', function () {
 
 describe('SeoFactory', function () {
     beforeEach(function () {
-        config()->set('laradocs.ui.brand.title', 'Acme Docs');
+        config()->set('laradocs.ui.brand.title', SEO_SITE_NAME);
     });
 
     it('builds rich SEO data from a document with sensible defaults', function () {
-        $seo = app(SeoFactory::class)->forDocument(makeDocument('guide/intro', [
+        $seo = app(SeoFactory::class)->forDocument(makeDocument(SEO_SLUG, [
             'title' => 'Intro',
             'description' => 'A short description.',
         ]));
 
-        expect($seo->title)->toBe('Intro · Acme Docs') // brand suffix baked into <title>
+        expect($seo->title)->toBe('Intro · ' . SEO_SITE_NAME) // brand suffix baked into <title>
             ->and($seo->openGraphTitle)->toBe('Intro')  // social cards stay clean
             ->and($seo->description)->toBe('A short description.')
             ->and($seo->type)->toBe('article')
-            ->and($seo->site_name)->toBe('Acme Docs')
+            ->and($seo->site_name)->toBe(SEO_SITE_NAME)
             ->and($seo->enableTitleSuffix)->toBeFalse()
             ->and($seo->modified_time)->not->toBeNull()
             ->and($seo->schema)->not->toBeNull();
@@ -74,7 +78,7 @@ describe('SeoFactory', function () {
 
     it('auto-generates a description from page content when none is set', function () {
         $seo = app(SeoFactory::class)->forDocument(makeDocument(
-            'guide/intro',
+            SEO_SLUG,
             ['title' => 'Intro'],
             "# Intro\n\nLaradocs turns markdown into a polished docs site.",
         ));
@@ -83,14 +87,14 @@ describe('SeoFactory', function () {
     });
 
     it('honours a dedicated seo: front-matter block', function () {
-        $seo = app(SeoFactory::class)->forDocument(makeDocument('guide/intro', [
+        $seo = app(SeoFactory::class)->forDocument(makeDocument(SEO_SLUG, [
             'title' => 'Intro',
             'description' => 'Visible subtitle.',
             'seo' => [
                 'title' => 'Custom SEO Title',
                 'description' => 'Custom SEO description.',
                 'image' => '/og/custom.png',
-                'robots' => 'noindex, nofollow',
+                'robots' => SEO_NOINDEX,
                 'canonical' => 'https://example.com/canonical',
             ],
         ]));
@@ -98,30 +102,30 @@ describe('SeoFactory', function () {
         expect($seo->openGraphTitle)->toBe('Custom SEO Title')
             ->and($seo->description)->toBe('Custom SEO description.')
             ->and($seo->image)->toBe('/og/custom.png')
-            ->and($seo->robots)->toBe('noindex, nofollow')
+            ->and($seo->robots)->toBe(SEO_NOINDEX)
             ->and($seo->canonical_url)->toBe('https://example.com/canonical');
     });
 
     it('maps the noindex shorthand to a robots directive', function () {
-        $seo = app(SeoFactory::class)->forDocument(makeDocument('guide/intro', [
+        $seo = app(SeoFactory::class)->forDocument(makeDocument(SEO_SLUG, [
             'title' => 'Hidden',
             'noindex' => true,
         ]));
 
-        expect($seo->robots)->toBe('noindex, nofollow');
+        expect($seo->robots)->toBe(SEO_NOINDEX);
     });
 
     it('treats a string noindex flag as truthy', function () {
-        $seo = app(SeoFactory::class)->forDocument(makeDocument('guide/intro', [
+        $seo = app(SeoFactory::class)->forDocument(makeDocument(SEO_SLUG, [
             'title' => 'Hidden',
             'noindex' => 'yes',
         ]));
 
-        expect($seo->robots)->toBe('noindex, nofollow');
+        expect($seo->robots)->toBe(SEO_NOINDEX);
     });
 
     it('coerces a numeric front-matter value to a string', function () {
-        $seo = app(SeoFactory::class)->forDocument(makeDocument('guide/intro', [
+        $seo = app(SeoFactory::class)->forDocument(makeDocument(SEO_SLUG, [
             'title' => 'Intro',
             'seo' => ['section' => 2026],
         ]));
@@ -132,13 +136,13 @@ describe('SeoFactory', function () {
     it('falls back to the brand tagline for the description', function () {
         config()->set('laradocs.ui.brand.tagline', 'Beautiful docs.');
 
-        $seo = app(SeoFactory::class)->forDocument(makeDocument('guide/intro', ['title' => 'Intro']));
+        $seo = app(SeoFactory::class)->forDocument(makeDocument(SEO_SLUG, ['title' => 'Intro']));
 
         expect($seo->description)->toBe('Beautiful docs.');
     });
 
     it('exposes front-matter tags as article tags', function () {
-        $seo = app(SeoFactory::class)->forDocument(makeDocument('guide/intro', [
+        $seo = app(SeoFactory::class)->forDocument(makeDocument(SEO_SLUG, [
             'title' => 'Intro',
             'tags' => ['api', 'guide'],
         ]));
@@ -149,20 +153,20 @@ describe('SeoFactory', function () {
     it('builds a website payload for a page without a document', function () {
         $seo = app(SeoFactory::class)->forPage();
 
-        expect($seo->title)->toBe('Acme Docs')
+        expect($seo->title)->toBe(SEO_SITE_NAME)
             ->and($seo->type)->toBe('website');
     });
 
     it('omits the suffix when the title already is the site name', function () {
-        $seo = app(SeoFactory::class)->forPage('Acme Docs');
+        $seo = app(SeoFactory::class)->forPage(SEO_SITE_NAME);
 
-        expect($seo->title)->toBe('Acme Docs');
+        expect($seo->title)->toBe(SEO_SITE_NAME);
     });
 
     it('lets an empty title_suffix disable the suffix entirely', function () {
         config()->set('laradocs.seo.title_suffix', '');
 
-        $seo = app(SeoFactory::class)->forDocument(makeDocument('guide/intro', ['title' => 'Intro']));
+        $seo = app(SeoFactory::class)->forDocument(makeDocument(SEO_SLUG, ['title' => 'Intro']));
 
         expect($seo->title)->toBe('Intro');
     });
@@ -171,7 +175,7 @@ describe('SeoFactory', function () {
         config()->set('laradocs.seo.auto_description', false);
 
         $seo = app(SeoFactory::class)->forDocument(makeDocument(
-            'guide/intro',
+            SEO_SLUG,
             ['title' => 'Intro'],
             "# Intro\n\nSome body text that would otherwise be used.",
         ));
@@ -182,13 +186,13 @@ describe('SeoFactory', function () {
     it('reads a robots default from config', function () {
         config()->set('laradocs.seo.robots', 'noindex');
 
-        $seo = app(SeoFactory::class)->forDocument(makeDocument('guide/intro', ['title' => 'Intro']));
+        $seo = app(SeoFactory::class)->forDocument(makeDocument(SEO_SLUG, ['title' => 'Intro']));
 
         expect($seo->robots)->toBe('noindex');
     });
 
     it('parses a publication date from front-matter', function () {
-        $seo = app(SeoFactory::class)->forDocument(makeDocument('guide/intro', [
+        $seo = app(SeoFactory::class)->forDocument(makeDocument(SEO_SLUG, [
             'title' => 'Intro',
             'published_at' => '2026-01-15',
         ]));
@@ -198,7 +202,7 @@ describe('SeoFactory', function () {
     });
 
     it('ignores an unparseable publication date', function () {
-        $seo = app(SeoFactory::class)->forDocument(makeDocument('guide/intro', [
+        $seo = app(SeoFactory::class)->forDocument(makeDocument(SEO_SLUG, [
             'title' => 'Intro',
             'published_at' => 'not-a-real-date',
         ]));
@@ -210,7 +214,7 @@ describe('SeoFactory', function () {
         config()->set('laradocs.seo.schema.article', false);
         config()->set('laradocs.seo.schema.breadcrumbs', false);
 
-        $seo = app(SeoFactory::class)->forDocument(makeDocument('guide/intro', ['title' => 'Intro']));
+        $seo = app(SeoFactory::class)->forDocument(makeDocument(SEO_SLUG, ['title' => 'Intro']));
 
         expect($seo->schema)->toBeNull();
     });
@@ -223,12 +227,12 @@ describe('SeoFactory', function () {
         );
         $current = new TreeNode(
             title: 'Intro',
-            slug: 'guide/intro',
-            document: makeDocument('guide/intro', ['title' => 'Intro']),
+            slug: SEO_SLUG,
+            document: makeDocument(SEO_SLUG, ['title' => 'Intro']),
         );
 
         $seo = app(SeoFactory::class)->forDocument(
-            makeDocument('guide/intro', ['title' => 'Intro']),
+            makeDocument(SEO_SLUG, ['title' => 'Intro']),
             [$ancestor, $current],
         );
 
