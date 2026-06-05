@@ -89,7 +89,6 @@
 
     <div class="laradocs-shell">
         <div class="laradocs-backdrop" aria-hidden="true" data-laradocs-backdrop></div>
-        @include('laradocs::partials.sidebar', ['nodes' => $tree->navigation() ?? []])
 
         <div class="laradocs-main">
             <main class="laradocs-content">
@@ -98,6 +97,8 @@
             @yield('toc')
         </div>
     </div>
+
+    @include('laradocs::partials.sidebar', ['nodes' => $tree->navigation() ?? []])
 
     {{-- Variant: command palette dialog. --}}
     @php $searchEnabled = (bool) config('laradocs.ui.search.enabled', true); @endphp
