@@ -217,7 +217,10 @@ it('laradocs:index surfaces engine failures as a non-zero exit', function () {
             throw new RuntimeException('engine unreachable');
         }
 
-        public function flush(): void {}
+        public function flush(): void
+        {
+            // No-op: this stub only exercises the sync() failure path.
+        }
 
         public function name(): string
         {
