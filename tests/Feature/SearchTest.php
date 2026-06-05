@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Closure;
 use Laradocs\Exceptions\MeilisearchIndexingException;
 use Laradocs\LaradocsServiceProvider;
 use Laradocs\Search\Contracts\SearchEngine;
@@ -243,7 +244,7 @@ it('laradocs:index surfaces engine failures as a non-zero exit', function () {
  * signatures) is what makes these fakes catch SDK-contract regressions — e.g.
  * accidentally passing a raw array to getTasks() — before they reach prod.
  */
-function bindFakeMeilisearchScout(): MeilisearchClient
+function bindFakeMeilisearchScout(?Closure $onUpdate = null): MeilisearchClient
 {
     $client = new class('http://localhost') extends MeilisearchClient
     {
@@ -279,9 +280,23 @@ function bindFakeMeilisearchScout(): MeilisearchClient
 
     // Scout engine that mirrors MeilisearchEngine's protected `meilisearch`
     // property so ScoutSearchEngine's ReflectionProperty lookup resolves it.
-    $scoutEngine = new class($client) extends FakeScoutEngine
+    // The optional $onUpdate hook lets a test simulate Meilisearch queuing
+    // indexing tasks when documents are pushed.
+    $scoutEngine = new class($client, $onUpdate) extends FakeScoutEngine
     {
-        public function __construct(protected MeilisearchClient $meilisearch) {}
+        public function __construct(
+            protected MeilisearchClient $meilisearch,
+            private ?Closure $onUpdate,
+        ) {}
+
+        public function update($models): void
+        {
+            parent::update($models);
+
+            if ($this->onUpdate !== null) {
+                ($this->onUpdate)($this->meilisearch);
+            }
+        }
     };
 
     config()->set('laradocs.search.driver', 'scout');
@@ -324,6 +339,27 @@ it('laradocs:index fails when Meilisearch rejects a queued indexing task', funct
         ->expectsOutputToContain('Failed to index')
         ->expectsOutputToContain('invalid primary key')
         ->assertFailed();
+});
+
+it('ScoutSearchEngine awaits pending tasks and reports a failure with no error message', function () {
+    // Empty taskLog exercises the "no prior tasks" baseline branch in
+    // latestTaskUid(). The update hook then queues an enqueued task (waited
+    // on by waitForPendingTasks) and a failed task with no `error.message`,
+    // which trips the "unknown error" fallback in failedTaskMessage().
+    $client = bindFakeMeilisearchScout(function (MeilisearchClient $client): void {
+        $client->taskLog[] = ['uid' => 1, 'status' => 'enqueued'];
+        $client->taskLog[] = ['uid' => 2, 'status' => 'failed', 'type' => 'documentAdditionOrUpdate'];
+    });
+
+    $engine = new ScoutSearchEngine(app(EngineManager::class), 'laradocs-test');
+
+    expect(fn () => $engine->sync([
+        ['slug' => 'a', 'title' => 'A', 'group' => '', 'content' => 'body'],
+    ]))
+        ->toThrow(MeilisearchIndexingException::class, 'unknown error [documentAdditionOrUpdate]');
+
+    // The enqueued task should have been waited on and marked succeeded.
+    expect($client->taskLog[0]['status'])->toBe('succeeded');
 });
 
 it('laradocs:index succeeds against Meilisearch when no tasks fail', function () {

@@ -234,21 +234,15 @@ final class ScoutSearchEngine implements SearchEngine
 
     /**
      * Meilisearch SDK ≥1.0 requires a TasksQuery DTO rather than a raw array.
-     * The DTO class is shipped with meilisearch/meilisearch-php, which Scout
-     * already depends on in the Meilisearch path — but we guard with
-     * class_exists() so unrelated Scout drivers don't trip over it.
+     * The DTO ships with meilisearch/meilisearch-php, which is always present
+     * here: callers only reach this method after we've already resolved a
+     * `MeilisearchClient`, which can't exist without the SDK installed.
      *
      * @param  array<string, mixed>  $query
      */
-    private function buildTasksQuery(array $query): ?TasksQuery
+    private function buildTasksQuery(array $query): TasksQuery
     {
-        $class = TasksQuery::class;
-
-        if (! class_exists($class)) {
-            return null;
-        }
-
-        $tasksQuery = new $class;
+        $tasksQuery = new TasksQuery;
 
         if (isset($query['indexUids']) && is_array($query['indexUids'])) {
             $tasksQuery->setIndexUids($query['indexUids']);
