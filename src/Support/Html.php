@@ -40,6 +40,21 @@ final class Html
         return self::innerHtml($body);
     }
 
+    /**
+     * Flatten an HTML fragment to its visible text, collapsing runs of
+     * whitespace so the result is suitable for indexing or excerpting.
+     */
+    public static function toText(string $html): string
+    {
+        if (trim($html) === '') {
+            return '';
+        }
+
+        $text = self::load($html)->textContent;
+
+        return trim((string) preg_replace('/\s+/u', ' ', $text));
+    }
+
     public static function load(string $html): DOMDocument
     {
         $dom = new DOMDocument('1.0', 'UTF-8');

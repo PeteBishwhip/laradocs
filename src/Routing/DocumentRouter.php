@@ -7,6 +7,7 @@ namespace Laradocs\Routing;
 use Illuminate\Contracts\Routing\Registrar;
 use Laradocs\Http\Controllers\AssetController;
 use Laradocs\Http\Controllers\DocsController;
+use Laradocs\Http\Controllers\SearchController;
 use Laradocs\Http\Middleware\EnsureDocsEnabled;
 
 final class DocumentRouter
@@ -39,6 +40,7 @@ final class DocumentRouter
             $router->get('_laradocs/asset/{file}', AssetController::class)
                 ->where('file', '[\w.\-]+')
                 ->name('asset');
+            $router->get('_laradocs/search', SearchController::class)->name('search');
             $router->get('/{path}', [DocsController::class, 'show'])
                 ->where('path', '.*')
                 ->name('show');

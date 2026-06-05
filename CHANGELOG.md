@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Pre-rendered full-text search powering the ⌘K command palette, matching page
+  bodies as well as titles.
+- `laradocs:index` Artisan command to build the search index and push it to the
+  configured engine; `laradocs:cache` now builds it too, and `laradocs:clear`
+  flushes it.
+- JSON search endpoint at `{prefix}/_laradocs/search` served by the active engine.
+- Laravel Scout support (Meilisearch / Typesense / Algolia) when `laravel/scout`
+  is installed, with automatic fallback to a dependency-free JSON index.
+- `search` config block (`driver`, `index`, `limit`, `min_chars`, `max_chars`)
+  and a per-page `search: false` front-matter flag to exclude individual pages.
+
 ## [1.0.0] - 2026-06-02
 
 ### Added

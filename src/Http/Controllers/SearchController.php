@@ -1,0 +1,89 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Laradocs\Http\Controllers;
+
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Laradocs\Laradocs;
+use Laradocs\Search\Contracts\SearchEngine;
+use Laradocs\Support\Config;
+
+/**
+ * JSON search endpoint backing the ⌘K command palette. Works identically
+ * whether the active engine is the local JSON index or a Scout backend.
+ */
+final class SearchController
+{
+    private const EXCERPT_LENGTH = 160;
+
+    public function __construct(
+        private readonly Laradocs $laradocs,
+        private readonly SearchEngine $engine,
+    ) {}
+
+    public function __invoke(Request $request): JsonResponse
+    {
+        if (! Config::bool('laradocs.ui.search.enabled', true)) {
+            abort(404);
+        }
+
+        $raw = $request->query('q', '');
+        $query = is_string($raw) ? trim($raw) : '';
+
+        if (mb_strlen($query) < Config::int('laradocs.search.min_chars', 2)) {
+            return new JsonResponse(['results' => []]);
+        }
+
+        $results = $this->engine->search(
+            $query,
+            $this->laradocs->searchIndex(),
+            Config::int('laradocs.search.limit', 20),
+        );
+
+        return new JsonResponse([
+            'results' => array_map(fn (array $entry): array => [
+                'slug' => $entry['slug'],
+                'title' => $entry['title'],
+                'group' => $entry['group'],
+                'url' => route('laradocs.show', ['path' => $entry['slug']]),
+                'excerpt' => $this->excerpt($entry['content'], $query),
+            ], $results),
+        ]);
+    }
+
+    /**
+     * A short snippet of body text centred on the first query term, with
+     * leading/trailing ellipses when the snippet is clipped from the body.
+     */
+    private function excerpt(string $content, string $query): string
+    {
+        if ($content === '') {
+            return '';
+        }
+
+        $term = $this->firstTerm($query);
+        $position = $term === '' ? false : mb_stripos($content, $term);
+
+        if ($position === false) {
+            return Str::limit($content, self::EXCERPT_LENGTH);
+        }
+
+        $start = max(0, $position - 40);
+        $snippet = trim(mb_substr($content, $start, self::EXCERPT_LENGTH));
+
+        $prefix = $start > 0 ? '…' : '';
+        $suffix = $start + self::EXCERPT_LENGTH < mb_strlen($content) ? '…' : '';
+
+        return $prefix . $snippet . $suffix;
+    }
+
+    private function firstTerm(string $query): string
+    {
+        $terms = preg_split('/\s+/u', $query) ?: [];
+
+        return (string) ($terms[0] ?? '');
+    }
+}

@@ -1,0 +1,44 @@
+name: js-tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'resources/dist/laradocs.js'
+      - 'tests/js/**'
+      - 'package.json'
+      - '.github/workflows/js-tests.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'resources/dist/laradocs.js'
+      - 'tests/js/**'
+      - 'package.json'
+      - '.github/workflows/js-tests.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: Node ${{ matrix.node }}
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['20', '22']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Run palette tests
+        run: npm test

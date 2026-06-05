@@ -6,7 +6,7 @@ order: 4
 
 # CLI
 
-Laradocs registers four Artisan commands. Run any of them with
+Laradocs registers five Artisan commands. Run any of them with
 `php artisan {name}`.
 
 ## `laradocs:install`
@@ -46,9 +46,20 @@ The output is produced from a Blade stub you can publish and edit — see
 php artisan laradocs:cache
 ```
 
-Pre-renders every visible document, warms the cache, and stores the
-navigation tree. Hooked into Laravel's optimizer, so `php artisan
-optimize` calls it automatically.
+Pre-renders every visible document, warms the cache, stores the
+navigation tree, and rebuilds the search index. Hooked into Laravel's
+optimizer, so `php artisan optimize` calls it automatically.
+
+## `laradocs:index`
+
+```bash
+php artisan laradocs:index
+```
+
+Builds the full-text [search](/docs/guide/search) index and pushes it to
+the configured engine (a Scout backend, or the built-in JSON index). Run
+automatically as part of `laradocs:cache`; run it on its own to refresh
+just the index.
 
 ## `laradocs:clear`
 
@@ -56,8 +67,8 @@ optimize` calls it automatically.
 php artisan laradocs:clear
 ```
 
-Flushes all cached HTML and the navigation tree. Hooked into
-`php artisan optimize:clear`.
+Flushes all cached HTML, the navigation tree and the search index. Hooked
+into `php artisan optimize:clear`.
 
 > [!TIP]
 > Editing a file invalidates only that file's cache (keyed on

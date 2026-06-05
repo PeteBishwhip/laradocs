@@ -772,10 +772,22 @@ body.laradocs {
 }
 .laradocs-palette-results li { margin: 0; }
 .laradocs-palette-results a {
-  display: flex; align-items: baseline; gap: .75rem;
+  display: flex; align-items: baseline; gap: .75rem; flex-wrap: wrap;
   padding: .55rem 1rem;
   color: var(--dc-fg) !important;
   font-size: .9rem;
+}
+.laradocs-palette-excerpt {
+  flex: 0 0 100%;
+  margin-top: .15rem;
+  font-size: .72rem;
+  line-height: 1.4;
+  color: var(--dc-muted);
+}
+.laradocs-palette-empty {
+  padding: .8rem 1rem;
+  font-size: .85rem;
+  color: var(--dc-muted);
 }
 .laradocs-palette-results a:hover,
 .laradocs-palette-results a.is-active {

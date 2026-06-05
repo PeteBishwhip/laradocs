@@ -3,8 +3,36 @@ name: quality
 on:
   push:
     branches: [main]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'config/**'
+      - 'resources/**'
+      - 'stubs/**'
+      - 'composer.json'
+      - 'composer.lock'
+      - 'phpstan.neon'
+      - 'phpunit.xml'
+      - 'pint.json'
+      - 'rector.php'
+      - 'testbench.yaml'
+      - '.github/workflows/quality.yml'
   pull_request:
     branches: [main]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'config/**'
+      - 'resources/**'
+      - 'stubs/**'
+      - 'composer.json'
+      - 'composer.lock'
+      - 'phpstan.neon'
+      - 'phpunit.xml'
+      - 'pint.json'
+      - 'rector.php'
+      - 'testbench.yaml'
+      - '.github/workflows/quality.yml'
 
 permissions:
   contents: read
