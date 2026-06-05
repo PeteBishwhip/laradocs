@@ -8,6 +8,9 @@ use Laradocs\Search\ScoutSearchEngine;
 use Laradocs\Search\SearchManager;
 use Laradocs\Tests\Fixtures\FakeScoutEngine;
 use Laravel\Scout\EngineManager;
+use Meilisearch\Client as MeilisearchClient;
+use Meilisearch\Contracts\TasksQuery;
+use Meilisearch\Contracts\TasksResults;
 
 const ALPHA_DOC = "---\ntitle: Alpha\n---\nbody\n";
 
@@ -228,74 +231,104 @@ it('laradocs:index surfaces engine failures as a non-zero exit', function () {
         ->assertFailed();
 });
 
-it('ScoutSearchEngine surfaces failed Meilisearch tasks queued during sync', function () {
-    // Stand-in for the Meilisearch SDK client. Tracks the tasks we pretend
-    // Meilisearch has queued/finished so we can assert sync() raises when a
-    // task from this run lands in the failed bucket.
-    $client = new class
+/**
+ * Bind a Scout driver that looks like Meilisearch to ScoutSearchEngine — its
+ * `meilisearch` property holds a real `Meilisearch\Client` subclass that
+ * overrides `getTasks` / `waitForTask` with in-memory implementations. Using
+ * the real base class (with its real `?TasksQuery` / `TasksResults`
+ * signatures) is what makes these fakes catch SDK-contract regressions — e.g.
+ * accidentally passing a raw array to getTasks() — before they reach prod.
+ */
+function bindFakeMeilisearchScout(): MeilisearchClient
+{
+    $client = new class('http://localhost') extends MeilisearchClient
     {
         /** @var array<int, array<string, mixed>> */
-        public array $tasks = [];
+        public array $taskLog = [];
 
-        /** @param array<string, mixed> $query */
-        public function getTasks(array $query): object
+        public function getTasks(?TasksQuery $options = null): TasksResults
         {
-            $statuses = (array) ($query['statuses'] ?? []);
+            $query = $options?->toArray() ?? [];
+            $statusesCsv = is_string($query['statuses'] ?? null) ? $query['statuses'] : '';
+            $statuses = $statusesCsv === '' ? [] : explode(',', $statusesCsv);
+
             $matching = array_values(array_filter(
-                $this->tasks,
+                $this->taskLog,
                 fn (array $task): bool => $statuses === [] || in_array($task['status'] ?? null, $statuses, true),
             ));
 
-            return new class($matching)
-            {
-                /** @param array<int, array<string, mixed>> $results */
-                public function __construct(private readonly array $results) {}
-
-                /** @return array<int, array<string, mixed>> */
-                public function getResults(): array
-                {
-                    return $this->results;
-                }
-            };
+            return new TasksResults(['results' => $matching]);
         }
 
-        public function waitForTask(int $uid): void
+        public function waitForTask($uid, int $timeoutInMs = 5000, int $intervalInMs = 50): array
         {
-            foreach ($this->tasks as &$task) {
+            foreach ($this->taskLog as &$task) {
                 if (($task['uid'] ?? null) === $uid && ($task['status'] ?? null) !== 'failed') {
                     $task['status'] = 'succeeded';
                 }
             }
             unset($task);
+
+            return [];
         }
     };
 
-    // A Scout engine that mirrors MeilisearchEngine's `meilisearch` property
-    // (protected on the real class — we expose it here so the production
-    // ReflectionProperty lookup in ScoutSearchEngine still resolves it).
+    // Scout engine that mirrors MeilisearchEngine's protected `meilisearch`
+    // property so ScoutSearchEngine's ReflectionProperty lookup resolves it.
     $scoutEngine = new class($client) extends FakeScoutEngine
     {
-        public function __construct(protected object $meilisearch) {}
+        public function __construct(protected MeilisearchClient $meilisearch) {}
     };
 
+    config()->set('laradocs.search.driver', 'scout');
     config()->set('scout.driver', 'fake-meili');
 
     $manager = new EngineManager(app());
     $manager->extend('fake-meili', fn (): object => $scoutEngine);
     app()->instance(EngineManager::class, $manager);
 
+    return $client;
+}
+
+it('ScoutSearchEngine surfaces failed Meilisearch tasks queued during sync', function () {
+    $client = bindFakeMeilisearchScout();
+
     // Baseline lookup returns the highest existing task UID; anything > 10
     // counts as part of "this sync" for the failure check.
-    $client->tasks = [['uid' => 10, 'status' => 'succeeded']];
-
-    $engine = new ScoutSearchEngine($manager, 'laradocs-test');
+    $client->taskLog = [['uid' => 10, 'status' => 'succeeded']];
 
     // Simulate Meilisearch accepting addDocuments but later failing the task
     // (the exact scenario from the slug primary-key bug).
-    $client->tasks[] = ['uid' => 11, 'status' => 'failed', 'type' => 'documentAdditionOrUpdate', 'error' => ['message' => 'invalid primary key']];
+    $client->taskLog[] = ['uid' => 11, 'status' => 'failed', 'type' => 'documentAdditionOrUpdate', 'error' => ['message' => 'invalid primary key']];
+
+    $engine = new ScoutSearchEngine(app(EngineManager::class), 'laradocs-test');
 
     expect(fn () => $engine->sync([
         ['slug' => 'a', 'title' => 'A', 'group' => '', 'content' => 'body'],
     ]))
         ->toThrow(RuntimeException::class, 'invalid primary key');
+});
+
+it('laradocs:index fails when Meilisearch rejects a queued indexing task', function () {
+    $this->makeDocs(['a.md' => ALPHA_DOC]);
+
+    $client = bindFakeMeilisearchScout();
+    $client->taskLog = [['uid' => 10, 'status' => 'succeeded']];
+    $client->taskLog[] = ['uid' => 11, 'status' => 'failed', 'type' => 'documentAdditionOrUpdate', 'error' => ['message' => 'invalid primary key']];
+
+    $this->artisan('laradocs:index')
+        ->expectsOutputToContain('Failed to index')
+        ->expectsOutputToContain('invalid primary key')
+        ->assertFailed();
+});
+
+it('laradocs:index succeeds against Meilisearch when no tasks fail', function () {
+    $this->makeDocs(['a.md' => ALPHA_DOC]);
+
+    $client = bindFakeMeilisearchScout();
+    $client->taskLog = [['uid' => 10, 'status' => 'succeeded']];
+
+    $this->artisan('laradocs:index')
+        ->expectsOutputToContain('Indexed 1 page(s) for search (scout engine).')
+        ->assertSuccessful();
 });

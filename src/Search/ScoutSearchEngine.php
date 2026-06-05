@@ -8,7 +8,7 @@ use Illuminate\Support\Collection;
 use Laradocs\Search\Contracts\SearchEngine;
 use Laravel\Scout\Builder;
 use Laravel\Scout\EngineManager;
-use ReflectionException;
+use Meilisearch\Client as MeilisearchClient;
 use ReflectionProperty;
 use RuntimeException;
 
@@ -129,7 +129,6 @@ final class ScoutSearchEngine implements SearchEngine
             return null;
         }
 
-        /** @var array<int, array<string, mixed>> $tasks */
         $tasks = $this->taskResults($client, [
             'indexUids' => [$this->index],
             'limit' => 1,
@@ -142,9 +141,8 @@ final class ScoutSearchEngine implements SearchEngine
         return is_int($tasks[0]['uid'] ?? null) ? $tasks[0]['uid'] : -1;
     }
 
-    private function waitForPendingTasks(object $client): void
+    private function waitForPendingTasks(MeilisearchClient $client): void
     {
-        /** @var array<int, array<string, mixed>> $pending */
         $pending = $this->taskResults($client, [
             'indexUids' => [$this->index],
             'statuses' => ['enqueued', 'processing'],
@@ -158,9 +156,8 @@ final class ScoutSearchEngine implements SearchEngine
         }
     }
 
-    private function assertNoNewFailedTasks(object $client, ?int $baselineTaskUid): void
+    private function assertNoNewFailedTasks(MeilisearchClient $client, ?int $baselineTaskUid): void
     {
-        /** @var array<int, array<string, mixed>> $failed */
         $failed = $this->taskResults($client, [
             'indexUids' => [$this->index],
             'statuses' => ['failed'],
@@ -180,7 +177,7 @@ final class ScoutSearchEngine implements SearchEngine
         $messages = array_map(
             fn (array $task): string => sprintf(
                 '%s [%s]',
-                is_string($task['error']['message'] ?? null) ? $task['error']['message'] : 'unknown error',
+                $this->failedTaskMessage($task),
                 is_string($task['type'] ?? null) ? $task['type'] : 'unknown task',
             ),
             $newFailures,
@@ -192,46 +189,80 @@ final class ScoutSearchEngine implements SearchEngine
     }
 
     /**
+     * @param  array<string, mixed>  $task
+     */
+    private function failedTaskMessage(array $task): string
+    {
+        $error = $task['error'] ?? null;
+
+        if (is_array($error) && is_string($error['message'] ?? null)) {
+            return $error['message'];
+        }
+
+        return 'unknown error';
+    }
+
+    /**
      * Scout's MeilisearchEngine stores its SDK client on a `protected
      * $meilisearch` property, so we read it via reflection rather than direct
-     * access. We duck-type rather than type-hint so the codebase doesn't take
-     * a hard dependency on the optional meilisearch/meilisearch-php package.
+     * access. The Meilisearch\Client reference is safe: the only way for a
+     * Scout engine to hold this property is for the SDK to be installed.
      */
-    private function meilisearchClient(object $scoutEngine): ?object
+    private function meilisearchClient(object $scoutEngine): ?MeilisearchClient
     {
         if (! property_exists($scoutEngine, 'meilisearch')) {
             return null;
         }
 
-        try {
-            $client = (new ReflectionProperty($scoutEngine, 'meilisearch'))->getValue($scoutEngine);
-        } catch (ReflectionException) {
-            return null;
-        }
+        $client = (new ReflectionProperty($scoutEngine, 'meilisearch'))->getValue($scoutEngine);
 
-        if (! is_object($client) || ! method_exists($client, 'getTasks') || ! method_exists($client, 'waitForTask')) {
-            return null;
-        }
-
-        return $client;
+        return $client instanceof MeilisearchClient ? $client : null;
     }
 
     /**
      * @param  array<string, mixed>  $query
      * @return array<int, array<string, mixed>>
      */
-    private function taskResults(object $client, array $query): array
+    private function taskResults(MeilisearchClient $client, array $query): array
     {
-        /** @var object $result */
-        $result = $client->getTasks($query);
-
-        if (! method_exists($result, 'getResults')) {
-            return [];
-        }
+        $result = $client->getTasks($this->buildTasksQuery($query));
 
         /** @var array<int, array<string, mixed>> $results */
         $results = $result->getResults();
 
         return $results;
+    }
+
+    /**
+     * Meilisearch SDK ≥1.0 requires a TasksQuery DTO rather than a raw array.
+     * The DTO class is shipped with meilisearch/meilisearch-php, which Scout
+     * already depends on in the Meilisearch path — but we guard with
+     * class_exists() so unrelated Scout drivers don't trip over it.
+     *
+     * @param  array<string, mixed>  $query
+     */
+    private function buildTasksQuery(array $query): ?\Meilisearch\Contracts\TasksQuery
+    {
+        $class = \Meilisearch\Contracts\TasksQuery::class;
+
+        if (! class_exists($class)) {
+            return null;
+        }
+
+        $tasksQuery = new $class();
+
+        if (isset($query['indexUids']) && is_array($query['indexUids'])) {
+            $tasksQuery->setIndexUids($query['indexUids']);
+        }
+
+        if (isset($query['statuses']) && is_array($query['statuses'])) {
+            $tasksQuery->setStatuses($query['statuses']);
+        }
+
+        if (isset($query['limit']) && is_int($query['limit'])) {
+            $tasksQuery->setLimit($query['limit']);
+        }
+
+        return $tasksQuery;
     }
 }
