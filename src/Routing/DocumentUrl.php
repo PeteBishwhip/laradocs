@@ -55,4 +55,14 @@ final class DocumentUrl
     {
         return route(self::prefix() . 'search');
     }
+
+    public static function apiTree(): string
+    {
+        return route(self::prefix() . 'api.tree');
+    }
+
+    public static function apiSearch(): string
+    {
+        return route(self::prefix() . 'api.search');
+    }
 }
