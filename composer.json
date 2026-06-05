@@ -37,7 +37,8 @@
         "rector/rector": "^1.2 || ^2.0"
     },
     "suggest": {
-        "laravel/scout": "Power full-text docs search with Meilisearch, Typesense or Algolia (falls back to a built-in JSON index)."
+        "laravel/scout": "Power full-text docs search with Meilisearch, Typesense or Algolia (falls back to a built-in JSON index).",
+        "nyholm/psr7": "When using Meilisearch via Scout, install a PSR-17 factory (nyholm/psr7, guzzlehttp/psr7 ^2, or symfony/http-client) so the Meilisearch SDK can build HTTP requests."
     },
     "autoload": {
         "psr-4": {
