@@ -9,6 +9,7 @@ use Illuminate\Support\Carbon;
 use Laradocs\Documents\Document;
 use Laradocs\Documents\TreeNode;
 use Laradocs\Metadata\Metadata;
+use Laradocs\Routing\DocumentUrl;
 use Laradocs\Support\Config;
 use RalphJSmit\Laravel\SEO\Schema\BreadcrumbListSchema;
 use RalphJSmit\Laravel\SEO\SchemaCollection;
@@ -203,11 +204,11 @@ final class SeoFactory
      */
     private function breadcrumbTrail(array $breadcrumbs): array
     {
-        $trail = ['Home' => route('laradocs.index')];
+        $trail = ['Home' => DocumentUrl::index()];
 
         foreach (array_slice($breadcrumbs, 0, -1) as $crumb) {
             if ($crumb->isLink()) {
-                $trail[$crumb->title] = route('laradocs.show', ['path' => $crumb->slug]);
+                $trail[$crumb->title] = DocumentUrl::toSlug($crumb->slug);
             }
         }
 

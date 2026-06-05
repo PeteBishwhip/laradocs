@@ -122,3 +122,9 @@ All routes are registered under the `laradocs.` name prefix:
 | `laradocs.asset` | `/{prefix}/_laradocs/asset/{file}` | Bundled CSS/JS. |
 
 Use them via `route('laradocs.show', ['path' => 'guide/routing'])`.
+
+The prefix itself is configurable with `LARADOCS_ROUTE_NAME` (or the
+`route.name` config key). The package builds its own internal links from
+this value, so changing it — say to `docs.` — renames every route without
+breaking navigation. Keep the trailing dot; it separates the prefix from
+the route name.

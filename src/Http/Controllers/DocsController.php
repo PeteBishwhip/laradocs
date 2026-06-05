@@ -8,6 +8,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Laradocs\Documents\Document;
 use Laradocs\Laradocs;
+use Laradocs\Routing\DocumentUrl;
 use Laradocs\Seo\SeoFactory;
 use Laradocs\Support\Config;
 use Laradocs\Support\Navigation;
@@ -102,6 +103,6 @@ final class DocsController
             return $target;
         }
 
-        return route('laradocs.show', ['path' => trim($target, '/')]);
+        return DocumentUrl::toSlug($target);
     }
 }

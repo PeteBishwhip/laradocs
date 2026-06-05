@@ -32,7 +32,7 @@ return [
         'prefix' => env('LARADOCS_ROUTE_PREFIX', 'docs'),
         'domain' => env('LARADOCS_ROUTE_DOMAIN'),
         'middleware' => ['web'],
-        'name' => 'laradocs.',
+        'name' => env('LARADOCS_ROUTE_NAME', 'laradocs.'),
     ],
 
     /*
