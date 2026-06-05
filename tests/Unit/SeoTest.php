@@ -111,6 +111,24 @@ describe('SeoFactory', function () {
         expect($seo->robots)->toBe('noindex, nofollow');
     });
 
+    it('treats a string noindex flag as truthy', function () {
+        $seo = app(SeoFactory::class)->forDocument(makeDocument('guide/intro', [
+            'title' => 'Hidden',
+            'noindex' => 'yes',
+        ]));
+
+        expect($seo->robots)->toBe('noindex, nofollow');
+    });
+
+    it('coerces a numeric front-matter value to a string', function () {
+        $seo = app(SeoFactory::class)->forDocument(makeDocument('guide/intro', [
+            'title' => 'Intro',
+            'seo' => ['section' => 2026],
+        ]));
+
+        expect($seo->section)->toBe('2026');
+    });
+
     it('falls back to the brand tagline for the description', function () {
         config()->set('laradocs.ui.brand.tagline', 'Beautiful docs.');
 
