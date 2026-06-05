@@ -16,5 +16,6 @@ programmatic access.
 - [Metadata](/docs/guide/metadata) — every front-matter field.
 - [Caching](/docs/guide/caching) — render caching and invalidation.
 - [Search](/docs/guide/search) — full-text search and Scout engines.
+- [SEO](/docs/guide/seo) — automatic meta tags, social cards and JSON-LD.
 - [CLI](/docs/guide/cli) — every Artisan command.
 - [PHP API](/docs/guide/api) — the `Laradocs` facade and service.

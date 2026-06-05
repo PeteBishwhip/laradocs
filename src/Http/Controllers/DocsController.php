@@ -8,14 +8,17 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Laradocs\Documents\Document;
 use Laradocs\Laradocs;
+use Laradocs\Seo\SeoFactory;
 use Laradocs\Support\Config;
 use Laradocs\Support\Navigation;
 use Laradocs\Toc\TableOfContents;
+use RalphJSmit\Laravel\SEO\Support\SEOData;
 
 final class DocsController
 {
     public function __construct(
         private readonly Laradocs $laradocs,
+        private readonly SeoFactory $seo,
     ) {}
 
     public function index(): View|RedirectResponse
@@ -27,6 +30,9 @@ final class DocsController
                 'tree' => $this->laradocs->tree(),
                 'activeSlug' => '',
                 'variables' => $this->laradocs->variableValues(),
+                'seo' => $this->seoEnabled()
+                    ? $this->seo->forPage(Config::nullableString('laradocs.ui.brand.title'))
+                    : null,
             ]);
         }
 
@@ -62,17 +68,32 @@ final class DocsController
             Config::int('laradocs.parser.toc.max_level', 3),
         );
 
+        $breadcrumbs = Navigation::breadcrumbs($navigation, $document->slug);
+
         return view('laradocs::show', [
             'document' => $document,
             'tree' => $tree,
             'activeSlug' => $document->slug,
             'navigation' => $navigation,
-            'breadcrumbs' => Navigation::breadcrumbs($navigation, $document->slug),
+            'breadcrumbs' => $breadcrumbs,
             'previous' => $previous,
             'next' => $next,
             'toc' => $toc,
             'variables' => $this->laradocs->variableValues(),
+            'seo' => $this->seoEnabled()
+                ? $this->seo->forDocument($document, $breadcrumbs)
+                : null,
         ]);
+    }
+
+    /**
+     * Whether to generate SEO meta tags for this response. Disabled via config,
+     * or implicitly when the SEO package isn't installed.
+     */
+    private function seoEnabled(): bool
+    {
+        return Config::bool('laradocs.seo.enabled', true)
+            && class_exists(SEOData::class);
     }
 
     private function resolveRedirect(string $target): string

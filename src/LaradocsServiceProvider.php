@@ -38,6 +38,7 @@ use Laradocs\Search\Contracts\SearchEngine;
 use Laradocs\Search\JsonSearchEngine;
 use Laradocs\Search\ScoutSearchEngine;
 use Laradocs\Search\SearchManager;
+use Laradocs\Seo\SeoFactory;
 use Laradocs\Support\Config;
 use Laradocs\Variables\VariableRegistry;
 use Laravel\Scout\EngineManager;
@@ -141,6 +142,8 @@ final class LaradocsServiceProvider extends ServiceProvider
 
     private function registerCore(): void
     {
+        $this->app->singleton(SeoFactory::class);
+
         $this->app->bind(Laradocs::class, fn (Application $app): Laradocs => new Laradocs(
             $app->make(DocumentLoader::class),
             $app->make(DocumentParser::class),

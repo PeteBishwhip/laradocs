@@ -47,10 +47,20 @@ jobs:
         with:
           php-version: '8.3'
           extensions: dom, libxml, mbstring
-          coverage: pcov
+          coverage: xdebug
       - run: composer install --prefer-dist --no-interaction
-      - name: Enforce 100% coverage
-        run: vendor/bin/pest --coverage --min=100
+      - name: Enforce 100% coverage and write a Clover report
+        env:
+          XDEBUG_MODE: coverage
+        run: vendor/bin/pest --coverage --min=100 --coverage-clover=coverage.xml
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+          retention-days: 1
+          if-no-files-found: error
 
   static-analysis:
     runs-on: ubuntu-latest
@@ -76,3 +86,20 @@ jobs:
           coverage: none
       - run: composer install --prefer-dist --no-interaction
       - run: vendor/bin/pint --test
+
+  sonarqube:
+    runs-on: ubuntu-latest
+    name: SonarQube
+    needs: coverage
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - name: Download coverage report
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@7006c4492b2e0ee0f816d36501671557c97f5995 # v8.1.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

@@ -30,6 +30,8 @@ Then open `/docs`.
   with a service-provider API to register your own.
 - 🖼️ **Rich content** — callouts (`> [!NOTE]`), syntax-highlighted code with a
   copy button, lazy images with captions, and local/YouTube/Vimeo video embeds.
+- 🔎 **Automatic SEO** — `<title>`, meta description, Open Graph & Twitter cards,
+  canonical URLs and JSON-LD for every page, with per-page front-matter overrides.
 - ✅ **Fully tested** — Pest + Testbench, 100% coverage gate, PHPStan max, Pint.
 
 ## Quick start
@@ -109,6 +111,7 @@ are themselves built with Laradocs. Highlights:
 - [Routing](https://laradocs.dev/docs/guide/routing)
 - [Metadata](https://laradocs.dev/docs/guide/metadata)
 - [Caching](https://laradocs.dev/docs/guide/caching)
+- [SEO](https://laradocs.dev/docs/guide/seo)
 - [CLI reference](https://laradocs.dev/docs/guide/cli)
 - [PHP API](https://laradocs.dev/docs/guide/api)
 - [Variables](https://laradocs.dev/docs/features/variables) ·

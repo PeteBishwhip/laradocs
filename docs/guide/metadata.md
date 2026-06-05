@@ -44,13 +44,19 @@ redirect: null
 | `updated_at` | string | Last-update timestamp; rendered in the page footer. |
 | `author` | string | Author name; exposed to custom views. |
 | `layout` | string | Override the Blade layout used to render this page. |
-| `image` | string | Social / OG image URL. |
+| `image` | string | Social / OG image URL — see [SEO](/docs/guide/seo). |
 | `redirect` | string | 301-redirect this slug to another page or absolute URL. |
 
 > [!IMPORTANT]
 > Unknown keys are preserved and reachable via
 > `$document->metadata->get('your_key')` — useful for custom views or
 > macros without forking the package.
+
+> [!NOTE]
+> `title`, `description`, `image`, `author` and `tags` also feed the page's
+> SEO and social meta. For SEO-specific control — a different search title,
+> `robots`, a `canonical` URL or a `noindex` flag — add a dedicated `seo:`
+> block. See the [SEO guide](/docs/guide/seo) for the full reference.
 
 ## How fields are used
 
@@ -86,6 +92,47 @@ Surface metadata exposed to your templates. `updated_at` is rendered in
 the page footer (`Last updated 2026-06-01`). The rest are available via
 `$document->metadata->author`, `$document->metadata->image`, and
 `$document->metadata->tags` — wire them into custom views as needed.
+
+`author`, `image` and `tags` also feed the page's SEO meta (see below).
+
+### SEO and social meta
+
+`title`, `description`, `image`, `author` and `tags` are used to build each
+page's `<title>`, meta description, Open Graph / Twitter cards and JSON-LD
+automatically. For SEO-specific control that shouldn't change what renders
+*on* the page, add a dedicated `seo:` block — its values win:
+
+```markdown
+---
+title: Internal Notes
+description: Shown as the page subtitle.
+seo:
+  title: A different title, just for search engines
+  description: A different description, just for the meta tags.
+  image: /og/custom.png
+  robots: noindex, nofollow
+  canonical: https://acme.test/canonical/url
+  type: article
+  section: Guides
+---
+```
+
+| `seo:` key | Purpose |
+|---|---|
+| `title` | Override the SEO/social title only (the on-page `<h1>` is unchanged). |
+| `description` | Override the meta / social description only. |
+| `image` | Open Graph / Twitter image. |
+| `author` | Author meta + schema. |
+| `tags` | `article:tag` entries. |
+| `robots` | Robots directive, e.g. `noindex, nofollow`. |
+| `canonical` | Canonical URL for this page. |
+| `type` | Open Graph type (`article`, `website`, …). |
+| `section` | Open Graph `article:section`; defaults to `group`. |
+
+Two shortcuts are also recognised at the top level: `noindex: true`
+(expands to `robots: noindex, nofollow`) and `published_at:` / `date:`
+(sets the Open Graph article publication time). See the full
+[SEO guide](/docs/guide/seo) for site-wide defaults and examples.
 
 ### `layout`
 

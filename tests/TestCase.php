@@ -7,6 +7,7 @@ namespace Laradocs\Tests;
 use Illuminate\Filesystem\Filesystem;
 use Laradocs\LaradocsServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
+use RalphJSmit\Laravel\SEO\LaravelSEOServiceProvider;
 
 abstract class TestCase extends Orchestra
 {
@@ -34,6 +35,7 @@ abstract class TestCase extends Orchestra
     protected function getPackageProviders($app): array
     {
         return [
+            LaravelSEOServiceProvider::class,
             LaradocsServiceProvider::class,
         ];
     }

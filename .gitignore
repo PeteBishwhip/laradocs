@@ -3,6 +3,7 @@
 /node_modules
 /.phpunit.cache
 .phpunit.result.cache
+coverage.xml
 composer.lock
 package-lock.json
 .DS_Store

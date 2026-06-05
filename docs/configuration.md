@@ -143,6 +143,26 @@ visually.
 Set the identifier to enable a provider — leave it `null` to opt out.
 See [Analytics](/docs/guide/analytics) for details.
 
+## SEO
+
+| Option | Env | Default |
+|---|---|---|
+| `seo.enabled` | `LARADOCS_SEO` | `true` |
+| `seo.site_name` | `LARADOCS_SEO_SITE_NAME` | `ui.brand.title` |
+| `seo.title_suffix` | `LARADOCS_SEO_TITLE_SUFFIX` | ` · {site_name}` |
+| `seo.description` | `LARADOCS_SEO_DESCRIPTION` | `ui.brand.tagline` |
+| `seo.auto_description` | `LARADOCS_SEO_AUTO_DESCRIPTION` | `true` |
+| `seo.image` | `LARADOCS_SEO_IMAGE` | `null` |
+| `seo.author` | `LARADOCS_SEO_AUTHOR` | `null` |
+| `seo.twitter` | `LARADOCS_SEO_TWITTER` | `null` |
+| `seo.type` | `LARADOCS_SEO_TYPE` | `article` |
+| `seo.robots` | `LARADOCS_SEO_ROBOTS` | package default |
+| `seo.schema.article` | `LARADOCS_SEO_SCHEMA_ARTICLE` | `true` |
+| `seo.schema.breadcrumbs` | `LARADOCS_SEO_SCHEMA_BREADCRUMBS` | `true` |
+
+Rich meta tags, Open Graph / Twitter cards and JSON-LD are generated for every
+page automatically; these tune the site-wide defaults. See [SEO](/docs/guide/seo).
+
 ## Cache
 
 | Option | Env | Default |

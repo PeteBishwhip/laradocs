@@ -21,12 +21,19 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', $title)</title>
-    @hasSection('description')
-        <meta name="description" content="@yield('description')">
-    @endif
-    @if(! empty($brand['favicon']))
-        <link rel="icon" href="{{ $brand['favicon'] }}">
+    @php $hasSeo = ! empty($seo) && function_exists('seo'); @endphp
+    @if($hasSeo)
+        {{-- Rich SEO meta (title, description, Open Graph, Twitter, canonical,
+             robots, favicon and JSON-LD) via ralphjsmit/laravel-seo. --}}
+        {!! seo($seo) !!}
+    @else
+        <title>@yield('title', $title)</title>
+        @hasSection('description')
+            <meta name="description" content="@yield('description')">
+        @endif
+        @if(! empty($brand['favicon']))
+            <link rel="icon" href="{{ $brand['favicon'] }}">
+        @endif
     @endif
     <script>
         (function () {
