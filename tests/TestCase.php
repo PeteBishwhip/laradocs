@@ -42,6 +42,9 @@ abstract class TestCase extends Orchestra
     {
         $app['config']->set('app.key', 'base64:' . base64_encode(random_bytes(32)));
         $app['config']->set('laradocs.cache.enabled', false);
+        // Default to the dependency-free engine so tests never reach out to a
+        // real Scout backend; Scout-specific tests opt in explicitly.
+        $app['config']->set('laradocs.search.driver', 'json');
     }
 
     /**

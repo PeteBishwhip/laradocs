@@ -13,6 +13,7 @@ use Illuminate\Support\ServiceProvider;
 use Laradocs\Cache\DocumentCache;
 use Laradocs\Console\CacheCommand;
 use Laradocs\Console\ClearCommand;
+use Laradocs\Console\IndexCommand;
 use Laradocs\Console\InstallCommand;
 use Laradocs\Console\MakeDocCommand;
 use Laradocs\Contracts\DocumentLoader;
@@ -33,8 +34,13 @@ use Laradocs\Metadata\FrontMatterMetadataResolver;
 use Laradocs\Parsers\MarkdownParser;
 use Laradocs\Routing\DocumentRouter;
 use Laradocs\Routing\SlugResolver;
+use Laradocs\Search\Contracts\SearchEngine;
+use Laradocs\Search\JsonSearchEngine;
+use Laradocs\Search\ScoutSearchEngine;
+use Laradocs\Search\SearchManager;
 use Laradocs\Support\Config;
 use Laradocs\Variables\VariableRegistry;
+use Laravel\Scout\EngineManager;
 use League\CommonMark\Environment\Environment;
 use League\CommonMark\Extension\Attributes\AttributesExtension;
 use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
@@ -51,6 +57,7 @@ final class LaradocsServiceProvider extends ServiceProvider
         $this->registerRegistries();
         $this->registerPipeline();
         $this->registerCore();
+        $this->registerSearch();
     }
 
     public function boot(): void
@@ -141,7 +148,55 @@ final class LaradocsServiceProvider extends ServiceProvider
             $app->make(VariableRegistry::class),
             $app->make(MacroRegistry::class),
             Config::string('laradocs.docs.index', '_index'),
+            Config::int('laradocs.search.max_chars', 10000),
         ));
+    }
+
+    private function registerSearch(): void
+    {
+        $this->app->singleton(SearchManager::class, function (Application $app): SearchManager {
+            $index = Config::string('laradocs.search.index', 'laradocs');
+
+            return new SearchManager(
+                Config::string('laradocs.search.driver', 'auto'),
+                class_exists(EngineManager::class),
+                self::scoutIsConfigured(),
+                fn (): SearchEngine => new ScoutSearchEngine($app->make(EngineManager::class), $index),
+                new JsonSearchEngine,
+            );
+        });
+
+        $this->app->bind(
+            SearchEngine::class,
+            fn (Application $app): SearchEngine => $app->make(SearchManager::class)->engine(),
+        );
+    }
+
+    /**
+     * Treat Scout as "configured" only when there's a real intent signal.
+     *
+     * Scout's package config merges a default of `'algolia'` whenever it's
+     * installed, so `config('scout.driver')` alone isn't reliable — auto-
+     * mode would pick Scout on hosts that never wired it up, then fail at
+     * query time when Algolia has no credentials. Instead we treat any
+     * driver other than the bare default as intent (the user picked it),
+     * and for the `'algolia'` default we also require an Algolia App ID.
+     * This works in both cached-config and live-env setups.
+     */
+    public static function scoutIsConfigured(): bool
+    {
+        $driver = Config::nullableString('scout.driver');
+
+        if ($driver === null || $driver === '') {
+            return false;
+        }
+
+        if ($driver === 'algolia') {
+            return Config::nullableString('scout.algolia.id') !== null
+                && Config::nullableString('scout.algolia.id') !== '';
+        }
+
+        return true;
     }
 
     private function buildConverter(Application $app): MarkdownConverter
@@ -269,6 +324,7 @@ final class LaradocsServiceProvider extends ServiceProvider
             MakeDocCommand::class,
             CacheCommand::class,
             ClearCommand::class,
+            IndexCommand::class,
         ]);
 
         $this->optimizes('laradocs:cache', 'laradocs:clear');
@@ -280,6 +336,7 @@ final class LaradocsServiceProvider extends ServiceProvider
             'Route Prefix' => '/' . Config::string('laradocs.route.prefix'),
             'Docs Path' => Config::string('laradocs.docs.path'),
             'Caching' => Config::bool('laradocs.cache.enabled') ? 'enabled' : 'disabled',
+            'Search Driver' => Config::string('laradocs.search.driver'),
             'Theme' => Config::string('laradocs.ui.theme'),
         ]);
     }

@@ -92,7 +92,13 @@
     </div>
 
     {{-- Variant: command palette dialog. --}}
-    <div class="laradocs-palette" data-laradocs-palette hidden role="dialog" aria-label="Quick search" aria-modal="true">
+    @php $searchEnabled = (bool) config('laradocs.ui.search.enabled', true); @endphp
+    <div class="laradocs-palette" data-laradocs-palette
+         @if($searchEnabled)
+             data-laradocs-search-url="{{ route('laradocs.search') }}"
+             data-laradocs-search-min="{{ (int) config('laradocs.search.min_chars', 2) }}"
+         @endif
+         hidden role="dialog" aria-label="Quick search" aria-modal="true">
         <div class="laradocs-palette-backdrop" data-laradocs-palette-close></div>
         <div class="laradocs-palette-panel">
             <div class="laradocs-palette-search">

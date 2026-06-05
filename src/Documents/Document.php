@@ -61,6 +61,14 @@ final class Document implements Arrayable
         return $this->metadata->hidden;
     }
 
+    /**
+     * Whether this page should be included in the full-text search index.
+     */
+    public function isSearchable(): bool
+    {
+        return $this->metadata->searchable;
+    }
+
     public function order(): int
     {
         return $this->metadata->order;

@@ -26,12 +26,19 @@
     "require-dev": {
         "larastan/larastan": "^2.9 || ^3.0",
         "laravel/pint": "^1.18",
+        "laravel/scout": "^10.0",
+        "meilisearch/meilisearch-php": "^1.0",
+        "nyholm/psr7": "^1.5",
         "orchestra/testbench": "^9.0 || ^10.0 || ^11.0",
         "orchestra/workbench": "^9.0 || ^10.0 || ^11.0",
         "pestphp/pest": "^3.0 || ^4.0",
         "pestphp/pest-plugin-laravel": "^3.0 || ^4.0",
         "phpstan/phpstan": "^1.11 || ^2.0",
         "rector/rector": "^1.2 || ^2.0"
+    },
+    "suggest": {
+        "laravel/scout": "Power full-text docs search with Meilisearch, Typesense or Algolia (falls back to a built-in JSON index).",
+        "nyholm/psr7": "When using Meilisearch via Scout, install a PSR-17 factory (nyholm/psr7, guzzlehttp/psr7 ^2, or symfony/http-client) so the Meilisearch SDK can build HTTP requests."
     },
     "autoload": {
         "psr-4": {
@@ -50,6 +57,7 @@
         "sort-packages": true,
         "allow-plugins": {
             "pestphp/pest-plugin": true,
+            "php-http/discovery": true,
             "phpstan/extension-installer": true
         }
     },

@@ -233,6 +233,35 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Search
+    |--------------------------------------------------------------------------
+    |
+    | Powers the ⌘K command palette's full-text search over page content.
+    |
+    | "driver"    auto | scout | json.
+    |   auto  — use Laravel Scout (Meilisearch / Typesense / Algolia) when it's
+    |           installed and configured, otherwise fall back to the JSON index.
+    |   scout — force Scout (falls back to JSON if Scout isn't installed).
+    |   json  — always use the built-in, dependency-free JSON index.
+    | "index"     Index name used by Scout engines.
+    | "limit"     Maximum results returned per query.
+    | "min_chars" Shortest query that triggers a search.
+    | "max_chars" Cap on indexed body text per page (0 = no cap).
+    |
+    | Exclude a single page from search with `search: false` in its front-matter.
+    |
+    */
+
+    'search' => [
+        'driver' => env('LARADOCS_SEARCH_DRIVER', 'auto'),
+        'index' => env('LARADOCS_SEARCH_INDEX', 'laradocs'),
+        'limit' => (int) env('LARADOCS_SEARCH_LIMIT', 20),
+        'min_chars' => (int) env('LARADOCS_SEARCH_MIN_CHARS', 2),
+        'max_chars' => (int) env('LARADOCS_SEARCH_MAX_CHARS', 10000),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Caching
     |--------------------------------------------------------------------------
     |

@@ -3,8 +3,30 @@ name: tests
 on:
   push:
     branches: [main]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'config/**'
+      - 'resources/**'
+      - 'stubs/**'
+      - 'composer.json'
+      - 'composer.lock'
+      - 'phpunit.xml'
+      - 'testbench.yaml'
+      - '.github/workflows/tests.yml'
   pull_request:
     branches: [main]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'config/**'
+      - 'resources/**'
+      - 'stubs/**'
+      - 'composer.json'
+      - 'composer.lock'
+      - 'phpunit.xml'
+      - 'testbench.yaml'
+      - '.github/workflows/tests.yml'
 
 permissions:
   contents: read

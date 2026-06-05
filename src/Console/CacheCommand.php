@@ -24,6 +24,6 @@ final class CacheCommand extends Command
 
         $this->components->info(sprintf('Cached %d documentation page(s).', $documents->count()));
 
-        return self::SUCCESS;
+        return $this->call('laradocs:index');
     }
 }
