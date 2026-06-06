@@ -155,6 +155,8 @@ final class LaradocsServiceProvider extends ServiceProvider
             $searchExclude = Config::array('laradocs.search.exclude');
             /** @var array<int, string> $searchInclude */
             $searchInclude = Config::array('laradocs.search.include');
+            /** @var array<string, float> $searchRank */
+            $searchRank = Config::array('laradocs.search.rank');
 
             return new Laradocs(
                 $app->make(DocumentLoader::class),
@@ -167,6 +169,7 @@ final class LaradocsServiceProvider extends ServiceProvider
                 Config::int('laradocs.search.max_chars', 10000),
                 $searchExclude,
                 $searchInclude,
+                $searchRank,
             );
         });
     }

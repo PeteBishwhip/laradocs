@@ -22,7 +22,10 @@ final class SearchIndexBuilder
      * @param  array<int, string>  $exclude  fnmatch slug patterns to exclude from the index.
      * @param  array<int, string>  $include  fnmatch slug patterns to include; when non-empty,
      *                                       only matching slugs are indexed.
-     * @return array<int, array{slug: string, title: string, group: string, content: string}>
+     * @param  array<string, float>  $ranks  fnmatch slug patterns mapped to rank multipliers.
+     *                                       First matching pattern wins; combined with the
+     *                                       page's own search_rank front-matter value.
+     * @return array<int, array{slug: string, title: string, group: string, content: string, rank: float}>
      */
     public function build(
         DocumentCollection $documents,
@@ -30,6 +33,7 @@ final class SearchIndexBuilder
         int $maxChars = 10000,
         array $exclude = [],
         array $include = [],
+        array $ranks = [],
     ): array {
         $entries = [];
 
@@ -45,6 +49,7 @@ final class SearchIndexBuilder
                 'title' => $document->title(),
                 'group' => $document->group() ?? '',
                 'content' => $this->content($render($document), $maxChars),
+                'rank' => $this->rank($document->slug, $document->searchRank(), $ranks),
             ];
         }
 
@@ -76,6 +81,26 @@ final class SearchIndexBuilder
         }
 
         return false;
+    }
+
+    /**
+     * Compute the final rank multiplier for a slug by combining the page's own
+     * search_rank front-matter value with the first matching config pattern.
+     *
+     * @param  array<string, float>  $ranks
+     */
+    private function rank(string $slug, float $pageRank, array $ranks): float
+    {
+        $patternRank = 1.0;
+
+        foreach ($ranks as $pattern => $multiplier) {
+            if (fnmatch($pattern, $slug)) {
+                $patternRank = $multiplier;
+                break;
+            }
+        }
+
+        return max(0.0, $pageRank * $patternRank);
     }
 
     private function content(string $html, int $maxChars): string

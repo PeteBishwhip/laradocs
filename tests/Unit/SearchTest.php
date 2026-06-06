@@ -15,14 +15,14 @@ use Laradocs\Tests\Fixtures\FakeScoutEngine;
 use Laravel\Scout\EngineManager;
 
 /**
- * @return array<int, array{slug: string, title: string, group: string, content: string}>
+ * @return array<int, array{slug: string, title: string, group: string, content: string, rank: float}>
  */
 function sampleIndex(): array
 {
     return [
-        ['slug' => 'install', 'title' => 'Installation', 'group' => 'Guide', 'content' => 'Run composer require to install the package.'],
-        ['slug' => 'config', 'title' => 'Configuration', 'group' => 'Guide', 'content' => 'Publish and edit the config file.'],
-        ['slug' => 'search', 'title' => 'Search', 'group' => 'Features', 'content' => 'Full text search over every page body.'],
+        ['slug' => 'install', 'title' => 'Installation', 'group' => 'Guide', 'content' => 'Run composer require to install the package.', 'rank' => 1.0],
+        ['slug' => 'config', 'title' => 'Configuration', 'group' => 'Guide', 'content' => 'Publish and edit the config file.', 'rank' => 1.0],
+        ['slug' => 'search', 'title' => 'Search', 'group' => 'Features', 'content' => 'Full text search over every page body.', 'rank' => 1.0],
     ];
 }
 
@@ -74,7 +74,7 @@ it('builds an index of visible, searchable pages in order', function () {
 
     expect($index)->toHaveCount(2)
         ->and(array_column($index, 'slug'))->toBe(['a', 'b'])
-        ->and($index[0])->toBe(['slug' => 'a', 'title' => 'Alpha', 'group' => '', 'content' => 'alpha body'])
+        ->and($index[0])->toBe(['slug' => 'a', 'title' => 'Alpha', 'group' => '', 'content' => 'alpha body', 'rank' => 1.0])
         ->and($index[1]['group'])->toBe('G');
 });
 
@@ -115,8 +115,8 @@ it('respects the json result limit and is a no-op to sync/flush', function () {
     $engine = new JsonSearchEngine;
 
     expect($engine->search('the', [
-        ['slug' => 'a', 'title' => 'A', 'group' => '', 'content' => 'the thing'],
-        ['slug' => 'b', 'title' => 'B', 'group' => '', 'content' => 'the other'],
+        ['slug' => 'a', 'title' => 'A', 'group' => '', 'content' => 'the thing', 'rank' => 1.0],
+        ['slug' => 'b', 'title' => 'B', 'group' => '', 'content' => 'the other', 'rank' => 1.0],
     ], 1))->toHaveCount(1);
 
     $engine->sync(sampleIndex());

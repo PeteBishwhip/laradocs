@@ -15,8 +15,8 @@ interface SearchEngine
     /**
      * Return the index entries matching the query, most relevant first.
      *
-     * @param  array<int, array{slug: string, title: string, group: string, content: string}>  $index
-     * @return array<int, array{slug: string, title: string, group: string, content: string}>
+     * @param  array<int, array{slug: string, title: string, group: string, content: string, rank: float}>  $index
+     * @return array<int, array{slug: string, title: string, group: string, content: string, rank: float}>
      */
     public function search(string $query, array $index, int $limit): array;
 
@@ -24,7 +24,7 @@ interface SearchEngine
      * Push the full index to the backend, replacing what was there before.
      * A no-op for engines that read the index directly at query time.
      *
-     * @param  array<int, array{slug: string, title: string, group: string, content: string}>  $index
+     * @param  array<int, array{slug: string, title: string, group: string, content: string, rank: float}>  $index
      */
     public function sync(array $index): void;
 

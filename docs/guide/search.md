@@ -114,6 +114,40 @@ touching each file. Values are [fnmatch](https://www.php.net/fnmatch) slug patte
 
 Excluded pages are still reachable — they just won't appear in search results.
 
+### Config-level rank multipliers
+
+Use `search.rank` to control where sections or individual pages appear in
+results without editing each file. Keys are fnmatch slug patterns; values are
+float multipliers. The first matching pattern wins, then multiplied by the
+page's own `search_rank` front-matter value (both default to `1.0`):
+
+```php
+'search' => [
+    'rank' => [
+        'guide/*'     => 2.0,    // Guide pages rank twice as high
+        'changelog'   => 0.5,    // Changelog ranks half as high
+        'reference/*' => 1.5,
+    ],
+],
+```
+
+Rank only affects the built-in JSON engine. When using Laravel Scout, ranking
+is determined by the external service (Meilisearch, Typesense, Algolia).
+
+### Per-page rank override
+
+Add `search_rank:` to a page's front-matter for one-off adjustments. It
+multiplies with any matching config pattern:
+
+```markdown
+---
+title: Important Page
+search_rank: 3.0
+---
+```
+
+A value of `0` sends the page to the bottom of every result set.
+
 ### Config-level include allow-list
 
 When `search.include` is non-empty, **only** pages whose slug matches a pattern

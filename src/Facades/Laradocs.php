@@ -20,7 +20,7 @@ use Laradocs\Documents\DocumentTree;
  * @method static Document|null find(string $slug)
  * @method static Document|null home()
  * @method static string render(Document $document)
- * @method static array<int, array{slug: string, title: string, group: string, content: string}> searchIndex()
+ * @method static array<int, array{slug: string, title: string, group: string, content: string, rank: float}> searchIndex()
  * @method static array<string, mixed> variableValues()
  *
  * @see \Laradocs\Laradocs

@@ -74,8 +74,8 @@ final class DocumentCache
      * of scalars, which is unaffected by `cache.serializable_classes`.
      *
      * @param  DocumentCollection<int, Document>  $documents
-     * @param  Closure(): array<int, array{slug: string, title: string, group: string, content: string}>  $build
-     * @return array<int, array{slug: string, title: string, group: string, content: string}>
+     * @param  Closure(): array<int, array{slug: string, title: string, group: string, content: string, rank: float}>  $build
+     * @return array<int, array{slug: string, title: string, group: string, content: string, rank: float}>
      */
     public function rememberSearchIndex(DocumentCollection $documents, Closure $build): array
     {

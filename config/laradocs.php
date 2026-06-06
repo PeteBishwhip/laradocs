@@ -314,8 +314,16 @@ return [
     | "include"   fnmatch slug patterns for an allow-list. When non-empty,
     |               only matching slugs are indexed regardless of other settings.
     |               E.g. ['guide/*', 'reference/*']
+    | "rank"      Rank multipliers by fnmatch slug pattern. First matching
+    |               pattern wins; combined with the page's own search_rank
+    |               front-matter value (both default to 1.0 = no change).
+    |               Values > 1.0 boost; values < 1.0 demote.
+    |               E.g. ['guide/*' => 2.0, 'changelog' => 0.5]
+    |               Only affects the built-in JSON engine; Scout engines use
+    |               their own external ranking.
     |
     | Per-page opt-out: add `search: false` to a page's front-matter.
+    | Per-page rank:    add `search_rank: 2.0` to a page's front-matter.
     | Hidden pages (`hidden: true`) are never indexed.
     |
     */
@@ -328,6 +336,7 @@ return [
         'max_chars' => (int) env('LARADOCS_SEARCH_MAX_CHARS', 10000),
         'exclude' => [],
         'include' => [],
+        'rank' => [],
     ],
 
     /*
