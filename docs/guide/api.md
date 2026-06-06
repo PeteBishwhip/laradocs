@@ -31,11 +31,11 @@ See [Variables](/docs/features/variables) and
 ## Querying the document tree
 
 ```php
-$all   = Laradocs::all();    // Laradocs\Documents\DocumentCollection
-$tree  = Laradocs::tree();   // Laradocs\Documents\DocumentTree
-$home  = Laradocs::home();   // Laradocs\Documents\Document|null
+$all   = Laradocs::all();               // DocumentCollection
+$tree  = Laradocs::tree();              // DocumentTree
+$home  = Laradocs::home();              // Document|null
 $page  = Laradocs::find('guide/routing'); // Document|null
-$html  = Laradocs::render($page);          // cached rendered HTML
+$html  = Laradocs::render($page);       // cached rendered HTML
 ```
 
 ### `DocumentCollection`
@@ -58,7 +58,7 @@ The navigation tree, built from the collection:
 | Method | Returns |
 |---|---|
 | `rootDocument` | The `/docs` landing document (or `null`). |
-| `navigation()` | Hierarchical array of `TreeNode`s. |
+| `navigation()` | Hierarchical array of `TreeNode`s (hidden nodes pruned). |
 | `grouped()` | `Collection<string, Collection<int, TreeNode>>`. |
 
 ### `Document` and `Metadata`

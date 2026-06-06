@@ -368,4 +368,25 @@ return [
         // 'alert' => 'laradocs::macros.alert',
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | HTTP API
+    |--------------------------------------------------------------------------
+    |
+    | Controls the JSON API endpoints (_laradocs/api/tree and _laradocs/api/search).
+    |
+    | "rate_limit"  Requests per minute allowed per IP address. Override or
+    |               disable programmatically via the Laradocs facade in a
+    |               service provider's boot() method:
+    |
+    |                 Laradocs::rateLimit(false);              // disable
+    |                 Laradocs::rateLimit(120);                // 120 rpm
+    |                 Laradocs::rateLimit(fn ($req) => ...);   // full control
+    |
+    */
+
+    'api' => [
+        'rate_limit' => (int) env('LARADOCS_API_RATE_LIMIT', 60),
+    ],
+
 ];

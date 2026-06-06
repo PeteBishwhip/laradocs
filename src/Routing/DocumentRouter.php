@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace Laradocs\Routing;
 
 use Illuminate\Contracts\Routing\Registrar;
+use Laradocs\Http\Controllers\ApiSearchController;
+use Laradocs\Http\Controllers\ApiTreeController;
 use Laradocs\Http\Controllers\AssetController;
 use Laradocs\Http\Controllers\DocsController;
 use Laradocs\Http\Controllers\SearchController;
 use Laradocs\Http\Middleware\EnsureDocsEnabled;
+use Laradocs\Http\Middleware\ThrottleApiRequests;
 
 final class DocumentRouter
 {
@@ -41,6 +44,12 @@ final class DocumentRouter
                 ->where('file', '[\w.\-]+')
                 ->name('asset');
             $router->get('_laradocs/search', SearchController::class)->name('search');
+            $router->get('_laradocs/api/tree', ApiTreeController::class)
+                ->middleware(ThrottleApiRequests::class)
+                ->name('api.tree');
+            $router->get('_laradocs/api/search', ApiSearchController::class)
+                ->middleware(ThrottleApiRequests::class)
+                ->name('api.search');
             $router->get('/{path}', [DocsController::class, 'show'])
                 ->where('path', '.*')
                 ->name('show');

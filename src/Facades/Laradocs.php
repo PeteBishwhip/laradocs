@@ -14,6 +14,7 @@ use Laradocs\Documents\DocumentTree;
  * @method static \Laradocs\Laradocs variables(array<string, mixed>|Closure $values)
  * @method static \Laradocs\Laradocs share(string $key, mixed $value)
  * @method static \Laradocs\Laradocs macro(string $name, Closure|string $handler)
+ * @method static \Laradocs\Laradocs rateLimit(Closure|int|false $resolver)
  * @method static DocumentCollection<int, Document> all()
  * @method static DocumentTree tree()
  * @method static Document|null find(string $slug)

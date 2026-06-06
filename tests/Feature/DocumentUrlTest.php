@@ -19,10 +19,12 @@ it('links an empty slug to the index route', function () {
         ->and(DocumentUrl::toSlug('/'))->toBe(url('/docs'));
 });
 
-it('builds index, asset and search urls', function () {
+it('builds index, asset, search and api urls', function () {
     expect(DocumentUrl::index())->toBe(url('/docs'))
         ->and(DocumentUrl::asset('laradocs.css'))->toBe(url('/docs/_laradocs/asset/laradocs.css'))
-        ->and(DocumentUrl::search())->toBe(url('/docs/_laradocs/search'));
+        ->and(DocumentUrl::search())->toBe(url('/docs/_laradocs/search'))
+        ->and(DocumentUrl::apiTree())->toBe(url('/docs/_laradocs/api/tree'))
+        ->and(DocumentUrl::apiSearch())->toBe(url('/docs/_laradocs/api/search'));
 });
 
 it('respects a configured route-name prefix', function () {

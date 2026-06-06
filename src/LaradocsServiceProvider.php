@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Laradocs;
 
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Cache\Factory as CacheFactory;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Routing\Registrar;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\Console\AboutCommand;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Laradocs\Cache\DocumentCache;
 use Laradocs\Console\CacheCommand;
@@ -40,6 +43,7 @@ use Laradocs\Search\ScoutSearchEngine;
 use Laradocs\Search\SearchManager;
 use Laradocs\Seo\SeoFactory;
 use Laradocs\Support\Config;
+use Laradocs\Support\RateLimiterConfig;
 use Laradocs\Variables\VariableRegistry;
 use Laravel\Scout\EngineManager;
 use League\CommonMark\Environment\Environment;
@@ -59,12 +63,14 @@ final class LaradocsServiceProvider extends ServiceProvider
         $this->registerPipeline();
         $this->registerCore();
         $this->registerSearch();
+        $this->registerRateLimiting();
     }
 
     public function boot(): void
     {
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'laradocs');
         $this->registerRoutes();
+        $this->bootRateLimiting();
         $this->registerDefaultMacros();
 
         if ($this->app->runningInConsole()) {
@@ -150,9 +156,33 @@ final class LaradocsServiceProvider extends ServiceProvider
             $app->make(DocumentCache::class),
             $app->make(VariableRegistry::class),
             $app->make(MacroRegistry::class),
+            $app->make(RateLimiterConfig::class),
             Config::string('laradocs.docs.index', '_index'),
             Config::int('laradocs.search.max_chars', 10000),
         ));
+    }
+
+    private function registerRateLimiting(): void
+    {
+        $this->app->singleton(RateLimiterConfig::class);
+    }
+
+    private function bootRateLimiting(): void
+    {
+        RateLimiter::for('laradocs-api', function (Request $request): Limit {
+            $resolver = $this->app->make(RateLimiterConfig::class)->get();
+
+            if ($resolver instanceof \Closure) {
+                /** @var Limit $limit */
+                $limit = $resolver($request);
+
+                return $limit;
+            }
+
+            $perMinute = is_int($resolver) ? $resolver : Config::int('laradocs.api.rate_limit', 60);
+
+            return Limit::perMinute($perMinute)->by($request->ip());
+        });
     }
 
     private function registerSearch(): void
