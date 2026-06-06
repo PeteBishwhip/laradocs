@@ -36,7 +36,7 @@ redirect: null
 | `slug` | string | Override the URL slug — see [Routing](/docs/guide/routing). |
 | `order` | int | Sort order within a section (ascending, default `999`). |
 | `hidden` | bool | Hide from sidebar and listings while keeping the URL reachable. |
-| `group` | string | Bucket the page under a sidebar heading and a top-level tab. |
+| `group` | string | Bucket the page under a sidebar heading and a top-level tab — see [Grouping](/docs/guide/grouping). |
 | `eyebrow` | string | Small label above the page title; defaults to `group` when omitted. |
 | `badge` | string | Tiny pill rendered next to the sidebar link (e.g. `New`, `Beta`). |
 | `icon` | string | Free-form icon name available to custom views/macros. |
@@ -80,7 +80,7 @@ badge: Updated
 ---
 ```
 
-- `group:` produces both a sidebar section heading and a top-level tab.
+- `group:` produces both a sidebar section heading and a top-level tab — see [Grouping](/docs/guide/grouping).
 - `order:` controls position within the group (lower = earlier).
 - `hidden: true` removes the page from sidebar and tabs while keeping
   it reachable by URL.
