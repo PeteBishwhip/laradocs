@@ -22,11 +22,8 @@ final class ClearCommand extends Command
         try {
             $engine->flush();
         } catch (Throwable $e) {
-            $this->error(sprintf(
-                'Failed to flush the search index (%s engine): %s',
-                $engine->name(),
-                $e->getMessage(),
-            ));
+            $this->error(sprintf('Failed to flush the search index (%s engine).', $engine->name()));
+            $this->error('  ' . $e->getMessage());
         }
 
         $this->components->info('Documentation cache cleared.');

@@ -3,6 +3,9 @@
 declare(strict_types=1);
 
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Cache\RateLimiting\Unlimited;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Laradocs\Facades\Laradocs;
 use Laradocs\Support\RateLimiterConfig;
 
@@ -92,6 +95,17 @@ it('disabled rate limiting omits rate limit headers', function () {
     $response = $this->getJson('/docs/_laradocs/api/tree')->assertOk();
 
     expect($response->headers->has('X-RateLimit-Limit'))->toBeFalse();
+});
+
+it('the named limiter callback yields an unlimited limit when disabled', function () {
+    // The middleware short-circuits before the named limiter runs, so exercise
+    // the callback directly to prove it honours rateLimit(false) defensively.
+    Laradocs::rateLimit(false);
+
+    $limiter = RateLimiter::limiter('laradocs-api');
+    $limit = $limiter(Request::create('/docs/_laradocs/api/tree'));
+
+    expect($limit)->toBeInstanceOf(Unlimited::class);
 });
 
 // ─── Custom resolver closure ──────────────────────────────────────────────────

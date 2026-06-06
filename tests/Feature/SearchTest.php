@@ -185,6 +185,38 @@ it('laradocs:clear flushes the search engine', function () {
     expect($fake->flushed)->toBeGreaterThan(0);
 });
 
+it('laradocs:clear reports a search index flush failure without failing', function () {
+    $this->makeDocs(['a.md' => ALPHA_DOC]);
+
+    app()->bind(SearchEngine::class, fn (): SearchEngine => new class implements SearchEngine
+    {
+        public function search(string $query, array $index, int $limit): array
+        {
+            return [];
+        }
+
+        public function sync(array $index): void
+        {
+            // No-op: this stub only exercises the flush() failure path.
+        }
+
+        public function flush(): void
+        {
+            throw new RuntimeException('index unreachable');
+        }
+
+        public function name(): string
+        {
+            return 'broken';
+        }
+    });
+
+    $this->artisan('laradocs:clear')
+        ->expectsOutputToContain('Failed to flush the search index (broken engine)')
+        ->expectsOutputToContain('index unreachable')
+        ->assertSuccessful();
+});
+
 it('searches through the configured scout engine end to end', function () {
     bindFakeScout();
     $this->makeDocs([
