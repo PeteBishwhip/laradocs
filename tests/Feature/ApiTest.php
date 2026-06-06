@@ -271,3 +271,25 @@ it('search 404s when docs are disabled', function () {
 
     $this->getJson('/docs/_laradocs/api/search?q=alpha')->assertNotFound();
 });
+
+it('search excerpt is empty for a body-less page matched by title', function () {
+    $this->makeDocs([
+        'blank.md' => "---\ntitle: Searchword\n---\n",
+    ]);
+
+    $this->getJson('/docs/_laradocs/api/search?q=searchword')
+        ->assertOk()
+        ->assertJsonPath('data.0.attributes.excerpt', '');
+});
+
+it('search excerpt falls back to a leading snippet when the term is title-only', function () {
+    $this->makeDocs([
+        'titled.md' => "---\ntitle: Keyworded Title\n---\nThis body never mentions the term.\n",
+    ]);
+
+    $excerpt = $this->getJson('/docs/_laradocs/api/search?q=keyworded')
+        ->assertOk()
+        ->json('data.0.attributes.excerpt');
+
+    expect($excerpt)->toBe('This body never mentions the term.');
+});

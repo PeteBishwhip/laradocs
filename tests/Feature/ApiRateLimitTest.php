@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Cache\RateLimiting\Limit;
 use Laradocs\Facades\Laradocs;
+use Laradocs\Support\RateLimiterConfig;
 
 beforeEach(function () {
     $this->makeDocs([
@@ -123,7 +124,7 @@ it('reads the default rate limit from config when no facade override is set', fu
     config()->set('laradocs.api.rate_limit', 2);
 
     // Forget the singleton so a fresh instance reads the updated config.
-    app()->forgetInstance(\Laradocs\Support\RateLimiterConfig::class);
+    app()->forgetInstance(RateLimiterConfig::class);
 
     $this->getJson('/docs/_laradocs/api/tree')->assertOk();
     $this->getJson('/docs/_laradocs/api/tree')->assertOk();

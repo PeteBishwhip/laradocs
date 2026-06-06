@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Laradocs;
 
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Cache\Factory as CacheFactory;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Routing\Registrar;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\Console\AboutCommand;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Laradocs\Cache\DocumentCache;
 use Laradocs\Console\CacheCommand;
@@ -34,9 +37,6 @@ use Laradocs\Metadata\FrontMatterMetadataResolver;
 use Laradocs\Parsers\MarkdownParser;
 use Laradocs\Routing\DocumentRouter;
 use Laradocs\Routing\SlugResolver;
-use Illuminate\Cache\RateLimiting\Limit;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\RateLimiter;
 use Laradocs\Search\Contracts\SearchEngine;
 use Laradocs\Search\JsonSearchEngine;
 use Laradocs\Search\ScoutSearchEngine;
@@ -173,7 +173,10 @@ final class LaradocsServiceProvider extends ServiceProvider
             $resolver = $this->app->make(RateLimiterConfig::class)->get();
 
             if ($resolver instanceof \Closure) {
-                return $resolver($request);
+                /** @var Limit $limit */
+                $limit = $resolver($request);
+
+                return $limit;
             }
 
             $perMinute = is_int($resolver) ? $resolver : Config::int('laradocs.api.rate_limit', 60);
