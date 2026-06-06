@@ -1,7 +1,6 @@
 ---
 title: Routing
 description: How file paths and metadata become URLs.
-order: 1
 ---
 
 # Routing

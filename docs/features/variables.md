@@ -1,7 +1,6 @@
 ---
 title: Variables
 description: Interpolate dynamic values into your docs.
-order: 1
 ---
 
 # Variables

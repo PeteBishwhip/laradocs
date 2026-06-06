@@ -1,7 +1,6 @@
 ---
 title: Grouping
 description: How group: buckets sections into tabs and sidebar headings.
-order: 3
 ---
 
 # Grouping

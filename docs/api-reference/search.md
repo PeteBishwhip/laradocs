@@ -1,7 +1,6 @@
 ---
 title: GET /api/search
 description: Runs a full-text search and returns matching pages as JSON:API resources.
-order: 2
 ---
 
 # GET /api/search

@@ -1,7 +1,6 @@
 ---
 title: Macros
 description: Reusable content components for your docs.
-order: 2
 ---
 
 # Macros

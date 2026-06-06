@@ -1,7 +1,6 @@
 ---
 title: Metadata
 description: The front-matter fields Laradocs understands.
-order: 2
 ---
 
 # Metadata
