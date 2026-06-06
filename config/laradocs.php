@@ -201,6 +201,21 @@ return [
         'search' => [
             'enabled' => (bool) env('LARADOCS_SEARCH', true),
         ],
+
+        /*
+        | Global banner displayed above the header on every page.
+        | "type" accepts: info | alert | danger
+        | "message" may contain HTML (e.g. a link for a CTA).
+        |
+        |   LARADOCS_BANNER=1
+        |   LARADOCS_BANNER_TYPE=info
+        |   LARADOCS_BANNER_MESSAGE="<a href='/changelog'>v2 is out</a> — see what's new."
+        */
+        'banner' => [
+            'enabled' => (bool) env('LARADOCS_BANNER', false),
+            'type' => env('LARADOCS_BANNER_TYPE', 'info'),
+            'message' => env('LARADOCS_BANNER_MESSAGE'),
+        ],
     ],
 
     /*

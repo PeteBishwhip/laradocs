@@ -371,6 +371,7 @@ final class LaradocsServiceProvider extends ServiceProvider
             'Caching' => Config::bool('laradocs.cache.enabled') ? 'enabled' : 'disabled',
             'Search Driver' => Config::string('laradocs.search.driver'),
             'Theme' => Config::string('laradocs.ui.theme'),
+            'Banner' => Config::bool('laradocs.ui.banner.enabled') ? Config::string('laradocs.ui.banner.type', 'info') : 'disabled',
         ]);
     }
 }
