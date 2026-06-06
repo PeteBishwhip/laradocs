@@ -327,6 +327,8 @@ body.laradocs {
   font-weight: 500;
 }
 .laradocs-sidebar .laradocs-nav-group {
+  display: flex;
+  align-items: center;
   margin: 1.5rem .65rem .35rem;
   font-size: .72rem;
   font-weight: 600;
@@ -334,6 +336,45 @@ body.laradocs {
   text-transform: uppercase;
   color: var(--dc-fg);
 }
+.laradocs-sidebar .laradocs-nav-group > span { flex: 1; min-width: 0; }
+.laradocs-sidebar .laradocs-nav-group[role="button"] {
+  cursor: pointer;
+  user-select: none;
+}
+.laradocs-sidebar .laradocs-nav-group[role="button"]:hover { color: var(--dc-accent); }
+
+/* Chevron icon used in collapse toggles */
+.laradocs-nav-toggle {
+  width: 14px; height: 14px;
+  flex-shrink: 0;
+  color: var(--dc-subtle);
+  transition: transform .15s ease;
+}
+.laradocs-nav-group[aria-expanded="false"] .laradocs-nav-toggle,
+.laradocs-nav-children-toggle[aria-expanded="false"] .laradocs-nav-toggle {
+  transform: rotate(-90deg);
+}
+
+/* Hide collapsed sections */
+.laradocs-sidebar nav > .laradocs-nav-group[aria-expanded="false"] + ul { display: none; }
+.laradocs-sidebar .laradocs-children.is-collapsed { display: none; }
+
+/* Flex row wrapping a link and its children toggle button */
+.laradocs-nav-link-row { display: flex; align-items: center; }
+.laradocs-nav-link-row > a { flex: 1; min-width: 0; }
+.laradocs-nav-children-toggle {
+  flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 0; background: transparent;
+  padding: .25rem;
+  margin: .05rem 0;
+  color: var(--dc-subtle);
+  cursor: pointer;
+  border-radius: var(--dc-radius);
+  transition: color .12s ease, background .12s ease;
+}
+.laradocs-nav-children-toggle:hover { color: var(--dc-fg); background: var(--dc-bg-elev); }
+
 .laradocs-sidebar .laradocs-children {
   margin: .15rem 0 .15rem .65rem;
   padding-left: .6rem;

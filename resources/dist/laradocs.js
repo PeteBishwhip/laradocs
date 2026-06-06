@@ -160,6 +160,98 @@
     });
   }
 
+  function initSidebarCollapse() {
+    var nav = document.querySelector('.laradocs-sidebar nav');
+    if (!nav) return;
+
+    var chevronPath = 'M6 9l6 6 6-6';
+    function makeChevron() {
+      var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('viewBox', '0 0 24 24');
+      svg.setAttribute('fill', 'none');
+      svg.setAttribute('stroke', 'currentColor');
+      svg.setAttribute('stroke-width', '2');
+      svg.setAttribute('stroke-linecap', 'round');
+      svg.setAttribute('stroke-linejoin', 'round');
+      svg.setAttribute('class', 'laradocs-nav-toggle');
+      svg.setAttribute('aria-hidden', 'true');
+      var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', chevronPath);
+      svg.appendChild(path);
+      return svg;
+    }
+
+    // Top-level nav group headers (direct children of nav)
+    var topGroups = nav.querySelectorAll(':scope > .laradocs-nav-group');
+    topGroups.forEach(function (group) {
+      var ul = group.nextElementSibling;
+      if (!ul || ul.tagName !== 'UL') return;
+
+      var isActive = !!ul.querySelector('a.is-active');
+      group.appendChild(makeChevron());
+      group.setAttribute('role', 'button');
+      group.setAttribute('tabindex', '0');
+      group.setAttribute('aria-expanded', isActive ? 'true' : 'false');
+
+      function toggle() {
+        var expanded = group.getAttribute('aria-expanded') === 'true';
+        group.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+      }
+      group.addEventListener('click', toggle);
+      group.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+      });
+    });
+
+    // Node-level children (.laradocs-children inside <li>)
+    nav.querySelectorAll('li').forEach(function (li) {
+      var children = li.querySelector(':scope > .laradocs-children');
+      if (!children) return;
+
+      var isActive = !!children.querySelector('a.is-active');
+      if (!isActive) children.classList.add('is-collapsed');
+
+      var groupTrigger = li.querySelector(':scope > .laradocs-nav-group');
+      var linkTrigger = li.querySelector(':scope > a');
+
+      if (groupTrigger) {
+        groupTrigger.appendChild(makeChevron());
+        groupTrigger.setAttribute('role', 'button');
+        groupTrigger.setAttribute('tabindex', '0');
+        groupTrigger.setAttribute('aria-expanded', isActive ? 'true' : 'false');
+
+        function toggleGroup() {
+          var expanded = groupTrigger.getAttribute('aria-expanded') === 'true';
+          groupTrigger.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+          children.classList.toggle('is-collapsed', expanded);
+        }
+        groupTrigger.addEventListener('click', toggleGroup);
+        groupTrigger.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleGroup(); }
+        });
+      } else if (linkTrigger) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'laradocs-nav-children-toggle';
+        btn.setAttribute('aria-label', 'Toggle submenu');
+        btn.setAttribute('aria-expanded', isActive ? 'true' : 'false');
+        btn.appendChild(makeChevron());
+
+        var row = document.createElement('div');
+        row.className = 'laradocs-nav-link-row';
+        li.insertBefore(row, linkTrigger);
+        row.appendChild(linkTrigger);
+        row.appendChild(btn);
+
+        btn.addEventListener('click', function () {
+          var expanded = btn.getAttribute('aria-expanded') === 'true';
+          btn.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+          children.classList.toggle('is-collapsed', expanded);
+        });
+      }
+    });
+  }
+
   function initSearchShortcut() {
     var input = document.querySelector('[data-laradocs-search]');
     if (!input) return;
@@ -402,6 +494,7 @@
     initProgress();
     initZoom();
     initSidebarIndex();
+    initSidebarCollapse();
     initSearchShortcut();
     initPalette();
   }
