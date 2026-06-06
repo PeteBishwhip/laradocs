@@ -1,7 +1,6 @@
 ---
 title: Search
 description: Full-text search for the command palette, with optional Scout engines.
-order: 3
 group: Guide
 ---
 

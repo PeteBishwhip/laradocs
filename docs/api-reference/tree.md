@@ -1,7 +1,6 @@
 ---
 title: GET /api/tree
 description: Returns the complete navigation tree as a JSON:API compound document.
-order: 1
 ---
 
 # GET /api/tree

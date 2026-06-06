@@ -34,7 +34,7 @@ final class TreeNode
 
     public function order(): int
     {
-        return $this->document?->order() ?? 999;
+        return $this->document?->order() ?? PHP_INT_MAX;
     }
 
     public function group(): ?string

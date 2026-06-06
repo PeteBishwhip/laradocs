@@ -67,7 +67,7 @@ The inline ternary keeps the rendered front-matter free of blank lines when
 ---
 title: {{ $title }}
 group: {{ $group ?? 'Uncategorised' }}
-order: {{ $order ?? 999 }}
+{!! $order !== null ? "order: {$order}" : '' !!}
 ---
 
 # {{ $title }}

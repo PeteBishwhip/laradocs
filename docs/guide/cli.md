@@ -1,7 +1,6 @@
 ---
 title: CLI
 description: Every Artisan command shipped by Laradocs.
-order: 4
 ---
 
 # CLI

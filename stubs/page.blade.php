@@ -1,7 +1,7 @@
 ---
 title: {{ $title }}
 {!! $group !== null ? "group: {$group}" : '# group: Guides              # Bucket this page sits under in the sidebar' !!}
-{!! $order !== null ? "order: {$order}" : '# order: 1                   # Lower numbers appear first (default 999)' !!}
+{!! $order !== null ? "order: {$order}" : '# order: 1                   # Lower numbers appear first; omit to sort alphabetically' !!}
 # description: A short summary used for <meta> tags and SEO
 # slug: custom-url           # Override the URL slug (defaults to the file path)
 # hidden: true               # Hide from the sidebar and listings

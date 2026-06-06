@@ -1,7 +1,6 @@
 ---
 title: Caching
 description: Fast rendering with automatic invalidation.
-order: 3
 ---
 
 # Caching

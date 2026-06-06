@@ -1,7 +1,6 @@
 ---
 title: SEO
 description: Rich, automatic SEO and social meta for every page — with per-page overrides.
-order: 7
 ---
 
 # SEO

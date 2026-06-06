@@ -1,7 +1,6 @@
 ---
 title: Rich Content
 description: Callouts, code, tables, images, video, footnotes and attribute lists.
-order: 3
 ---
 
 # Rich Content
