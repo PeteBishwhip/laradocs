@@ -19,6 +19,7 @@ final class CacheCommand extends Command
         $documents = $laradocs->all();
 
         $laradocs->tree();
+        $laradocs->sitemap();
 
         $documents->each(fn (Document $document) => $laradocs->render($document));
 

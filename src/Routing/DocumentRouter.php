@@ -10,6 +10,7 @@ use Laradocs\Http\Controllers\ApiTreeController;
 use Laradocs\Http\Controllers\AssetController;
 use Laradocs\Http\Controllers\DocsController;
 use Laradocs\Http\Controllers\SearchController;
+use Laradocs\Http\Controllers\SitemapController;
 use Laradocs\Http\Middleware\EnsureDocsEnabled;
 use Laradocs\Http\Middleware\ThrottleApiRequests;
 
@@ -40,6 +41,7 @@ final class DocumentRouter
 
         $router->group($attributes, function (Registrar $router): void {
             $router->get('/', [DocsController::class, 'index'])->name('index');
+            $router->get('sitemap.xml', SitemapController::class)->name('sitemap');
             $router->get('_laradocs/asset/{file}', AssetController::class)
                 ->where('file', '[\w.\-]+')
                 ->name('asset');

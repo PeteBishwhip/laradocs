@@ -32,6 +32,8 @@ Then open `/docs`.
   copy button, lazy images with captions, and local/YouTube/Vimeo video embeds.
 - 🔎 **Automatic SEO** — `<title>`, meta description, Open Graph & Twitter cards,
   canonical URLs and JSON-LD for every page, with per-page front-matter overrides.
+- 🗺️ **Sitemap** — an auto-generated `sitemap.xml` at `{prefix}/sitemap.xml`,
+  cached and invalidated alongside the rest of the docs cache.
 - ✅ **Fully tested** — Pest + Testbench, 100% coverage gate, PHPStan max, Pint.
 
 ## Quick start
@@ -112,6 +114,7 @@ are themselves built with Laradocs. Highlights:
 - [Metadata](https://laradocs.dev/docs/guide/metadata)
 - [Caching](https://laradocs.dev/docs/guide/caching)
 - [SEO](https://laradocs.dev/docs/guide/seo)
+- [Sitemap](https://laradocs.dev/docs/guide/sitemap)
 - [CLI reference](https://laradocs.dev/docs/guide/cli)
 - [PHP API](https://laradocs.dev/docs/guide/api)
 - [Variables](https://laradocs.dev/docs/features/variables) ·
