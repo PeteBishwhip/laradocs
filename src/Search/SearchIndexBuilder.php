@@ -64,23 +64,14 @@ final class SearchIndexBuilder
      */
     private function allowed(string $slug, array $exclude, array $include): bool
     {
-        foreach ($exclude as $pattern) {
-            if (fnmatch($pattern, $slug)) {
-                return false;
-            }
+        $isExcluded = array_filter($exclude, fn (string $p): bool => fnmatch($p, $slug)) !== [];
+
+        if ($isExcluded) {
+            return false;
         }
 
-        if ($include === []) {
-            return true;
-        }
-
-        foreach ($include as $pattern) {
-            if (fnmatch($pattern, $slug)) {
-                return true;
-            }
-        }
-
-        return false;
+        return $include === []
+            || array_filter($include, fn (string $p): bool => fnmatch($p, $slug)) !== [];
     }
 
     /**
