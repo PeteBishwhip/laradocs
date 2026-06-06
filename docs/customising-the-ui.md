@@ -25,6 +25,8 @@ A typical page is composed of:
   link, and prev/next pager.
 - **Table of contents** — scroll-spying right column highlighting the
   heading you're currently reading. Hidden under 1180px.
+- **Banner** — optional full-width strip above the header for
+  announcements, maintenance notices, or CTAs.
 - **Footer** — configurable text and link list (toggle with
   `LARADOCS_FOOTER`).
 
@@ -169,6 +171,41 @@ and works whether your docs use `.md` or `.markdown`.
 ```
 
 `LARADOCS_FOOTER=false` removes the footer entirely.
+
+## Banner
+
+Display a full-width announcement strip above the header on every page —
+useful for maintenance windows, version releases, or any site-wide notice.
+
+```php
+// config/laradocs.php
+'ui' => [
+    'banner' => [
+        'enabled' => true,
+        'type'    => 'info',
+        'message' => '<a href="/docs/changelog">v2.0 is out</a> — see what\'s new.',
+    ],
+],
+```
+
+Or via environment variables:
+
+```dotenv
+LARADOCS_BANNER=true
+LARADOCS_BANNER_TYPE=info
+LARADOCS_BANNER_MESSAGE="Scheduled maintenance on Sunday 02:00–04:00 UTC."
+```
+
+The `message` is rendered as raw HTML, so you can include links and
+inline markup for CTAs. Keep it short — one line.
+
+| Type | Colour |
+|---|---|
+| `info` | Blue |
+| `alert` | Amber |
+| `danger` | Red |
+
+All three variants adapt to light and dark mode automatically.
 
 ## Overriding views
 

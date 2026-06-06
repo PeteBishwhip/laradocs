@@ -26,7 +26,7 @@ it('has no broken internal documentation links', function () {
     $broken = [];
 
     foreach ($laradocs->all() as $document) {
-        $html = $laradocs->render($document);
+        $html = preg_replace('~<pre\b[^>]*>.*?</pre>~s', '', $laradocs->render($document)) ?? '';
         preg_match_all('~href="/docs/([^"#]*)~', $html, $matches);
 
         foreach ($matches[1] as $target) {

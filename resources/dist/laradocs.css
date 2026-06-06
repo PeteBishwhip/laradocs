@@ -115,6 +115,33 @@ body.laradocs {
   transition: width .1s linear;
 }
 
+/* ─────────────────────── banner ─────────────────────── */
+.laradocs-banner {
+  display: flex; justify-content: center; align-items: center;
+  padding: .5rem 1.25rem;
+  font-size: .875rem; font-weight: 500; line-height: 1.4; text-align: center;
+}
+.laradocs-banner-inner { max-width: var(--dc-content-w); }
+.laradocs-banner a { color: inherit; text-decoration: underline; }
+.laradocs-banner a:hover { opacity: .8; }
+
+.laradocs-banner-info   { background: #eff6ff; color: #1d4ed8; }
+.laradocs-banner-alert  { background: #fffbeb; color: #92400e; }
+.laradocs-banner-danger { background: #fff1f2; color: #be123c; }
+
+[data-theme="dark"] .laradocs-banner-info   { background: #1e3a5f; color: #93c5fd; }
+[data-theme="dark"] .laradocs-banner-alert  { background: #451a03; color: #fcd34d; }
+[data-theme="dark"] .laradocs-banner-danger { background: #4c0519; color: #fca5a5; }
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .laradocs-banner-info,
+  :root[data-theme="auto"] .laradocs-banner-info   { background: #1e3a5f; color: #93c5fd; }
+  :root:not([data-theme]) .laradocs-banner-alert,
+  :root[data-theme="auto"] .laradocs-banner-alert  { background: #451a03; color: #fcd34d; }
+  :root:not([data-theme]) .laradocs-banner-danger,
+  :root[data-theme="auto"] .laradocs-banner-danger { background: #4c0519; color: #fca5a5; }
+}
+
 /* ─────────────────────── header ─────────────────────── */
 .laradocs-header {
   position: sticky; top: 0; z-index: 10;
