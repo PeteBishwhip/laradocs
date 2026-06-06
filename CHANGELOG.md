@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Default `robots.txt` served at `{prefix}/robots.txt` with a `Sitemap:` pointer
+  at the package's `sitemap.xml`. Custom `User-agent` rule blocks can be defined
+  in `laradocs.robots.rules`, and `LARADOCS_ENABLED=false` collapses the body
+  to a `Disallow: /` directive.
 - Pre-rendered full-text search powering the ⌘K command palette, matching page
   bodies as well as titles.
 - `laradocs:index` Artisan command to build the search index and push it to the

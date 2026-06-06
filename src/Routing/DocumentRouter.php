@@ -9,6 +9,7 @@ use Laradocs\Http\Controllers\ApiSearchController;
 use Laradocs\Http\Controllers\ApiTreeController;
 use Laradocs\Http\Controllers\AssetController;
 use Laradocs\Http\Controllers\DocsController;
+use Laradocs\Http\Controllers\RobotsController;
 use Laradocs\Http\Controllers\SearchController;
 use Laradocs\Http\Controllers\SitemapController;
 use Laradocs\Http\Middleware\EnsureDocsEnabled;
@@ -24,10 +25,8 @@ final class DocumentRouter
      */
     public function register(Registrar $router, array $config): void
     {
-        $middleware = array_merge(
-            (array) ($config['middleware'] ?? ['web']),
-            [EnsureDocsEnabled::class],
-        );
+        $baseMiddleware = (array) ($config['middleware'] ?? ['web']);
+        $middleware = array_merge($baseMiddleware, [EnsureDocsEnabled::class]);
 
         $attributes = [
             'prefix' => $config['prefix'] ?? 'docs',
@@ -38,6 +37,16 @@ final class DocumentRouter
         if (! empty($config['domain'])) {
             $attributes['domain'] = $config['domain'];
         }
+
+        // robots.txt is registered without EnsureDocsEnabled so that crawlers
+        // still receive a valid "Disallow: /" body when the docs are off, as
+        // opposed to a 404 they might interpret as transient.
+        $robotsAttributes = $attributes;
+        $robotsAttributes['middleware'] = $baseMiddleware;
+
+        $router->group($robotsAttributes, function (Registrar $router): void {
+            $router->get('robots.txt', RobotsController::class)->name('robots');
+        });
 
         $router->group($attributes, function (Registrar $router): void {
             $router->get('/', [DocsController::class, 'index'])->name('index');

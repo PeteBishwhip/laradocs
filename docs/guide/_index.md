@@ -19,5 +19,6 @@ programmatic access.
 - [Search](/docs/guide/search) — full-text search and Scout engines.
 - [SEO](/docs/guide/seo) — automatic meta tags, social cards and JSON-LD.
 - [Sitemap](/docs/guide/sitemap) — the auto-generated `sitemap.xml`.
+- [Robots](/docs/guide/robots) — the default `robots.txt` and how to customise it.
 - [CLI](/docs/guide/cli) — every Artisan command.
 - [PHP API](/docs/guide/api) — the `Laradocs` facade and service.
