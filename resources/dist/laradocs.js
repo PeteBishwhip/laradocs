@@ -208,11 +208,11 @@
       var children = li.querySelector(':scope > .laradocs-children');
       if (!children) return;
 
-      var isActive = !!children.querySelector('a.is-active');
-      if (!isActive) children.classList.add('is-collapsed');
-
       var groupTrigger = li.querySelector(':scope > .laradocs-nav-group');
       var linkTrigger = li.querySelector(':scope > a');
+
+      var isActive = !!children.querySelector('a.is-active') || (linkTrigger && linkTrigger.classList.contains('is-active'));
+      if (!isActive) children.classList.add('is-collapsed');
 
       if (groupTrigger) {
         groupTrigger.appendChild(makeChevron());
