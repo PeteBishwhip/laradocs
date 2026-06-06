@@ -7,6 +7,7 @@ namespace Laradocs\Console;
 use Illuminate\Console\Command;
 use Laradocs\Cache\DocumentCache;
 use Laradocs\Search\Contracts\SearchEngine;
+use Throwable;
 
 final class ClearCommand extends Command
 {
@@ -18,7 +19,15 @@ final class ClearCommand extends Command
     {
         $cache->flush();
 
-        $engine->flush();
+        try {
+            $engine->flush();
+        } catch (Throwable $e) {
+            $this->error(sprintf(
+                'Failed to flush the search index (%s engine): %s',
+                $engine->name(),
+                $e->getMessage(),
+            ));
+        }
 
         $this->components->info('Documentation cache cleared.');
 
