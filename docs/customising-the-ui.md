@@ -183,7 +183,7 @@ useful for maintenance windows, version releases, or any site-wide notice.
     'banner' => [
         'enabled' => true,
         'type'    => 'info',
-        'message' => '<a href="/changelog">v2.0 is out</a> — see what\'s new.',
+        'message' => '<a href="/docs/changelog">v2.0 is out</a> — see what\'s new.',
     ],
 ],
 ```
