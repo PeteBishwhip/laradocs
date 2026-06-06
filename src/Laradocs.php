@@ -13,6 +13,7 @@ use Laradocs\Documents\DocumentCollection;
 use Laradocs\Documents\DocumentTree;
 use Laradocs\Macros\MacroRegistry;
 use Laradocs\Search\SearchIndexBuilder;
+use Laradocs\Support\RateLimiterConfig;
 use Laradocs\Variables\VariableRegistry;
 
 /**
@@ -26,6 +27,7 @@ final class Laradocs
         private readonly DocumentCache $cache,
         private readonly VariableRegistry $variables,
         private readonly MacroRegistry $macros,
+        private readonly RateLimiterConfig $rateLimiterConfig,
         private readonly string $indexName = '_index',
         private readonly int $searchMaxChars = 10000,
     ) {}
@@ -48,6 +50,25 @@ final class Laradocs
     public function share(string $key, mixed $value): self
     {
         $this->variables->set($key, $value);
+
+        return $this;
+    }
+
+    /**
+     * Override or disable the API rate limiter.
+     *
+     * Pass an integer to set a per-minute limit, a closure for full control
+     * over the Limit object, or false to disable rate limiting entirely.
+     *
+     * Call this in a service provider's boot() method:
+     *
+     *   Laradocs::rateLimit(false);             // disable
+     *   Laradocs::rateLimit(120);               // 120 rpm per IP
+     *   Laradocs::rateLimit(fn ($req) => ...);  // full control
+     */
+    public function rateLimit(Closure|int|false $resolver): self
+    {
+        $this->rateLimiterConfig->set($resolver);
 
         return $this;
     }
