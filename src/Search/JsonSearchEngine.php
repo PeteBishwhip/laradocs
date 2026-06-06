@@ -56,14 +56,14 @@ final class JsonSearchEngine implements SearchEngine
     }
 
     /**
-     * Weighted match score for one entry — title hits outweigh body hits.
-     * Returns null when any query term is absent, since every term must
-     * appear somewhere on the page for it to match.
+     * Weighted match score for one entry — title hits outweigh body hits,
+     * then multiplied by the entry's rank. Returns null when any query term
+     * is absent, since every term must appear somewhere on the page to match.
      *
-     * @param  array{title: string, content: string}  $entry
+     * @param  array{title: string, content: string, rank: float}  $entry
      * @param  array<int, string>  $terms
      */
-    private function score(array $entry, array $terms): ?int
+    private function score(array $entry, array $terms): ?float
     {
         $title = mb_strtolower($entry['title']);
         $content = mb_strtolower($entry['content']);
@@ -81,7 +81,7 @@ final class JsonSearchEngine implements SearchEngine
             $score += ($inTitle ? 3 : 0) + ($inContent ? 1 : 0);
         }
 
-        return $score;
+        return $score * $entry['rank'];
     }
 
     /**

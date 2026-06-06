@@ -69,6 +69,15 @@ final class Document implements Arrayable
         return $this->metadata->searchable;
     }
 
+    /**
+     * Rank multiplier applied to this page's relevance score in the JSON engine.
+     * Values > 1.0 boost the page; values < 1.0 demote it.
+     */
+    public function searchRank(): float
+    {
+        return $this->metadata->searchRank;
+    }
+
     public function order(): int
     {
         return $this->metadata->order;

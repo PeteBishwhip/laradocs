@@ -82,9 +82,12 @@ database table, and maps results back onto the pre-rendered index for display.
 Re-run `laradocs:index` (or `laradocs:cache`) after changing content to refresh
 the engine.
 
-## Excluding a page
+## Excluding pages from the index
 
-Add `search: false` to any page's front-matter to keep it out of the index:
+### Per-page opt-out
+
+Add `search: false` to any page's front-matter to keep it out of the index while
+leaving the URL fully reachable:
 
 ```markdown
 ---
@@ -93,7 +96,79 @@ search: false
 ---
 ```
 
-Hidden pages (`hidden: true`) are never indexed.
+Hidden pages (`hidden: true`) are never indexed regardless of the `search:` field.
+
+### Config-level exclude list
+
+Use `search.exclude` in `config/laradocs.php` to exclude a set of pages without
+touching each file. Values are [fnmatch](https://www.php.net/fnmatch) slug patterns:
+
+```php
+'search' => [
+    'exclude' => [
+        'internal/*',   // all pages under /docs/internal/
+        'changelog',    // the exact slug "changelog"
+    ],
+],
+```
+
+Excluded pages are still reachable — they just won't appear in search results.
+
+### Config-level rank multipliers
+
+Use `search.rank` to control where sections or individual pages appear in
+results without editing each file. Keys are fnmatch slug patterns; values are
+float multipliers. The first matching pattern wins, then multiplied by the
+page's own `search_rank` front-matter value (both default to `1.0`):
+
+```php
+'search' => [
+    'rank' => [
+        'guide/*'     => 2.0,    // Guide pages rank twice as high
+        'changelog'   => 0.5,    // Changelog ranks half as high
+        'reference/*' => 1.5,
+    ],
+],
+```
+
+Both the JSON engine and Scout engines respect rank. The JSON engine applies
+rank as a direct multiplier on its relevance score. Scout engines apply rank
+as a post-retrieval re-sort: each result's position in Scout's response is
+used as a base score, then multiplied by rank — so a strongly boosted page
+can overtake higher-relevance results, and a demoted page falls below them.
+When all ranks are `1.0` (the default), Scout's original order is preserved.
+
+### Per-page rank override
+
+Add `search_rank:` to a page's front-matter for one-off adjustments. It
+multiplies with any matching config pattern:
+
+```markdown
+---
+title: Important Page
+search_rank: 3.0
+---
+```
+
+A value of `0` sends the page to the bottom of every result set.
+
+### Config-level include allow-list
+
+When `search.include` is non-empty, **only** pages whose slug matches a pattern
+are indexed. Everything else is excluded:
+
+```php
+'search' => [
+    'include' => [
+        'guide/*',
+        'reference/*',
+    ],
+],
+```
+
+`search: false` front-matter is still respected inside an include pattern — a page
+matching an `include` pattern is still excluded if it declares `search: false`.
+`exclude` patterns take priority over `include` patterns for the same slug.
 
 ## Disabling search
 

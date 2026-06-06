@@ -21,6 +21,11 @@ use Laradocs\Variables\VariableRegistry;
  */
 final class Laradocs
 {
+    /**
+     * @param  array<int, string>  $searchExclude
+     * @param  array<int, string>  $searchInclude
+     * @param  array<string, float>  $searchRank
+     */
     public function __construct(
         private readonly DocumentLoader $loader,
         private readonly DocumentParser $parser,
@@ -30,6 +35,9 @@ final class Laradocs
         private readonly RateLimiterConfig $rateLimiterConfig,
         private readonly string $indexName = '_index',
         private readonly int $searchMaxChars = 10000,
+        private readonly array $searchExclude = [],
+        private readonly array $searchInclude = [],
+        private readonly array $searchRank = [],
     ) {}
 
     /**
@@ -131,7 +139,7 @@ final class Laradocs
      * The pre-rendered, cached full-text search index: one entry per visible,
      * searchable page. Busts automatically when any document changes.
      *
-     * @return array<int, array{slug: string, title: string, group: string, content: string}>
+     * @return array<int, array{slug: string, title: string, group: string, content: string, rank: float}>
      */
     public function searchIndex(): array
     {
@@ -143,6 +151,9 @@ final class Laradocs
                 $documents,
                 fn (Document $document): string => $this->render($document),
                 $this->searchMaxChars,
+                $this->searchExclude,
+                $this->searchInclude,
+                $this->searchRank,
             )
         );
     }

@@ -46,6 +46,8 @@ redirect: null
 | `layout` | string | Override the Blade layout used to render this page. |
 | `image` | string | Social / OG image URL — see [SEO](/docs/guide/seo). |
 | `redirect` | string | 301-redirect this slug to another page or absolute URL. |
+| `search` | bool | Set to `false` to exclude this page from the search index while keeping its URL reachable (default `true`). |
+| `search_rank` | float | Rank multiplier applied to search results. Values above `1.0` boost this page; values below `1.0` demote it. Combines with the config-level `search.rank` pattern. Applies to both the JSON and Scout engines. |
 
 > [!IMPORTANT]
 > Unknown keys are preserved and reachable via

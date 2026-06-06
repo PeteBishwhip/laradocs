@@ -150,16 +150,28 @@ final class LaradocsServiceProvider extends ServiceProvider
     {
         $this->app->singleton(SeoFactory::class);
 
-        $this->app->bind(Laradocs::class, fn (Application $app): Laradocs => new Laradocs(
-            $app->make(DocumentLoader::class),
-            $app->make(DocumentParser::class),
-            $app->make(DocumentCache::class),
-            $app->make(VariableRegistry::class),
-            $app->make(MacroRegistry::class),
-            $app->make(RateLimiterConfig::class),
-            Config::string('laradocs.docs.index', '_index'),
-            Config::int('laradocs.search.max_chars', 10000),
-        ));
+        $this->app->bind(Laradocs::class, function (Application $app): Laradocs {
+            /** @var array<int, string> $searchExclude */
+            $searchExclude = Config::array('laradocs.search.exclude');
+            /** @var array<int, string> $searchInclude */
+            $searchInclude = Config::array('laradocs.search.include');
+            /** @var array<string, float> $searchRank */
+            $searchRank = Config::array('laradocs.search.rank');
+
+            return new Laradocs(
+                $app->make(DocumentLoader::class),
+                $app->make(DocumentParser::class),
+                $app->make(DocumentCache::class),
+                $app->make(VariableRegistry::class),
+                $app->make(MacroRegistry::class),
+                $app->make(RateLimiterConfig::class),
+                Config::string('laradocs.docs.index', '_index'),
+                Config::int('laradocs.search.max_chars', 10000),
+                $searchExclude,
+                $searchInclude,
+                $searchRank,
+            );
+        });
     }
 
     private function registerRateLimiting(): void
