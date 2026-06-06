@@ -82,9 +82,12 @@ database table, and maps results back onto the pre-rendered index for display.
 Re-run `laradocs:index` (or `laradocs:cache`) after changing content to refresh
 the engine.
 
-## Excluding a page
+## Excluding pages from the index
 
-Add `search: false` to any page's front-matter to keep it out of the index:
+### Per-page opt-out
+
+Add `search: false` to any page's front-matter to keep it out of the index while
+leaving the URL fully reachable:
 
 ```markdown
 ---
@@ -93,7 +96,41 @@ search: false
 ---
 ```
 
-Hidden pages (`hidden: true`) are never indexed.
+Hidden pages (`hidden: true`) are never indexed regardless of the `search:` field.
+
+### Config-level exclude list
+
+Use `search.exclude` in `config/laradocs.php` to exclude a set of pages without
+touching each file. Values are [fnmatch](https://www.php.net/fnmatch) slug patterns:
+
+```php
+'search' => [
+    'exclude' => [
+        'internal/*',   // all pages under /docs/internal/
+        'changelog',    // the exact slug "changelog"
+    ],
+],
+```
+
+Excluded pages are still reachable — they just won't appear in search results.
+
+### Config-level include allow-list
+
+When `search.include` is non-empty, **only** pages whose slug matches a pattern
+are indexed. Everything else is excluded:
+
+```php
+'search' => [
+    'include' => [
+        'guide/*',
+        'reference/*',
+    ],
+],
+```
+
+`search: false` front-matter is still respected inside an include pattern — a page
+matching an `include` pattern is still excluded if it declares `search: false`.
+`exclude` patterns take priority over `include` patterns for the same slug.
 
 ## Disabling search
 

@@ -46,6 +46,7 @@ redirect: null
 | `layout` | string | Override the Blade layout used to render this page. |
 | `image` | string | Social / OG image URL — see [SEO](/docs/guide/seo). |
 | `redirect` | string | 301-redirect this slug to another page or absolute URL. |
+| `search` | bool | Set to `false` to exclude this page from the search index while keeping its URL reachable (default `true`). |
 
 > [!IMPORTANT]
 > Unknown keys are preserved and reachable via

@@ -309,8 +309,14 @@ return [
     | "limit"     Maximum results returned per query.
     | "min_chars" Shortest query that triggers a search.
     | "max_chars" Cap on indexed body text per page (0 = no cap).
+    | "exclude"   fnmatch slug patterns always excluded from the index.
+    |               E.g. ['internal/*', 'drafts/*']
+    | "include"   fnmatch slug patterns for an allow-list. When non-empty,
+    |               only matching slugs are indexed regardless of other settings.
+    |               E.g. ['guide/*', 'reference/*']
     |
-    | Exclude a single page from search with `search: false` in its front-matter.
+    | Per-page opt-out: add `search: false` to a page's front-matter.
+    | Hidden pages (`hidden: true`) are never indexed.
     |
     */
 
@@ -320,6 +326,8 @@ return [
         'limit' => (int) env('LARADOCS_SEARCH_LIMIT', 20),
         'min_chars' => (int) env('LARADOCS_SEARCH_MIN_CHARS', 2),
         'max_chars' => (int) env('LARADOCS_SEARCH_MAX_CHARS', 10000),
+        'exclude' => [],
+        'include' => [],
     ],
 
     /*

@@ -21,6 +21,10 @@ use Laradocs\Variables\VariableRegistry;
  */
 final class Laradocs
 {
+    /**
+     * @param  array<int, string>  $searchExclude
+     * @param  array<int, string>  $searchInclude
+     */
     public function __construct(
         private readonly DocumentLoader $loader,
         private readonly DocumentParser $parser,
@@ -30,6 +34,8 @@ final class Laradocs
         private readonly RateLimiterConfig $rateLimiterConfig,
         private readonly string $indexName = '_index',
         private readonly int $searchMaxChars = 10000,
+        private readonly array $searchExclude = [],
+        private readonly array $searchInclude = [],
     ) {}
 
     /**
@@ -143,6 +149,8 @@ final class Laradocs
                 $documents,
                 fn (Document $document): string => $this->render($document),
                 $this->searchMaxChars,
+                $this->searchExclude,
+                $this->searchInclude,
             )
         );
     }

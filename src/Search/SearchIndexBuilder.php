@@ -19,15 +19,24 @@ final class SearchIndexBuilder
     /**
      * @param  DocumentCollection<int, Document>  $documents
      * @param  Closure(Document): string  $render  Renders a document to HTML.
+     * @param  array<int, string>  $exclude  fnmatch slug patterns to exclude from the index.
+     * @param  array<int, string>  $include  fnmatch slug patterns to include; when non-empty,
+     *                                       only matching slugs are indexed.
      * @return array<int, array{slug: string, title: string, group: string, content: string}>
      */
-    public function build(DocumentCollection $documents, Closure $render, int $maxChars = 10000): array
-    {
+    public function build(
+        DocumentCollection $documents,
+        Closure $render,
+        int $maxChars = 10000,
+        array $exclude = [],
+        array $include = [],
+    ): array {
         $entries = [];
 
         $searchable = $documents
             ->visible()
             ->filter(fn (Document $document): bool => $document->isSearchable())
+            ->filter(fn (Document $document): bool => $this->allowed($document->slug, $exclude, $include))
             ->ordered();
 
         foreach ($searchable as $document) {
@@ -40,6 +49,33 @@ final class SearchIndexBuilder
         }
 
         return $entries;
+    }
+
+    /**
+     * Whether a slug is permitted by the exclude/include lists.
+     *
+     * @param  array<int, string>  $exclude
+     * @param  array<int, string>  $include
+     */
+    private function allowed(string $slug, array $exclude, array $include): bool
+    {
+        foreach ($exclude as $pattern) {
+            if (fnmatch($pattern, $slug)) {
+                return false;
+            }
+        }
+
+        if ($include === []) {
+            return true;
+        }
+
+        foreach ($include as $pattern) {
+            if (fnmatch($pattern, $slug)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function content(string $html, int $maxChars): string
