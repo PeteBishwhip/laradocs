@@ -9,6 +9,7 @@ use Illuminate\Contracts\Cache\Repository;
 use Laradocs\Documents\Document;
 use Laradocs\Documents\DocumentCollection;
 use Laradocs\Documents\DocumentTree;
+use Laradocs\Support\CacheKey;
 
 final class DocumentCache
 {
@@ -16,7 +17,6 @@ final class DocumentCache
         private readonly Repository $store,
         private readonly bool $enabled = true,
         private readonly ?int $ttl = null,
-        private readonly string $prefix = 'laradocs',
     ) {}
 
     /**
@@ -26,9 +26,7 @@ final class DocumentCache
      */
     public function rememberHtml(Document $document, Closure $render): string
     {
-        $key = $this->documentKey($document);
-
-        return $this->remember($key, $render);
+        return $this->remember($this->documentKey($document), $render);
     }
 
     /**
@@ -43,7 +41,7 @@ final class DocumentCache
      */
     public function rememberTree(DocumentCollection $documents, Closure $build): DocumentTree
     {
-        $key = $this->prefix . ':tree:' . $this->signature($documents);
+        $key = CacheKey::tree($this->signature($documents));
 
         if (! $this->enabled) {
             return $build();
@@ -79,9 +77,7 @@ final class DocumentCache
      */
     public function rememberSearchIndex(DocumentCollection $documents, Closure $build): array
     {
-        $key = $this->prefix . ':search:' . $this->signature($documents);
-
-        return $this->remember($key, $build);
+        return $this->remember(CacheKey::search($this->signature($documents)), $build);
     }
 
     /**
@@ -103,7 +99,7 @@ final class DocumentCache
 
     public function documentKey(Document $document): string
     {
-        return $this->prefix . ':doc:' . hash('sha256', $document->path) . ':' . $document->modifiedAt;
+        return CacheKey::document($document);
     }
 
     /**
@@ -175,6 +171,6 @@ final class DocumentCache
 
     private function indexKey(): string
     {
-        return $this->prefix . ':index';
+        return CacheKey::index();
     }
 }

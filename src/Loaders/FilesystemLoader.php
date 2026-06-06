@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Laradocs\Loaders;
 
+use Closure;
 use Illuminate\Filesystem\Filesystem;
 use Laradocs\Contracts\DocumentLoader;
 use Laradocs\Contracts\MetadataResolver;
@@ -16,6 +17,9 @@ use SplFileInfo;
 final class FilesystemLoader implements DocumentLoader
 {
     /**
+     * @param  string|Closure(): string  $path  Eagerly resolved string, or a closure
+     *                                          re-invoked at each call so consumer apps
+     *                                          can retarget the docs path per request.
      * @param  array<int, string>  $extensions
      * @param  array<int, string>  $ignoredPatterns
      * @param  array<string, mixed>  $metadataDefaults
@@ -24,7 +28,7 @@ final class FilesystemLoader implements DocumentLoader
         private readonly Filesystem $files,
         private readonly MetadataResolver $metadataResolver,
         private readonly SlugResolver $slugResolver,
-        private readonly string $path,
+        private readonly string|Closure $path,
         private readonly array $extensions = ['md'],
         private readonly array $ignoredPatterns = [],
         private readonly array $metadataDefaults = [],
@@ -32,18 +36,20 @@ final class FilesystemLoader implements DocumentLoader
 
     public function all(): DocumentCollection
     {
-        if (! $this->files->isDirectory($this->path)) {
+        $path = $this->path();
+
+        if (! $this->files->isDirectory($path)) {
             return new DocumentCollection;
         }
 
         $documents = new DocumentCollection;
 
-        foreach ($this->files->allFiles($this->path) as $file) {
-            if (! $this->shouldInclude($file)) {
+        foreach ($this->files->allFiles($path) as $file) {
+            if (! $this->shouldInclude($file, $path)) {
                 continue;
             }
 
-            $documents->push($this->makeDocument($file));
+            $documents->push($this->makeDocument($file, $path));
         }
 
         return $documents;
@@ -54,13 +60,22 @@ final class FilesystemLoader implements DocumentLoader
         return $this->all()->findBySlug($slug);
     }
 
-    private function shouldInclude(SplFileInfo $file): bool
+    /**
+     * Resolve the docs path lazily so a closure-backed path picks up runtime
+     * config changes (`laradocs.docs.path`) without reconstructing the loader.
+     */
+    private function path(): string
+    {
+        return is_string($this->path) ? $this->path : ($this->path)();
+    }
+
+    private function shouldInclude(SplFileInfo $file, string $basePath): bool
     {
         if (! in_array(strtolower($file->getExtension()), $this->extensions, true)) {
             return false;
         }
 
-        $relative = $this->relativePath($file);
+        $relative = $this->relativePath($file, $basePath);
 
         foreach (explode('/', $relative) as $segment) {
             foreach ($this->ignoredPatterns as $pattern) {
@@ -73,9 +88,9 @@ final class FilesystemLoader implements DocumentLoader
         return true;
     }
 
-    private function makeDocument(SplFileInfo $file): Document
+    private function makeDocument(SplFileInfo $file, string $basePath): Document
     {
-        $relative = $this->relativePath($file);
+        $relative = $this->relativePath($file, $basePath);
 
         [$matter, $body] = $this->metadataResolver->resolve($this->files->get($file->getPathname()));
 
@@ -94,9 +109,9 @@ final class FilesystemLoader implements DocumentLoader
         );
     }
 
-    private function relativePath(SplFileInfo $file): string
+    private function relativePath(SplFileInfo $file, string $basePath): string
     {
-        $relative = ltrim(str_replace($this->path, '', $file->getPathname()), '/\\');
+        $relative = ltrim(str_replace($basePath, '', $file->getPathname()), '/\\');
 
         return str_replace('\\', '/', $relative);
     }
