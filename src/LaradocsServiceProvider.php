@@ -184,6 +184,10 @@ final class LaradocsServiceProvider extends ServiceProvider
         RateLimiter::for('laradocs-api', function (Request $request): Limit {
             $resolver = $this->app->make(RateLimiterConfig::class)->get();
 
+            if ($resolver === false) {
+                return Limit::none();
+            }
+
             if ($resolver instanceof \Closure) {
                 /** @var Limit $limit */
                 $limit = $resolver($request);
