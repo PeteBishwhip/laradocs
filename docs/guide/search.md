@@ -131,8 +131,12 @@ page's own `search_rank` front-matter value (both default to `1.0`):
 ],
 ```
 
-Rank only affects the built-in JSON engine. When using Laravel Scout, ranking
-is determined by the external service (Meilisearch, Typesense, Algolia).
+Both the JSON engine and Scout engines respect rank. The JSON engine applies
+rank as a direct multiplier on its relevance score. Scout engines apply rank
+as a post-retrieval re-sort: each result's position in Scout's response is
+used as a base score, then multiplied by rank — so a strongly boosted page
+can overtake higher-relevance results, and a demoted page falls below them.
+When all ranks are `1.0` (the default), Scout's original order is preserved.
 
 ### Per-page rank override
 

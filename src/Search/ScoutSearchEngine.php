@@ -54,7 +54,37 @@ final class ScoutSearchEngine implements SearchEngine
             }
         }
 
-        return $results;
+        return $this->rerank($results);
+    }
+
+    /**
+     * Re-sort results by combining Scout's positional relevance with each
+     * entry's rank multiplier. Position 1 receives a base score equal to the
+     * total result count; each subsequent position is one less. Multiplying by
+     * rank allows boosted entries to overtake higher-relevance results and
+     * demoted entries to fall below them. When all ranks are 1.0 (the default)
+     * the sort is stable and Scout's original order is preserved.
+     *
+     * @param  array<int, array{slug: string, title: string, group: string, content: string, rank: float}>  $results
+     * @return array<int, array{slug: string, title: string, group: string, content: string, rank: float}>
+     */
+    private function rerank(array $results): array
+    {
+        if ($results === []) {
+            return [];
+        }
+
+        $total = count($results);
+        $scored = [];
+
+        foreach ($results as $i => $entry) {
+            $scored[] = ['score' => ($total - $i) * $entry['rank'], 'entry' => $entry];
+        }
+
+        usort($scored, fn (array $a, array $b): int => $b['score'] <=> $a['score']
+            ?: strcmp($a['entry']['title'], $b['entry']['title']));
+
+        return array_map(fn (array $row): array => $row['entry'], $scored);
     }
 
     public function sync(array $index): void

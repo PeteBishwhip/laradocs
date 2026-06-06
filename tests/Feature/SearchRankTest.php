@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Laradocs\Tests\Fixtures\FakeScoutEngine;
+use Laravel\Scout\EngineManager;
+
 // Helpers — re-run a search and return the ordered list of slugs.
 function searchSlugs(mixed $test, string $query): array
 {
@@ -115,6 +118,75 @@ it('per-page and config rank multiply together', function () {
     $slugs = searchSlugs($this, 'composer');
 
     expect(array_search('guide/intro', $slugs))->toBeLessThan(array_search('other', $slugs));
+});
+
+// ─── Scout engine re-ranking ─────────────────────────────────────────────────
+
+function bindFakeScoutEngine(): FakeScoutEngine
+{
+    config()->set('laradocs.search.driver', 'scout');
+    config()->set('scout.driver', 'fake-rank');
+
+    $fake = new FakeScoutEngine;
+    $manager = new EngineManager(app());
+    $manager->extend('fake-rank', fn (): FakeScoutEngine => $fake);
+    app()->instance(EngineManager::class, $manager);
+
+    return $fake;
+}
+
+it('scout preserves its own order when all ranks are 1.0', function () {
+    bindFakeScoutEngine();
+
+    $this->makeDocs([
+        'a.md' => "---\ntitle: A\norder: 1\n---\nComposer install.\n",
+        'b.md' => "---\ntitle: B\norder: 2\n---\nComposer install.\n",
+        'c.md' => "---\ntitle: C\norder: 3\n---\nComposer install.\n",
+    ]);
+
+    $this->artisan('laradocs:index')->assertSuccessful();
+
+    $slugs = searchSlugs($this, 'composer');
+
+    // Without rank overrides Scout's indexed order is maintained: a, b, c
+    expect($slugs)->toBe(['a', 'b', 'c']);
+});
+
+it('scout re-ranks a boosted page above higher-relevance results', function () {
+    bindFakeScoutEngine();
+
+    config()->set('laradocs.search.rank', ['c' => 4.0]);
+
+    $this->makeDocs([
+        'a.md' => "---\ntitle: A\norder: 1\n---\nComposer install.\n",
+        'b.md' => "---\ntitle: B\norder: 2\n---\nComposer install.\n",
+        'c.md' => "---\ntitle: C\norder: 3\n---\nComposer install.\n",
+    ]);
+
+    $this->artisan('laradocs:index')->assertSuccessful();
+
+    // Scout returns a, b, c (positional scores 3, 2, 1).
+    // After rank: c = 1 × 4.0 = 4 → overtakes a (3×1=3) and b (2×1=2).
+    $slugs = searchSlugs($this, 'composer');
+
+    expect(array_search('c', $slugs))->toBeLessThan(array_search('a', $slugs));
+});
+
+it('scout demotes a page with a low rank below lower-relevance results', function () {
+    bindFakeScoutEngine();
+
+    $this->makeDocs([
+        'a.md' => "---\ntitle: A\norder: 1\n---\nComposer install.\n",
+        'b.md' => "---\ntitle: B\norder: 2\n---\nComposer install.\n",
+        'c.md' => "---\ntitle: C\norder: 3\nsearch_rank: 0.1\n---\nComposer install.\n",
+    ]);
+
+    $this->artisan('laradocs:index')->assertSuccessful();
+
+    // Scout returns a=3, b=2, c=1. After rank: c = 1 × 0.1 = 0.1 → last.
+    $slugs = searchSlugs($this, 'composer');
+
+    expect(array_search('c', $slugs))->toBeGreaterThan(array_search('b', $slugs));
 });
 
 it('per-page rank of 0 beats a high config pattern rank', function () {
