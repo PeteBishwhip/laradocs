@@ -80,7 +80,7 @@ final class Document implements Arrayable
 
     public function order(): int
     {
-        return $this->metadata->order;
+        return $this->metadata->order ?? PHP_INT_MAX;
     }
 
     public function group(): ?string
