@@ -383,7 +383,15 @@ final class LaradocsServiceProvider extends ServiceProvider
             IndexCommand::class,
         ]);
 
-        $this->optimizes('laradocs:cache', 'laradocs:clear');
+        // `laradocs:cache` builds a sitemap whose URLs come from
+        // `route('laradocs.*')`. Those names only exist when the package
+        // owns the docs URL — when a consumer app sets `route.register`
+        // to false to wire docs into its own routes, hooking the command
+        // into `optimize` would throw RouteNotFoundException on every
+        // deploy. The consumer is responsible for warming its own cache.
+        if (Config::bool('laradocs.route.register', true)) {
+            $this->optimizes('laradocs:cache', 'laradocs:clear');
+        }
     }
 
     private function registerAbout(): void
