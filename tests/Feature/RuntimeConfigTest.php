@@ -64,6 +64,7 @@ it('routes every cache key through CacheKey so the prefix updates uniformly', fu
         ->and(CacheKey::document($doc))->toStartWith('first:doc:')
         ->and(CacheKey::tree('abc'))->toBe('first:tree:abc')
         ->and(CacheKey::search('abc'))->toBe('first:search:abc')
+        ->and(CacheKey::sitemap('abc'))->toBe('first:sitemap:abc')
         ->and(CacheKey::index())->toBe('first:index');
 
     config()->set('laradocs.cache.key_prefix', 'second');
@@ -72,5 +73,6 @@ it('routes every cache key through CacheKey so the prefix updates uniformly', fu
         ->and(CacheKey::document($doc))->toStartWith('second:doc:')
         ->and(CacheKey::tree('abc'))->toBe('second:tree:abc')
         ->and(CacheKey::search('abc'))->toBe('second:search:abc')
+        ->and(CacheKey::sitemap('abc'))->toBe('second:sitemap:abc')
         ->and(CacheKey::index())->toBe('second:index');
 });

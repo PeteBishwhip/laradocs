@@ -67,6 +67,18 @@ final class DocumentCache
     }
 
     /**
+     * Cache the rendered sitemap XML, keyed by the combined document mtimes
+     * so it busts whenever any file changes.
+     *
+     * @param  DocumentCollection<int, Document>  $documents
+     * @param  Closure(): string  $build
+     */
+    public function rememberSitemap(DocumentCollection $documents, Closure $build): string
+    {
+        return $this->remember(CacheKey::sitemap($this->signature($documents)), $build);
+    }
+
+    /**
      * Cache the pre-rendered search index, keyed by the combined document
      * mtimes so it busts whenever any file changes. Stored as a plain array
      * of scalars, which is unaffected by `cache.serializable_classes`.
