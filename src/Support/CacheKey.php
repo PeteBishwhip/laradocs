@@ -40,6 +40,11 @@ final class CacheKey
         return self::make('search', $signature);
     }
 
+    public static function sitemap(string $signature): string
+    {
+        return self::make('sitemap', $signature);
+    }
+
     public static function index(): string
     {
         return self::make('index');
