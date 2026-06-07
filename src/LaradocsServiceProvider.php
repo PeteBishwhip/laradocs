@@ -126,7 +126,7 @@ final class LaradocsServiceProvider extends ServiceProvider
                 new Filesystem,
                 $app->make(MetadataResolver::class),
                 $app->make(SlugResolver::class),
-                Config::string('laradocs.docs.path'),
+                fn (): string => Config::string('laradocs.docs.path'),
                 $extensions,
                 $ignored,
                 $defaults,
@@ -141,7 +141,6 @@ final class LaradocsServiceProvider extends ServiceProvider
                 $factory->store(Config::nullableString('laradocs.cache.store')),
                 Config::bool('laradocs.cache.enabled', true),
                 Config::nullableInt('laradocs.cache.ttl'),
-                Config::string('laradocs.cache.key_prefix', 'laradocs'),
             );
         });
     }
