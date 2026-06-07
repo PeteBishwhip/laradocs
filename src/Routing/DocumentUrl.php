@@ -56,6 +56,11 @@ final class DocumentUrl
         return route(self::prefix() . 'search');
     }
 
+    public static function sitemap(): string
+    {
+        return route(self::prefix() . 'sitemap');
+    }
+
     public static function apiTree(): string
     {
         return route(self::prefix() . 'api.tree');

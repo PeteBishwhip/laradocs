@@ -68,7 +68,8 @@ final class DocumentCache
 
     /**
      * Cache the rendered sitemap XML, keyed by the combined document mtimes
-     * so it busts whenever any file changes.
+     * so it busts whenever any file changes. Stored as a string, which is
+     * unaffected by `cache.serializable_classes`.
      *
      * @param  DocumentCollection<int, Document>  $documents
      * @param  Closure(): string  $build

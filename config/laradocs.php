@@ -316,6 +316,37 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | robots.txt
+    |--------------------------------------------------------------------------
+    |
+    | A default robots.txt is served at {prefix}/robots.txt. It always emits a
+    | Sitemap: pointer at the package's sitemap and, by default, allows every
+    | crawler.
+    |
+    | When `laradocs.enabled` is false the entire body is replaced with a
+    | "Disallow: /" directive — so search engines keep the docs out of their
+    | index without ever needing to fetch a page.
+    |
+    | "rules" Custom User-agent groups. Each entry is an associative array:
+    |
+    |   [
+    |     'user_agent' => '*',                    // string or array of strings
+    |     'allow'      => ['/'],                  // string or array (optional)
+    |     'disallow'   => ['/private/'],          // string or array (optional)
+    |   ]
+    |
+    | Leave the array empty to keep the default "allow everything" block.
+    |
+    */
+
+    'robots' => [
+        'rules' => [
+            // ['user_agent' => '*', 'disallow' => ['/_laradocs/']],
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Search
     |--------------------------------------------------------------------------
     |

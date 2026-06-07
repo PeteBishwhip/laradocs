@@ -30,6 +30,9 @@ the features they describe.
 - **SEO without the busywork.** Titles, meta descriptions, Open Graph and
   Twitter cards, canonical URLs and JSON-LD are generated for every page —
   with per-page front-matter overrides. See [SEO](/docs/guide/seo).
+- **A sitemap, for free.** An auto-generated `sitemap.xml` listing every
+  visible page, served at `{prefix}/sitemap.xml`. See
+  [Sitemap](/docs/guide/sitemap).
 - **Inter + Laravel red.** Modern type, clean hairline borders, the brand
   accent built in. Override any token from config.
 
