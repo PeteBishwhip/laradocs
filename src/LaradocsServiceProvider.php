@@ -329,6 +329,14 @@ final class LaradocsServiceProvider extends ServiceProvider
         // Routes are always registered so that route:cache captures them
         // regardless of the current `enabled` flag. The EnsureDocsEnabled
         // middleware enforces the toggle at request time instead.
+        //
+        // Consumer apps that want to own the docs URL (e.g. for tenant
+        // routing) can set `laradocs.route.register => false` and wire the
+        // render action into their own route instead.
+        if (! Config::bool('laradocs.route.register', true)) {
+            return;
+        }
+
         /** @var Registrar $router */
         $router = $this->app->make(Registrar::class);
 

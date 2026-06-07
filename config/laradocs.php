@@ -21,6 +21,11 @@ return [
     | Routing
     |--------------------------------------------------------------------------
     |
+    | "register"   When false, the package skips registering its own routes so
+    |              the consumer app can wire the render action into a route it
+    |              owns (e.g. behind tenant-resolving middleware). The package's
+    |              controllers are still available; see DocumentRouter for the
+    |              canonical action references.
     | "prefix"     The URL segment your docs live under (e.g. /docs).
     | "domain"     Optionally serve docs on a dedicated subdomain.
     | "middleware" Middleware applied to every docs route.
@@ -29,6 +34,7 @@ return [
     */
 
     'route' => [
+        'register' => env('LARADOCS_ROUTE_REGISTER', true),
         'prefix' => env('LARADOCS_ROUTE_PREFIX', 'docs'),
         'domain' => env('LARADOCS_ROUTE_DOMAIN'),
         'middleware' => ['web'],
