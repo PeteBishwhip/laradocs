@@ -45,6 +45,11 @@ final class CacheKey
         return self::make('sitemap', $signature);
     }
 
+    public static function feed(string $signature, string $format): string
+    {
+        return self::make('feed', $format, $signature);
+    }
+
     public static function index(): string
     {
         return self::make('index');

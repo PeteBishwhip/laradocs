@@ -80,6 +80,18 @@ final class DocumentCache
     }
 
     /**
+     * Cache the rendered feed XML (RSS or Atom), keyed by format + combined
+     * document mtimes so it busts whenever any file changes.
+     *
+     * @param  DocumentCollection<int, Document>  $documents
+     * @param  Closure(): string  $build
+     */
+    public function rememberFeed(DocumentCollection $documents, string $format, Closure $build): string
+    {
+        return $this->remember(CacheKey::feed($this->signature($documents), $format), $build);
+    }
+
+    /**
      * Cache the pre-rendered search index, keyed by the combined document
      * mtimes so it busts whenever any file changes. Stored as a plain array
      * of scalars, which is unaffected by `cache.serializable_classes`.

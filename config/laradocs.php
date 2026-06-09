@@ -321,6 +321,25 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | RSS / Atom Feed
+    |--------------------------------------------------------------------------
+    |
+    | An XML feed is served at {prefix}/feed.xml listing the N most-recently-
+    | updated visible pages, ordered by `updated_at` front-matter (falling back
+    | to the file's mtime).
+    |
+    | "format"   Output format: rss (RSS 2.0) | atom (Atom 1.0).
+    | "limit"    Maximum number of items to include.
+    |
+    */
+
+    'feed' => [
+        'format' => env('LARADOCS_FEED_FORMAT', 'rss'),
+        'limit' => (int) env('LARADOCS_FEED_LIMIT', 20),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | robots.txt
     |--------------------------------------------------------------------------
     |
