@@ -29,6 +29,23 @@ use Throwable;
 final class SeoFactory
 {
     /**
+     * The X card type resolved by the last forDocument() / forPage() call.
+     * Exposed via xCard() so the controller can pass it as a separate view
+     * variable, letting the layout emit an explicit twitter:card tag first
+     * (X/Twitter parsers honour the first occurrence).
+     */
+    private string $lastXCard = 'summary_large_image';
+
+    /**
+     * Return the X card type resolved during the most recent
+     * forDocument() or forPage() call.
+     */
+    public function xCard(): string
+    {
+        return $this->lastXCard;
+    }
+
+    /**
      * Build the SEO payload for a rendered document.
      *
      * @param  array<int, TreeNode>  $breadcrumbs  Navigation trail, current page last.
@@ -37,6 +54,8 @@ final class SeoFactory
     {
         $meta = $document->metadata;
         $seo = $this->seoBlock($meta);
+
+        $this->lastXCard = $this->resolveXCard($seo, $meta);
 
         $title = self::asString($this->pick($seo, $meta, 'title')) ?? $document->title();
         $description = self::asString($this->pick($seo, $meta, 'description'))
@@ -50,14 +69,14 @@ final class SeoFactory
             image: self::asString($this->pick($seo, $meta, 'image')) ?? $this->stringOrNull('laradocs.seo.image'),
             // We bake the suffix into the title (above) and disable the SEO
             // package's own suffixing, which would otherwise also drag the
-            // brand into og:title / twitter:title. Social cards instead read
+            // brand into og:title / x:title. Social cards instead read
             // the clean title from openGraphTitle below.
             enableTitleSuffix: false,
             published_time: $this->publishedTime($seo, $meta),
             modified_time: $this->timestamp($document->modifiedAt),
             section: self::asString($this->pick($seo, $meta, 'section')) ?? $meta->group,
             tags: $this->resolveTags($seo, $meta),
-            twitter_username: $this->stringOrNull('laradocs.seo.twitter'),
+            twitter_username: $this->stringOrNull('laradocs.seo.x'),
             schema: $this->schema($breadcrumbs),
             type: self::asString($this->pick($seo, $meta, 'type')) ?? $this->stringOrNull('laradocs.seo.type') ?? 'article',
             site_name: $this->siteName(),
@@ -76,19 +95,35 @@ final class SeoFactory
     {
         $title ??= $this->siteName();
 
+        $this->lastXCard = $this->stringOrNull('laradocs.seo.x_card') ?? 'summary_large_image';
+
         return new SEOData(
             title: $this->suffixedTitle($title),
             description: $description ?? $this->fallbackDescription(),
             author: $this->stringOrNull('laradocs.seo.author'),
             image: $this->stringOrNull('laradocs.seo.image'),
             enableTitleSuffix: false,
-            twitter_username: $this->stringOrNull('laradocs.seo.twitter'),
+            twitter_username: $this->stringOrNull('laradocs.seo.x'),
             type: 'website',
             site_name: $this->siteName(),
             favicon: $this->stringOrNull('laradocs.ui.brand.favicon'),
             // Social cards read the clean, un-suffixed title.
             openGraphTitle: $title,
         );
+    }
+
+    /**
+     * Resolve the X card type: seo.x_card front-matter block takes priority,
+     * then the top-level x_card key, then the site-wide config, and finally
+     * the hard-coded default.
+     *
+     * @param  array<string, mixed>  $seo
+     */
+    private function resolveXCard(array $seo, Metadata $meta): string
+    {
+        $value = self::asString($this->pick($seo, $meta, 'x_card'));
+
+        return $value ?? $this->stringOrNull('laradocs.seo.x_card') ?? 'summary_large_image';
     }
 
     /**
