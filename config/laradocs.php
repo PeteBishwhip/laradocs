@@ -297,8 +297,13 @@ return [
         // Default author attribution for article meta + schema.
         'author' => env('LARADOCS_SEO_AUTHOR'),
 
-        // Twitter / X handle (without the @) for twitter:site / creator tags.
-        'twitter' => env('LARADOCS_SEO_TWITTER'),
+        // X (formerly Twitter) handle (without the @) for twitter:site / creator tags.
+        'x' => env('LARADOCS_SEO_X'),
+
+        // X card type. Accepts: summary_large_image | summary | app | player.
+        // summary_large_image is best for pages with a dedicated cover image;
+        // summary renders a small thumbnail and suits text-heavy reference pages.
+        'x_card' => env('LARADOCS_SEO_X_CARD', 'summary_large_image'),
 
         // Open Graph type emitted for documentation pages.
         'type' => env('LARADOCS_SEO_TYPE', 'article'),
