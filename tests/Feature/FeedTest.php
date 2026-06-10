@@ -282,6 +282,19 @@ it('rss and atom feeds use separate cache entries', function () {
         ->and($atom)->toContain('<feed');
 });
 
+it('atom feed updated element falls back to epoch when no visible documents exist', function () {
+    config()->set('laradocs.feed.format', 'atom');
+    $this->makeDocs([
+        'secret.md' => "---\ntitle: Secret\nhidden: true\n---\nbody\n",
+    ]);
+
+    $body = $this->get('/docs/feed.xml')->assertOk()->getContent();
+
+    expect($body)
+        ->toContain('<feed xmlns="http://www.w3.org/2005/Atom">')
+        ->not->toContain('<entry>');
+});
+
 // ── Access control ────────────────────────────────────────────────────────────
 
 it('feed 404s when docs are disabled', function () {
