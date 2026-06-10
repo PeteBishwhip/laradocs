@@ -61,6 +61,11 @@ final class DocumentUrl
         return route(self::prefix() . 'sitemap');
     }
 
+    public static function feed(): string
+    {
+        return route(self::prefix() . 'feed');
+    }
+
     public static function apiTree(): string
     {
         return route(self::prefix() . 'api.tree');
