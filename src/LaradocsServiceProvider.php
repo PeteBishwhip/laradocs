@@ -127,7 +127,7 @@ final class LaradocsServiceProvider extends ServiceProvider
                 new Filesystem,
                 $app->make(MetadataResolver::class),
                 $app->make(SlugResolver::class),
-                Config::string('laradocs.docs.path'),
+                fn (): string => Config::string('laradocs.docs.path'),
                 $extensions,
                 $ignored,
                 $defaults,
@@ -142,7 +142,6 @@ final class LaradocsServiceProvider extends ServiceProvider
                 $factory->store(Config::nullableString('laradocs.cache.store')),
                 Config::bool('laradocs.cache.enabled', true),
                 Config::nullableInt('laradocs.cache.ttl'),
-                Config::string('laradocs.cache.key_prefix', 'laradocs'),
             );
         });
     }
@@ -184,6 +183,10 @@ final class LaradocsServiceProvider extends ServiceProvider
     {
         RateLimiter::for('laradocs-api', function (Request $request): Limit {
             $resolver = $this->app->make(RateLimiterConfig::class)->get();
+
+            if ($resolver === false) {
+                return Limit::none();
+            }
 
             if ($resolver instanceof \Closure) {
                 /** @var Limit $limit */
@@ -338,6 +341,14 @@ final class LaradocsServiceProvider extends ServiceProvider
         // Routes are always registered so that route:cache captures them
         // regardless of the current `enabled` flag. The EnsureDocsEnabled
         // middleware enforces the toggle at request time instead.
+        //
+        // Consumer apps that want to own the docs URL (e.g. for tenant
+        // routing) can set `laradocs.route.register => false` and wire the
+        // render action into their own route instead.
+        if (! Config::bool('laradocs.route.register', true)) {
+            return;
+        }
+
         /** @var Registrar $router */
         $router = $this->app->make(Registrar::class);
 
@@ -384,7 +395,15 @@ final class LaradocsServiceProvider extends ServiceProvider
             IndexCommand::class,
         ]);
 
-        $this->optimizes('laradocs:cache', 'laradocs:clear');
+        // `laradocs:cache` builds a sitemap whose URLs come from
+        // `route('laradocs.*')`. Those names only exist when the package
+        // owns the docs URL — when a consumer app sets `route.register`
+        // to false to wire docs into its own routes, hooking the command
+        // into `optimize` would throw RouteNotFoundException on every
+        // deploy. The consumer is responsible for warming its own cache.
+        if (Config::bool('laradocs.route.register', true)) {
+            $this->optimizes('laradocs:cache', 'laradocs:clear');
+        }
     }
 
     private function registerAbout(): void
@@ -395,6 +414,7 @@ final class LaradocsServiceProvider extends ServiceProvider
             'Caching' => Config::bool('laradocs.cache.enabled') ? 'enabled' : 'disabled',
             'Search Driver' => Config::string('laradocs.search.driver'),
             'Theme' => Config::string('laradocs.ui.theme'),
+            'Banner' => Config::bool('laradocs.ui.banner.enabled') ? Config::string('laradocs.ui.banner.type', 'info') : 'disabled',
         ]);
     }
 }

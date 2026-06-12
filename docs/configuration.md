@@ -125,6 +125,9 @@ See [Rich Content](/docs/features/rich-content) for what each extension enables.
 | `ui.footer.enabled` | `LARADOCS_FOOTER` | `true` |
 | `ui.footer.text` | `LARADOCS_FOOTER_TEXT` | `null` |
 | `ui.footer.links` | — | `[]` |
+| `ui.banner.enabled` | `LARADOCS_BANNER` | `false` |
+| `ui.banner.type` | `LARADOCS_BANNER_TYPE` | `info` |
+| `ui.banner.message` | `LARADOCS_BANNER_MESSAGE` | `null` |
 | `ui.edit.url` | `LARADOCS_EDIT_URL` | `null` |
 | `ui.edit.label` | `LARADOCS_EDIT_LABEL` | `Edit this page` |
 | `ui.search.enabled` | `LARADOCS_SEARCH` | `true` |

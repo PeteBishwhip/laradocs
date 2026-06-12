@@ -24,6 +24,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     @php $hasSeo = ! empty($seo) && function_exists('seo'); @endphp
     @if($hasSeo)
+        {{-- Explicit twitter:card comes first — X/Twitter parsers use the first
+             occurrence, so this takes precedence over the auto-detected value
+             that ralphjsmit/laravel-seo emits below. --}}
+        @if(! empty($xCard))
+            <meta name="twitter:card" content="{{ $xCard }}">
+        @endif
         {{-- Rich SEO meta (title, description, Open Graph, Twitter, canonical,
              robots, favicon and JSON-LD) via ralphjsmit/laravel-seo. --}}
         {!! seo($seo) !!}
@@ -65,6 +71,8 @@
 </head>
 <body class="laradocs" data-preset="{{ $preset }}">
     <div class="laradocs-progress" aria-hidden="true"><span></span></div>
+
+    @include('laradocs::partials.banner')
 
     @include('laradocs::partials.header', ['brand' => $brand, 'tagline' => $tagline, 'title' => $title, 'tree' => $tree ?? null])
 

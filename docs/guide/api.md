@@ -1,7 +1,6 @@
 ---
 title: PHP API
 description: The Laradocs facade and service for programmatic access.
-order: 5
 ---
 
 # PHP API

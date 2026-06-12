@@ -27,13 +27,15 @@ final class DocsController
         $document = $this->laradocs->home();
 
         if ($document === null) {
+            $seoEnabled = $this->seoEnabled();
+            $seo = $seoEnabled ? $this->seo->forPage(Config::nullableString('laradocs.ui.brand.title')) : null;
+
             return view('laradocs::empty', [
                 'tree' => $this->laradocs->tree(),
                 'activeSlug' => '',
                 'variables' => $this->laradocs->variableValues(),
-                'seo' => $this->seoEnabled()
-                    ? $this->seo->forPage(Config::nullableString('laradocs.ui.brand.title'))
-                    : null,
+                'seo' => $seo,
+                'xCard' => $seoEnabled ? $this->seo->xCard() : null,
             ]);
         }
 
@@ -71,6 +73,9 @@ final class DocsController
 
         $breadcrumbs = Navigation::breadcrumbs($navigation, $document->slug);
 
+        $seoEnabled = $this->seoEnabled();
+        $seo = $seoEnabled ? $this->seo->forDocument($document, $breadcrumbs) : null;
+
         return view('laradocs::show', [
             'document' => $document,
             'tree' => $tree,
@@ -81,9 +86,8 @@ final class DocsController
             'next' => $next,
             'toc' => $toc,
             'variables' => $this->laradocs->variableValues(),
-            'seo' => $this->seoEnabled()
-                ? $this->seo->forDocument($document, $breadcrumbs)
-                : null,
+            'seo' => $seo,
+            'xCard' => $seoEnabled ? $this->seo->xCard() : null,
         ]);
     }
 

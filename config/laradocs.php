@@ -21,6 +21,11 @@ return [
     | Routing
     |--------------------------------------------------------------------------
     |
+    | "register"   When false, the package skips registering its own routes so
+    |              the consumer app can wire the render action into a route it
+    |              owns (e.g. behind tenant-resolving middleware). The package's
+    |              controllers are still available; see DocumentRouter for the
+    |              canonical action references.
     | "prefix"     The URL segment your docs live under (e.g. /docs).
     | "domain"     Optionally serve docs on a dedicated subdomain.
     | "middleware" Middleware applied to every docs route.
@@ -29,6 +34,7 @@ return [
     */
 
     'route' => [
+        'register' => env('LARADOCS_ROUTE_REGISTER', true),
         'prefix' => env('LARADOCS_ROUTE_PREFIX', 'docs'),
         'domain' => env('LARADOCS_ROUTE_DOMAIN'),
         'middleware' => ['web'],
@@ -214,6 +220,21 @@ return [
         'search' => [
             'enabled' => (bool) env('LARADOCS_SEARCH', true),
         ],
+
+        /*
+        | Global banner displayed above the header on every page.
+        | "type" accepts: info | alert | danger
+        | "message" may contain HTML (e.g. a link for a CTA).
+        |
+        |   LARADOCS_BANNER=1
+        |   LARADOCS_BANNER_TYPE=info
+        |   LARADOCS_BANNER_MESSAGE="<a href='/changelog'>v2 is out</a> — see what's new."
+        */
+        'banner' => [
+            'enabled' => (bool) env('LARADOCS_BANNER', false),
+            'type' => env('LARADOCS_BANNER_TYPE', 'info'),
+            'message' => env('LARADOCS_BANNER_MESSAGE'),
+        ],
     ],
 
     /*
@@ -289,8 +310,13 @@ return [
         // Default author attribution for article meta + schema.
         'author' => env('LARADOCS_SEO_AUTHOR'),
 
-        // Twitter / X handle (without the @) for twitter:site / creator tags.
-        'twitter' => env('LARADOCS_SEO_TWITTER'),
+        // X (formerly Twitter) handle (without the @) for twitter:site / creator tags.
+        'x' => env('LARADOCS_SEO_X'),
+
+        // X card type. Accepts: summary_large_image | summary | app | player.
+        // summary_large_image is best for pages with a dedicated cover image;
+        // summary renders a small thumbnail and suits text-heavy reference pages.
+        'x_card' => env('LARADOCS_SEO_X_CARD', 'summary_large_image'),
 
         // Open Graph type emitted for documentation pages.
         'type' => env('LARADOCS_SEO_TYPE', 'article'),
@@ -303,6 +329,56 @@ return [
         'schema' => [
             'article' => (bool) env('LARADOCS_SEO_SCHEMA_ARTICLE', true),
             'breadcrumbs' => (bool) env('LARADOCS_SEO_SCHEMA_BREADCRUMBS', true),
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | RSS / Atom Feed
+    |--------------------------------------------------------------------------
+    |
+    | An XML feed is served at {prefix}/feed.xml listing the N most-recently-
+    | updated visible pages, ordered by `updated_at` front-matter (falling back
+    | to the file's mtime).
+    |
+    | "format"   Output format: rss (RSS 2.0) | atom (Atom 1.0).
+    | "limit"    Maximum number of items to include.
+    |
+    */
+
+    'feed' => [
+        'format' => env('LARADOCS_FEED_FORMAT', 'rss'),
+        'limit' => (int) env('LARADOCS_FEED_LIMIT', 20),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | robots.txt
+    |--------------------------------------------------------------------------
+    |
+    | A default robots.txt is served at {prefix}/robots.txt. It always emits a
+    | Sitemap: pointer at the package's sitemap and, by default, allows every
+    | crawler.
+    |
+    | When `laradocs.enabled` is false the entire body is replaced with a
+    | "Disallow: /" directive — so search engines keep the docs out of their
+    | index without ever needing to fetch a page.
+    |
+    | "rules" Custom User-agent groups. Each entry is an associative array:
+    |
+    |   [
+    |     'user_agent' => '*',                    // string or array of strings
+    |     'allow'      => ['/'],                  // string or array (optional)
+    |     'disallow'   => ['/private/'],          // string or array (optional)
+    |   ]
+    |
+    | Leave the array empty to keep the default "allow everything" block.
+    |
+    */
+
+    'robots' => [
+        'rules' => [
+            // ['user_agent' => '*', 'disallow' => ['/_laradocs/']],
         ],
     ],
 

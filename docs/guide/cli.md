@@ -1,7 +1,6 @@
 ---
 title: CLI
 description: Every Artisan command shipped by Laradocs.
-order: 4
 ---
 
 # CLI
@@ -47,8 +46,9 @@ php artisan laradocs:cache
 ```
 
 Pre-renders every visible document, warms the cache, stores the
-navigation tree, and rebuilds the search index. Hooked into Laravel's
-optimizer, so `php artisan optimize` calls it automatically.
+navigation tree, generates the [sitemap](/docs/guide/sitemap), and
+rebuilds the search index. Hooked into Laravel's optimizer, so
+`php artisan optimize` calls it automatically.
 
 ## `laradocs:index`
 
@@ -67,8 +67,8 @@ just the index.
 php artisan laradocs:clear
 ```
 
-Flushes all cached HTML, the navigation tree and the search index. Hooked
-into `php artisan optimize:clear`.
+Flushes all cached HTML, the navigation tree, the sitemap and the search
+index. Hooked into `php artisan optimize:clear`.
 
 > [!TIP]
 > Editing a file invalidates only that file's cache (keyed on

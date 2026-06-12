@@ -79,6 +79,26 @@ it('groups top-level navigation nodes by metadata group', function () {
     expect($grouped->keys()->all())->toContain('Start', '');
 });
 
+it('sorts unordered siblings alphabetically by title', function () {
+    $docs = new DocumentCollection([
+        makeDocument('c', ['title' => 'Charlie']),
+        makeDocument('a', ['title' => 'Alice']),
+        makeDocument('b', ['title' => 'Bob']),
+    ]);
+
+    expect(collect(tree($docs)->navigation())->pluck('title')->all())->toBe(['Alice', 'Bob', 'Charlie']);
+});
+
+it('places explicitly ordered items before unordered alphabetical items', function () {
+    $docs = new DocumentCollection([
+        makeDocument('c', ['title' => 'Charlie']),
+        makeDocument('a', ['title' => 'Alice']),
+        makeDocument('b', ['title' => 'Bob', 'order' => 1]),
+    ]);
+
+    expect(collect(tree($docs)->navigation())->pluck('title')->all())->toBe(['Bob', 'Alice', 'Charlie']);
+});
+
 it('promotes an existing section node to a link when a matching doc loads later', function () {
     $docs = new DocumentCollection([
         makeDocument('api/users', ['title' => 'Users']),

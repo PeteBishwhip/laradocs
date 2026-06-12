@@ -1,7 +1,6 @@
 ---
 title: Analytics
 description: Wire your docs to a privacy-friendly analytics provider.
-order: 6
 ---
 
 # Analytics

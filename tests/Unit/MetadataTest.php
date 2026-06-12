@@ -49,6 +49,10 @@ it('round-trips through toArray()', function () {
         ->and($array['extra_key'])->toBe('e');
 });
 
+it('defaults order to PHP_INT_MAX when not set', function () {
+    expect(Metadata::fromArray([])->order)->toBe(PHP_INT_MAX);
+});
+
 it('is searchable by default and honours search: false', function () {
     expect(Metadata::fromArray([])->searchable)->toBeTrue()
         ->and(Metadata::fromArray(['search' => false])->searchable)->toBeFalse()

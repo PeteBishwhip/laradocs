@@ -12,6 +12,8 @@ use Laradocs\Documents\Document;
 use Laradocs\Documents\DocumentCollection;
 use Laradocs\Documents\DocumentTree;
 use Laradocs\Macros\MacroRegistry;
+use Laradocs\Routing\FeedBuilder;
+use Laradocs\Routing\SitemapBuilder;
 use Laradocs\Search\SearchIndexBuilder;
 use Laradocs\Support\RateLimiterConfig;
 use Laradocs\Variables\VariableRegistry;
@@ -155,6 +157,36 @@ final class Laradocs
                 $this->searchInclude,
                 $this->searchRank,
             )
+        );
+    }
+
+    /**
+     * The rendered, cached sitemap XML listing every visible, non-redirected
+     * page in tree order. Busts automatically when any document changes.
+     */
+    public function sitemap(): string
+    {
+        $documents = $this->all();
+
+        return $this->cache->rememberSitemap(
+            $documents,
+            fn (): string => (new SitemapBuilder)->build($this->tree())
+        );
+    }
+
+    /**
+     * The rendered, cached feed XML (RSS 2.0 or Atom 1.0) listing the N
+     * most-recently-updated visible, non-redirected pages. Busts automatically
+     * when any document changes.
+     */
+    public function feed(string $format, int $limit, string $feedUrl, string $siteTitle): string
+    {
+        $documents = $this->all();
+
+        return $this->cache->rememberFeed(
+            $documents,
+            $format,
+            fn (): string => (new FeedBuilder)->build($documents, $format, $limit, $feedUrl, $siteTitle)
         );
     }
 
