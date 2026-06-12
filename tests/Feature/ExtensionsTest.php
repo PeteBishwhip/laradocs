@@ -69,3 +69,43 @@ it('converts local video and youtube links to players', function () {
         ->and($video)->toContain('video/mp4')
         ->and($youtube)->toContain('youtube-nocookie.com/embed/abc123');
 });
+
+it('renders mermaid blocks as diagrams with a no-js fallback and lazy loader', function () {
+    $html = render("```mermaid\ngraph TD; A-->B;\n```");
+
+    expect($html)->toContain('class="laradocs-mermaid"')
+        ->and($html)->toContain('laradocs-mermaid-source')
+        // The graph source survives as the no-JS fallback.
+        ->and($html)->toContain('graph TD; A--&gt;B;')
+        // It is not dressed up as a copyable code block.
+        ->and($html)->not->toContain('laradocs-code-copy')
+        // The lazy loader is appended only because a diagram is present.
+        ->and($html)->toContain('<script type="module">')
+        ->and($html)->toContain('mermaid.esm.min.mjs');
+});
+
+it('only injects the mermaid loader once per page', function () {
+    $html = render("```mermaid\ngraph TD; A-->B;\n```\n\n```mermaid\ngraph LR; C-->D;\n```");
+
+    expect(substr_count($html, '<script type="module">'))->toBe(1)
+        ->and(substr_count($html, 'class="laradocs-mermaid"'))->toBe(2);
+});
+
+it('leaves ordinary code blocks untouched by the mermaid extension', function () {
+    $html = render("```php\necho 1;\n```");
+
+    expect($html)->toContain('laradocs-code-copy')
+        ->and($html)->not->toContain('laradocs-mermaid');
+});
+
+it('falls back to a plain code block when mermaid is disabled', function () {
+    config()->set('laradocs.parser.extensions.mermaid', false);
+    app()->forgetInstance(DocumentParser::class);
+
+    $html = render("```mermaid\ngraph TD; A-->B;\n```");
+
+    expect($html)->not->toContain('laradocs-mermaid')
+        ->and($html)->not->toContain('mermaid.esm.min.mjs')
+        // Without the extension it is just a normal fenced code block.
+        ->and($html)->toContain('laradocs-code');
+});

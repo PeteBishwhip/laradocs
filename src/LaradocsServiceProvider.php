@@ -29,6 +29,7 @@ use Laradocs\Extensions\CodeBlockExtension;
 use Laradocs\Extensions\HeadingAnchorExtension;
 use Laradocs\Extensions\ImageExtension;
 use Laradocs\Extensions\MacroExtension;
+use Laradocs\Extensions\MermaidExtension;
 use Laradocs\Extensions\VariableExtension;
 use Laradocs\Extensions\VideoExtension;
 use Laradocs\Loaders\FilesystemLoader;
@@ -314,6 +315,17 @@ final class LaradocsServiceProvider extends ServiceProvider
 
         if ($config['images'] ?? true) {
             $extensions[] = new ImageExtension;
+        }
+
+        // Runs before CodeBlockExtension so mermaid fences are claimed before
+        // they would otherwise pick up a language label and copy button.
+        if ($config['mermaid'] ?? true) {
+            $extensions[] = new MermaidExtension(
+                Config::string(
+                    'laradocs.parser.mermaid.src',
+                    'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs',
+                ),
+            );
         }
 
         $extensions[] = new CodeBlockExtension;

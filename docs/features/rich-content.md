@@ -1,6 +1,6 @@
 ---
 title: Rich Content
-description: Callouts, code, tables, images, video, footnotes and attribute lists.
+description: Callouts, code, tables, images, video, diagrams, footnotes and attribute lists.
 order: 3
 ---
 
@@ -101,6 +101,32 @@ become responsive embeds:
 
 Only the YouTube and Vimeo hosts are embedded — other video links are
 left as plain hyperlinks.
+
+## Diagrams
+
+A fenced block tagged `mermaid` renders as an SVG diagram:
+
+````markdown
+```mermaid
+graph TD;
+    A[Request] --> B{Cached?};
+    B -- Yes --> C[Serve from cache];
+    B -- No --> D[Render document];
+```
+````
+
+[mermaid.js](https://mermaid.js.org) is imported lazily and only on pages
+that contain a diagram, so pages without one pay nothing. The diagram
+follows the active colour scheme — its theme variables are mapped from the
+same `--dc-*` tokens as the rest of the UI and re-render when you toggle
+dark mode.
+
+When JavaScript is disabled the graph definition stays on the page as a
+styled code block, so the content is never lost.
+
+Disable the feature with `parser.extensions.mermaid => false`, or point
+`parser.mermaid.src` at a self-hosted ESM build (or set `LARADOCS_MERMAID_SRC`)
+to avoid the CDN.
 
 ## Footnotes
 

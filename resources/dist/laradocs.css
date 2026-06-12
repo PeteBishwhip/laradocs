@@ -746,6 +746,44 @@ body.laradocs {
   font-size: inherit;
 }
 
+/* mermaid diagrams */
+.laradocs-mermaid {
+  margin: 1.5rem 0;
+  text-align: center;
+}
+.laradocs-mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+/* No-JS / pre-render fallback: the raw graph source as a styled code block. */
+.laradocs-mermaid-source {
+  margin: 0;
+  padding: 1rem 1.15rem;
+  overflow-x: auto;
+  text-align: left;
+  font-family: var(--dc-mono);
+  font-size: .87rem;
+  line-height: 1.6;
+  color: var(--dc-code-fg);
+  background: var(--dc-code-bg);
+  border: 1px solid var(--dc-rule);
+  border-radius: var(--dc-radius-lg);
+}
+/* While mermaid loads, hide the source so it doesn't flash before the SVG. */
+.laradocs-mermaid.is-loading .laradocs-mermaid-source {
+  visibility: hidden;
+}
+.laradocs-mermaid.is-loading {
+  min-height: 2.5rem;
+}
+/* Once rendered, the source <pre> holds the SVG — drop its code-block chrome. */
+.laradocs-mermaid.is-rendered .laradocs-mermaid-source {
+  padding: 0;
+  background: none;
+  border: 0;
+  overflow: visible;
+}
+
 /* callouts */
 .laradocs-callout {
   margin: 1.5rem 0;
