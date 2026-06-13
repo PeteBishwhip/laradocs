@@ -16,8 +16,12 @@ use Illuminate\Support\ServiceProvider;
 use Laradocs\Cache\DocumentCache;
 use Laradocs\Console\CacheCommand;
 use Laradocs\Console\ClearCommand;
+use Laradocs\Console\CloneProjectCommand;
+use Laradocs\Console\ConfigCommand;
+use Laradocs\Console\DeployCommand;
 use Laradocs\Console\IndexCommand;
 use Laradocs\Console\InstallCommand;
+use Laradocs\Console\LoginCommand;
 use Laradocs\Console\MakeDocCommand;
 use Laradocs\Contracts\DocumentLoader;
 use Laradocs\Contracts\DocumentParser;
@@ -381,6 +385,10 @@ final class LaradocsServiceProvider extends ServiceProvider
             CacheCommand::class,
             ClearCommand::class,
             IndexCommand::class,
+            LoginCommand::class,
+            DeployCommand::class,
+            CloneProjectCommand::class,
+            ConfigCommand::class,
         ]);
 
         // `laradocs:cache` builds a sitemap whose URLs come from
