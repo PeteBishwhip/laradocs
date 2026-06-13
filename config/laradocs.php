@@ -482,4 +482,25 @@ return [
         'rate_limit' => (int) env('LARADOCS_API_RATE_LIMIT', 60),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Deploy
+    |--------------------------------------------------------------------------
+    |
+    | Connection details for `php artisan laradocs:deploy` and friends, which
+    | push your docs to (or pull them from) a hosted Laradocs site. Authenticate
+    | once with `php artisan laradocs:login`; tokens are cached at the path
+    | below. The client id is the hosted platform's first-party CLI client and
+    | rarely needs changing.
+    |
+    */
+
+    'deploy' => [
+        'url' => env('LARADOCS_URL', 'https://laradocs.dev'),
+        'site' => env('LARADOCS_SITE'),
+        'client_id' => env('LARADOCS_CLIENT_ID', '926e3796-a4a2-487a-a3af-4e447871a7cd'),
+        'redirect_port' => (int) env('LARADOCS_REDIRECT_PORT', 8788),
+        'credentials' => env('LARADOCS_CREDENTIALS', storage_path('laradocs/credentials.json')),
+    ],
+
 ];
