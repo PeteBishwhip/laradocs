@@ -113,10 +113,23 @@ return [
             'heading_anchors' => true,
             'images' => true,
             'video' => true,
+            'mermaid' => true,
             'variables' => true,
             'macros' => true,
         ],
         'highlighter' => env('LARADOCS_HIGHLIGHTER', 'shiki-css'),
+
+        /*
+        | Mermaid diagram rendering. ```mermaid blocks become SVG via mermaid.js,
+        | loaded lazily and only on pages that contain a diagram. Point "src" at
+        | a self-hosted ESM build to avoid the CDN.
+        */
+        'mermaid' => [
+            'src' => env(
+                'LARADOCS_MERMAID_SRC',
+                'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs',
+            ),
+        ],
         'unknown_variable' => 'blank', // blank | raw
         'toc' => [
             'min_level' => 2,

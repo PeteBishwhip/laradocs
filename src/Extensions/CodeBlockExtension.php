@@ -19,6 +19,12 @@ final class CodeBlockExtension implements HtmlExtension
         return Html::mutate($html, function (DOMDocument $dom, DOMElement $body): void {
             /** @var DOMElement $pre */
             foreach (iterator_to_array($body->getElementsByTagName('pre')) as $pre) {
+                // Mermaid diagrams own their own chrome — they should not get a
+                // language label or copy button.
+                if (str_contains($pre->getAttribute('class'), 'laradocs-mermaid-source')) {
+                    continue;
+                }
+
                 $this->wrap($dom, $pre);
             }
         });

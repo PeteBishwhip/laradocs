@@ -89,8 +89,10 @@ These supply values when a page omits them.
 | `parser.extensions.heading_anchors` | — | `true` |
 | `parser.extensions.images` | — | `true` |
 | `parser.extensions.video` | — | `true` |
+| `parser.extensions.mermaid` | — | `true` |
 | `parser.extensions.variables` | — | `true` |
 | `parser.extensions.macros` | — | `true` |
+| `parser.mermaid.src` | `LARADOCS_MERMAID_SRC` | jsDelivr mermaid@11 ESM |
 | `parser.highlighter` | `LARADOCS_HIGHLIGHTER` | `shiki-css` |
 | `parser.unknown_variable` | — | `blank` |
 | `parser.toc.min_level` | — | `2` |

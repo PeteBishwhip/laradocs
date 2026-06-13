@@ -42,6 +42,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.0] - 2026-06-06
 
 ### Added
+- Mermaid diagram support: ` ```mermaid ` fenced blocks render as SVG via
+  mermaid.js, imported lazily and only on pages that contain a diagram. Diagrams
+  honour the active dark-mode tokens and re-render on theme change, and fall back
+  to a styled code block when JavaScript is disabled. Toggle with
+  `parser.extensions.mermaid`; self-host via `parser.mermaid.src`.
 - Pre-rendered full-text search powering the ⌘K command palette, matching page
   bodies as well as titles.
 - `laradocs:index` Artisan command to build the search index and push it to the
