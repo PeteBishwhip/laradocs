@@ -65,6 +65,17 @@ return [
         'read_more' => 'Läs mer',
     ],
 
+    'tags' => [
+        'eyebrow' => 'Taggar',
+        'label' => 'Taggar',
+        'index_title' => 'Taggar',
+        'index_intro' => 'Bläddra i dokumentationen efter ämne.',
+        'show_title' => 'Sidor taggade med ”:tag”',
+        'count' => '{0} Inga sidor|{1} :count sida|[2,*] :count sidor',
+        'empty' => 'Inga taggar ännu.',
+        'all' => 'Alla taggar',
+    ],
+
     'empty' => [
         'eyebrow' => 'Kom igång',
         'title' => 'Din dokumentation, klar när du är.',

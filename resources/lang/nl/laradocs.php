@@ -65,6 +65,17 @@ return [
         'read_more' => 'Meer informatie',
     ],
 
+    'tags' => [
+        'eyebrow' => 'Tags',
+        'label' => 'Tags',
+        'index_title' => 'Tags',
+        'index_intro' => 'Blader door de documentatie op onderwerp.',
+        'show_title' => 'Pagina’s met de tag “:tag”',
+        'count' => '{0} Geen pagina’s|{1} :count pagina|[2,*] :count pagina’s',
+        'empty' => 'Nog geen tags.',
+        'all' => 'Alle tags',
+    ],
+
     'empty' => [
         'eyebrow' => 'Aan de slag',
         'title' => 'Uw documentatie, klaar wanneer u klaar bent.',

@@ -15,6 +15,7 @@ programmatic access.
   named routes and redirects.
 - [Metadata](/docs/guide/metadata) — every front-matter field.
 - [Grouping](/docs/guide/grouping) — how `group:` creates tabs and sidebar sections.
+- [Tags](/docs/guide/tags) — auto-generated tag index pages from front-matter `tags:`.
 - [Caching](/docs/guide/caching) — render caching and invalidation.
 - [Search](/docs/guide/search) — full-text search and Scout engines.
 - [SEO](/docs/guide/seo) — automatic meta tags, social cards and JSON-LD.
