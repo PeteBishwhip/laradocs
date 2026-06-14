@@ -27,7 +27,7 @@
     "require-dev": {
         "larastan/larastan": "^2.9 || ^3.0",
         "laravel/pint": "^1.18",
-        "laravel/scout": "^10.0",
+        "laravel/scout": "^11.2",
         "meilisearch/meilisearch-php": "^1.0",
         "nyholm/psr7": "^1.5",
         "orchestra/testbench": "^9.0 || ^10.0 || ^11.0",
