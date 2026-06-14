@@ -7,6 +7,7 @@ namespace Laradocs\Extensions;
 use Laradocs\Contracts\MarkdownExtension;
 use Laradocs\Macros\MacroRegistry;
 use Laradocs\Support\CodeAwareReplacer;
+use Laradocs\Support\ValueCaster;
 
 /**
  * Expands @docs('name', key: 'value', ...) calls into rendered macro HTML.
@@ -105,15 +106,15 @@ final class MacroExtension implements MarkdownExtension
             return ['', []];
         }
 
-        $name = $this->unquote(array_shift($tokens));
+        $name = ValueCaster::unquote(array_shift($tokens));
         $arguments = [];
         $position = 0;
 
         foreach ($tokens as $token) {
             if (preg_match('/^([a-zA-Z_][a-zA-Z0-9_]*)\s*:\s*(.*)$/s', $token, $m) === 1) {
-                $arguments[$m[1]] = $this->castValue($m[2]);
+                $arguments[$m[1]] = ValueCaster::cast($m[2]);
             } else {
-                $arguments[$position++] = $this->castValue($token);
+                $arguments[$position++] = ValueCaster::cast($token);
             }
         }
 
@@ -161,40 +162,5 @@ final class MacroExtension implements MarkdownExtension
         }
 
         return $tokens;
-    }
-
-    private function castValue(string $value): mixed
-    {
-        $value = trim($value);
-
-        if ($value === 'true') {
-            return true;
-        }
-
-        if ($value === 'false') {
-            return false;
-        }
-
-        if (is_numeric($value)) {
-            return $value + 0;
-        }
-
-        return $this->unquote($value);
-    }
-
-    private function unquote(string $value): string
-    {
-        $value = trim($value);
-
-        if (strlen($value) >= 2) {
-            $first = $value[0];
-            $last = $value[strlen($value) - 1];
-
-            if (($first === '"' || $first === "'") && $first === $last) {
-                return substr($value, 1, -1);
-            }
-        }
-
-        return $value;
     }
 }

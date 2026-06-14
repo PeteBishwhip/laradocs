@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Blade-component-style tags in markdown: authors can drop `<x-name attr="value">…</x-name>`
+  (or self-closing `<x-name />`) straight into a page. Components resolve through the
+  existing macro engine — `<x-name>` renders the macro registered under `name`, so the
+  two syntaxes round-trip — and the macro registry doubles as the whitelist: only
+  registered names render and attribute values are never evaluated as PHP, so there is no
+  arbitrary Blade execution. Inner content is passed as a `slot` argument. A `callout`
+  component ships built-in. Escape a literal tag with a backslash (`\<x-callout>`), an
+  inline code span, or a fenced block. Toggle via `parser.extensions.components`. See the
+  new "Components" feature guide.
 - Auto-generated tag index pages. A global index at `{prefix}/tags` lists every
   tag declared in front-matter `tags:`, and `{prefix}/tag/{slug}` lists the pages
   carrying a single tag. Tags are matched by slug (case- and spacing-insensitive),
