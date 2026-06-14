@@ -444,6 +444,14 @@ final class LaradocsServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__ . '/../stubs' => $this->app->basePath('stubs/laradocs'),
         ], 'laradocs-stubs');
+
+        $this->publishes([
+            __DIR__ . '/../config/laradocs.php' => $this->app->configPath('laradocs.php'),
+            __DIR__ . '/../resources/views' => $this->app->resourcePath('views/vendor/laradocs'),
+            __DIR__ . '/../resources/lang' => $this->app->langPath('vendor/laradocs'),
+            __DIR__ . '/../resources/dist' => $this->app->publicPath('vendor/laradocs'),
+            __DIR__ . '/../stubs' => $this->app->basePath('stubs/laradocs'),
+        ], 'laradocs-all');
     }
 
     private function registerCommands(): void
