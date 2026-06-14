@@ -198,3 +198,29 @@ it('applies the requested locale to the rendered docs page', function () {
         File::deleteDirectory(lang_path('vendor/laradocs/fr'));
     }
 });
+
+it('restores the application locale after a docs request so workers do not leak (octane-safe)', function () {
+    File::ensureDirectoryExists(lang_path('vendor/laradocs/fr'));
+    File::put(
+        lang_path('vendor/laradocs/fr/laradocs.php'),
+        "<?php\n\nreturn ['search' => ['trigger' => 'Rechercher dans la doc…']];\n",
+    );
+
+    try {
+        $this->makeDocs([
+            'index.md' => "---\ntitle: Home\norder: 1\n---\n# Welcome\n",
+        ]);
+
+        config()->set('app.locale', 'en');
+        config()->set('laradocs.locale.available', ['en' => 'English', 'fr' => 'Français']);
+        app()->setLocale('en');
+
+        // The page renders in French, but the worker's global locale is reset
+        // afterwards so the next request starts from a clean slate.
+        $this->get('/docs?lang=fr')->assertOk()->assertSee('Rechercher dans la doc…');
+
+        expect(app()->getLocale())->toBe('en');
+    } finally {
+        File::deleteDirectory(lang_path('vendor/laradocs/fr'));
+    }
+});

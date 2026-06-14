@@ -102,6 +102,11 @@ choice in a `laradocs_locale` cookie so it persists as the reader navigates.
 Unknown codes are ignored, so the query string can never force the UI into a
 locale you haven't configured.
 
+The locale is applied per request and the previous locale is restored once the
+response has rendered, so the package is safe to run under
+[Laravel Octane](https://laravel.com/docs/octane) — one request's language is
+never carried into the next.
+
 ## Overriding individual strings
 
 If you only want to tweak a phrase or two, publish the language files and edit

@@ -14,6 +14,10 @@ use Symfony\Component\HttpFoundation\Response;
  * bundled views render in the visitor's chosen language. The selection is
  * resolved by {@see LaradocsServiceProvider::determineLocale()} and, when made
  * via the `?lang=` query parameter, persisted in a cookie for return visits.
+ *
+ * The previous locale is restored once the response has rendered so a
+ * long-lived worker (Laravel Octane) never carries one request's language
+ * into the next.
  */
 final class SetDocsLocale
 {
@@ -22,11 +26,19 @@ final class SetDocsLocale
      */
     public function handle(Request $request, Closure $next): Response
     {
+        $previous = app()->getLocale();
         $locale = LaradocsServiceProvider::determineLocale($request);
 
         app()->setLocale($locale);
 
-        $response = $next($request);
+        try {
+            $response = $next($request);
+        } finally {
+            // The docs views have already rendered to a string by this point,
+            // so restoring here keeps the request's output in the chosen
+            // locale while leaving the worker's global state untouched.
+            app()->setLocale($previous);
+        }
 
         $requested = $request->query('lang');
 
