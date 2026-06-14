@@ -284,6 +284,22 @@ final class LaradocsServiceProvider extends ServiceProvider
     }
 
     /**
+     * The validated `?lang=` query parameter, or null if absent or unrecognised.
+     *
+     * Centralises the single point where the request is interrogated for an
+     * explicit locale choice, so neither this class nor the middleware need to
+     * repeat the available-locales check independently.
+     */
+    public static function explicitLocaleChoice(Request $request): ?string
+    {
+        /** @var array<string, mixed> $available */
+        $available = Config::array('laradocs.locale.available');
+        $lang = $request->query('lang');
+
+        return is_string($lang) && $lang !== '' && array_key_exists($lang, $available) ? $lang : null;
+    }
+
+    /**
      * The locale to render the current docs request in.
      *
      * An explicit choice — the `?lang=` query parameter or the cookie it sets —
@@ -296,10 +312,14 @@ final class LaradocsServiceProvider extends ServiceProvider
         /** @var array<string, mixed> $available */
         $available = Config::array('laradocs.locale.available');
 
-        foreach ([$request->query('lang'), $request->cookie('laradocs_locale')] as $candidate) {
-            if (is_string($candidate) && $candidate !== '' && array_key_exists($candidate, $available)) {
-                return $candidate;
-            }
+        $explicit = self::explicitLocaleChoice($request);
+        if ($explicit !== null) {
+            return $explicit;
+        }
+
+        $cookie = $request->cookie('laradocs_locale');
+        if (is_string($cookie) && $cookie !== '' && array_key_exists($cookie, $available)) {
+            return $cookie;
         }
 
         return self::defaultLocale();

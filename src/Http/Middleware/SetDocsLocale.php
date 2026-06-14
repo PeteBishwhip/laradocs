@@ -28,21 +28,24 @@ final class SetDocsLocale
     {
         $previous = app()->getLocale();
         $locale = LaradocsServiceProvider::determineLocale($request);
+        $changed = $locale !== $previous;
 
-        app()->setLocale($locale);
+        if ($changed) {
+            app()->setLocale($locale);
+        }
 
         try {
             $response = $next($request);
         } finally {
-            // The docs views have already rendered to a string by this point,
-            // so restoring here keeps the request's output in the chosen
-            // locale while leaving the worker's global state untouched.
-            app()->setLocale($previous);
+            if ($changed) {
+                // The docs views have already rendered to a string by this point,
+                // so restoring here keeps the request's output in the chosen
+                // locale while leaving the worker's global state untouched.
+                app()->setLocale($previous);
+            }
         }
 
-        $requested = $request->query('lang');
-
-        if (is_string($requested) && $requested !== '') {
+        if (LaradocsServiceProvider::explicitLocaleChoice($request) !== null) {
             // Remember an explicit choice for a year so navigation keeps the
             // selected language without re-appending the query parameter.
             $response->headers->setCookie(cookie('laradocs_locale', $locale, 60 * 24 * 365));
