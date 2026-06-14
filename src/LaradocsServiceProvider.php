@@ -60,9 +60,15 @@ use League\CommonMark\MarkdownConverter;
 
 final class LaradocsServiceProvider extends ServiceProvider
 {
+    private const CONFIG = '/../config/laradocs.php';
+    private const VIEWS  = '/../resources/views';
+    private const LANG   = '/../resources/lang';
+    private const DIST   = '/../resources/dist';
+    private const STUBS  = '/../stubs';
+
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__ . '/../config/laradocs.php', 'laradocs');
+        $this->mergeConfigFrom(__DIR__ . self::CONFIG, 'laradocs');
 
         $this->registerRegistries();
         $this->registerPipeline();
@@ -73,8 +79,8 @@ final class LaradocsServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'laradocs');
-        $this->loadTranslationsFrom(__DIR__ . '/../resources/lang', 'laradocs');
+        $this->loadViewsFrom(__DIR__ . self::VIEWS, 'laradocs');
+        $this->loadTranslationsFrom(__DIR__ . self::LANG, 'laradocs');
         $this->registerRoutes();
         $this->bootRateLimiting();
         $this->registerDefaultMacros();
@@ -445,33 +451,18 @@ final class LaradocsServiceProvider extends ServiceProvider
 
     private function registerPublishing(): void
     {
-        $this->publishes([
-            __DIR__ . '/../config/laradocs.php' => $this->app->configPath('laradocs.php'),
-        ], 'laradocs-config');
+        $config = [__DIR__ . self::CONFIG => $this->app->configPath('laradocs.php')];
+        $views  = [__DIR__ . self::VIEWS  => $this->app->resourcePath('views/vendor/laradocs')];
+        $lang   = [__DIR__ . self::LANG   => $this->app->langPath('vendor/laradocs')];
+        $assets = [__DIR__ . self::DIST   => $this->app->publicPath('vendor/laradocs')];
+        $stubs  = [__DIR__ . self::STUBS  => $this->app->basePath('stubs/laradocs')];
 
-        $this->publishes([
-            __DIR__ . '/../resources/views' => $this->app->resourcePath('views/vendor/laradocs'),
-        ], 'laradocs-views');
-
-        $this->publishes([
-            __DIR__ . '/../resources/lang' => $this->app->langPath('vendor/laradocs'),
-        ], 'laradocs-lang');
-
-        $this->publishes([
-            __DIR__ . '/../resources/dist' => $this->app->publicPath('vendor/laradocs'),
-        ], 'laradocs-assets');
-
-        $this->publishes([
-            __DIR__ . '/../stubs' => $this->app->basePath('stubs/laradocs'),
-        ], 'laradocs-stubs');
-
-        $this->publishes([
-            __DIR__ . '/../config/laradocs.php' => $this->app->configPath('laradocs.php'),
-            __DIR__ . '/../resources/views' => $this->app->resourcePath('views/vendor/laradocs'),
-            __DIR__ . '/../resources/lang' => $this->app->langPath('vendor/laradocs'),
-            __DIR__ . '/../resources/dist' => $this->app->publicPath('vendor/laradocs'),
-            __DIR__ . '/../stubs' => $this->app->basePath('stubs/laradocs'),
-        ], 'laradocs-all');
+        $this->publishes($config, 'laradocs-config');
+        $this->publishes($views,  'laradocs-views');
+        $this->publishes($lang,   'laradocs-lang');
+        $this->publishes($assets, 'laradocs-assets');
+        $this->publishes($stubs,  'laradocs-stubs');
+        $this->publishes(array_merge($config, $views, $lang, $assets, $stubs), 'laradocs-all');
     }
 
     private function registerCommands(): void
