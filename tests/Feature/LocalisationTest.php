@@ -115,6 +115,7 @@ it('exposes the language files under the laradocs namespace', function () {
 it('falls back to the application locale by default', function () {
     config()->set('app.locale', 'en');
     config()->set('laradocs.locale.default', null);
+    config()->set('laradocs.locale.available', ['en' => 'English', 'fr' => 'Français']);
 
     expect(LaradocsServiceProvider::defaultLocale())->toBe('en');
 });
