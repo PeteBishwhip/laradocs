@@ -129,11 +129,22 @@ See [Rich Content](/docs/features/rich-content) for what each extension enables.
 | `ui.banner.type` | `LARADOCS_BANNER_TYPE` | `info` |
 | `ui.banner.message` | `LARADOCS_BANNER_MESSAGE` | `null` |
 | `ui.edit.url` | `LARADOCS_EDIT_URL` | `null` |
-| `ui.edit.label` | `LARADOCS_EDIT_LABEL` | `Edit this page` |
 | `ui.search.enabled` | `LARADOCS_SEARCH` | `true` |
 
 See [Customising the UI](/docs/customising-the-ui) for what each value does
 visually.
+
+## Localisation
+
+| Option | Env | Default |
+|---|---|---|
+| `locale.default` | `LARADOCS_LOCALE` | `en` |
+| `locale.available` | — | `['en' => 'English']` |
+| `locale.selector` | `LARADOCS_LOCALE_SELECTOR` | `true` |
+
+The bundled views are fully translatable. See
+[Localisation](/docs/guide/localisation) for the workflow — publishing the
+language files, adding locales and the in-page language selector.
 
 ## Analytics
 

@@ -14,6 +14,7 @@ use Laradocs\Http\Controllers\RobotsController;
 use Laradocs\Http\Controllers\SearchController;
 use Laradocs\Http\Controllers\SitemapController;
 use Laradocs\Http\Middleware\EnsureDocsEnabled;
+use Laradocs\Http\Middleware\SetDocsLocale;
 use Laradocs\Http\Middleware\ThrottleApiRequests;
 
 final class DocumentRouter
@@ -27,7 +28,7 @@ final class DocumentRouter
     public function register(Registrar $router, array $config): void
     {
         $baseMiddleware = (array) ($config['middleware'] ?? ['web']);
-        $middleware = array_merge($baseMiddleware, [EnsureDocsEnabled::class]);
+        $middleware = array_merge($baseMiddleware, [EnsureDocsEnabled::class, SetDocsLocale::class]);
 
         $attributes = [
             'prefix' => $config['prefix'] ?? 'docs',

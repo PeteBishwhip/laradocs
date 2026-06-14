@@ -4,7 +4,7 @@
     $links = (array) config('laradocs.ui.header.links', []);
 @endphp
 <header class="laradocs-header">
-    <button class="laradocs-icon-btn laradocs-menu-btn" type="button" aria-label="Toggle navigation" data-laradocs-menu>
+    <button class="laradocs-icon-btn laradocs-menu-btn" type="button" aria-label="{{ __('laradocs::laradocs.nav.toggle_navigation') }}" data-laradocs-menu>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M3 6h18M3 12h18M3 18h18"/>
         </svg>
@@ -22,14 +22,14 @@
         @endif
     </a>
 
-    <button type="button" class="laradocs-palette-trigger" data-laradocs-palette-open aria-label="Open command palette">
+    <button type="button" class="laradocs-palette-trigger" data-laradocs-palette-open aria-label="{{ __('laradocs::laradocs.search.open') }}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-        <span>Search the docs…</span>
+        <span>{{ __('laradocs::laradocs.search.trigger') }}</span>
         <kbd>⌘K</kbd>
     </button>
 
     @if(! empty($links))
-        <nav class="laradocs-header-nav" aria-label="Header">
+        <nav class="laradocs-header-nav" aria-label="{{ __('laradocs::laradocs.nav.header') }}">
             @foreach($links as $link)
                 @php
                     $url = $link['url'] ?? '#';
@@ -47,8 +47,9 @@
 
     <div class="laradocs-spacer"></div>
 
+    @include('laradocs::partials.language-selector')
 
-    <button class="laradocs-icon-btn" type="button" data-laradocs-theme-toggle aria-label="Toggle theme">
+    <button class="laradocs-icon-btn" type="button" data-laradocs-theme-toggle aria-label="{{ __('laradocs::laradocs.theme.toggle') }}">
         <svg class="icon-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="9"/>
             <path d="M12 3v18"/>

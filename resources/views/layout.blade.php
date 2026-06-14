@@ -77,14 +77,14 @@
     @include('laradocs::partials.header', ['brand' => $brand, 'tagline' => $tagline, 'title' => $title, 'tree' => $tree ?? null])
 
     @if(isset($tree) && method_exists($tree, 'grouped'))
-        <nav class="laradocs-tabs" aria-label="Sections">
+        <nav class="laradocs-tabs" aria-label="{{ __('laradocs::laradocs.nav.sections') }}">
             <div class="laradocs-tabs-inner">
                 @php $activeGroup = $document->metadata->group ?? null; @endphp
                 @foreach($tree->grouped() as $group => $nodes)
                     @php
                         $first = collect($nodes)->first(fn($n) => $n->isLink());
                         $href = $first ? DocumentUrl::toSlug($first->slug) : '#';
-                        $label = $group === '' ? 'Overview' : $group;
+                        $label = $group === '' ? __('laradocs::laradocs.nav.overview') : $group;
                     @endphp
                     <a href="{{ $href }}"
                        class="laradocs-tab {{ ($activeGroup ?? '') === $group ? 'is-active' : '' }}">
@@ -115,12 +115,12 @@
              data-laradocs-search-url="{{ DocumentUrl::search() }}"
              data-laradocs-search-min="{{ (int) config('laradocs.search.min_chars', 2) }}"
          @endif
-         hidden role="dialog" aria-label="Quick search" aria-modal="true">
+         hidden role="dialog" aria-label="{{ __('laradocs::laradocs.search.label') }}" aria-modal="true">
         <div class="laradocs-palette-backdrop" data-laradocs-palette-close></div>
         <div class="laradocs-palette-panel">
             <div class="laradocs-palette-search">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-                <input type="text" placeholder="Search pages…" data-laradocs-palette-input>
+                <input type="text" placeholder="{{ __('laradocs::laradocs.search.placeholder') }}" data-laradocs-palette-input>
                 <kbd>esc</kbd>
             </div>
             <ul class="laradocs-palette-results" data-laradocs-palette-results>
@@ -156,9 +156,9 @@
                 @endif
             </ul>
             <div class="laradocs-palette-footer">
-                <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
-                <span><kbd>↵</kbd> open</span>
-                <span><kbd>esc</kbd> close</span>
+                <span><kbd>↑</kbd><kbd>↓</kbd> {{ __('laradocs::laradocs.search.navigate') }}</span>
+                <span><kbd>↵</kbd> {{ __('laradocs::laradocs.search.select') }}</span>
+                <span><kbd>esc</kbd> {{ __('laradocs::laradocs.search.close') }}</span>
             </div>
         </div>
     </div>

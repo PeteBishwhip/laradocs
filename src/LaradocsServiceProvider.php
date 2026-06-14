@@ -60,9 +60,19 @@ use League\CommonMark\MarkdownConverter;
 
 final class LaradocsServiceProvider extends ServiceProvider
 {
+    private const CONFIG = __DIR__ . '/../config/laradocs.php';
+
+    private const VIEWS = __DIR__ . '/../resources/views';
+
+    private const LANG = __DIR__ . '/../resources/lang';
+
+    private const DIST = __DIR__ . '/../resources/dist';
+
+    private const STUBS = __DIR__ . '/../stubs';
+
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__ . '/../config/laradocs.php', 'laradocs');
+        $this->mergeConfigFrom(self::CONFIG, 'laradocs');
 
         $this->registerRegistries();
         $this->registerPipeline();
@@ -73,7 +83,8 @@ final class LaradocsServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'laradocs');
+        $this->loadViewsFrom(self::VIEWS, 'laradocs');
+        $this->loadTranslationsFrom(self::LANG, 'laradocs');
         $this->registerRoutes();
         $this->bootRateLimiting();
         $this->registerDefaultMacros();
@@ -252,6 +263,78 @@ final class LaradocsServiceProvider extends ServiceProvider
         return true;
     }
 
+    /**
+     * The locale the docs fall back to when a visitor hasn't picked one.
+     *
+     * Resolution order:
+     *   1. An explicit `laradocs.locale.default` (or LARADOCS_LOCALE).
+     *   2. The host application's locale, when it has a translation directory.
+     *   3. The first configured `available` locale.
+     *   4. The application locale as a last resort.
+     */
+    public static function defaultLocale(): string
+    {
+        $configured = Config::nullableString('laradocs.locale.default');
+
+        if ($configured !== null && $configured !== '') {
+            return $configured;
+        }
+
+        /** @var array<string, mixed> $available */
+        $available = Config::array('laradocs.locale.available');
+        $appLocale = (string) app()->getLocale();
+
+        if (array_key_exists($appLocale, $available)) {
+            return $appLocale;
+        }
+
+        $first = array_key_first($available);
+
+        return is_string($first) && $first !== '' ? $first : $appLocale;
+    }
+
+    /**
+     * The validated `?lang=` query parameter, or null if absent or unrecognised.
+     *
+     * Centralises the single point where the request is interrogated for an
+     * explicit locale choice, so neither this class nor the middleware need to
+     * repeat the available-locales check independently.
+     */
+    public static function explicitLocaleChoice(Request $request): ?string
+    {
+        /** @var array<string, mixed> $available */
+        $available = Config::array('laradocs.locale.available');
+        $lang = $request->query('lang');
+
+        return is_string($lang) && $lang !== '' && array_key_exists($lang, $available) ? $lang : null;
+    }
+
+    /**
+     * The locale to render the current docs request in.
+     *
+     * An explicit choice — the `?lang=` query parameter or the cookie it sets —
+     * wins when it maps to a configured `available` locale; otherwise the
+     * {@see self::defaultLocale()} is used. Unknown codes are ignored so the
+     * query string can never force an untranslated locale.
+     */
+    public static function determineLocale(Request $request): string
+    {
+        /** @var array<string, mixed> $available */
+        $available = Config::array('laradocs.locale.available');
+
+        $explicit = self::explicitLocaleChoice($request);
+        if ($explicit !== null) {
+            return $explicit;
+        }
+
+        $cookie = $request->cookie('laradocs_locale');
+        if (is_string($cookie) && $cookie !== '' && array_key_exists($cookie, $available)) {
+            return $cookie;
+        }
+
+        return self::defaultLocale();
+    }
+
     private function buildConverter(Application $app): MarkdownConverter
     {
         $extensions = Config::array('laradocs.parser.extensions');
@@ -372,21 +455,18 @@ final class LaradocsServiceProvider extends ServiceProvider
 
     private function registerPublishing(): void
     {
-        $this->publishes([
-            __DIR__ . '/../config/laradocs.php' => $this->app->configPath('laradocs.php'),
-        ], 'laradocs-config');
+        $config = [self::CONFIG => $this->app->configPath('laradocs.php')];
+        $views = [self::VIEWS => $this->app->resourcePath('views/vendor/laradocs')];
+        $lang = [self::LANG => $this->app->langPath('vendor/laradocs')];
+        $assets = [self::DIST => $this->app->publicPath('vendor/laradocs')];
+        $stubs = [self::STUBS => $this->app->basePath('stubs/laradocs')];
 
-        $this->publishes([
-            __DIR__ . '/../resources/views' => $this->app->resourcePath('views/vendor/laradocs'),
-        ], 'laradocs-views');
-
-        $this->publishes([
-            __DIR__ . '/../resources/dist' => $this->app->publicPath('vendor/laradocs'),
-        ], 'laradocs-assets');
-
-        $this->publishes([
-            __DIR__ . '/../stubs' => $this->app->basePath('stubs/laradocs'),
-        ], 'laradocs-stubs');
+        $this->publishes($config, 'laradocs-config');
+        $this->publishes($views, 'laradocs-views');
+        $this->publishes($lang, 'laradocs-lang');
+        $this->publishes($assets, 'laradocs-assets');
+        $this->publishes($stubs, 'laradocs-stubs');
+        $this->publishes(array_merge($config, $views, $lang, $assets, $stubs), 'laradocs-all');
     }
 
     private function registerCommands(): void

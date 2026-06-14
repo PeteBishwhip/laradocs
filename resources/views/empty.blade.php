@@ -4,40 +4,39 @@
 
 @section('content')
     <section class="laradocs-empty" aria-labelledby="laradocs-empty-title">
-        <span class="laradocs-empty-eyebrow">Get started</span>
-        <h1 id="laradocs-empty-title">Your documentation, ready when you are.</h1>
+        <span class="laradocs-empty-eyebrow">{{ __('laradocs::laradocs.empty.eyebrow') }}</span>
+        <h1 id="laradocs-empty-title">{{ __('laradocs::laradocs.empty.title') }}</h1>
         <p>
-            Laradocs is wired up and waiting for content. Pages are sourced from
-            <code>{{ config('laradocs.docs.path') }}</code>.
+            {!! __('laradocs::laradocs.empty.intro', ['path' => '<code>' . e(config('laradocs.docs.path')) . '</code>']) !!}
         </p>
 
         <div class="laradocs-empty-steps">
             <div class="laradocs-empty-step">
                 <span class="num">01</span>
                 <div>
-                    <strong>Scaffold a starter page</strong>
-                    Run <code>php artisan laradocs:install</code> to drop a welcome page and folder into your docs directory.
+                    <strong>{{ __('laradocs::laradocs.empty.step_one_title') }}</strong>
+                    {!! __('laradocs::laradocs.empty.step_one_body', ['command' => '<code>php artisan laradocs:install</code>']) !!}
                 </div>
             </div>
             <div class="laradocs-empty-step">
                 <span class="num">02</span>
                 <div>
-                    <strong>Write your first page</strong>
-                    Use <code>php artisan make:doc getting-started</code> to generate a new markdown file with front-matter.
+                    <strong>{{ __('laradocs::laradocs.empty.step_two_title') }}</strong>
+                    {!! __('laradocs::laradocs.empty.step_two_body', ['command' => '<code>php artisan make:doc getting-started</code>']) !!}
                 </div>
             </div>
             <div class="laradocs-empty-step">
                 <span class="num">03</span>
                 <div>
-                    <strong>Tune the look</strong>
-                    Switch presets with <code>LARADOCS_UI_PRESET=classic|minimal|wide</code> or tune the accent with <code>LARADOCS_ACCENT</code>.
+                    <strong>{{ __('laradocs::laradocs.empty.step_three_title') }}</strong>
+                    {!! __('laradocs::laradocs.empty.step_three_body', ['preset' => '<code>LARADOCS_UI_PRESET=classic|minimal|wide</code>', 'accent' => '<code>LARADOCS_ACCENT</code>']) !!}
                 </div>
             </div>
         </div>
 
         <p>
             <a class="laradocs-button" href="https://github.com/petebishwhip/laradocs" target="_blank" rel="noopener">
-                Read the handbook →
+                {!! __('laradocs::laradocs.empty.handbook') !!}
             </a>
         </p>
     </section>

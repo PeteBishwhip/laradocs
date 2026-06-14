@@ -18,6 +18,36 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Localisation
+    |--------------------------------------------------------------------------
+    |
+    | Every user-facing string in the bundled views is translatable. Publish
+    | the language files with `php artisan vendor:publish --tag=laradocs-lang`
+    | and add a directory per locale (e.g. lang/vendor/laradocs/fr).
+    |
+    | "default"   The locale the docs render in. Defaults to "en". Set
+    |             LARADOCS_LOCALE to override.
+    | "available" Locales offered in the in-page language selector. Keys are
+    |             locale codes (matching a translation directory); values are
+    |             the human-readable labels shown in the selector.
+    | "selector"  Show the language selector in the header. It is hidden
+    |             automatically when fewer than two locales are available.
+    |
+    | A visitor can switch language with a `?lang=<code>` query parameter; the
+    | choice is remembered in a cookie. See the "Localisation" guide.
+    |
+    */
+
+    'locale' => [
+        'default' => env('LARADOCS_LOCALE', 'en'),
+        'available' => [
+            'en' => 'English',
+        ],
+        'selector' => (bool) env('LARADOCS_LOCALE_SELECTOR', true),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Routing
     |--------------------------------------------------------------------------
     |
@@ -214,7 +244,6 @@ return [
         */
         'edit' => [
             'url' => env('LARADOCS_EDIT_URL'),
-            'label' => env('LARADOCS_EDIT_LABEL', 'Edit this page'),
         ],
 
         'search' => [

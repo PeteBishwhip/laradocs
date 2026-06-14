@@ -130,7 +130,6 @@ source:
 
 ```dotenv
 LARADOCS_EDIT_URL="https://github.com/you/repo/edit/main/docs/{file}"
-LARADOCS_EDIT_LABEL="Edit on GitHub"
 ```
 
 The template supports three placeholders:
