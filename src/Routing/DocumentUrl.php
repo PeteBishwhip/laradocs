@@ -56,6 +56,22 @@ final class DocumentUrl
         return route(self::prefix() . 'search');
     }
 
+    /**
+     * URL to the global tag index (e.g. /docs/tags).
+     */
+    public static function tags(): string
+    {
+        return route(self::prefix() . 'tags.index');
+    }
+
+    /**
+     * URL to a single tag's listing page (e.g. /docs/tag/getting-started).
+     */
+    public static function tag(string $slug): string
+    {
+        return route(self::prefix() . 'tags.show', ['tag' => $slug]);
+    }
+
     public static function sitemap(): string
     {
         return route(self::prefix() . 'sitemap');

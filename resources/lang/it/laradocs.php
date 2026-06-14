@@ -65,6 +65,17 @@ return [
         'read_more' => 'Leggi di più',
     ],
 
+    'tags' => [
+        'eyebrow' => 'Tag',
+        'label' => 'Tag',
+        'index_title' => 'Tag',
+        'index_intro' => 'Esplora la documentazione per argomento.',
+        'show_title' => 'Pagine con il tag «:tag»',
+        'count' => '{0} Nessuna pagina|{1} :count pagina|[2,*] :count pagine',
+        'empty' => 'Ancora nessun tag.',
+        'all' => 'Tutti i tag',
+    ],
+
     'empty' => [
         'eyebrow' => 'Per iniziare',
         'title' => 'La tua documentazione, pronta quando ti trovi.',

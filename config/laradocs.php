@@ -113,6 +113,33 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Tag Index Pages
+    |--------------------------------------------------------------------------
+    |
+    | Pages declare topics with a front-matter `tags:` list. When enabled, the
+    | package auto-generates a global index of every tag and a listing page per
+    | tag — no extra markdown required. Hidden pages never appear in either.
+    |
+    | "enabled" Toggle the tag routes and pages on or off.
+    | "index"   Slug of the global index, served at {prefix}/{index} (e.g. /docs/tags).
+    | "prefix"  URL segment for a single tag, served at {prefix}/{tag}
+    |             (e.g. /docs/tag/getting-started).
+    |
+    | A real document occupying either slug always wins, so these never shadow
+    | hand-authored pages. Customise the look by publishing the views with
+    | `php artisan vendor:publish --tag=laradocs-views` and editing the files
+    | under resources/views/vendor/laradocs/tags.
+    |
+    */
+
+    'tags' => [
+        'enabled' => (bool) env('LARADOCS_TAGS', true),
+        'index' => env('LARADOCS_TAGS_INDEX', 'tags'),
+        'prefix' => env('LARADOCS_TAGS_PREFIX', 'tag'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Per-file Metadata Defaults
     |--------------------------------------------------------------------------
     |

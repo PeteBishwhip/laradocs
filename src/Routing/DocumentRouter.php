@@ -13,9 +13,11 @@ use Laradocs\Http\Controllers\FeedController;
 use Laradocs\Http\Controllers\RobotsController;
 use Laradocs\Http\Controllers\SearchController;
 use Laradocs\Http\Controllers\SitemapController;
+use Laradocs\Http\Controllers\TagController;
 use Laradocs\Http\Middleware\EnsureDocsEnabled;
 use Laradocs\Http\Middleware\SetDocsLocale;
 use Laradocs\Http\Middleware\ThrottleApiRequests;
+use Laradocs\Support\Config;
 
 final class DocumentRouter
 {
@@ -64,6 +66,21 @@ final class DocumentRouter
             $router->get('_laradocs/api/search', ApiSearchController::class)
                 ->middleware(ThrottleApiRequests::class)
                 ->name('api.search');
+
+            // Tag index pages are registered ahead of the catch-all show route
+            // so their fixed paths take priority; the controller still defers
+            // to a real document occupying the same slug. Single-segment
+            // {tag} keeps the catch-all responsible for any deeper paths.
+            if (Config::bool('laradocs.tags.enabled', true)) {
+                $index = trim(Config::string('laradocs.tags.index', 'tags'), '/');
+                $prefix = trim(Config::string('laradocs.tags.prefix', 'tag'), '/');
+
+                $router->get($index, [TagController::class, 'index'])->name('tags.index');
+                $router->get($prefix . '/{tag}', [TagController::class, 'show'])
+                    ->where('tag', '[^/]+')
+                    ->name('tags.show');
+            }
+
             $router->get('/{path}', [DocsController::class, 'show'])
                 ->where('path', '.*')
                 ->name('show');

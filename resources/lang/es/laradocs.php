@@ -65,6 +65,17 @@ return [
         'read_more' => 'Leer más',
     ],
 
+    'tags' => [
+        'eyebrow' => 'Etiquetas',
+        'label' => 'Etiquetas',
+        'index_title' => 'Etiquetas',
+        'index_intro' => 'Explora la documentación por tema.',
+        'show_title' => 'Páginas etiquetadas con «:tag»',
+        'count' => '{0} Ninguna página|{1} :count página|[2,*] :count páginas',
+        'empty' => 'Aún no hay etiquetas.',
+        'all' => 'Todas las etiquetas',
+    ],
+
     'empty' => [
         'eyebrow' => 'Empezar',
         'title' => 'Tu documentación, lista cuando estés.',

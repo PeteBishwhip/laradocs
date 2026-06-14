@@ -65,6 +65,17 @@ return [
         'read_more' => 'Lesen Sie mehr',
     ],
 
+    'tags' => [
+        'eyebrow' => 'Schlagwörter',
+        'label' => 'Schlagwörter',
+        'index_title' => 'Schlagwörter',
+        'index_intro' => 'Durchsuchen Sie die Dokumentation nach Thema.',
+        'show_title' => 'Seiten mit dem Schlagwort „:tag“',
+        'count' => '{0} Keine Seiten|{1} :count Seite|[2,*] :count Seiten',
+        'empty' => 'Noch keine Schlagwörter.',
+        'all' => 'Alle Schlagwörter',
+    ],
+
     'empty' => [
         'eyebrow' => 'Los geht\'s',
         'title' => 'Ihre Dokumentation, bereit, wenn Sie es sind.',

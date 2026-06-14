@@ -1,6 +1,7 @@
 @extends('laradocs::layout')
 
 @use('Laradocs\Routing\DocumentUrl')
+@use('Illuminate\Support\Str')
 
 @section('title', $document->title())
 @if($document->metadata->description)
@@ -56,6 +57,18 @@
     <article class="laradocs-prose">
         {!! $html !!}
     </article>
+
+    @php
+        $tagsEnabled = (bool) config('laradocs.tags.enabled', true);
+        $docTags = $tagsEnabled ? array_values(array_filter($document->metadata->tags, fn ($t) => trim((string) $t) !== '')) : [];
+    @endphp
+    @if($docTags !== [])
+        <nav class="laradocs-page-tags" aria-label="{{ __('laradocs::laradocs.tags.label') }}">
+            @foreach($docTags as $tag)
+                <a class="laradocs-tag-chip" href="{{ DocumentUrl::tag(Str::slug($tag)) }}">{{ $tag }}</a>
+            @endforeach
+        </nav>
+    @endif
 
     @php
         $editTemplate = config('laradocs.ui.edit.url');
