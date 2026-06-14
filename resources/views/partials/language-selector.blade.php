@@ -1,12 +1,8 @@
-@php
-    /** @var array<string, string> $languages */
-    $languages = (array) config('laradocs.locale.available', []);
-    $selectorEnabled = (bool) config('laradocs.locale.selector', true);
-    $current = app()->getLocale();
-@endphp
+@php($languages = \Laradocs\Support\Locale::available())
+@php($current = app()->getLocale())
 
 {{-- Only render once there is a genuine choice to make. --}}
-@if($selectorEnabled && count($languages) > 1)
+@if((bool) config('laradocs.locale.selector', true) && count($languages) > 1)
     <details class="laradocs-lang" data-laradocs-lang>
         <summary class="laradocs-icon-btn" aria-label="{{ __('laradocs::laradocs.language.label') }}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

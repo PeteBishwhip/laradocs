@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\ServiceProvider;
-use Laradocs\LaradocsServiceProvider;
+use Laradocs\Support\Locale;
 
 /**
  * Strip everything from a Blade template that legitimately contains
@@ -115,15 +115,16 @@ it('exposes the language files under the laradocs namespace', function () {
 it('falls back to the application locale by default', function () {
     config()->set('app.locale', 'en');
     config()->set('laradocs.locale.default', null);
+    config()->set('laradocs.locale.available', ['en' => 'English', 'fr' => 'Français']);
 
-    expect(LaradocsServiceProvider::defaultLocale())->toBe('en');
+    expect(Locale::fallback())->toBe('en');
 });
 
 it('uses an explicit configured default locale when set', function () {
     config()->set('laradocs.locale.default', 'fr');
     config()->set('laradocs.locale.available', ['en' => 'English', 'fr' => 'Français']);
 
-    expect(LaradocsServiceProvider::defaultLocale())->toBe('fr');
+    expect(Locale::fallback())->toBe('fr');
 });
 
 it('falls back to the first available locale when the app locale is unknown', function () {
@@ -131,7 +132,7 @@ it('falls back to the first available locale when the app locale is unknown', fu
     config()->set('laradocs.locale.default', null);
     config()->set('laradocs.locale.available', ['en' => 'English', 'fr' => 'Français']);
 
-    expect(LaradocsServiceProvider::defaultLocale())->toBe('en');
+    expect(Locale::fallback())->toBe('en');
 });
 
 it('honours a valid ?lang query parameter', function () {
@@ -139,7 +140,7 @@ it('honours a valid ?lang query parameter', function () {
 
     $request = Request::create('/docs?lang=fr');
 
-    expect(LaradocsServiceProvider::determineLocale($request))->toBe('fr');
+    expect(Locale::determine($request))->toBe('fr');
 });
 
 it('ignores an unknown ?lang query parameter', function () {
@@ -148,7 +149,7 @@ it('ignores an unknown ?lang query parameter', function () {
 
     $request = Request::create('/docs?lang=zz');
 
-    expect(LaradocsServiceProvider::determineLocale($request))->toBe('en');
+    expect(Locale::determine($request))->toBe('en');
 });
 
 it('remembers a language choice from the cookie', function () {
@@ -157,7 +158,7 @@ it('remembers a language choice from the cookie', function () {
     $request = Request::create('/docs');
     $request->cookies->set('laradocs_locale', 'de');
 
-    expect(LaradocsServiceProvider::determineLocale($request))->toBe('de');
+    expect(Locale::determine($request))->toBe('de');
 });
 
 it('renders the language selector only when more than one locale is offered', function () {
@@ -196,6 +197,128 @@ it('applies the requested locale to the rendered docs page', function () {
         $this->get('/docs/guide?lang=fr')->assertOk()->assertSee('Rechercher dans la doc...');
     } finally {
         File::deleteDirectory(lang_path('vendor/laradocs/fr'));
+    }
+});
+
+it('auto-detects locales from lang/vendor/laradocs/ when available is null', function () {
+    config()->set('laradocs.locale.available', null);
+
+    File::ensureDirectoryExists(lang_path('vendor/laradocs/en'));
+    File::ensureDirectoryExists(lang_path('vendor/laradocs/fr'));
+
+    try {
+        $locales = Locale::available();
+
+        expect($locales)->toHaveKey('en')->toHaveKey('fr');
+    } finally {
+        File::deleteDirectory(lang_path('vendor/laradocs/en'));
+        File::deleteDirectory(lang_path('vendor/laradocs/fr'));
+    }
+});
+
+it('uses the locale code as the label when no meta.php is present', function () {
+    config()->set('laradocs.locale.available', null);
+
+    File::ensureDirectoryExists(lang_path('vendor/laradocs/de'));
+
+    try {
+        $locales = Locale::available();
+
+        expect($locales['de'])->toBe('de');
+    } finally {
+        File::deleteDirectory(lang_path('vendor/laradocs/de'));
+    }
+});
+
+it('reads the label from meta.php when present', function () {
+    config()->set('laradocs.locale.available', null);
+
+    File::ensureDirectoryExists(lang_path('vendor/laradocs/fr'));
+    File::put(lang_path('vendor/laradocs/fr/meta.php'), "<?php\n\nreturn ['label' => 'Français'];\n");
+
+    try {
+        $locales = Locale::available();
+
+        expect($locales['fr'])->toBe('Français');
+    } finally {
+        File::deleteDirectory(lang_path('vendor/laradocs/fr'));
+    }
+});
+
+it('returns an empty array when the lang directory does not exist', function () {
+    config()->set('laradocs.locale.available', null);
+
+    expect(Locale::available())->toBe([]);
+});
+
+it('ignores files in the lang directory — only directories count as locales', function () {
+    config()->set('laradocs.locale.available', null);
+
+    File::ensureDirectoryExists(lang_path('vendor/laradocs'));
+    File::put(lang_path('vendor/laradocs/README.md'), '# Lang');
+    File::ensureDirectoryExists(lang_path('vendor/laradocs/en'));
+
+    try {
+        $locales = Locale::available();
+
+        expect($locales)->toHaveKey('en')->not->toHaveKey('README.md');
+    } finally {
+        File::deleteDirectory(lang_path('vendor/laradocs'));
+    }
+});
+
+it('respects a non-empty available array as an explicit override over auto-detection', function () {
+    config()->set('laradocs.locale.available', ['en' => 'English']);
+
+    // Even if dirs exist on disk, the explicit config wins.
+    File::ensureDirectoryExists(lang_path('vendor/laradocs/fr'));
+
+    try {
+        expect(Locale::available())->toBe(['en' => 'English']);
+    } finally {
+        File::deleteDirectory(lang_path('vendor/laradocs/fr'));
+    }
+});
+
+it('treats an empty available array as a deliberate opt-out, skipping auto-detection', function () {
+    config()->set('laradocs.locale.available', []);
+
+    // Locale directories exist on disk, but the empty array disables them.
+    File::ensureDirectoryExists(lang_path('vendor/laradocs/en'));
+    File::ensureDirectoryExists(lang_path('vendor/laradocs/fr'));
+
+    try {
+        expect(Locale::available())->toBe([]);
+    } finally {
+        File::deleteDirectory(lang_path('vendor/laradocs/en'));
+        File::deleteDirectory(lang_path('vendor/laradocs/fr'));
+    }
+});
+
+it('caches the auto-detected locales so the filesystem is only scanned once', function () {
+    config()->set('laradocs.locale.available', null);
+    config()->set('laradocs.cache.enabled', true);
+
+    $key = config('laradocs.cache.key_prefix', 'laradocs') . ':locales';
+    cache()->forget($key);
+
+    File::ensureDirectoryExists(lang_path('vendor/laradocs/en'));
+    File::ensureDirectoryExists(lang_path('vendor/laradocs/fr'));
+
+    try {
+        // First call scans the filesystem and primes the cache.
+        expect(Locale::available())->toHaveKey('fr');
+
+        // Removing the directory afterwards has no effect: the cached value is
+        // served without touching the filesystem again.
+        File::deleteDirectory(lang_path('vendor/laradocs/fr'));
+
+        expect(Locale::available())->toHaveKey('fr')
+            ->and(cache()->get($key))->toHaveKey('fr');
+    } finally {
+        File::deleteDirectory(lang_path('vendor/laradocs/en'));
+        File::deleteDirectory(lang_path('vendor/laradocs/fr'));
+        cache()->forget($key);
     }
 });
 
