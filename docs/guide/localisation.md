@@ -62,16 +62,15 @@ environment variable):
 ],
 ```
 
-The full resolution order is implemented by
-`LaradocsServiceProvider::defaultLocale()`:
+The full resolution order is implemented by `Laradocs\Support\Locale::fallback()`:
 
 1. The explicit `laradocs.locale.default` value.
 2. The application locale, when a matching `available` entry exists.
 3. The first locale listed in `available`.
 
 The locale actually used for a given request is decided by
-`LaradocsServiceProvider::determineLocale()`, which lets a visitor's explicit
-choice win over the default (see below) before falling back to it.
+`Laradocs\Support\Locale::determine()`, which lets a visitor's explicit choice
+win over the default (see below) before falling back to it.
 
 ## The language selector
 

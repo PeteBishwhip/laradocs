@@ -1,4 +1,4 @@
-@php($languages = \Laradocs\LaradocsServiceProvider::availableLocales())
+@php($languages = \Laradocs\Support\Locale::available())
 @php($current = app()->getLocale())
 
 {{-- Only render once there is a genuine choice to make. --}}
