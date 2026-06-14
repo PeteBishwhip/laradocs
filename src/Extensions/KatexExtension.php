@@ -225,7 +225,7 @@ final class KatexExtension implements HtmlExtension, MarkdownExtension
             }
             NODE;
 
-        $tmpFile = sys_get_temp_dir() . '/laradocs-katex-' . substr(md5($script), 0, 8) . '.cjs';
+        $tmpFile = sys_get_temp_dir() . '/laradocs-katex-' . substr(hash('sha256', $script), 0, 8) . '.cjs';
 
         if (! file_exists($tmpFile)) {
             file_put_contents($tmpFile, $script);
