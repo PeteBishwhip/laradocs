@@ -294,6 +294,33 @@ it('treats an empty available array as a deliberate opt-out, skipping auto-detec
     }
 });
 
+it('caches the auto-detected locales so the filesystem is only scanned once', function () {
+    config()->set('laradocs.locale.available', null);
+    config()->set('laradocs.cache.enabled', true);
+
+    $key = config('laradocs.cache.key_prefix', 'laradocs') . ':locales';
+    cache()->forget($key);
+
+    File::ensureDirectoryExists(lang_path('vendor/laradocs/en'));
+    File::ensureDirectoryExists(lang_path('vendor/laradocs/fr'));
+
+    try {
+        // First call scans the filesystem and primes the cache.
+        expect(LaradocsServiceProvider::availableLocales())->toHaveKey('fr');
+
+        // Removing the directory afterwards has no effect: the cached value is
+        // served without touching the filesystem again.
+        File::deleteDirectory(lang_path('vendor/laradocs/fr'));
+
+        expect(LaradocsServiceProvider::availableLocales())->toHaveKey('fr')
+            ->and(cache()->get($key))->toHaveKey('fr');
+    } finally {
+        File::deleteDirectory(lang_path('vendor/laradocs/en'));
+        File::deleteDirectory(lang_path('vendor/laradocs/fr'));
+        cache()->forget($key);
+    }
+});
+
 it('restores the application locale after a docs request so workers do not leak (octane-safe)', function () {
     File::ensureDirectoryExists(lang_path('vendor/laradocs/fr'));
     File::put(

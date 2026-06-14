@@ -276,13 +276,14 @@ final class LaradocsServiceProvider extends ServiceProvider
      * array with a `'label'` key; when absent the locale code is used as the
      * human-readable label.
      *
-     * @return array<string, string>  Keys are locale codes; values are labels.
+     * @return array<string, string> Keys are locale codes; values are labels.
      */
     public static function availableLocales(): array
     {
         $explicit = config('laradocs.locale.available');
 
         if (is_array($explicit)) {
+            /** @var array<string, string> $explicit */
             return $explicit;
         }
 
@@ -293,9 +294,12 @@ final class LaradocsServiceProvider extends ServiceProvider
         $key = Config::string('laradocs.cache.key_prefix', 'laradocs') . ':locales';
         $ttl = Config::nullableInt('laradocs.cache.ttl') ?? 86400;
 
-        return cache()
+        /** @var array<string, string> $locales */
+        $locales = cache()
             ->store(Config::nullableString('laradocs.cache.store'))
             ->remember($key, $ttl, fn (): array => self::scanLocalesFromFilesystem());
+
+        return $locales;
     }
 
     /**
