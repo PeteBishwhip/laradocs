@@ -1,6 +1,6 @@
 @php
     $template = config('laradocs.ui.edit.url');
-    $label = config('laradocs.ui.edit.label') ?? __('laradocs::laradocs.page.edit');
+    $label = __('laradocs::laradocs.page.edit');
 
     // {file} — the real path on disk relative to docs.path, with its actual
     //          extension (handles section _index files and any custom

@@ -244,9 +244,6 @@ return [
         */
         'edit' => [
             'url' => env('LARADOCS_EDIT_URL'),
-            // Leave null to use the translated "Edit this page" string. Set a
-            // value (or LARADOCS_EDIT_LABEL) to override the label outright.
-            'label' => env('LARADOCS_EDIT_LABEL'),
         ],
 
         'search' => [

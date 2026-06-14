@@ -121,5 +121,4 @@ the relevant key. The keys are grouped by area — `nav`, `search`, `toc`,
 ],
 ```
 
-The edit link also honours the `ui.edit.label` config option; setting that
-overrides the translated string for every locale.
+To reword the link label, publish the language files and update `page.edit`.

@@ -129,7 +129,6 @@ See [Rich Content](/docs/features/rich-content) for what each extension enables.
 | `ui.banner.type` | `LARADOCS_BANNER_TYPE` | `info` |
 | `ui.banner.message` | `LARADOCS_BANNER_MESSAGE` | `null` |
 | `ui.edit.url` | `LARADOCS_EDIT_URL` | `null` |
-| `ui.edit.label` | `LARADOCS_EDIT_LABEL` | `null` (uses the translated string) |
 | `ui.search.enabled` | `LARADOCS_SEARCH` | `true` |
 
 See [Customising the UI](/docs/customising-the-ui) for what each value does
