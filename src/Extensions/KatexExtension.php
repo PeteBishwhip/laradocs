@@ -222,9 +222,10 @@ final class KatexExtension implements HtmlExtension, MarkdownExtension
         }
 
         $results = json_decode($output, true);
+        $toNullable = static fn (mixed $r): ?string => is_string($r) ? $r : null;
 
         return is_array($results)
-            ? array_map(static fn (mixed $r): ?string => is_string($r) ? $r : null, array_values($results))
+            ? array_map($toNullable, array_values($results))
             : $empty;
     }
 
