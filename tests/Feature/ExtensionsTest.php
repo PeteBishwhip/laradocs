@@ -147,6 +147,16 @@ it('renders inline math as a katex span', function () {
         ->and($html)->toContain('data-expr="E = mc^2"');
 });
 
+it('keeps an escaped dollar inside inline math instead of closing it', function () {
+    $html = render('Costs $\$5 \neq \$6$ today.');
+
+    // The whole "\$5 \neq \$6" is one expression; the escaped dollars do not
+    // terminate it early.
+    expect($html)->toContain('class="laradocs-katex-inline"')
+        ->and($html)->toContain('data-expr="\\$5 \neq \\$6"')
+        ->and(substr_count($html, 'data-laradocs-katex="inline"'))->toBe(1);
+});
+
 it('renders single-line display math $$…$$ as a block span', function () {
     $html = render('Center this: $$\\frac{a}{b}$$ done.');
 

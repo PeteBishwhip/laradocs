@@ -50,9 +50,11 @@ final class KatexExtension implements HtmlExtension, MarkdownExtension
                 $text,
             );
 
-            // Inline math: $expr$ — single $ not adjacent to another $.
+            // Inline math: $expr$ — single $ not adjacent to another $. The
+            // body is any run of escaped sequences (so \$ stays inside the
+            // expression) or non-delimiter characters.
             $text = (string) preg_replace_callback(
-                '/(?<!\$)\$(?!\$)((?:[^$\n]|\\\$)+)\$(?!\$)/',
+                '/(?<!\$)\$(?!\$)((?:\\\\.|[^$\n])+)\$(?!\$)/',
                 fn (array $m) => $this->spanPlaceholder('inline', trim($m[1])),
                 $text,
             );
