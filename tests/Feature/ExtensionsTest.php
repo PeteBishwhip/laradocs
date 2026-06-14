@@ -3,11 +3,26 @@
 declare(strict_types=1);
 
 use Laradocs\Contracts\DocumentParser;
+use Laradocs\Extensions\KatexExtension;
 use Laradocs\Laradocs;
 
 function render(string $markdown): string
 {
     return app(DocumentParser::class)->parse($markdown);
+}
+
+/**
+ * Write an executable PHP script that stands in for the `node` binary the
+ * KaTeX extension shells out to. It receives the temp script path as $argv[1]
+ * and the JSON expression batch as $argv[2], exactly like the real call.
+ */
+function fakeNodeBinary(string $phpBody): string
+{
+    $path = (string) tempnam(sys_get_temp_dir(), 'laradocs-fake-node-');
+    file_put_contents($path, "#!/usr/bin/env php\n<?php\n" . $phpBody);
+    chmod($path, 0755);
+
+    return $path;
 }
 
 it('interpolates known variables and blanks unknown ones', function () {
@@ -169,7 +184,7 @@ it('leaves math inside inline code untouched', function () {
 });
 
 it('uses the configured js and css urls in the bootstrap script', function () {
-    $ext = new \Laradocs\Extensions\KatexExtension(
+    $ext = new KatexExtension(
         'https://example.com/katex.js',
         'https://example.com/katex.css',
     );
@@ -180,6 +195,74 @@ it('uses the configured js and css urls in the bootstrap script', function () {
 
     expect($result)->toContain('https://example.com/katex.css')
         ->and($result)->toContain('https://example.com/katex.js');
+});
+
+it('restores an unclosed $$ block verbatim instead of dropping it', function () {
+    $html = render("$$\n\\frac{a}{b}");
+
+    expect($html)->not->toContain('data-laradocs-katex')
+        ->and($html)->toContain('frac{a}{b}');
+});
+
+it('server-side renders math through the node binary when SSR is enabled', function () {
+    $node = fakeNodeBinary(<<<'PHP'
+        $batch = json_decode($argv[2] ?? '[]', true) ?: [];
+        echo json_encode(array_map(
+            static fn ($e) => '<span class="katex-ssr" data-mode="'.($e['display'] ? 'block' : 'inline').'">'.$e['expr'].'</span>',
+            $batch,
+        ));
+        PHP);
+
+    $ext = new KatexExtension(
+        'https://example.com/katex.js',
+        'https://example.com/katex.css',
+        ssr: true,
+        nodeBin: $node,
+    );
+
+    $html = $ext->processHtml($ext->processMarkdown("Inline \$x^2\$ and:\n\n\$\$\n\\frac{a}{b}\n\$\$"));
+
+    // Both expressions are pre-rendered into the wrapper and marked so the
+    // client-side script skips them; the stylesheet is still injected.
+    expect($html)->toContain('class="katex-ssr"')
+        ->and($html)->toContain('data-mode="inline"')
+        ->and($html)->toContain('data-mode="block"')
+        ->and(substr_count($html, 'data-katex-rendered="1"'))->toBe(2)
+        ->and($html)->toContain('https://example.com/katex.css');
+});
+
+it('falls back to client-side rendering when the node renderer exits non-zero', function () {
+    $node = fakeNodeBinary("fwrite(STDERR, 'boom');\nexit(1);");
+
+    $ext = new KatexExtension(
+        'https://example.com/katex.js',
+        'https://example.com/katex.css',
+        ssr: true,
+        nodeBin: $node,
+    );
+
+    $html = $ext->processHtml($ext->processMarkdown("\$\$\n\\frac{a}{b}\n\$\$"));
+
+    // Nothing is pre-rendered; the wrapper and the client bootstrap survive.
+    expect($html)->not->toContain('data-katex-rendered="1"')
+        ->and($html)->toContain('data-laradocs-katex="block"')
+        ->and($html)->toContain('https://example.com/katex.js');
+});
+
+it('falls back to client-side rendering when the node renderer emits invalid json', function () {
+    $node = fakeNodeBinary("echo 'not json at all';");
+
+    $ext = new KatexExtension(
+        'https://example.com/katex.js',
+        'https://example.com/katex.css',
+        ssr: true,
+        nodeBin: $node,
+    );
+
+    $html = $ext->processHtml($ext->processMarkdown("\$\$\n\\frac{a}{b}\n\$\$"));
+
+    expect($html)->not->toContain('data-katex-rendered="1"')
+        ->and($html)->toContain('data-laradocs-katex="block"');
 });
 
 // Disable test last — it leaves katex=false in shared config state.

@@ -24,7 +24,7 @@ use Laradocs\Support\Html;
  *
  * Only pages that actually contain a math expression load the KaTeX assets.
  */
-final class KatexExtension implements MarkdownExtension, HtmlExtension
+final class KatexExtension implements HtmlExtension, MarkdownExtension
 {
     public function __construct(
         private readonly string $js,
@@ -77,6 +77,7 @@ final class KatexExtension implements MarkdownExtension, HtmlExtension
             if ($fence === null && preg_match('/^\s{0,3}(`{3,}|~{3,})/', $line, $m) === 1) {
                 $fence = $m[1];
                 $output[] = $line;
+
                 continue;
             }
 
@@ -85,6 +86,7 @@ final class KatexExtension implements MarkdownExtension, HtmlExtension
                 if (preg_match('/^\s{0,3}' . $fence[0] . '{' . strlen($fence) . ',}\s*$/', $line) === 1) {
                     $fence = null;
                 }
+
                 continue;
             }
 
@@ -95,11 +97,13 @@ final class KatexExtension implements MarkdownExtension, HtmlExtension
                 } else {
                     $math[] = $line;
                 }
+
                 continue;
             }
 
             if (trim($line) === '$$') {
                 $math = [];
+
                 continue;
             }
 
@@ -143,27 +147,28 @@ final class KatexExtension implements MarkdownExtension, HtmlExtension
      * replaces its children with pre-rendered KaTeX HTML and marks it with
      * data-katex-rendered so the client-side script skips it.
      *
-     * @param  list<\DOMNode>  $elements
+     * @param  array<int, \DOMNode|\DOMNameSpaceNode>  $elements
      */
     private function applySsr(DOMDocument $dom, array $elements): void
     {
-        $exprs = [];
+        // Only DOMElements carry the data-* attributes we render from. Filter
+        // once so the expression list and the elements stay index-aligned.
+        $targets = array_values(array_filter(
+            $elements,
+            static fn (\DOMNode|\DOMNameSpaceNode $el): bool => $el instanceof DOMElement,
+        ));
 
-        foreach ($elements as $el) {
-            if (! $el instanceof DOMElement) {
-                continue;
-            }
-
-            $exprs[] = [
-                'expr' => $el->getAttribute('data-expr'),
-                'display' => $el->getAttribute('data-laradocs-katex') === 'block',
-            ];
-        }
+        $exprs = array_map(static fn (DOMElement $el): array => [
+            'expr' => $el->getAttribute('data-expr'),
+            'display' => $el->getAttribute('data-laradocs-katex') === 'block',
+        ], $targets);
 
         $rendered = $this->runKatexNode($exprs);
 
-        foreach ($elements as $i => $el) {
-            if (! $el instanceof DOMElement || ! isset($rendered[$i]) || ! is_string($rendered[$i])) {
+        foreach ($targets as $i => $el) {
+            $html = $rendered[$i] ?? null;
+
+            if ($html === null) {
                 continue;
             }
 
@@ -171,7 +176,7 @@ final class KatexExtension implements MarkdownExtension, HtmlExtension
                 $el->removeChild($el->firstChild);
             }
 
-            foreach (Html::fragment($dom, $rendered[$i]) as $node) {
+            foreach (Html::fragment($dom, $html) as $node) {
                 $el->appendChild($node);
             }
 
@@ -183,20 +188,24 @@ final class KatexExtension implements MarkdownExtension, HtmlExtension
      * Call Node.js to render a batch of expressions via katex.renderToString().
      *
      * @param  list<array{expr: string, display: bool}>  $exprs
-     * @return list<string|null>  null for any expression that could not be rendered
+     * @return list<string|null> null for any expression that could not be rendered
      */
     private function runKatexNode(array $exprs): array
     {
         $empty = array_fill(0, count($exprs), null);
 
+        // Defensive: applySsr only calls this with a non-empty expression
+        // list, and proc_open is always present in supported environments.
         if (empty($exprs) || ! function_exists('proc_open')) {
-            return $empty;
+            return $empty; // @codeCoverageIgnore
         }
 
         $input = json_encode($exprs);
 
+        // Defensive: the expressions originate from DOM string attributes, so
+        // they always encode cleanly.
         if (! is_string($input)) {
-            return $empty;
+            return $empty; // @codeCoverageIgnore
         }
 
         // Inline Node script — written to a temp file so we can pass the
@@ -227,8 +236,10 @@ final class KatexExtension implements MarkdownExtension, HtmlExtension
         $descriptors = [['pipe', 'r'], ['pipe', 'w'], ['pipe', 'w']];
         $proc = proc_open($cmd, $descriptors, $pipes);
 
+        // Defensive: proc_open only returns false when the process cannot be
+        // spawned at all, which a valid binary path does not trigger.
         if (! is_resource($proc)) {
-            return $empty;
+            return $empty; // @codeCoverageIgnore
         }
 
         fclose($pipes[0]);
@@ -243,7 +254,14 @@ final class KatexExtension implements MarkdownExtension, HtmlExtension
 
         $results = json_decode($output, true);
 
-        return is_array($results) ? $results : $empty;
+        if (! is_array($results)) {
+            return $empty;
+        }
+
+        return array_map(
+            static fn (mixed $r): ?string => is_string($r) ? $r : null,
+            array_values($results),
+        );
     }
 
     private function bootstrap(DOMDocument $dom): DOMElement
