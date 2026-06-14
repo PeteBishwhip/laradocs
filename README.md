@@ -95,6 +95,7 @@ Laradocs::macro('tweet', fn (array $args) => "<a href=\"...\">@{$args['user']}</
 php artisan vendor:publish --tag=laradocs-config
 php artisan vendor:publish --tag=laradocs-views
 php artisan vendor:publish --tag=laradocs-assets
+php artisan vendor:publish --tag=laradocs-lang
 ```
 
 ## Testing

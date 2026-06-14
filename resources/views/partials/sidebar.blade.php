@@ -6,7 +6,7 @@
 @endphp
 @if($hasContent)
     <aside class="laradocs-sidebar">
-        <nav aria-label="Documentation">
+        <nav aria-label="{{ __('laradocs::laradocs.nav.documentation') }}">
             @if($showRoot && $tree->rootDocument)
                 <ul>
                     <li>

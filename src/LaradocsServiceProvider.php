@@ -74,6 +74,7 @@ final class LaradocsServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'laradocs');
+        $this->loadTranslationsFrom(__DIR__ . '/../resources/lang', 'laradocs');
         $this->registerRoutes();
         $this->bootRateLimiting();
         $this->registerDefaultMacros();
@@ -252,6 +253,58 @@ final class LaradocsServiceProvider extends ServiceProvider
         return true;
     }
 
+    /**
+     * The locale the docs fall back to when a visitor hasn't picked one.
+     *
+     * Resolution order:
+     *   1. An explicit `laradocs.locale.default` (or LARADOCS_LOCALE).
+     *   2. The host application's locale, when it has a translation directory.
+     *   3. The first configured `available` locale.
+     *   4. The application locale as a last resort.
+     */
+    public static function defaultLocale(): string
+    {
+        $configured = Config::nullableString('laradocs.locale.default');
+
+        if ($configured !== null && $configured !== '') {
+            return $configured;
+        }
+
+        /** @var array<string, mixed> $available */
+        $available = Config::array('laradocs.locale.available');
+        $appLocale = (string) app()->getLocale();
+
+        if (array_key_exists($appLocale, $available)) {
+            return $appLocale;
+        }
+
+        $first = array_key_first($available);
+
+        return is_string($first) && $first !== '' ? $first : $appLocale;
+    }
+
+    /**
+     * The locale to render the current docs request in.
+     *
+     * An explicit choice — the `?lang=` query parameter or the cookie it sets —
+     * wins when it maps to a configured `available` locale; otherwise the
+     * {@see self::defaultLocale()} is used. Unknown codes are ignored so the
+     * query string can never force an untranslated locale.
+     */
+    public static function determineLocale(Request $request): string
+    {
+        /** @var array<string, mixed> $available */
+        $available = Config::array('laradocs.locale.available');
+
+        foreach ([$request->query('lang'), $request->cookie('laradocs_locale')] as $candidate) {
+            if (is_string($candidate) && $candidate !== '' && array_key_exists($candidate, $available)) {
+                return $candidate;
+            }
+        }
+
+        return self::defaultLocale();
+    }
+
     private function buildConverter(Application $app): MarkdownConverter
     {
         $extensions = Config::array('laradocs.parser.extensions');
@@ -379,6 +432,10 @@ final class LaradocsServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__ . '/../resources/views' => $this->app->resourcePath('views/vendor/laradocs'),
         ], 'laradocs-views');
+
+        $this->publishes([
+            __DIR__ . '/../resources/lang' => $this->app->langPath('vendor/laradocs'),
+        ], 'laradocs-lang');
 
         $this->publishes([
             __DIR__ . '/../resources/dist' => $this->app->publicPath('vendor/laradocs'),
