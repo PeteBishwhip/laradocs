@@ -60,15 +60,15 @@ use League\CommonMark\MarkdownConverter;
 
 final class LaradocsServiceProvider extends ServiceProvider
 {
-    private const CONFIG = '/../config/laradocs.php';
-    private const VIEWS  = '/../resources/views';
-    private const LANG   = '/../resources/lang';
-    private const DIST   = '/../resources/dist';
-    private const STUBS  = '/../stubs';
+    private const CONFIG = __DIR__ . '/../config/laradocs.php';
+    private const VIEWS  = __DIR__ . '/../resources/views';
+    private const LANG   = __DIR__ . '/../resources/lang';
+    private const DIST   = __DIR__ . '/../resources/dist';
+    private const STUBS  = __DIR__ . '/../stubs';
 
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__ . self::CONFIG, 'laradocs');
+        $this->mergeConfigFrom(self::CONFIG, 'laradocs');
 
         $this->registerRegistries();
         $this->registerPipeline();
@@ -79,8 +79,8 @@ final class LaradocsServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $this->loadViewsFrom(__DIR__ . self::VIEWS, 'laradocs');
-        $this->loadTranslationsFrom(__DIR__ . self::LANG, 'laradocs');
+        $this->loadViewsFrom(self::VIEWS, 'laradocs');
+        $this->loadTranslationsFrom(self::LANG, 'laradocs');
         $this->registerRoutes();
         $this->bootRateLimiting();
         $this->registerDefaultMacros();
@@ -451,11 +451,11 @@ final class LaradocsServiceProvider extends ServiceProvider
 
     private function registerPublishing(): void
     {
-        $config = [__DIR__ . self::CONFIG => $this->app->configPath('laradocs.php')];
-        $views  = [__DIR__ . self::VIEWS  => $this->app->resourcePath('views/vendor/laradocs')];
-        $lang   = [__DIR__ . self::LANG   => $this->app->langPath('vendor/laradocs')];
-        $assets = [__DIR__ . self::DIST   => $this->app->publicPath('vendor/laradocs')];
-        $stubs  = [__DIR__ . self::STUBS  => $this->app->basePath('stubs/laradocs')];
+        $config = [self::CONFIG => $this->app->configPath('laradocs.php')];
+        $views  = [self::VIEWS  => $this->app->resourcePath('views/vendor/laradocs')];
+        $lang   = [self::LANG   => $this->app->langPath('vendor/laradocs')];
+        $assets = [self::DIST   => $this->app->publicPath('vendor/laradocs')];
+        $stubs  = [self::STUBS  => $this->app->basePath('stubs/laradocs')];
 
         $this->publishes($config, 'laradocs-config');
         $this->publishes($views,  'laradocs-views');
