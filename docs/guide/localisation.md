@@ -47,26 +47,25 @@ return [
 ```
 
 You don't have to translate every key — anything you leave out falls back to
-the package's English string automatically.
+the package's default string automatically.
 
 ## Choosing the default language
 
-Which language the docs render in is resolved on every request. Set the
-default with the `locale.default` option (or the `LARADOCS_LOCALE` environment
-variable):
+Which language the docs render in is resolved on every request. The default is
+`en`. Override it with the `locale.default` option (or the `LARADOCS_LOCALE`
+environment variable):
 
 ```php
 // config/laradocs.php
 'locale' => [
-    'default' => env('LARADOCS_LOCALE'), // null = use the app's locale
+    'default' => env('LARADOCS_LOCALE', 'en'),
 ],
 ```
 
-When `default` is `null`, Laradocs uses your application's own locale
-(`config('app.locale')`). The full resolution order is implemented by
+The full resolution order is implemented by
 `LaradocsServiceProvider::defaultLocale()`:
 
-1. The explicit `laradocs.locale.default` value, if set.
+1. The explicit `laradocs.locale.default` value.
 2. The application locale, when a matching `available` entry exists.
 3. The first locale listed in `available`.
 
@@ -82,7 +81,6 @@ in the selector:
 
 ```php
 'locale' => [
-    'default' => env('LARADOCS_LOCALE'),
     'available' => [
         'en' => 'English',
         'fr' => 'Français',

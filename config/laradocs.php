@@ -25,8 +25,8 @@ return [
     | the language files with `php artisan vendor:publish --tag=laradocs-lang`
     | and add a directory per locale (e.g. lang/vendor/laradocs/fr).
     |
-    | "default"   The locale the docs render in. When null, Laradocs uses the
-    |             host application's locale (config('app.locale')).
+    | "default"   The locale the docs render in. Defaults to "en". Set
+    |             LARADOCS_LOCALE to override.
     | "available" Locales offered in the in-page language selector. Keys are
     |             locale codes (matching a translation directory); values are
     |             the human-readable labels shown in the selector.
@@ -39,7 +39,7 @@ return [
     */
 
     'locale' => [
-        'default' => env('LARADOCS_LOCALE'),
+        'default' => env('LARADOCS_LOCALE', 'en'),
         'available' => [
             'en' => 'English',
         ],

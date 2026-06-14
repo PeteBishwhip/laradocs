@@ -138,7 +138,7 @@ visually.
 
 | Option | Env | Default |
 |---|---|---|
-| `locale.default` | `LARADOCS_LOCALE` | `null` (uses `app.locale`) |
+| `locale.default` | `LARADOCS_LOCALE` | `en` |
 | `locale.available` | — | `['en' => 'English']` |
 | `locale.selector` | `LARADOCS_LOCALE_SELECTOR` | `true` |
 
