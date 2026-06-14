@@ -144,6 +144,7 @@ return [
             'images' => true,
             'video' => true,
             'mermaid' => true,
+            'katex' => true,
             'variables' => true,
             'macros' => true,
         ],
@@ -159,6 +160,31 @@ return [
                 'LARADOCS_MERMAID_SRC',
                 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs',
             ),
+        ],
+
+        /*
+        | KaTeX math rendering. $…$ becomes inline math and $$…$$ becomes
+        | display (block) math. Both are extracted before CommonMark runs so
+        | the parser never sees the LaTeX source.
+        |
+        | "js"  / "css"  CDN URLs for katex.min.js and katex.min.css.
+        |        Point at a self-hosted build to avoid the CDN, or set
+        |        LARADOCS_KATEX_JS / LARADOCS_KATEX_CSS.
+        | "ssr"  When true, expressions are rendered to HTML on the server via
+        |        a Node.js subprocess (requires the katex npm package). Falls
+        |        back to client-side rendering silently when Node is absent.
+        |        Set LARADOCS_KATEX_SSR=true to enable.
+        */
+        'katex' => [
+            'js' => env(
+                'LARADOCS_KATEX_JS',
+                'https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.js',
+            ),
+            'css' => env(
+                'LARADOCS_KATEX_CSS',
+                'https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.css',
+            ),
+            'ssr' => (bool) env('LARADOCS_KATEX_SSR', false),
         ],
         'unknown_variable' => 'blank', // blank | raw
         'toc' => [

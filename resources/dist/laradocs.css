@@ -811,6 +811,43 @@ body.laradocs {
   overflow: visible;
 }
 
+/* katex math */
+/* Math glyphs inherit currentColor, so light/dark follow --dc-fg for free. */
+/* Inline math: KaTeX renders at 1.21em, oversized next to prose — pull it
+   back so symbols sit at roughly text size on the line. */
+.laradocs-katex-inline { color: var(--dc-fg); }
+.laradocs-katex-inline .katex { font-size: 1.05em; }
+
+/* Display (block) math — both <div> (multi-line) and <span> (single-line)
+   variants. A subtle elevated card matching code blocks / callouts: centred,
+   with horizontal scroll for equations wider than the column. */
+.laradocs-katex-block {
+  display: block;
+  margin: 1.75rem 0;
+  padding: 1.35rem 1.25rem;
+  border: 1px solid var(--dc-rule);
+  border-radius: var(--dc-radius-lg);
+  background: var(--dc-bg-elev);
+  color: var(--dc-fg);
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+/* KaTeX's display wrapper adds 1em vertical margin — the card's padding owns
+   that spacing now, so flatten it. */
+.laradocs-katex-block .katex-display { margin: 0; }
+.laradocs-katex-block .katex { font-size: 1.3em; }
+
+/* Before KaTeX renders (client-side), the raw LaTeX is briefly visible.
+   Present it as muted monospace so it reads as a formula loading rather than
+   broken markup. SSR'd math is already marked rendered. */
+[data-laradocs-katex]:not([data-katex-rendered]) {
+  font-family: var(--dc-mono);
+  font-size: .87rem;
+  font-style: normal;
+  color: var(--dc-muted);
+}
+
 /* callouts */
 .laradocs-callout {
   margin: 1.5rem 0;

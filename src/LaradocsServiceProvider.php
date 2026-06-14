@@ -32,6 +32,7 @@ use Laradocs\Extensions\CalloutExtension;
 use Laradocs\Extensions\CodeBlockExtension;
 use Laradocs\Extensions\HeadingAnchorExtension;
 use Laradocs\Extensions\ImageExtension;
+use Laradocs\Extensions\KatexExtension;
 use Laradocs\Extensions\MacroExtension;
 use Laradocs\Extensions\MermaidExtension;
 use Laradocs\Extensions\VariableExtension;
@@ -380,6 +381,15 @@ final class LaradocsServiceProvider extends ServiceProvider
             $extensions[] = new MacroExtension($app->make(MacroRegistry::class));
         }
 
+        if ($config['katex'] ?? true) {
+            $extensions[] = new KatexExtension(
+                Config::string('laradocs.parser.katex.js', 'https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.js'),
+                Config::string('laradocs.parser.katex.css', 'https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.css'),
+                Config::bool('laradocs.parser.katex.ssr'),
+                Config::nullableString('laradocs.parser.katex.node_bin'),
+            );
+        }
+
         return $extensions;
     }
 
@@ -415,6 +425,15 @@ final class LaradocsServiceProvider extends ServiceProvider
                     'laradocs.parser.mermaid.src',
                     'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs',
                 ),
+            );
+        }
+
+        if ($config['katex'] ?? true) {
+            $extensions[] = new KatexExtension(
+                Config::string('laradocs.parser.katex.js', 'https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.js'),
+                Config::string('laradocs.parser.katex.css', 'https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.css'),
+                Config::bool('laradocs.parser.katex.ssr'),
+                Config::nullableString('laradocs.parser.katex.node_bin'),
             );
         }
 

@@ -3,11 +3,26 @@
 declare(strict_types=1);
 
 use Laradocs\Contracts\DocumentParser;
+use Laradocs\Extensions\KatexExtension;
 use Laradocs\Laradocs;
 
 function render(string $markdown): string
 {
     return app(DocumentParser::class)->parse($markdown);
+}
+
+/**
+ * Write an executable PHP script that stands in for the `node` binary the
+ * KaTeX extension shells out to. It receives the temp script path as $argv[1]
+ * and the JSON expression batch as $argv[2], exactly like the real call.
+ */
+function fakeNodeBinary(string $phpBody): string
+{
+    $path = (string) tempnam(sys_get_temp_dir(), 'laradocs-fake-node-');
+    file_put_contents($path, "#!/usr/bin/env php\n<?php\n" . $phpBody);
+    chmod($path, 0755);
+
+    return $path;
 }
 
 it('interpolates known variables and blanks unknown ones', function () {
@@ -108,4 +123,171 @@ it('falls back to a plain code block when mermaid is disabled', function () {
         ->and($html)->not->toContain('mermaid.esm.min.mjs')
         // Without the extension it is just a normal fenced code block.
         ->and($html)->toContain('laradocs-code');
+});
+
+// ── KaTeX math ───────────────────────────────────────────────────────────────
+
+it('renders block math as a katex wrapper with a no-js fallback', function () {
+    $html = render("$$\n\\frac{a}{b}\n$$");
+
+    expect($html)->toContain('class="laradocs-katex-block"')
+        ->and($html)->toContain('data-laradocs-katex="block"')
+        // The raw expression is the text content and the data-expr attribute.
+        ->and($html)->toContain('data-expr="\\frac{a}{b}"')
+        // The bootstrap script is injected.
+        ->and($html)->toContain('<script>')
+        ->and($html)->toContain('katex.min.js');
+});
+
+it('renders inline math as a katex span', function () {
+    $html = render('The formula $E = mc^2$ is famous.');
+
+    expect($html)->toContain('class="laradocs-katex-inline"')
+        ->and($html)->toContain('data-laradocs-katex="inline"')
+        ->and($html)->toContain('data-expr="E = mc^2"');
+});
+
+it('keeps an escaped dollar inside inline math instead of closing it', function () {
+    $html = render('Costs $\$5 \neq \$6$ today.');
+
+    // The whole "\$5 \neq \$6" is one expression; the escaped dollars do not
+    // terminate it early.
+    expect($html)->toContain('class="laradocs-katex-inline"')
+        ->and($html)->toContain('data-expr="\\$5 \neq \\$6"')
+        ->and(substr_count($html, 'data-laradocs-katex="inline"'))->toBe(1);
+});
+
+it('renders single-line display math $$…$$ as a block span', function () {
+    $html = render('Center this: $$\\frac{a}{b}$$ done.');
+
+    expect($html)->toContain('class="laradocs-katex-block"')
+        ->and($html)->toContain('data-laradocs-katex="block"');
+});
+
+it('injects the katex bootstrap script only once per page', function () {
+    $html = render("$$\n\\alpha\n$$\n\nAnd also $\\beta$ inline.");
+
+    expect(substr_count($html, '<script>'))->toBe(1)
+        ->and($html)->toContain('data-laradocs-katex="block"')
+        ->and($html)->toContain('data-laradocs-katex="inline"');
+});
+
+it('HTML-encodes math expressions containing special characters', function () {
+    $html = render('Is $a < b$ true?');
+
+    expect($html)->toContain('data-expr="a &lt; b"')
+        ->and($html)->toContain('class="laradocs-katex-inline"');
+});
+
+it('leaves math inside fenced code blocks untouched', function () {
+    $html = render("```\n\$\$\n\\frac{a}{b}\n\$\$\n```");
+
+    expect($html)->not->toContain('data-laradocs-katex')
+        ->and($html)->toContain('laradocs-code');
+});
+
+it('leaves math inside inline code untouched', function () {
+    $html = render('Use `$x$` for variables.');
+
+    expect($html)->not->toContain('data-laradocs-katex')
+        ->and($html)->toContain('$x$');
+});
+
+it('uses the configured js and css urls in the bootstrap script', function () {
+    $ext = new KatexExtension(
+        'https://example.com/katex.js',
+        'https://example.com/katex.css',
+    );
+
+    // Simulate what processMarkdown + CommonMark produce for $x^2$
+    $placeholder = '<span class="laradocs-katex-inline" data-laradocs-katex="inline" data-expr="x^2">x^2</span>';
+    $result = $ext->processHtml("<p>$placeholder</p>");
+
+    expect($result)->toContain('https://example.com/katex.css')
+        ->and($result)->toContain('https://example.com/katex.js');
+});
+
+it('restores an unclosed $$ block verbatim instead of dropping it', function () {
+    $html = render("$$\n\\frac{a}{b}");
+
+    expect($html)->not->toContain('data-laradocs-katex')
+        ->and($html)->toContain('frac{a}{b}');
+});
+
+it('server-side renders math through the node binary when SSR is enabled', function () {
+    $node = fakeNodeBinary(<<<'PHP'
+        $batch = json_decode($argv[2] ?? '[]', true) ?: [];
+        echo json_encode(array_map(
+            static fn ($e) => '<span class="katex-ssr" data-mode="'.($e['display'] ? 'block' : 'inline').'">'.$e['expr'].'</span>',
+            $batch,
+        ));
+        PHP);
+
+    $ext = new KatexExtension(
+        'https://example.com/katex.js',
+        'https://example.com/katex.css',
+        ssr: true,
+        nodeBin: $node,
+    );
+
+    $html = $ext->processHtml($ext->processMarkdown("Inline \$x^2\$ and:\n\n\$\$\n\\frac{a}{b}\n\$\$"));
+
+    // Both expressions are pre-rendered into the wrapper and marked so the
+    // client-side script skips them; the stylesheet is still injected.
+    expect($html)->toContain('class="katex-ssr"')
+        ->and($html)->toContain('data-mode="inline"')
+        ->and($html)->toContain('data-mode="block"')
+        ->and(substr_count($html, 'data-katex-rendered="1"'))->toBe(2)
+        ->and($html)->toContain('https://example.com/katex.css');
+});
+
+it('falls back to client-side rendering when the node renderer exits non-zero', function () {
+    $node = fakeNodeBinary("fwrite(STDERR, 'boom');\nexit(1);");
+
+    $ext = new KatexExtension(
+        'https://example.com/katex.js',
+        'https://example.com/katex.css',
+        ssr: true,
+        nodeBin: $node,
+    );
+
+    $html = $ext->processHtml($ext->processMarkdown("\$\$\n\\frac{a}{b}\n\$\$"));
+
+    // Nothing is pre-rendered; the wrapper and the client bootstrap survive.
+    expect($html)->not->toContain('data-katex-rendered="1"')
+        ->and($html)->toContain('data-laradocs-katex="block"')
+        ->and($html)->toContain('https://example.com/katex.js');
+});
+
+it('falls back to client-side rendering when the node renderer emits invalid json', function () {
+    $node = fakeNodeBinary("echo 'not json at all';");
+
+    $ext = new KatexExtension(
+        'https://example.com/katex.js',
+        'https://example.com/katex.css',
+        ssr: true,
+        nodeBin: $node,
+    );
+
+    $html = $ext->processHtml($ext->processMarkdown("\$\$\n\\frac{a}{b}\n\$\$"));
+
+    expect($html)->not->toContain('data-katex-rendered="1"')
+        ->and($html)->toContain('data-laradocs-katex="block"');
+});
+
+// Disable test last — it leaves katex=false in shared config state.
+it('falls back to plain text when katex is disabled', function () {
+    config()->set('laradocs.parser.extensions.katex', false);
+    app()->forgetInstance(DocumentParser::class);
+
+    $html = render(<<<'MD'
+$$
+\frac{a}{b}
+$$
+
+And $x$ inline.
+MD);
+
+    expect($html)->not->toContain('data-laradocs-katex')
+        ->and($html)->not->toContain('katex.min.js');
 });
