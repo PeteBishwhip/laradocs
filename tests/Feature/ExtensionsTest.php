@@ -109,3 +109,92 @@ it('falls back to a plain code block when mermaid is disabled', function () {
         // Without the extension it is just a normal fenced code block.
         ->and($html)->toContain('laradocs-code');
 });
+
+// ── KaTeX math ───────────────────────────────────────────────────────────────
+
+it('renders block math as a katex wrapper with a no-js fallback', function () {
+    $html = render("$$\n\\frac{a}{b}\n$$");
+
+    expect($html)->toContain('class="laradocs-katex-block"')
+        ->and($html)->toContain('data-laradocs-katex="block"')
+        // The raw expression is the text content and the data-expr attribute.
+        ->and($html)->toContain('data-expr="\\frac{a}{b}"')
+        // The bootstrap script is injected.
+        ->and($html)->toContain('<script>')
+        ->and($html)->toContain('katex.min.js');
+});
+
+it('renders inline math as a katex span', function () {
+    $html = render('The formula $E = mc^2$ is famous.');
+
+    expect($html)->toContain('class="laradocs-katex-inline"')
+        ->and($html)->toContain('data-laradocs-katex="inline"')
+        ->and($html)->toContain('data-expr="E = mc^2"');
+});
+
+it('renders single-line display math $$…$$ as a block span', function () {
+    $html = render('Center this: $$\\frac{a}{b}$$ done.');
+
+    expect($html)->toContain('class="laradocs-katex-block"')
+        ->and($html)->toContain('data-laradocs-katex="block"');
+});
+
+it('injects the katex bootstrap script only once per page', function () {
+    $html = render("$$\n\\alpha\n$$\n\nAnd also $\\beta$ inline.");
+
+    expect(substr_count($html, '<script>'))->toBe(1)
+        ->and($html)->toContain('data-laradocs-katex="block"')
+        ->and($html)->toContain('data-laradocs-katex="inline"');
+});
+
+it('HTML-encodes math expressions containing special characters', function () {
+    $html = render('Is $a < b$ true?');
+
+    expect($html)->toContain('data-expr="a &lt; b"')
+        ->and($html)->toContain('class="laradocs-katex-inline"');
+});
+
+it('leaves math inside fenced code blocks untouched', function () {
+    $html = render("```\n\$\$\n\\frac{a}{b}\n\$\$\n```");
+
+    expect($html)->not->toContain('data-laradocs-katex')
+        ->and($html)->toContain('laradocs-code');
+});
+
+it('leaves math inside inline code untouched', function () {
+    $html = render('Use `$x$` for variables.');
+
+    expect($html)->not->toContain('data-laradocs-katex')
+        ->and($html)->toContain('$x$');
+});
+
+it('uses the configured js and css urls in the bootstrap script', function () {
+    $ext = new \Laradocs\Extensions\KatexExtension(
+        'https://example.com/katex.js',
+        'https://example.com/katex.css',
+    );
+
+    // Simulate what processMarkdown + CommonMark produce for $x^2$
+    $placeholder = '<span class="laradocs-katex-inline" data-laradocs-katex="inline" data-expr="x^2">x^2</span>';
+    $result = $ext->processHtml("<p>$placeholder</p>");
+
+    expect($result)->toContain('https://example.com/katex.css')
+        ->and($result)->toContain('https://example.com/katex.js');
+});
+
+// Disable test last — it leaves katex=false in shared config state.
+it('falls back to plain text when katex is disabled', function () {
+    config()->set('laradocs.parser.extensions.katex', false);
+    app()->forgetInstance(DocumentParser::class);
+
+    $html = render(<<<'MD'
+$$
+\frac{a}{b}
+$$
+
+And $x$ inline.
+MD);
+
+    expect($html)->not->toContain('data-laradocs-katex')
+        ->and($html)->not->toContain('katex.min.js');
+});

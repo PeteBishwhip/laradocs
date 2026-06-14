@@ -811,6 +811,21 @@ body.laradocs {
   overflow: visible;
 }
 
+/* katex math */
+/* Display (block) wrapper — both <div> (multi-line) and <span> (single-line) variants */
+.laradocs-katex-block {
+  display: block;
+  text-align: center;
+  margin: 1.5rem 0;
+  overflow-x: auto;
+}
+/* Before KaTeX renders, show the raw expression in a code-like style */
+[data-laradocs-katex]:not([data-katex-rendered]) {
+  font-family: var(--dc-mono);
+  font-size: .87rem;
+  font-style: normal;
+}
+
 /* callouts */
 .laradocs-callout {
   margin: 1.5rem 0;

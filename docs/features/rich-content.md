@@ -128,6 +128,44 @@ Disable the feature with `parser.extensions.mermaid => false`, or point
 `parser.mermaid.src` at a self-hosted ESM build (or set `LARADOCS_MERMAID_SRC`)
 to avoid the CDN.
 
+## Math
+
+KaTeX renders LaTeX math, loaded lazily and only on pages that contain an
+expression.
+
+**Inline math** — wrap in single dollar signs:
+
+```markdown
+The famous equation $E = mc^2$ changed physics.
+```
+
+**Display (block) math** — place `$$` alone on its own line:
+
+```markdown
+$$
+\frac{-b \pm \sqrt{b^2 - 4ac}}{2a}
+$$
+```
+
+A single-line shorthand also works:
+
+```markdown
+This identity $$e^{i\pi} + 1 = 0$$ is block-display math.
+```
+
+Before KaTeX loads the raw expression is shown in monospace; once loaded
+KaTeX renders it synchronously so there is no perceptible layout shift.
+When JavaScript is disabled the raw LaTeX source remains readable.
+
+Point `parser.katex.js` and `parser.katex.css` at self-hosted builds (or
+set `LARADOCS_KATEX_JS` / `LARADOCS_KATEX_CSS`) to avoid the CDN.
+
+Enable server-side rendering via `LARADOCS_KATEX_SSR=true` — this requires
+Node.js and the `katex` npm package to be available on the server. When
+absent, the extension falls back to client-side rendering automatically.
+
+Disable the feature with `parser.extensions.katex => false`.
+
 ## Footnotes
 
 ```markdown
