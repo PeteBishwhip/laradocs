@@ -61,10 +61,14 @@ use League\CommonMark\MarkdownConverter;
 final class LaradocsServiceProvider extends ServiceProvider
 {
     private const CONFIG = __DIR__ . '/../config/laradocs.php';
-    private const VIEWS  = __DIR__ . '/../resources/views';
-    private const LANG   = __DIR__ . '/../resources/lang';
-    private const DIST   = __DIR__ . '/../resources/dist';
-    private const STUBS  = __DIR__ . '/../stubs';
+
+    private const VIEWS = __DIR__ . '/../resources/views';
+
+    private const LANG = __DIR__ . '/../resources/lang';
+
+    private const DIST = __DIR__ . '/../resources/dist';
+
+    private const STUBS = __DIR__ . '/../stubs';
 
     public function register(): void
     {
@@ -452,16 +456,16 @@ final class LaradocsServiceProvider extends ServiceProvider
     private function registerPublishing(): void
     {
         $config = [self::CONFIG => $this->app->configPath('laradocs.php')];
-        $views  = [self::VIEWS  => $this->app->resourcePath('views/vendor/laradocs')];
-        $lang   = [self::LANG   => $this->app->langPath('vendor/laradocs')];
-        $assets = [self::DIST   => $this->app->publicPath('vendor/laradocs')];
-        $stubs  = [self::STUBS  => $this->app->basePath('stubs/laradocs')];
+        $views = [self::VIEWS => $this->app->resourcePath('views/vendor/laradocs')];
+        $lang = [self::LANG => $this->app->langPath('vendor/laradocs')];
+        $assets = [self::DIST => $this->app->publicPath('vendor/laradocs')];
+        $stubs = [self::STUBS => $this->app->basePath('stubs/laradocs')];
 
         $this->publishes($config, 'laradocs-config');
-        $this->publishes($views,  'laradocs-views');
-        $this->publishes($lang,   'laradocs-lang');
+        $this->publishes($views, 'laradocs-views');
+        $this->publishes($lang, 'laradocs-lang');
         $this->publishes($assets, 'laradocs-assets');
-        $this->publishes($stubs,  'laradocs-stubs');
+        $this->publishes($stubs, 'laradocs-stubs');
         $this->publishes(array_merge($config, $views, $lang, $assets, $stubs), 'laradocs-all');
     }
 
