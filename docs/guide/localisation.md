@@ -75,9 +75,38 @@ choice win over the default (see below) before falling back to it.
 
 ## The language selector
 
-List the languages you want to offer in `locale.available`. Keys are locale
-codes (matching a published translation directory); values are the labels shown
-in the selector:
+Once you have at least two locale directories under `lang/vendor/laradocs/`,
+the package detects them automatically and shows a language selector in the
+header. No configuration is required — just publish the lang files, copy and
+translate a new directory, and the selector appears.
+
+```bash
+# English is already published; add French:
+cp -r lang/vendor/laradocs/en lang/vendor/laradocs/fr
+# Translate lang/vendor/laradocs/fr/laradocs.php …
+```
+
+The selector is hidden automatically when fewer than two locales are detected.
+Disable it entirely with `'selector' => false` (or `LARADOCS_LOCALE_SELECTOR=false`).
+
+### Locale labels
+
+By default the locale code itself is used as the label in the selector (e.g.
+`fr`). Add a `meta.php` file inside the locale directory to provide a
+human-readable name:
+
+```php
+// lang/vendor/laradocs/fr/meta.php
+return [
+    'label' => 'Français',
+];
+```
+
+### Overriding auto-detection
+
+If you prefer to control the locale list explicitly — for example to hide a
+locale from the selector without removing its files — set `locale.available` to
+an array. Any array value takes precedence over the filesystem scan:
 
 ```php
 'locale' => [
@@ -86,19 +115,19 @@ in the selector:
         'fr' => 'Français',
         'de' => 'Deutsch',
     ],
-    'selector' => true,
 ],
 ```
 
-A language selector then appears in the header. It is hidden automatically when
-fewer than two languages are configured, and you can disable it entirely with
-`'selector' => false` (or `LARADOCS_LOCALE_SELECTOR=false`).
+Leave it `null` (the default) to use auto-detection. Set it to an empty array
+(`[]`) to opt out entirely and hide the selector regardless of what is on disk.
+
+### How switching works
 
 Selecting a language appends a `?lang=<code>` query parameter; the package
-validates it against `available`, applies it for the request, and stores the
-choice in a `laradocs_locale` cookie so it persists as the reader navigates.
-Unknown codes are ignored, so the query string can never force the UI into a
-locale you haven't configured.
+validates it against the detected locales, applies it for the request, and
+stores the choice in a `laradocs_locale` cookie so it persists as the reader
+navigates. Unknown codes are ignored, so the query string can never force the
+UI into a locale that has no translation directory.
 
 The locale is applied per request and the previous locale is restored once the
 response has rendered, so the package is safe to run under

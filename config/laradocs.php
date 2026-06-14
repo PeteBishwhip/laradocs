@@ -27,9 +27,15 @@ return [
     |
     | "default"   The locale the docs render in. Defaults to "en". Set
     |             LARADOCS_LOCALE to override.
-    | "available" Locales offered in the in-page language selector. Keys are
-    |             locale codes (matching a translation directory); values are
-    |             the human-readable labels shown in the selector.
+    | "available" Locales offered in the in-page language selector.
+    |             Leave null (the default) to auto-detect: the package scans
+    |             lang/vendor/laradocs/ and treats each sub-directory as an
+    |             available locale. Add a meta.php inside a locale directory
+    |             returning ['label' => 'My Label'] for a custom display name;
+    |             otherwise the locale code itself is used.
+    |             Supply an array to override auto-detection entirely: keys are
+    |             locale codes, values are human-readable labels. An empty array
+    |             disables the selector outright.
     | "selector"  Show the language selector in the header. It is hidden
     |             automatically when fewer than two locales are available.
     |
@@ -40,9 +46,7 @@ return [
 
     'locale' => [
         'default' => env('LARADOCS_LOCALE', 'en'),
-        'available' => [
-            'en' => 'English',
-        ],
+        'available' => null,
         'selector' => (bool) env('LARADOCS_LOCALE_SELECTOR', true),
     ],
 

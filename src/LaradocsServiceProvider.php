@@ -264,12 +264,97 @@ final class LaradocsServiceProvider extends ServiceProvider
     }
 
     /**
+     * The locales available for the documentation interface.
+     *
+     * When `laradocs.locale.available` is an array it is returned as-is — an
+     * explicit override that wins over auto-detection. An empty array therefore
+     * disables the selector outright. When it is null (the default) the
+     * published translation directory is scanned for locale sub-directories and
+     * the result is cached to avoid repeated filesystem hits on every request.
+     *
+     * Each locale directory may contain an optional `meta.php` that returns an
+     * array with a `'label'` key; when absent the locale code is used as the
+     * human-readable label.
+     *
+     * @return array<string, string>  Keys are locale codes; values are labels.
+     */
+    public static function availableLocales(): array
+    {
+        $explicit = config('laradocs.locale.available');
+
+        if (is_array($explicit)) {
+            return $explicit;
+        }
+
+        if (! Config::bool('laradocs.cache.enabled', true)) {
+            return self::scanLocalesFromFilesystem();
+        }
+
+        $key = Config::string('laradocs.cache.key_prefix', 'laradocs') . ':locales';
+        $ttl = Config::nullableInt('laradocs.cache.ttl') ?? 86400;
+
+        return cache()
+            ->store(Config::nullableString('laradocs.cache.store'))
+            ->remember($key, $ttl, fn (): array => self::scanLocalesFromFilesystem());
+    }
+
+    /**
+     * Scan the published lang directory for locale sub-directories.
+     *
+     * @return array<string, string>
+     */
+    private static function scanLocalesFromFilesystem(): array
+    {
+        $path = app()->langPath('vendor/laradocs');
+
+        if (! is_dir($path)) {
+            return [];
+        }
+
+        $locales = [];
+
+        foreach (array_diff((array) scandir($path), ['.', '..']) as $entry) {
+            $entry = (string) $entry;
+
+            if (! is_dir("{$path}/{$entry}")) {
+                continue;
+            }
+
+            $locales[$entry] = self::localeLabel($entry, "{$path}/{$entry}");
+        }
+
+        return $locales;
+    }
+
+    /**
+     * The human-readable label for a locale directory.
+     *
+     * Reads `meta.php` from the directory when it exists and exposes a string
+     * `label` key; otherwise the locale code itself is used as the label.
+     */
+    private static function localeLabel(string $code, string $dir): string
+    {
+        $meta = "{$dir}/meta.php";
+
+        if (is_file($meta)) {
+            /** @var mixed $data */
+            $data = require $meta;
+
+            if (is_array($data) && isset($data['label']) && is_string($data['label'])) {
+                return $data['label'];
+            }
+        }
+
+        return $code;
+    }
+
+    /**
      * The locale the docs fall back to when a visitor hasn't picked one.
      *
      * Resolution order:
      *   1. An explicit `laradocs.locale.default` (or LARADOCS_LOCALE).
      *   2. The host application's locale, when it has a translation directory.
-     *   3. The first configured `available` locale.
+     *   3. The first detected `available` locale.
      *   4. The application locale as a last resort.
      */
     public static function defaultLocale(): string
@@ -280,8 +365,7 @@ final class LaradocsServiceProvider extends ServiceProvider
             return $configured;
         }
 
-        /** @var array<string, mixed> $available */
-        $available = Config::array('laradocs.locale.available');
+        $available = self::availableLocales();
         $appLocale = (string) app()->getLocale();
 
         if (array_key_exists($appLocale, $available)) {
@@ -302,8 +386,7 @@ final class LaradocsServiceProvider extends ServiceProvider
      */
     public static function explicitLocaleChoice(Request $request): ?string
     {
-        /** @var array<string, mixed> $available */
-        $available = Config::array('laradocs.locale.available');
+        $available = self::availableLocales();
         $lang = $request->query('lang');
 
         return is_string($lang) && $lang !== '' && array_key_exists($lang, $available) ? $lang : null;
@@ -313,14 +396,13 @@ final class LaradocsServiceProvider extends ServiceProvider
      * The locale to render the current docs request in.
      *
      * An explicit choice — the `?lang=` query parameter or the cookie it sets —
-     * wins when it maps to a configured `available` locale; otherwise the
+     * wins when it maps to a detected `available` locale; otherwise the
      * {@see self::defaultLocale()} is used. Unknown codes are ignored so the
      * query string can never force an untranslated locale.
      */
     public static function determineLocale(Request $request): string
     {
-        /** @var array<string, mixed> $available */
-        $available = Config::array('laradocs.locale.available');
+        $available = self::availableLocales();
 
         $explicit = self::explicitLocaleChoice($request);
         if ($explicit !== null) {
