@@ -76,18 +76,8 @@ final class KatexExtension implements HtmlExtension, MarkdownExtension
         $math = null;
 
         foreach ($lines as $line) {
-            if ($fence === null && preg_match('/^\s{0,3}(`{3,}|~{3,})/', $line, $m) === 1) {
-                $fence = $m[1];
+            if ($this->processFenceLine($line, $fence)) {
                 $output[] = $line;
-
-                continue;
-            }
-
-            if ($fence !== null) {
-                $output[] = $line;
-                if (preg_match('/^\s{0,3}' . $fence[0] . '{' . strlen($fence) . ',}\s*$/', $line) === 1) {
-                    $fence = null;
-                }
 
                 continue;
             }
@@ -119,6 +109,28 @@ final class KatexExtension implements HtmlExtension, MarkdownExtension
         }
 
         return implode("\n", $output);
+    }
+
+    /**
+     * Updates $fence state and returns true if $line belongs to a fenced block.
+     */
+    private function processFenceLine(string $line, ?string &$fence): bool
+    {
+        if ($fence === null) {
+            if (preg_match('/^\s{0,3}(`{3,}|~{3,})/', $line, $m) !== 1) {
+                return false;
+            }
+
+            $fence = $m[1];
+
+            return true;
+        }
+
+        if (preg_match('/^\s{0,3}' . $fence[0] . '{' . strlen($fence) . ',}\s*$/', $line) === 1) {
+            $fence = null;
+        }
+
+        return true;
     }
 
     // ── HtmlExtension ────────────────────────────────────────────────────────
@@ -196,18 +208,34 @@ final class KatexExtension implements HtmlExtension, MarkdownExtension
     {
         $empty = array_fill(0, count($exprs), null);
 
-        // Defensive: applySsr only calls this with a non-empty expression
-        // list, and proc_open is always present in supported environments.
-        if (empty($exprs) || ! function_exists('proc_open')) {
+        // empty() covers the no-expressions guard; json_encode covers encode failure.
+        $input = empty($exprs) ? null : json_encode($exprs);
+
+        if (! is_string($input)) {
             return $empty; // @codeCoverageIgnore
         }
 
-        $input = json_encode($exprs);
+        $output = $this->spawnNode($input);
 
-        // Defensive: the expressions originate from DOM string attributes, so
-        // they always encode cleanly.
-        if (! is_string($input)) {
-            return $empty; // @codeCoverageIgnore
+        if ($output === null) {
+            return $empty;
+        }
+
+        $results = json_decode($output, true);
+
+        return is_array($results)
+            ? array_map(static fn (mixed $r): ?string => is_string($r) ? $r : null, array_values($results))
+            : $empty;
+    }
+
+    /**
+     * Writes the KaTeX Node script to a temp file, spawns Node.js, and returns
+     * stdout on success or null on any failure.
+     */
+    private function spawnNode(string $input): ?string
+    {
+        if (! function_exists('proc_open')) {
+            return null; // @codeCoverageIgnore
         }
 
         // Inline Node script — written to a temp file so we can pass the
@@ -238,10 +266,8 @@ final class KatexExtension implements HtmlExtension, MarkdownExtension
         $descriptors = [['pipe', 'r'], ['pipe', 'w'], ['pipe', 'w']];
         $proc = proc_open($cmd, $descriptors, $pipes);
 
-        // Defensive: proc_open only returns false when the process cannot be
-        // spawned at all, which a valid binary path does not trigger.
         if (! is_resource($proc)) {
-            return $empty; // @codeCoverageIgnore
+            return null; // @codeCoverageIgnore
         }
 
         fclose($pipes[0]);
@@ -250,20 +276,7 @@ final class KatexExtension implements HtmlExtension, MarkdownExtension
         fclose($pipes[2]);
         $code = proc_close($proc);
 
-        if ($code !== 0 || ! is_string($output)) {
-            return $empty;
-        }
-
-        $results = json_decode($output, true);
-
-        if (! is_array($results)) {
-            return $empty;
-        }
-
-        return array_map(
-            static fn (mixed $r): ?string => is_string($r) ? $r : null,
-            array_values($results),
-        );
+        return ($code === 0 && is_string($output)) ? $output : null;
     }
 
     private function bootstrap(DOMDocument $dom): DOMElement
