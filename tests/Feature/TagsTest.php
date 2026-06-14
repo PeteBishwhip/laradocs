@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 use Illuminate\Contracts\Routing\Registrar;
+use Laradocs\Documents\Tag;
+use Laradocs\Laradocs;
 use Laradocs\Routing\DocumentRouter;
 
 beforeEach(function () {
@@ -51,6 +53,37 @@ it('collapses tags that share a slug into one listing', function () {
         ->assertOk()
         ->assertSee('One')
         ->assertSee('Two');
+});
+
+it('skips empty and slugless tag labels', function () {
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\n---\n# Home\n",
+        'page.md' => "---\ntitle: Page\ntags: ['Guide', '', '###']\n---\nBody.\n",
+    ]);
+
+    $tags = app(Laradocs::class)->tags();
+
+    expect($tags)->toHaveCount(1)
+        ->and($tags->first())->toBeInstanceOf(Tag::class)
+        ->and($tags->first()->slug)->toBe('guide');
+});
+
+it('exposes a tag as an array', function () {
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\n---\n# Home\n",
+        'page.md' => "---\ntitle: Page\nslug: page\ntags: [Guide]\n---\nBody.\n",
+    ]);
+
+    $tag = app(Laradocs::class)->tag('guide');
+
+    expect($tag->toArray())->toBe([
+        'slug' => 'guide',
+        'label' => 'Guide',
+        'count' => 1,
+        'documents' => [
+            ['slug' => 'page', 'title' => 'Page'],
+        ],
+    ]);
 });
 
 it('404s for a tag no visible page carries', function () {
