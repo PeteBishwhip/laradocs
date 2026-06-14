@@ -65,6 +65,17 @@ return [
         'read_more' => 'Leer más',
     ],
 
+    'tags' => [
+        'eyebrow' => 'Tags',
+        'label' => 'Tags',
+        'index_title' => 'Tags',
+        'index_intro' => 'Browse the documentation by topic.',
+        'show_title' => 'Pages tagged “:tag”',
+        'count' => '{0} No pages|{1} :count page|[2,*] :count pages',
+        'empty' => 'No tags yet.',
+        'all' => 'All tags',
+    ],
+
     'empty' => [
         'eyebrow' => 'Empezar',
         'title' => 'Tu documentación, lista cuando estés.',
