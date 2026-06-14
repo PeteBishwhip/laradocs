@@ -179,7 +179,7 @@ it('applies the requested locale to the rendered docs page', function () {
     File::ensureDirectoryExists(lang_path('vendor/laradocs/fr'));
     File::put(
         lang_path('vendor/laradocs/fr/laradocs.php'),
-        "<?php\n\nreturn ['search' => ['trigger' => 'Rechercher dans la doc…']];\n",
+        "<?php\n\nreturn ['search' => ['trigger' => 'Rechercher dans la doc...']];\n",
     );
 
     try {
@@ -192,8 +192,8 @@ it('applies the requested locale to the rendered docs page', function () {
 
         // The header search trigger renders on every page. Without a choice it
         // stays English; ?lang=fr resolves through the middleware to French.
-        $this->get('/docs/guide')->assertOk()->assertSee('Search the docs…');
-        $this->get('/docs/guide?lang=fr')->assertOk()->assertSee('Rechercher dans la doc…');
+        $this->get('/docs/guide')->assertOk()->assertSee('Search the docs...');
+        $this->get('/docs/guide?lang=fr')->assertOk()->assertSee('Rechercher dans la doc...');
     } finally {
         File::deleteDirectory(lang_path('vendor/laradocs/fr'));
     }
@@ -203,7 +203,7 @@ it('restores the application locale after a docs request so workers do not leak 
     File::ensureDirectoryExists(lang_path('vendor/laradocs/fr'));
     File::put(
         lang_path('vendor/laradocs/fr/laradocs.php'),
-        "<?php\n\nreturn ['search' => ['trigger' => 'Rechercher dans la doc…']];\n",
+        "<?php\n\nreturn ['search' => ['trigger' => 'Rechercher dans la doc...']];\n",
     );
 
     try {
@@ -217,7 +217,7 @@ it('restores the application locale after a docs request so workers do not leak 
 
         // The page renders in French, but the worker's global locale is reset
         // afterwards so the next request starts from a clean slate.
-        $this->get('/docs?lang=fr')->assertOk()->assertSee('Rechercher dans la doc…');
+        $this->get('/docs?lang=fr')->assertOk()->assertSee('Rechercher dans la doc...');
 
         expect(app()->getLocale())->toBe('en');
     } finally {

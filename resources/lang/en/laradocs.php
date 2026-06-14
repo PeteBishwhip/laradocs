@@ -35,9 +35,9 @@ return [
 
     'search' => [
         'label' => 'Quick search',
-        'placeholder' => 'Search pages…',
+        'placeholder' => 'Search pages...',
         'open' => 'Open command palette',
-        'trigger' => 'Search the docs…',
+        'trigger' => 'Search the docs...',
         'navigate' => 'navigate',
         'select' => 'open',
         'close' => 'close',
@@ -75,7 +75,7 @@ return [
         'step_two_body' => 'Use :command to generate a new markdown file with front-matter.',
         'step_three_title' => 'Tune the look',
         'step_three_body' => 'Switch presets with :preset or tune the accent with :accent.',
-        'handbook' => 'Read the handbook →',
+        'handbook' => 'Read the handbook &rarr;',
     ],
 
 ];
