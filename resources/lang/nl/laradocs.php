@@ -20,62 +20,62 @@ return [
     */
 
     'nav' => [
-        'sections' => 'Sections',
-        'overview' => 'Overview',
-        'breadcrumb' => 'Breadcrumb',
-        'home' => 'Home',
-        'header' => 'Header',
-        'footer' => 'Footer',
-        'pagination' => 'Pagination',
-        'documentation' => 'Documentation',
-        'toggle_navigation' => 'Toggle navigation',
-        'previous' => 'Previous',
-        'next' => 'Next',
+        'sections' => 'Secties',
+        'overview' => 'Overzicht',
+        'breadcrumb' => 'Kruimelpad',
+        'home' => 'Startpagina',
+        'header' => 'Koptekst',
+        'footer' => 'Voettekst',
+        'pagination' => 'Paginering',
+        'documentation' => 'Documentatie',
+        'toggle_navigation' => 'Navigatie in-/uitschakelen',
+        'previous' => 'Vorig',
+        'next' => 'Volgende',
     ],
 
     'search' => [
-        'label' => 'Quick search',
-        'placeholder' => 'Search pages...',
-        'open' => 'Open command palette',
-        'trigger' => 'Search the docs...',
-        'navigate' => 'navigate',
+        'label' => 'Snel zoeken',
+        'placeholder' => 'Zoek pagina\'s...',
+        'open' => 'Open opdracht palet',
+        'trigger' => 'Doorzoek de documenten...',
+        'navigate' => 'navigeren',
         'select' => 'open',
-        'close' => 'close',
+        'close' => 'sluiten',
     ],
 
     'theme' => [
-        'toggle' => 'Toggle theme',
+        'toggle' => 'Thema aan/uit',
     ],
 
     'toc' => [
-        'label' => 'On this page',
+        'label' => 'Op deze pagina',
     ],
 
     'language' => [
-        'label' => 'Language',
-        'select' => 'Select language',
+        'label' => 'Taal',
+        'select' => 'Taal selecteren',
     ],
 
     'page' => [
-        'last_updated' => 'Last updated :date',
-        'edit' => 'Edit this page',
+        'last_updated' => 'Laatst bijgewerkt :date',
+        'edit' => 'Deze pagina bewerken',
     ],
 
     'macros' => [
-        'read_more' => 'Read more',
+        'read_more' => 'Meer informatie',
     ],
 
     'empty' => [
-        'eyebrow' => 'Get started',
-        'title' => 'Your documentation, ready when you are.',
-        'intro' => 'Laradocs is wired up and waiting for content. Pages are sourced from :path.',
-        'step_one_title' => 'Scaffold a starter page',
-        'step_one_body' => 'Run :command to drop a welcome page and folder into your docs directory.',
-        'step_two_title' => 'Write your first page',
-        'step_two_body' => 'Use :command to generate a new markdown file with front-matter.',
-        'step_three_title' => 'Tune the look',
-        'step_three_body' => 'Switch presets with :preset or tune the accent with :accent.',
-        'handbook' => 'Read the handbook &rarr;',
+        'eyebrow' => 'Aan de slag',
+        'title' => 'Uw documentatie, klaar wanneer u klaar bent.',
+        'intro' => 'LaraDocs is bedraad en wachten op inhoud. Pagina\'s zijn afkomstig uit :path.',
+        'step_one_title' => 'Steiger een startpagina',
+        'step_one_body' => 'Voer :command uit om een welkomstpagina en map in uw documentenmap te plaatsen.',
+        'step_two_title' => 'Schrijf je eerste pagina',
+        'step_two_body' => 'Gebruik :command om een nieuw markdown bestand te genereren met de voorkant.',
+        'step_three_title' => 'Pas het uiterlijk af',
+        'step_three_body' => 'Verander instellingen met :preset of pas het accent af met :accent.',
+        'handbook' => 'Lees de handleiding &rarr;',
     ],
 
 ];
