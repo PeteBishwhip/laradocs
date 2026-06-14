@@ -28,6 +28,7 @@ use Laradocs\Contracts\DocumentParser;
 use Laradocs\Contracts\HtmlExtension;
 use Laradocs\Contracts\MarkdownExtension;
 use Laradocs\Contracts\MetadataResolver;
+use Laradocs\Extensions\BladeComponentExtension;
 use Laradocs\Extensions\CalloutExtension;
 use Laradocs\Extensions\CodeBlockExtension;
 use Laradocs\Extensions\HeadingAnchorExtension;
@@ -309,6 +310,12 @@ final class LaradocsServiceProvider extends ServiceProvider
             $extensions[] = new MacroExtension($app->make(MacroRegistry::class));
         }
 
+        // Runs after macros so `@docs()` calls and `{{ variables }}` nested in a
+        // component's slot are expanded before the slot is captured.
+        if ($config['components'] ?? true) {
+            $extensions[] = new BladeComponentExtension($app->make(MacroRegistry::class));
+        }
+
         if ($config['katex'] ?? true) {
             $extensions[] = new KatexExtension(
                 Config::string('laradocs.parser.katex.js', 'https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.js'),
@@ -393,7 +400,7 @@ final class LaradocsServiceProvider extends ServiceProvider
     {
         $macros = $this->app->make(MacroRegistry::class);
 
-        foreach (['alert', 'badge', 'button', 'embed'] as $name) {
+        foreach (['alert', 'badge', 'button', 'callout', 'embed'] as $name) {
             if (! $macros->has($name)) {
                 $macros->register($name, "laradocs::macros.{$name}");
             }
