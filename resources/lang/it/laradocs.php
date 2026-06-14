@@ -20,62 +20,62 @@ return [
     */
 
     'nav' => [
-        'sections' => 'Sections',
-        'overview' => 'Overview',
-        'breadcrumb' => 'Breadcrumb',
-        'home' => 'Home',
-        'header' => 'Header',
-        'footer' => 'Footer',
-        'pagination' => 'Pagination',
-        'documentation' => 'Documentation',
-        'toggle_navigation' => 'Toggle navigation',
-        'previous' => 'Previous',
-        'next' => 'Next',
+        'sections' => 'Sezioni',
+        'overview' => 'Panoramica',
+        'breadcrumb' => 'Pangrattato',
+        'home' => 'Casa',
+        'header' => 'Intestazione',
+        'footer' => 'Piè di pagina',
+        'pagination' => 'Paginazione',
+        'documentation' => 'Documentazione',
+        'toggle_navigation' => 'Attiva/disattiva navigazione',
+        'previous' => 'Precedente',
+        'next' => 'Successivo',
     ],
 
     'search' => [
-        'label' => 'Quick search',
-        'placeholder' => 'Search pages...',
-        'open' => 'Open command palette',
-        'trigger' => 'Search the docs...',
+        'label' => 'Ricerca rapida',
+        'placeholder' => 'Cerca pagine...',
+        'open' => 'Apri tavolozza comandi',
+        'trigger' => 'Cerca nei documenti...',
         'navigate' => 'navigate',
-        'select' => 'open',
-        'close' => 'close',
+        'select' => 'apri',
+        'close' => 'chiudi',
     ],
 
     'theme' => [
-        'toggle' => 'Toggle theme',
+        'toggle' => 'Attiva/Disattiva tema',
     ],
 
     'toc' => [
-        'label' => 'On this page',
+        'label' => 'Su questa pagina',
     ],
 
     'language' => [
-        'label' => 'Language',
-        'select' => 'Select language',
+        'label' => 'Lingua',
+        'select' => 'Seleziona lingua',
     ],
 
     'page' => [
-        'last_updated' => 'Last updated :date',
-        'edit' => 'Edit this page',
+        'last_updated' => 'Ultimo aggiornamento :date',
+        'edit' => 'Modifica questa pagina',
     ],
 
     'macros' => [
-        'read_more' => 'Read more',
+        'read_more' => 'Leggi di più',
     ],
 
     'empty' => [
-        'eyebrow' => 'Get started',
-        'title' => 'Your documentation, ready when you are.',
-        'intro' => 'Laradocs is wired up and waiting for content. Pages are sourced from :path.',
-        'step_one_title' => 'Scaffold a starter page',
-        'step_one_body' => 'Run :command to drop a welcome page and folder into your docs directory.',
-        'step_two_title' => 'Write your first page',
-        'step_two_body' => 'Use :command to generate a new markdown file with front-matter.',
-        'step_three_title' => 'Tune the look',
-        'step_three_body' => 'Switch presets with :preset or tune the accent with :accent.',
-        'handbook' => 'Read the handbook &rarr;',
+        'eyebrow' => 'Per iniziare',
+        'title' => 'La tua documentazione, pronta quando ti trovi.',
+        'intro' => 'Laradocs è cablato e in attesa di contenuti. Le pagine provengono da :path.',
+        'step_one_title' => 'Struttura una pagina iniziale',
+        'step_one_body' => 'Eseguire :command per rilasciare una pagina di benvenuto e una cartella nella cartella docs.',
+        'step_two_title' => 'Scrivi la tua prima pagina',
+        'step_two_body' => 'Usa :command per generare un nuovo file markdown con front-matter.',
+        'step_three_title' => 'Sintonizza l\'aspetto',
+        'step_three_body' => 'Cambia preset con :preset o sintonizza l\'accento con :accent.',
+        'handbook' => 'Leggi il manuale &rarr;',
     ],
 
 ];
