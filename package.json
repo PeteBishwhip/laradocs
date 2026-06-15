@@ -7,6 +7,6 @@
     "test": "node --test --test-reporter=spec tests/js/palette.test.mjs"
   },
   "devDependencies": {
-    "jsdom": "^25.0.1"
+    "jsdom": "^29.1.1"
   }
 }
