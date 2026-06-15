@@ -178,6 +178,7 @@ return [
             'katex' => true,
             'variables' => true,
             'macros' => true,
+            'components' => true,
         ],
         'highlighter' => env('LARADOCS_HIGHLIGHTER', 'shiki-css'),
 

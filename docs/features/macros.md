@@ -6,8 +6,9 @@ description: Reusable content components for your docs.
 # Macros
 
 Macros are reusable snippets invoked with the `@docs(...)` syntax. The
-package ships with four built-ins and you can register as many of your
-own as you like.
+package ships with built-ins and you can register as many of your own as
+you like. Prefer Blade-component syntax (`<x-name>`)? Every macro is also
+callable as a [component](/docs/features/components) — the two round-trip.
 
 ## Calling syntax
 
@@ -30,6 +31,7 @@ own as you like.
 | `alert` | `type`, `body` | `body` | Coloured alert box. |
 | `badge` | `text` | `text` | Small pill label. |
 | `button` | `text`, `href` | `text`, `href` | Styled call-to-action button. |
+| `callout` | `type`, `title`, `slot` | `slot` | Titled callout block (also `<x-callout>`). |
 | `embed` | `url` | `url` | Safe-URL link wrapper for raw URLs. |
 
 ### Alert
