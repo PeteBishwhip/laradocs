@@ -77,6 +77,18 @@ final class BladeComponentExtension implements MarkdownExtension
             return ['<', $lt + 1];
         }
 
+        return $this->renderTag($text, $lt, $tag);
+    }
+
+    /**
+     * Resolve the slot (for paired tags) and either render the whitelisted
+     * component or pass the original source through untouched.
+     *
+     * @param  array{name: string, attributes: array<string, mixed>, selfClosing: bool, end: int}  $tag
+     * @return array{0: string, 1: int}
+     */
+    private function renderTag(string $text, int $lt, array $tag): array
+    {
         $end = $tag['end'];
         $slot = null;
 
@@ -241,18 +253,29 @@ final class BladeComponentExtension implements MarkdownExtension
     private function readAttributeValue(string $raw, int $offset): array
     {
         $length = strlen($raw);
-        $i = $this->skipSpaces($raw, $offset);
+        $equals = $this->skipSpaces($raw, $offset);
 
-        if ($i >= $length || $raw[$i] !== '=') {
+        if ($equals >= $length || $raw[$equals] !== '=') {
             return [null, $offset];
         }
 
-        $i = $this->skipSpaces($raw, $i + 1);
+        $i = $this->skipSpaces($raw, $equals + 1);
 
-        if ($i >= $length) {
-            return [null, $offset];
-        }
+        // A trailing `=` with nothing after it falls back to a valueless attribute.
+        return $i >= $length
+            ? [null, $offset]
+            : $this->extractValue($raw, $i);
+    }
 
+    /**
+     * Extract a quoted or bare value starting at $i and return it (quotes
+     * preserved) alongside the offset just past it.
+     *
+     * @return array{0: string, 1: int}
+     */
+    private function extractValue(string $raw, int $i): array
+    {
+        $length = strlen($raw);
         $first = $raw[$i];
 
         if ($first === '"' || $first === "'") {
