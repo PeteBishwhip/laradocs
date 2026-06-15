@@ -1,0 +1,14 @@
+{
+  "landing": { "spec": "landing.spec.ts" },
+  "navigation": { "spec": "navigation.spec.ts" },
+  "search-palette": { "spec": "search-palette.spec.ts" },
+  "search-api": { "spec": "search-api.spec.ts" },
+  "tree-api": { "spec": "tree-api.spec.ts" },
+  "sitemap": { "spec": "sitemap.spec.ts" },
+  "theme-toggle": { "spec": "theme-toggle.spec.ts" },
+  "mobile-nav": { "spec": "mobile-nav.spec.ts" },
+  "toc": { "spec": "toc.spec.ts" },
+  "banner": { "spec": "banner.spec.ts" },
+  "assets": { "spec": "assets.spec.ts" },
+  "seo": { "spec": "seo.spec.ts" }
+}
