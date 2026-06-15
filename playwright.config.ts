@@ -27,7 +27,7 @@ const LARADOCS_SEARCH_DRIVER = 'json';
  * render the global banner so banner.spec.ts can assert against real markup —
  * including the anchor tag embedded in the message.
  */
-const BANNER_MESSAGE =
+export const BANNER_MESSAGE =
   'Heads up: read the <a href="https://laradocs.test/upgrade">upgrade guide</a> before continuing.';
 
 export default defineConfig({
@@ -48,7 +48,12 @@ export default defineConfig({
       env: { LARADOCS_PATH, LARADOCS_SEARCH_DRIVER },
     },
     {
-      command: 'composer serve --port=8001',
+      // `composer serve --port=8001` does NOT work: the composer `serve` script
+      // is a multi-step array (@build then `testbench serve`), and the trailing
+      // `--port` is not forwarded to the serve step — the server still binds
+      // 8000, colliding with the default server above. We build, then invoke
+      // `testbench serve` directly so the port actually applies.
+      command: 'composer build && vendor/bin/testbench serve --ansi --port=8001',
       url: 'http://127.0.0.1:8001/docs',
       reuseExistingServer: !process.env.CI,
       env: {

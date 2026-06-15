@@ -22,4 +22,19 @@ test.describe('landing page', () => {
       nav.getByRole('link', { name: 'Getting Started' }),
     ).toBeAttached();
   });
+
+  test('does not render the global banner without the banner env', async ({
+    page,
+  }) => {
+    // This spec runs under the `default` project, which talks to the no-env
+    // server on port 8000. With LARADOCS_BANNER unset the partial short-circuits
+    // (`@if(! empty($banner['enabled']) ...)`), so the alert must be absent.
+    // This is the negative counterpart to banner.spec.ts's presence assertion.
+    await page.goto('/docs');
+
+    await expect(page.locator('[role="alert"].laradocs-banner-alert')).toHaveCount(
+      0,
+    );
+    await expect(page.locator('.laradocs-banner')).toHaveCount(0);
+  });
 });
