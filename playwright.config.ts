@@ -1,4 +1,17 @@
 import { defineConfig, devices } from '@playwright/test';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
+
+/**
+ * Under Testbench, base_path() points at the empty skeleton app rather than this
+ * package, so `composer serve` wouldn't pick up the real docs/ folder. The PHP
+ * built-in server also resolves relative paths against its document root, so a
+ * relative LARADOCS_PATH fails at request time. We hand both serve instances an
+ * absolute path to this repo's docs/ so the e2e specs assert against the real
+ * fixture pages.
+ */
+const repoRoot = dirname(fileURLToPath(import.meta.url));
+const LARADOCS_PATH = resolve(repoRoot, 'docs');
 
 /**
  * The `banner` project boots a second `composer serve` instance configured to
@@ -23,12 +36,14 @@ export default defineConfig({
       command: 'composer serve',
       url: 'http://127.0.0.1:8000/docs',
       reuseExistingServer: !process.env.CI,
+      env: { LARADOCS_PATH },
     },
     {
       command: 'composer serve --port=8001',
       url: 'http://127.0.0.1:8001/docs',
       reuseExistingServer: !process.env.CI,
       env: {
+        LARADOCS_PATH,
         LARADOCS_BANNER: 'true',
         LARADOCS_BANNER_TYPE: 'alert',
         LARADOCS_BANNER_MESSAGE: BANNER_MESSAGE,
