@@ -14,3 +14,7 @@ package-lock.json
 /.agents
 /.codex
 /.mcp.json
+.context
+test-results/
+playwright-report/
+playwright/.cache/
