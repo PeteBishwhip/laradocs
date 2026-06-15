@@ -19,19 +19,12 @@ final class ValueCaster
     {
         $value = trim($value);
 
-        if ($value === 'true') {
-            return true;
-        }
-
-        if ($value === 'false') {
-            return false;
-        }
-
-        if (is_numeric($value)) {
-            return $value + 0;
-        }
-
-        return self::unquote($value);
+        return match (true) {
+            $value === 'true' => true,
+            $value === 'false' => false,
+            is_numeric($value) => $value + 0,
+            default => self::unquote($value),
+        };
     }
 
     /**

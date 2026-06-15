@@ -47,62 +47,64 @@ final class BladeComponentExtension implements MarkdownExtension
 
         while (($lt = strpos($text, $needle, $offset)) !== false) {
             $result .= substr($text, $offset, $lt - $offset);
-            $offset = $lt;
-
-            // Backslash-escaped — leave the tag (and its backslash) in place so
-            // CommonMark renders the literal angle bracket as text.
-            if ($lt > 0 && $text[$lt - 1] === '\\') {
-                $result .= $needle;
-                $offset += strlen($needle);
-
-                continue;
-            }
-
-            $tag = $this->parseOpeningTag($text, $lt);
-
-            if ($tag === null) {
-                $result .= '<';
-                $offset++;
-
-                continue;
-            }
-
-            $end = $tag['end'];
-            $slot = null;
-
-            if (! $tag['selfClosing']) {
-                $closeStart = $this->findClosingTag($text, $tag['name'], $tag['end']);
-
-                if ($closeStart === null) {
-                    // No matching close — treat the opening tag as literal text.
-                    $result .= substr($text, $lt, $tag['end'] - $lt);
-                    $offset = $tag['end'];
-
-                    continue;
-                }
-
-                $slot = substr($text, $tag['end'], $closeStart - $tag['end']);
-                $end = $closeStart + strlen($this->closeTag($tag['name']));
-            }
-
-            if ($this->macros->has($tag['name'])) {
-                $arguments = $tag['attributes'];
-
-                if ($slot !== null) {
-                    // Expand the slot first so nested components render too.
-                    $arguments['slot'] = trim($this->expand($slot));
-                }
-
-                $result .= $this->macros->render($tag['name'], $arguments);
-            } else {
-                // Not whitelisted — pass the original source through untouched.
-                $result .= substr($text, $lt, $end - $lt);
-            }
-
-            $offset = $end;
+            [$appended, $offset] = $this->expandTagAt($text, $lt);
+            $result .= $appended;
         }
 
         return $result . substr($text, $offset);
+    }
+
+    /**
+     * Resolve whatever lives at the `<x-` needle at $lt — a backslash-escape,
+     * a malformed tag, an unmatched open, an unknown component, or a render —
+     * and return [rendered text to append, offset to resume scanning from].
+     *
+     * @return array{0: string, 1: int}
+     */
+    private function expandTagAt(string $text, int $lt): array
+    {
+        $needle = '<' . self::PREFIX;
+
+        // Backslash-escaped — leave the tag (and its backslash) in place so
+        // CommonMark renders the literal angle bracket as text.
+        if ($lt > 0 && $text[$lt - 1] === '\\') {
+            return [$needle, $lt + strlen($needle)];
+        }
+
+        $tag = $this->parseOpeningTag($text, $lt);
+
+        if ($tag === null) {
+            return ['<', $lt + 1];
+        }
+
+        $end = $tag['end'];
+        $slot = null;
+
+        if (! $tag['selfClosing']) {
+            $closeStart = $this->findClosingTag($text, $tag['name'], $tag['end']);
+
+            if ($closeStart === null) {
+                // No matching close — treat the opening tag as literal text.
+                return [substr($text, $lt, $tag['end'] - $lt), $tag['end']];
+            }
+
+            $slot = substr($text, $tag['end'], $closeStart - $tag['end']);
+            $end = $closeStart + strlen($this->closeTag($tag['name']));
+        }
+
+        if (! $this->macros->has($tag['name'])) {
+            // Not whitelisted — pass the original source through untouched.
+            return [substr($text, $lt, $end - $lt), $end];
+        }
+
+        $arguments = $tag['attributes'];
+
+        if ($slot !== null) {
+            // Expand the slot first so nested components render too.
+            $arguments['slot'] = trim($this->expand($slot));
+        }
+
+        return [$this->macros->render($tag['name'], $arguments), $end];
     }
 
     /**
@@ -172,14 +174,26 @@ final class BladeComponentExtension implements MarkdownExtension
      */
     private function parseAttributes(string $raw): array
     {
-        $pattern = '/(?<name>:?[A-Za-z_][A-Za-z0-9_.-]*)(?:\s*=\s*(?<value>"[^"]*"|\'[^\']*\'|[^\s>]+))?/';
-
-        preg_match_all($pattern, $raw, $matches, PREG_SET_ORDER);
-
         $attributes = [];
+        $length = strlen($raw);
+        $offset = 0;
 
-        foreach ($matches as $match) {
-            $name = $match['name'];
+        while ($offset < $length) {
+            $offset = $this->skipSpaces($raw, $offset);
+
+            if ($offset >= $length) {
+                break;
+            }
+
+            $name = $this->matchAttributeName($raw, $offset);
+
+            if ($name === null) {
+                $offset++;
+
+                continue;
+            }
+
+            $offset += strlen($name);
 
             // A leading ':' marks a "bound" attribute. Blade would evaluate it
             // as a PHP expression; we never do that — we unwrap any quotes and
@@ -190,9 +204,9 @@ final class BladeComponentExtension implements MarkdownExtension
                 $name = substr($name, 1);
             }
 
-            $value = $match['value'] ?? '';
+            [$rawValue, $offset] = $this->readAttributeValue($raw, $offset);
 
-            if ($value === '') {
+            if ($rawValue === null) {
                 // Valueless attribute, e.g. `<x-alert dismissible>`.
                 $attributes[$name] = true;
 
@@ -200,11 +214,75 @@ final class BladeComponentExtension implements MarkdownExtension
             }
 
             $attributes[$name] = $bound
-                ? ValueCaster::cast(ValueCaster::unquote($value))
-                : ValueCaster::cast($value);
+                ? ValueCaster::cast(ValueCaster::unquote($rawValue))
+                : ValueCaster::cast($rawValue);
         }
 
         return $attributes;
+    }
+
+    private function matchAttributeName(string $raw, int $offset): ?string
+    {
+        if (preg_match('/\G:?[A-Za-z_][\w.-]*/', $raw, $match, 0, $offset) !== 1) {
+            return null;
+        }
+
+        return $match[0];
+    }
+
+    /**
+     * Read an optional `= value` following an attribute name. Returns the raw
+     * value (quotes preserved so the bound/unbound caller can decide whether to
+     * strip them) and the offset after the value — or [null, $offset] when no
+     * `=` follows, meaning the attribute is valueless.
+     *
+     * @return array{0: string|null, 1: int}
+     */
+    private function readAttributeValue(string $raw, int $offset): array
+    {
+        $length = strlen($raw);
+        $i = $this->skipSpaces($raw, $offset);
+
+        if ($i >= $length || $raw[$i] !== '=') {
+            return [null, $offset];
+        }
+
+        $i = $this->skipSpaces($raw, $i + 1);
+
+        if ($i >= $length) {
+            return [null, $offset];
+        }
+
+        $first = $raw[$i];
+
+        if ($first === '"' || $first === "'") {
+            $closing = strpos($raw, $first, $i + 1);
+
+            if ($closing === false) {
+                return [substr($raw, $i), $length];
+            }
+
+            return [substr($raw, $i, $closing - $i + 1), $closing + 1];
+        }
+
+        $end = $i;
+
+        while ($end < $length && ! ctype_space($raw[$end]) && $raw[$end] !== '>') {
+            $end++;
+        }
+
+        return [substr($raw, $i, $end - $i), $end];
+    }
+
+    private function skipSpaces(string $text, int $offset): int
+    {
+        $length = strlen($text);
+
+        while ($offset < $length && ctype_space($text[$offset])) {
+            $offset++;
+        }
+
+        return $offset;
     }
 
     /**
@@ -229,17 +307,7 @@ final class BladeComponentExtension implements MarkdownExtension
             $nextOpen = strpos($text, $open, $i);
 
             if ($nextOpen !== false && $nextOpen < $nextClose) {
-                $nested = $this->parseOpeningTag($text, $nextOpen);
-
-                if ($nested !== null && $this->isBoundary($text, $nextOpen + strlen($open))) {
-                    if (! $nested['selfClosing']) {
-                        $depth++;
-                    }
-
-                    $i = $nested['end'];
-                } else {
-                    $i = $nextOpen + strlen($open);
-                }
+                [$depth, $i] = $this->advancePastNestedOpen($text, $open, $nextOpen, $depth);
 
                 continue;
             }
@@ -254,6 +322,29 @@ final class BladeComponentExtension implements MarkdownExtension
         }
 
         return null;
+    }
+
+    /**
+     * Advance past a same-name opening tag encountered while scanning for the
+     * matching close. Bumps depth for genuine nested opens, skips over the
+     * prefix when the match is a prefix-collision (`<x-foo` inside `<x-foobar`).
+     *
+     * @return array{0: int, 1: int}
+     */
+    private function advancePastNestedOpen(string $text, string $open, int $nextOpen, int $depth): array
+    {
+        $nested = $this->parseOpeningTag($text, $nextOpen);
+        $isGenuine = $nested !== null && $this->isBoundary($text, $nextOpen + strlen($open));
+
+        if (! $isGenuine) {
+            return [$depth, $nextOpen + strlen($open)];
+        }
+
+        if (! $nested['selfClosing']) {
+            $depth++;
+        }
+
+        return [$depth, $nested['end']];
     }
 
     private function closeTag(string $name): string
