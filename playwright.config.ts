@@ -14,6 +14,15 @@ const repoRoot = dirname(fileURLToPath(import.meta.url));
 const LARADOCS_PATH = resolve(repoRoot, 'docs');
 
 /**
+ * The search "driver" defaults to `auto`, which prefers Laravel Scout when it's
+ * installed (it is, in vendor/). Under Testbench serve the Scout collection
+ * engine blows up (SearchableDocument::query() is undefined), 500-ing both the
+ * palette endpoint and /api/search. Forcing the built-in JSON engine gives the
+ * search specs (and the ⌘K palette) a working full-text backend.
+ */
+const LARADOCS_SEARCH_DRIVER = 'json';
+
+/**
  * The `banner` project boots a second `composer serve` instance configured to
  * render the global banner so banner.spec.ts can assert against real markup —
  * including the anchor tag embedded in the message.
@@ -36,7 +45,7 @@ export default defineConfig({
       command: 'composer serve',
       url: 'http://127.0.0.1:8000/docs',
       reuseExistingServer: !process.env.CI,
-      env: { LARADOCS_PATH },
+      env: { LARADOCS_PATH, LARADOCS_SEARCH_DRIVER },
     },
     {
       command: 'composer serve --port=8001',
@@ -44,6 +53,7 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
       env: {
         LARADOCS_PATH,
+        LARADOCS_SEARCH_DRIVER,
         LARADOCS_BANNER: 'true',
         LARADOCS_BANNER_TYPE: 'alert',
         LARADOCS_BANNER_MESSAGE: BANNER_MESSAGE,
