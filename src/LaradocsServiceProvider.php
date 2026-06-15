@@ -16,19 +16,26 @@ use Illuminate\Support\ServiceProvider;
 use Laradocs\Cache\DocumentCache;
 use Laradocs\Console\CacheCommand;
 use Laradocs\Console\ClearCommand;
+use Laradocs\Console\CloneProjectCommand;
+use Laradocs\Console\ConfigCommand;
+use Laradocs\Console\DeployCommand;
 use Laradocs\Console\IndexCommand;
 use Laradocs\Console\InstallCommand;
+use Laradocs\Console\LoginCommand;
 use Laradocs\Console\MakeDocCommand;
 use Laradocs\Contracts\DocumentLoader;
 use Laradocs\Contracts\DocumentParser;
 use Laradocs\Contracts\HtmlExtension;
 use Laradocs\Contracts\MarkdownExtension;
 use Laradocs\Contracts\MetadataResolver;
+use Laradocs\Extensions\BladeComponentExtension;
 use Laradocs\Extensions\CalloutExtension;
 use Laradocs\Extensions\CodeBlockExtension;
 use Laradocs\Extensions\HeadingAnchorExtension;
 use Laradocs\Extensions\ImageExtension;
+use Laradocs\Extensions\KatexExtension;
 use Laradocs\Extensions\MacroExtension;
+use Laradocs\Extensions\MermaidExtension;
 use Laradocs\Extensions\VariableExtension;
 use Laradocs\Extensions\VideoExtension;
 use Laradocs\Loaders\FilesystemLoader;
@@ -55,9 +62,19 @@ use League\CommonMark\MarkdownConverter;
 
 final class LaradocsServiceProvider extends ServiceProvider
 {
+    private const CONFIG = __DIR__ . '/../config/laradocs.php';
+
+    private const VIEWS = __DIR__ . '/../resources/views';
+
+    private const LANG = __DIR__ . '/../resources/lang';
+
+    private const DIST = __DIR__ . '/../resources/dist';
+
+    private const STUBS = __DIR__ . '/../stubs';
+
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__ . '/../config/laradocs.php', 'laradocs');
+        $this->mergeConfigFrom(self::CONFIG, 'laradocs');
 
         $this->registerRegistries();
         $this->registerPipeline();
@@ -68,7 +85,8 @@ final class LaradocsServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'laradocs');
+        $this->loadViewsFrom(self::VIEWS, 'laradocs');
+        $this->loadTranslationsFrom(self::LANG, 'laradocs');
         $this->registerRoutes();
         $this->bootRateLimiting();
         $this->registerDefaultMacros();
@@ -126,7 +144,7 @@ final class LaradocsServiceProvider extends ServiceProvider
                 new Filesystem,
                 $app->make(MetadataResolver::class),
                 $app->make(SlugResolver::class),
-                Config::string('laradocs.docs.path'),
+                fn (): string => Config::string('laradocs.docs.path'),
                 $extensions,
                 $ignored,
                 $defaults,
@@ -141,7 +159,6 @@ final class LaradocsServiceProvider extends ServiceProvider
                 $factory->store(Config::nullableString('laradocs.cache.store')),
                 Config::bool('laradocs.cache.enabled', true),
                 Config::nullableInt('laradocs.cache.ttl'),
-                Config::string('laradocs.cache.key_prefix', 'laradocs'),
             );
         });
     }
@@ -293,6 +310,21 @@ final class LaradocsServiceProvider extends ServiceProvider
             $extensions[] = new MacroExtension($app->make(MacroRegistry::class));
         }
 
+        // Runs after macros so `@docs()` calls and `{{ variables }}` nested in a
+        // component's slot are expanded before the slot is captured.
+        if ($config['components'] ?? true) {
+            $extensions[] = new BladeComponentExtension($app->make(MacroRegistry::class));
+        }
+
+        if ($config['katex'] ?? true) {
+            $extensions[] = new KatexExtension(
+                Config::string('laradocs.parser.katex.js', 'https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.js'),
+                Config::string('laradocs.parser.katex.css', 'https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.css'),
+                Config::bool('laradocs.parser.katex.ssr'),
+                Config::nullableString('laradocs.parser.katex.node_bin'),
+            );
+        }
+
         return $extensions;
     }
 
@@ -320,6 +352,26 @@ final class LaradocsServiceProvider extends ServiceProvider
             $extensions[] = new ImageExtension;
         }
 
+        // Runs before CodeBlockExtension so mermaid fences are claimed before
+        // they would otherwise pick up a language label and copy button.
+        if ($config['mermaid'] ?? true) {
+            $extensions[] = new MermaidExtension(
+                Config::string(
+                    'laradocs.parser.mermaid.src',
+                    'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs',
+                ),
+            );
+        }
+
+        if ($config['katex'] ?? true) {
+            $extensions[] = new KatexExtension(
+                Config::string('laradocs.parser.katex.js', 'https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.js'),
+                Config::string('laradocs.parser.katex.css', 'https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.css'),
+                Config::bool('laradocs.parser.katex.ssr'),
+                Config::nullableString('laradocs.parser.katex.node_bin'),
+            );
+        }
+
         $extensions[] = new CodeBlockExtension;
 
         return $extensions;
@@ -330,6 +382,14 @@ final class LaradocsServiceProvider extends ServiceProvider
         // Routes are always registered so that route:cache captures them
         // regardless of the current `enabled` flag. The EnsureDocsEnabled
         // middleware enforces the toggle at request time instead.
+        //
+        // Consumer apps that want to own the docs URL (e.g. for tenant
+        // routing) can set `laradocs.route.register => false` and wire the
+        // render action into their own route instead.
+        if (! Config::bool('laradocs.route.register', true)) {
+            return;
+        }
+
         /** @var Registrar $router */
         $router = $this->app->make(Registrar::class);
 
@@ -340,7 +400,7 @@ final class LaradocsServiceProvider extends ServiceProvider
     {
         $macros = $this->app->make(MacroRegistry::class);
 
-        foreach (['alert', 'badge', 'button', 'embed'] as $name) {
+        foreach (['alert', 'badge', 'button', 'callout', 'embed'] as $name) {
             if (! $macros->has($name)) {
                 $macros->register($name, "laradocs::macros.{$name}");
             }
@@ -349,21 +409,18 @@ final class LaradocsServiceProvider extends ServiceProvider
 
     private function registerPublishing(): void
     {
-        $this->publishes([
-            __DIR__ . '/../config/laradocs.php' => $this->app->configPath('laradocs.php'),
-        ], 'laradocs-config');
+        $config = [self::CONFIG => $this->app->configPath('laradocs.php')];
+        $views = [self::VIEWS => $this->app->resourcePath('views/vendor/laradocs')];
+        $lang = [self::LANG => $this->app->langPath('vendor/laradocs')];
+        $assets = [self::DIST => $this->app->publicPath('vendor/laradocs')];
+        $stubs = [self::STUBS => $this->app->basePath('stubs/laradocs')];
 
-        $this->publishes([
-            __DIR__ . '/../resources/views' => $this->app->resourcePath('views/vendor/laradocs'),
-        ], 'laradocs-views');
-
-        $this->publishes([
-            __DIR__ . '/../resources/dist' => $this->app->publicPath('vendor/laradocs'),
-        ], 'laradocs-assets');
-
-        $this->publishes([
-            __DIR__ . '/../stubs' => $this->app->basePath('stubs/laradocs'),
-        ], 'laradocs-stubs');
+        $this->publishes($config, 'laradocs-config');
+        $this->publishes($views, 'laradocs-views');
+        $this->publishes($lang, 'laradocs-lang');
+        $this->publishes($assets, 'laradocs-assets');
+        $this->publishes($stubs, 'laradocs-stubs');
+        $this->publishes(array_merge($config, $views, $lang, $assets, $stubs), 'laradocs-all');
     }
 
     private function registerCommands(): void
@@ -374,9 +431,21 @@ final class LaradocsServiceProvider extends ServiceProvider
             CacheCommand::class,
             ClearCommand::class,
             IndexCommand::class,
+            LoginCommand::class,
+            DeployCommand::class,
+            CloneProjectCommand::class,
+            ConfigCommand::class,
         ]);
 
-        $this->optimizes('laradocs:cache', 'laradocs:clear');
+        // `laradocs:cache` builds a sitemap whose URLs come from
+        // `route('laradocs.*')`. Those names only exist when the package
+        // owns the docs URL — when a consumer app sets `route.register`
+        // to false to wire docs into its own routes, hooking the command
+        // into `optimize` would throw RouteNotFoundException on every
+        // deploy. The consumer is responsible for warming its own cache.
+        if (Config::bool('laradocs.route.register', true)) {
+            $this->optimizes('laradocs:cache', 'laradocs:clear');
+        }
     }
 
     private function registerAbout(): void

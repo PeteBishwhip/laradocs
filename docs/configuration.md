@@ -89,8 +89,10 @@ These supply values when a page omits them.
 | `parser.extensions.heading_anchors` | — | `true` |
 | `parser.extensions.images` | — | `true` |
 | `parser.extensions.video` | — | `true` |
+| `parser.extensions.mermaid` | — | `true` |
 | `parser.extensions.variables` | — | `true` |
 | `parser.extensions.macros` | — | `true` |
+| `parser.mermaid.src` | `LARADOCS_MERMAID_SRC` | jsDelivr mermaid@11 ESM |
 | `parser.highlighter` | `LARADOCS_HIGHLIGHTER` | `shiki-css` |
 | `parser.unknown_variable` | — | `blank` |
 | `parser.toc.min_level` | — | `2` |
@@ -127,11 +129,22 @@ See [Rich Content](/docs/features/rich-content) for what each extension enables.
 | `ui.banner.type` | `LARADOCS_BANNER_TYPE` | `info` |
 | `ui.banner.message` | `LARADOCS_BANNER_MESSAGE` | `null` |
 | `ui.edit.url` | `LARADOCS_EDIT_URL` | `null` |
-| `ui.edit.label` | `LARADOCS_EDIT_LABEL` | `Edit this page` |
 | `ui.search.enabled` | `LARADOCS_SEARCH` | `true` |
 
 See [Customising the UI](/docs/customising-the-ui) for what each value does
 visually.
+
+## Localisation
+
+| Option | Env | Default |
+|---|---|---|
+| `locale.default` | `LARADOCS_LOCALE` | `en` |
+| `locale.available` | — | `['en' => 'English']` |
+| `locale.selector` | `LARADOCS_LOCALE_SELECTOR` | `true` |
+
+The bundled views are fully translatable. See
+[Localisation](/docs/guide/localisation) for the workflow — publishing the
+language files, adding locales and the in-page language selector.
 
 ## Analytics
 

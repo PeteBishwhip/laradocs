@@ -5,13 +5,17 @@ declare(strict_types=1);
 namespace Laradocs;
 
 use Closure;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Laradocs\Cache\DocumentCache;
 use Laradocs\Contracts\DocumentLoader;
 use Laradocs\Contracts\DocumentParser;
 use Laradocs\Documents\Document;
 use Laradocs\Documents\DocumentCollection;
 use Laradocs\Documents\DocumentTree;
+use Laradocs\Documents\Tag;
 use Laradocs\Macros\MacroRegistry;
+use Laradocs\Routing\FeedBuilder;
 use Laradocs\Routing\SitemapBuilder;
 use Laradocs\Search\SearchIndexBuilder;
 use Laradocs\Support\RateLimiterConfig;
@@ -126,6 +130,57 @@ final class Laradocs
     }
 
     /**
+     * Every tag declared across visible documents, each paired with the
+     * (visible, ordered) pages that carry it. Sorted alphabetically by label.
+     *
+     * Hidden documents never contribute, so a tag used only by hidden pages
+     * does not appear here.
+     *
+     * @return Collection<int, Tag>
+     */
+    public function tags(): Collection
+    {
+        /** @var array<string, array{label: string, documents: array<int, Document>}> $buckets */
+        $buckets = [];
+
+        foreach ($this->all()->visible() as $document) {
+            foreach ($document->metadata->tags as $label) {
+                $label = trim($label);
+                $slug = Str::slug($label);
+
+                if ($label === '' || $slug === '') {
+                    continue;
+                }
+
+                // First spelling of a tag wins as the display label, so
+                // "API" and "api" collapse to one entry rather than two.
+                $buckets[$slug] ??= ['label' => $label, 'documents' => []];
+                $buckets[$slug]['documents'][] = $document;
+            }
+        }
+
+        return collect($buckets)
+            ->map(fn (array $bucket, string $slug): Tag => new Tag(
+                $slug,
+                $bucket['label'],
+                (new DocumentCollection($bucket['documents']))->ordered(),
+            ))
+            ->sortBy(fn (Tag $tag): string => Str::lower($tag->label), SORT_NATURAL)
+            ->values();
+    }
+
+    /**
+     * Resolve a single tag (matched by its slug) to its visible documents, or
+     * null when no visible document carries it.
+     */
+    public function tag(string $slug): ?Tag
+    {
+        $slug = Str::slug($slug);
+
+        return $this->tags()->first(fn (Tag $tag): bool => $tag->slug === $slug);
+    }
+
+    /**
      * The landing document for the docs root, if any.
      */
     public function home(): ?Document
@@ -170,6 +225,22 @@ final class Laradocs
         return $this->cache->rememberSitemap(
             $documents,
             fn (): string => (new SitemapBuilder)->build($this->tree())
+        );
+    }
+
+    /**
+     * The rendered, cached feed XML (RSS 2.0 or Atom 1.0) listing the N
+     * most-recently-updated visible, non-redirected pages. Busts automatically
+     * when any document changes.
+     */
+    public function feed(string $format, int $limit, string $feedUrl, string $siteTitle): string
+    {
+        $documents = $this->all();
+
+        return $this->cache->rememberFeed(
+            $documents,
+            $format,
+            fn (): string => (new FeedBuilder)->build($documents, $format, $limit, $feedUrl, $siteTitle)
         );
     }
 

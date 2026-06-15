@@ -7,7 +7,7 @@
     <div class="laradocs-footer-text">{{ $text }}</div>
 
     @if(! empty($links))
-        <nav class="laradocs-footer-links" aria-label="Footer">
+        <nav class="laradocs-footer-links" aria-label="{{ __('laradocs::laradocs.nav.footer') }}">
             @foreach($links as $link)
                 @php
                     $url = $link['url'] ?? '#';

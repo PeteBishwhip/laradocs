@@ -773,6 +773,81 @@ body.laradocs {
   font-size: inherit;
 }
 
+/* mermaid diagrams */
+.laradocs-mermaid {
+  margin: 1.5rem 0;
+  text-align: center;
+}
+.laradocs-mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+/* No-JS / pre-render fallback: the raw graph source as a styled code block. */
+.laradocs-mermaid-source {
+  margin: 0;
+  padding: 1rem 1.15rem;
+  overflow-x: auto;
+  text-align: left;
+  font-family: var(--dc-mono);
+  font-size: .87rem;
+  line-height: 1.6;
+  color: var(--dc-code-fg);
+  background: var(--dc-code-bg);
+  border: 1px solid var(--dc-rule);
+  border-radius: var(--dc-radius-lg);
+}
+/* While mermaid loads, hide the source so it doesn't flash before the SVG. */
+.laradocs-mermaid.is-loading .laradocs-mermaid-source {
+  visibility: hidden;
+}
+.laradocs-mermaid.is-loading {
+  min-height: 2.5rem;
+}
+/* Once rendered, the source <pre> holds the SVG — drop its code-block chrome. */
+.laradocs-mermaid.is-rendered .laradocs-mermaid-source {
+  padding: 0;
+  background: none;
+  border: 0;
+  overflow: visible;
+}
+
+/* katex math */
+/* Math glyphs inherit currentColor, so light/dark follow --dc-fg for free. */
+/* Inline math: KaTeX renders at 1.21em, oversized next to prose — pull it
+   back so symbols sit at roughly text size on the line. */
+.laradocs-katex-inline { color: var(--dc-fg); }
+.laradocs-katex-inline .katex { font-size: 1.05em; }
+
+/* Display (block) math — both <div> (multi-line) and <span> (single-line)
+   variants. A subtle elevated card matching code blocks / callouts: centred,
+   with horizontal scroll for equations wider than the column. */
+.laradocs-katex-block {
+  display: block;
+  margin: 1.75rem 0;
+  padding: 1.35rem 1.25rem;
+  border: 1px solid var(--dc-rule);
+  border-radius: var(--dc-radius-lg);
+  background: var(--dc-bg-elev);
+  color: var(--dc-fg);
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+/* KaTeX's display wrapper adds 1em vertical margin — the card's padding owns
+   that spacing now, so flatten it. */
+.laradocs-katex-block .katex-display { margin: 0; }
+.laradocs-katex-block .katex { font-size: 1.3em; }
+
+/* Before KaTeX renders (client-side), the raw LaTeX is briefly visible.
+   Present it as muted monospace so it reads as a formula loading rather than
+   broken markup. SSR'd math is already marked rendered. */
+[data-laradocs-katex]:not([data-katex-rendered]) {
+  font-family: var(--dc-mono);
+  font-size: .87rem;
+  font-style: normal;
+  color: var(--dc-muted);
+}
+
 /* callouts */
 .laradocs-callout {
   margin: 1.5rem 0;
@@ -1114,6 +1189,88 @@ body.laradocs {
     overflow-x: auto;
     max-width: 100%;
   }
+}
+
+/* ─────────────────────── tag index pages ─────────────────────── */
+.laradocs-tag-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.laradocs-tag-cloud li { margin: 0; }
+
+.laradocs-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .3rem .7rem;
+  font-size: .85rem;
+  font-weight: 500;
+  color: var(--dc-fg) !important;
+  background: var(--dc-bg-elev);
+  border: 1px solid var(--dc-rule);
+  border-radius: 999px;
+  text-decoration: none;
+  transition: border-color .15s ease, color .15s ease, background .15s ease;
+}
+.laradocs-tag-chip:hover {
+  color: var(--dc-accent) !important;
+  border-color: var(--dc-accent-line);
+  background: var(--dc-accent-soft);
+}
+.laradocs-tag-chip-count {
+  min-width: 1.25rem;
+  padding: 0 .35rem;
+  font-size: .7rem;
+  font-weight: 600;
+  text-align: center;
+  color: var(--dc-accent);
+  background: var(--dc-accent-soft);
+  border-radius: 999px;
+}
+
+.laradocs-tag-pages {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: .85rem;
+}
+.laradocs-tag-page {
+  display: block;
+  padding: 1rem 1.1rem;
+  background: var(--dc-bg-elev);
+  border: 1px solid var(--dc-rule);
+  border-radius: var(--dc-radius-lg);
+  text-decoration: none;
+  transition: border-color .15s ease, background .15s ease;
+}
+.laradocs-tag-page:hover { border-color: var(--dc-accent-line); }
+.laradocs-tag-page-title {
+  display: block;
+  font-weight: 600;
+  color: var(--dc-fg);
+}
+.laradocs-tag-page:hover .laradocs-tag-page-title { color: var(--dc-accent); }
+.laradocs-tag-page-desc {
+  display: block;
+  margin-top: .25rem;
+  font-size: .9rem;
+  color: var(--dc-muted);
+}
+
+.laradocs-tag-back { margin-top: 2rem; font-size: .9rem; }
+.laradocs-tags-empty { color: var(--dc-muted); }
+
+/* Tag list on an individual document page. */
+.laradocs-page-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin: 2rem 0 0;
 }
 
 /* ─────────────────────── reduced motion ─────────────────────── */

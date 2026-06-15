@@ -9,10 +9,15 @@ use Laradocs\Http\Controllers\ApiSearchController;
 use Laradocs\Http\Controllers\ApiTreeController;
 use Laradocs\Http\Controllers\AssetController;
 use Laradocs\Http\Controllers\DocsController;
+use Laradocs\Http\Controllers\FeedController;
+use Laradocs\Http\Controllers\RobotsController;
 use Laradocs\Http\Controllers\SearchController;
 use Laradocs\Http\Controllers\SitemapController;
+use Laradocs\Http\Controllers\TagController;
 use Laradocs\Http\Middleware\EnsureDocsEnabled;
+use Laradocs\Http\Middleware\SetDocsLocale;
 use Laradocs\Http\Middleware\ThrottleApiRequests;
+use Laradocs\Support\Config;
 
 final class DocumentRouter
 {
@@ -24,10 +29,8 @@ final class DocumentRouter
      */
     public function register(Registrar $router, array $config): void
     {
-        $middleware = array_merge(
-            (array) ($config['middleware'] ?? ['web']),
-            [EnsureDocsEnabled::class],
-        );
+        $baseMiddleware = (array) ($config['middleware'] ?? ['web']);
+        $middleware = array_merge($baseMiddleware, [EnsureDocsEnabled::class, SetDocsLocale::class]);
 
         $attributes = [
             'prefix' => $config['prefix'] ?? 'docs',
@@ -39,9 +42,20 @@ final class DocumentRouter
             $attributes['domain'] = $config['domain'];
         }
 
+        // robots.txt is registered without EnsureDocsEnabled so that crawlers
+        // still receive a valid "Disallow: /" body when the docs are off, as
+        // opposed to a 404 they might interpret as transient.
+        $robotsAttributes = $attributes;
+        $robotsAttributes['middleware'] = $baseMiddleware;
+
+        $router->group($robotsAttributes, function (Registrar $router): void {
+            $router->get('robots.txt', RobotsController::class)->name('robots');
+        });
+
         $router->group($attributes, function (Registrar $router): void {
             $router->get('/', [DocsController::class, 'index'])->name('index');
             $router->get('sitemap.xml', SitemapController::class)->name('sitemap');
+            $router->get('feed.xml', FeedController::class)->name('feed');
             $router->get('_laradocs/asset/{file}', AssetController::class)
                 ->where('file', '[\w.\-]+')
                 ->name('asset');
@@ -52,6 +66,21 @@ final class DocumentRouter
             $router->get('_laradocs/api/search', ApiSearchController::class)
                 ->middleware(ThrottleApiRequests::class)
                 ->name('api.search');
+
+            // Tag index pages are registered ahead of the catch-all show route
+            // so their fixed paths take priority; the controller still defers
+            // to a real document occupying the same slug. Single-segment
+            // {tag} keeps the catch-all responsible for any deeper paths.
+            if (Config::bool('laradocs.tags.enabled', true)) {
+                $index = trim(Config::string('laradocs.tags.index', 'tags'), '/');
+                $prefix = trim(Config::string('laradocs.tags.prefix', 'tag'), '/');
+
+                $router->get($index, [TagController::class, 'index'])->name('tags.index');
+                $router->get($prefix . '/{tag}', [TagController::class, 'show'])
+                    ->where('tag', '[^/]+')
+                    ->name('tags.show');
+            }
+
             $router->get('/{path}', [DocsController::class, 'show'])
                 ->where('path', '.*')
                 ->name('show');

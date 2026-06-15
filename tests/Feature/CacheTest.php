@@ -13,7 +13,7 @@ use Laradocs\Metadata\Metadata;
 
 function arrayCache(bool $enabled = true): DocumentCache
 {
-    return new DocumentCache(new Repository(new ArrayStore), $enabled, null, 'laradocs');
+    return new DocumentCache(new Repository(new ArrayStore), $enabled, null);
 }
 
 it('caches rendered html on a miss and serves it on a hit', function () {
@@ -111,7 +111,7 @@ it('survives a cache store that forbids unserializing objects', function () {
         }
     };
 
-    $cache = new DocumentCache(new Repository($store), true, null, 'laradocs');
+    $cache = new DocumentCache(new Repository($store), true, null);
     $docs = new DocumentCollection([makeDocument('a')]);
     $tree = new DocumentTree([new TreeNode('A', 'a')]);
 

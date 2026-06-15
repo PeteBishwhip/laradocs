@@ -95,6 +95,9 @@ the page footer (`Last updated 2026-06-01`). The rest are available via
 `$document->metadata->author`, `$document->metadata->image`, and
 `$document->metadata->tags` — wire them into custom views as needed.
 
+`tags` also drive the auto-generated [tag index pages](/docs/guide/tags):
+each page's tags link out to a listing of everything sharing that topic.
+
 `author`, `image` and `tags` also feed the page's SEO meta (see below).
 
 ### SEO and social meta

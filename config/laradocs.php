@@ -18,9 +18,48 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Localisation
+    |--------------------------------------------------------------------------
+    |
+    | Every user-facing string in the bundled views is translatable. Publish
+    | the language files with `php artisan vendor:publish --tag=laradocs-lang`
+    | and add a directory per locale (e.g. lang/vendor/laradocs/fr).
+    |
+    | "default"   The locale the docs render in. Defaults to "en". Set
+    |             LARADOCS_LOCALE to override.
+    | "available" Locales offered in the in-page language selector.
+    |             Leave null (the default) to auto-detect: the package scans
+    |             lang/vendor/laradocs/ and treats each sub-directory as an
+    |             available locale. Add a meta.php inside a locale directory
+    |             returning ['label' => 'My Label'] for a custom display name;
+    |             otherwise the locale code itself is used.
+    |             Supply an array to override auto-detection entirely: keys are
+    |             locale codes, values are human-readable labels. An empty array
+    |             disables the selector outright.
+    | "selector"  Show the language selector in the header. It is hidden
+    |             automatically when fewer than two locales are available.
+    |
+    | A visitor can switch language with a `?lang=<code>` query parameter; the
+    | choice is remembered in a cookie. See the "Localisation" guide.
+    |
+    */
+
+    'locale' => [
+        'default' => env('LARADOCS_LOCALE', 'en'),
+        'available' => null,
+        'selector' => (bool) env('LARADOCS_LOCALE_SELECTOR', true),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Routing
     |--------------------------------------------------------------------------
     |
+    | "register"   When false, the package skips registering its own routes so
+    |              the consumer app can wire the render action into a route it
+    |              owns (e.g. behind tenant-resolving middleware). The package's
+    |              controllers are still available; see DocumentRouter for the
+    |              canonical action references.
     | "prefix"     The URL segment your docs live under (e.g. /docs).
     | "domain"     Optionally serve docs on a dedicated subdomain.
     | "middleware" Middleware applied to every docs route.
@@ -29,6 +68,7 @@ return [
     */
 
     'route' => [
+        'register' => env('LARADOCS_ROUTE_REGISTER', true),
         'prefix' => env('LARADOCS_ROUTE_PREFIX', 'docs'),
         'domain' => env('LARADOCS_ROUTE_DOMAIN'),
         'middleware' => ['web'],
@@ -73,6 +113,33 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Tag Index Pages
+    |--------------------------------------------------------------------------
+    |
+    | Pages declare topics with a front-matter `tags:` list. When enabled, the
+    | package auto-generates a global index of every tag and a listing page per
+    | tag — no extra markdown required. Hidden pages never appear in either.
+    |
+    | "enabled" Toggle the tag routes and pages on or off.
+    | "index"   Slug of the global index, served at {prefix}/{index} (e.g. /docs/tags).
+    | "prefix"  URL segment for a single tag, served at {prefix}/{tag}
+    |             (e.g. /docs/tag/getting-started).
+    |
+    | A real document occupying either slug always wins, so these never shadow
+    | hand-authored pages. Customise the look by publishing the views with
+    | `php artisan vendor:publish --tag=laradocs-views` and editing the files
+    | under resources/views/vendor/laradocs/tags.
+    |
+    */
+
+    'tags' => [
+        'enabled' => (bool) env('LARADOCS_TAGS', true),
+        'index' => env('LARADOCS_TAGS_INDEX', 'tags'),
+        'prefix' => env('LARADOCS_TAGS_PREFIX', 'tag'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Per-file Metadata Defaults
     |--------------------------------------------------------------------------
     |
@@ -107,10 +174,50 @@ return [
             'heading_anchors' => true,
             'images' => true,
             'video' => true,
+            'mermaid' => true,
+            'katex' => true,
             'variables' => true,
             'macros' => true,
+            'components' => true,
         ],
         'highlighter' => env('LARADOCS_HIGHLIGHTER', 'shiki-css'),
+
+        /*
+        | Mermaid diagram rendering. ```mermaid blocks become SVG via mermaid.js,
+        | loaded lazily and only on pages that contain a diagram. Point "src" at
+        | a self-hosted ESM build to avoid the CDN.
+        */
+        'mermaid' => [
+            'src' => env(
+                'LARADOCS_MERMAID_SRC',
+                'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs',
+            ),
+        ],
+
+        /*
+        | KaTeX math rendering. $…$ becomes inline math and $$…$$ becomes
+        | display (block) math. Both are extracted before CommonMark runs so
+        | the parser never sees the LaTeX source.
+        |
+        | "js"  / "css"  CDN URLs for katex.min.js and katex.min.css.
+        |        Point at a self-hosted build to avoid the CDN, or set
+        |        LARADOCS_KATEX_JS / LARADOCS_KATEX_CSS.
+        | "ssr"  When true, expressions are rendered to HTML on the server via
+        |        a Node.js subprocess (requires the katex npm package). Falls
+        |        back to client-side rendering silently when Node is absent.
+        |        Set LARADOCS_KATEX_SSR=true to enable.
+        */
+        'katex' => [
+            'js' => env(
+                'LARADOCS_KATEX_JS',
+                'https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.js',
+            ),
+            'css' => env(
+                'LARADOCS_KATEX_CSS',
+                'https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.css',
+            ),
+            'ssr' => (bool) env('LARADOCS_KATEX_SSR', false),
+        ],
         'unknown_variable' => 'blank', // blank | raw
         'toc' => [
             'min_level' => 2,
@@ -195,7 +302,6 @@ return [
         */
         'edit' => [
             'url' => env('LARADOCS_EDIT_URL'),
-            'label' => env('LARADOCS_EDIT_LABEL', 'Edit this page'),
         ],
 
         'search' => [
@@ -291,8 +397,13 @@ return [
         // Default author attribution for article meta + schema.
         'author' => env('LARADOCS_SEO_AUTHOR'),
 
-        // Twitter / X handle (without the @) for twitter:site / creator tags.
-        'twitter' => env('LARADOCS_SEO_TWITTER'),
+        // X (formerly Twitter) handle (without the @) for twitter:site / creator tags.
+        'x' => env('LARADOCS_SEO_X'),
+
+        // X card type. Accepts: summary_large_image | summary | app | player.
+        // summary_large_image is best for pages with a dedicated cover image;
+        // summary renders a small thumbnail and suits text-heavy reference pages.
+        'x_card' => env('LARADOCS_SEO_X_CARD', 'summary_large_image'),
 
         // Open Graph type emitted for documentation pages.
         'type' => env('LARADOCS_SEO_TYPE', 'article'),
@@ -305,6 +416,56 @@ return [
         'schema' => [
             'article' => (bool) env('LARADOCS_SEO_SCHEMA_ARTICLE', true),
             'breadcrumbs' => (bool) env('LARADOCS_SEO_SCHEMA_BREADCRUMBS', true),
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | RSS / Atom Feed
+    |--------------------------------------------------------------------------
+    |
+    | An XML feed is served at {prefix}/feed.xml listing the N most-recently-
+    | updated visible pages, ordered by `updated_at` front-matter (falling back
+    | to the file's mtime).
+    |
+    | "format"   Output format: rss (RSS 2.0) | atom (Atom 1.0).
+    | "limit"    Maximum number of items to include.
+    |
+    */
+
+    'feed' => [
+        'format' => env('LARADOCS_FEED_FORMAT', 'rss'),
+        'limit' => (int) env('LARADOCS_FEED_LIMIT', 20),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | robots.txt
+    |--------------------------------------------------------------------------
+    |
+    | A default robots.txt is served at {prefix}/robots.txt. It always emits a
+    | Sitemap: pointer at the package's sitemap and, by default, allows every
+    | crawler.
+    |
+    | When `laradocs.enabled` is false the entire body is replaced with a
+    | "Disallow: /" directive — so search engines keep the docs out of their
+    | index without ever needing to fetch a page.
+    |
+    | "rules" Custom User-agent groups. Each entry is an associative array:
+    |
+    |   [
+    |     'user_agent' => '*',                    // string or array of strings
+    |     'allow'      => ['/'],                  // string or array (optional)
+    |     'disallow'   => ['/private/'],          // string or array (optional)
+    |   ]
+    |
+    | Leave the array empty to keep the default "allow everything" block.
+    |
+    */
+
+    'robots' => [
+        'rules' => [
+            // ['user_agent' => '*', 'disallow' => ['/_laradocs/']],
         ],
     ],
 
@@ -419,6 +580,27 @@ return [
 
     'api' => [
         'rate_limit' => (int) env('LARADOCS_API_RATE_LIMIT', 60),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Deploy
+    |--------------------------------------------------------------------------
+    |
+    | Connection details for `php artisan laradocs:deploy` and friends, which
+    | push your docs to (or pull them from) a hosted Laradocs site. Authenticate
+    | once with `php artisan laradocs:login`; tokens are cached at the path
+    | below. The client id is the hosted platform's first-party CLI client and
+    | rarely needs changing.
+    |
+    */
+
+    'deploy' => [
+        'url' => env('LARADOCS_URL', 'https://laradocs.dev'),
+        'site' => env('LARADOCS_SITE'),
+        'client_id' => env('LARADOCS_CLIENT_ID', '926e3796-a4a2-487a-a3af-4e447871a7cd'),
+        'redirect_port' => (int) env('LARADOCS_REDIRECT_PORT', 8788),
+        'credentials' => env('LARADOCS_CREDENTIALS', storage_path('laradocs/credentials.json')),
     ],
 
 ];

@@ -1,6 +1,7 @@
 @extends('laradocs::layout')
 
 @use('Laradocs\Routing\DocumentUrl')
+@use('Illuminate\Support\Str')
 
 @section('title', $document->title())
 @if($document->metadata->description)
@@ -9,8 +10,8 @@
 
 @section('content')
     @if(count($breadcrumbs) > 1)
-        <nav class="laradocs-breadcrumbs" aria-label="Breadcrumb">
-            <a href="{{ DocumentUrl::index() }}">Home</a>
+        <nav class="laradocs-breadcrumbs" aria-label="{{ __('laradocs::laradocs.nav.breadcrumb') }}">
+            <a href="{{ DocumentUrl::index() }}">{{ __('laradocs::laradocs.nav.home') }}</a>
             @foreach($breadcrumbs as $crumb)
                 <span aria-hidden="true">·</span>
                 @if($loop->last)
@@ -58,6 +59,18 @@
     </article>
 
     @php
+        $tagsEnabled = (bool) config('laradocs.tags.enabled', true);
+        $docTags = $tagsEnabled ? array_values(array_filter($document->metadata->tags, fn ($t) => trim((string) $t) !== '')) : [];
+    @endphp
+    @if($docTags !== [])
+        <nav class="laradocs-page-tags" aria-label="{{ __('laradocs::laradocs.tags.label') }}">
+            @foreach($docTags as $tag)
+                <a class="laradocs-tag-chip" href="{{ DocumentUrl::tag(Str::slug($tag)) }}">{{ $tag }}</a>
+            @endforeach
+        </nav>
+    @endif
+
+    @php
         $editTemplate = config('laradocs.ui.edit.url');
         $updatedAt = $document->metadata->updatedAt;
     @endphp
@@ -67,21 +80,21 @@
                 @include('laradocs::partials.edit-link', ['document' => $document])
             @endif
             @if($updatedAt)
-                <span>Last updated {{ $updatedAt }}</span>
+                <span>{{ __('laradocs::laradocs.page.last_updated', ['date' => $updatedAt]) }}</span>
             @endif
         </div>
     @endif
 
     @if($previous || $next)
-        <nav class="laradocs-pager" aria-label="Pagination">
+        <nav class="laradocs-pager" aria-label="{{ __('laradocs::laradocs.nav.pagination') }}">
             @if($previous)
                 <a class="prev" href="{{ DocumentUrl::toSlug($previous->slug) }}">
-                    <span>Previous</span>{{ $previous->title }}
+                    <span>{{ __('laradocs::laradocs.nav.previous') }}</span>{{ $previous->title }}
                 </a>
             @endif
             @if($next)
                 <a class="next" href="{{ DocumentUrl::toSlug($next->slug) }}">
-                    <span>Next</span>{{ $next->title }}
+                    <span>{{ __('laradocs::laradocs.nav.next') }}</span>{{ $next->title }}
                 </a>
             @endif
         </nav>

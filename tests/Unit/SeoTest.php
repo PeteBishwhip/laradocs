@@ -219,6 +219,97 @@ describe('SeoFactory', function () {
         expect($seo->schema)->toBeNull();
     });
 
+    it('defaults x_card to summary_large_image', function () {
+        $factory = app(SeoFactory::class);
+        $factory->forDocument(makeDocument(SEO_SLUG, ['title' => 'Intro']));
+
+        expect($factory->xCard())->toBe('summary_large_image');
+    });
+
+    it('reads x_card from the top-level front-matter key', function () {
+        $factory = app(SeoFactory::class);
+        $factory->forDocument(makeDocument(SEO_SLUG, [
+            'title' => 'Intro',
+            'x_card' => 'summary',
+        ]));
+
+        expect($factory->xCard())->toBe('summary');
+    });
+
+    it('reads x_card from the seo: front-matter block', function () {
+        $factory = app(SeoFactory::class);
+        $factory->forDocument(makeDocument(SEO_SLUG, [
+            'title' => 'Intro',
+            'seo' => ['x_card' => 'summary'],
+        ]));
+
+        expect($factory->xCard())->toBe('summary');
+    });
+
+    it('prefers seo: block x_card over the top-level key', function () {
+        $factory = app(SeoFactory::class);
+        $factory->forDocument(makeDocument(SEO_SLUG, [
+            'title' => 'Intro',
+            'x_card' => 'summary',
+            'seo' => ['x_card' => 'summary_large_image'],
+        ]));
+
+        expect($factory->xCard())->toBe('summary_large_image');
+    });
+
+    it('falls back to the config default for x_card', function () {
+        config()->set('laradocs.seo.x_card', 'summary');
+
+        $factory = app(SeoFactory::class);
+        $factory->forDocument(makeDocument(SEO_SLUG, ['title' => 'Intro']));
+
+        expect($factory->xCard())->toBe('summary');
+    });
+
+    it('resolves x_card for site pages (forPage)', function () {
+        config()->set('laradocs.seo.x_card', 'summary');
+
+        $factory = app(SeoFactory::class);
+        $factory->forPage();
+
+        expect($factory->xCard())->toBe('summary');
+    });
+
+    it('uses page image over site-wide default image', function () {
+        config()->set('laradocs.seo.image', 'https://example.com/default.png');
+
+        $seo = app(SeoFactory::class)->forDocument(makeDocument(SEO_SLUG, [
+            'title' => 'Intro',
+            'image' => 'https://example.com/page.png',
+        ]));
+
+        expect($seo->image)->toBe('https://example.com/page.png');
+    });
+
+    it('uses seo: block image over top-level image front-matter', function () {
+        $seo = app(SeoFactory::class)->forDocument(makeDocument(SEO_SLUG, [
+            'title' => 'Intro',
+            'image' => 'https://example.com/top-level.png',
+            'seo' => ['image' => 'https://example.com/seo-block.png'],
+        ]));
+
+        expect($seo->image)->toBe('https://example.com/seo-block.png');
+    });
+
+    it('falls back to site-wide image when no page image is set', function () {
+        config()->set('laradocs.seo.image', 'https://example.com/site.png');
+
+        $seo = app(SeoFactory::class)->forDocument(makeDocument(SEO_SLUG, ['title' => 'Intro']));
+
+        expect($seo->image)->toBe('https://example.com/site.png');
+    });
+
+    it('leaves image null when neither page nor site image is configured', function () {
+        $seo = app(SeoFactory::class)->forDocument(makeDocument(SEO_SLUG, ['title' => 'Intro']));
+
+        expect($seo->image)->toBeNull();
+    });
+
     it('builds a breadcrumb trail from linked ancestors', function () {
         $ancestor = new TreeNode(
             title: 'Guide',
