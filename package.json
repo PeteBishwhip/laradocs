@@ -4,9 +4,12 @@
   "type": "module",
   "description": "Test harness for the bundled palette JS. The package itself ships no Node build step — `resources/dist/laradocs.js` is hand-authored and committed.",
   "scripts": {
-    "test": "node --test --test-reporter=spec tests/js/palette.test.mjs"
+    "test": "node --test --test-reporter=spec tests/js/palette.test.mjs",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "devDependencies": {
+    "@playwright/test": "^1.49.1",
     "jsdom": "^25.0.1"
   }
 }
