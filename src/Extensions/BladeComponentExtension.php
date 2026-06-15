@@ -174,9 +174,7 @@ final class BladeComponentExtension implements MarkdownExtension
     {
         $pattern = '/(?<name>:?[A-Za-z_][A-Za-z0-9_.-]*)(?:\s*=\s*(?<value>"[^"]*"|\'[^\']*\'|[^\s>]+))?/';
 
-        if (preg_match_all($pattern, $raw, $matches, PREG_SET_ORDER) === false) {
-            return [];
-        }
+        preg_match_all($pattern, $raw, $matches, PREG_SET_ORDER);
 
         $attributes = [];
 

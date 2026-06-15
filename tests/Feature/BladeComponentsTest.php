@@ -110,3 +110,67 @@ it('leaves a tag inside an unterminated fence untouched', function () {
 
     expect($html)->not->toContain('laradocs-pill');
 });
+
+it('treats an opening tag with no closing > as literal text', function () {
+    // The needle "<x-" is found but never reaches a closing bracket, so the
+    // parser bails out and leaves the source alone (no macro fires).
+    $html = component('Hint: <x-badge text="x" left dangling at end-of-input');
+
+    expect($html)->not->toContain('laradocs-pill');
+});
+
+it('tracks depth when the same component nests inside itself', function () {
+    $html = component('<x-callout type="tip">outer <x-callout type="note">inner</x-callout> tail</x-callout>');
+
+    // Depth tracking has to walk *past* the inner close to find the outer one;
+    // both callouts should render side-by-side rather than the outer being
+    // truncated at the first </x-callout>.
+    expect($html)->toContain('laradocs-callout-tip')
+        ->and($html)->toContain('laradocs-callout-note')
+        ->and($html)->toContain('inner')
+        ->and($html)->toContain('tail');
+});
+
+it('does not bump depth when the nested same-name tag is self-closing', function () {
+    app(Laradocs::class)->macro('selfish', fn (array $arguments): string => '<i class="selfish-' . ($arguments['k'] ?? '') . '">' . ($arguments['slot'] ?? '') . '</i>');
+
+    $html = component('<x-selfish k="outer">A <x-selfish k="inner" /> B</x-selfish>');
+
+    expect($html)->toContain('class="selfish-outer"')
+        ->and($html)->toContain('class="selfish-inner"');
+});
+
+it('skips a prefix-collision tag while scanning for the matching close', function () {
+    // `<x-foo` is a prefix of `<x-foobar`. The closing-tag scan must NOT mistake
+    // the nested longer-named tag for another opening of the outer component.
+    app(Laradocs::class)->macro('foo', fn (array $arguments): string => '<div class="x-foo">' . ($arguments['slot'] ?? '') . '</div>');
+    app(Laradocs::class)->macro('foobar', fn (): string => '<span class="x-foobar"></span>');
+
+    $html = component('<x-foo>start <x-foobar /> end</x-foo>');
+
+    expect($html)->toContain('class="x-foo"')
+        ->and($html)->toContain('class="x-foobar"')
+        ->and($html)->toContain('start')
+        ->and($html)->toContain('end');
+});
+
+it('treats an unbalanced same-name nest as literal when the outer never closes', function () {
+    // Inner pair is balanced (`<x-callout>...</x-callout>`) but the outer one
+    // is dangling — depth-tracking runs to the end of input without ever
+    // returning to zero, so the outer opening tag must be emitted verbatim
+    // while the inner pair still renders.
+    $html = component('<x-callout type="tip">outer-text<x-callout type="note">inner-text</x-callout>');
+
+    expect($html)->toContain('laradocs-callout-note')
+        ->and($html)->toContain('inner-text')
+        ->and($html)->not->toContain('laradocs-callout-tip');
+});
+
+it('still expands a component on a line with an unbalanced inline backtick', function () {
+    // A lone backtick has no closing partner on the line, so the masker leaves
+    // the whole line alone — the component should still render.
+    $html = component('say `loose <x-badge text="Beta" /> rest');
+
+    expect($html)->toContain('laradocs-pill')
+        ->and($html)->toContain('Beta');
+});

@@ -74,6 +74,15 @@ it('accepts unquoted macro names and bare positional args', function () {
         ->toContain('[bareval]');
 });
 
+it('passes a single-character macro name through unquote unchanged', function () {
+    // The unquote helper bails out when the value is shorter than the two
+    // characters needed for a matching quote pair — exercises that early-out.
+    app(Laradocs::class)->macro('a', fn (): string => '<b>letter</b>');
+
+    expect(app(DocumentParser::class)->parse('@docs(a)'))
+        ->toContain('letter');
+});
+
 it('falls back to section when a heading slug would be empty', function () {
     $html = (new HeadingAnchorExtension)->processHtml('<h2></h2>');
 
