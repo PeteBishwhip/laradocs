@@ -38,10 +38,10 @@ test('prev/next pager points at the alphabetical siblings of the nested page', a
     await expect(pager).toBeVisible();
 
     // Matches Navigation::siblings over the (default-alphabetical) guide tree:
-    // …PHP API → Routing → Search…
+    // …Robots → Routing → Search…
     const prev = pager.locator('a.prev');
     const next = pager.locator('a.next');
-    await expect(prev).toHaveAttribute('href', /\/docs\/guide\/api$/);
+    await expect(prev).toHaveAttribute('href', /\/docs\/guide\/robots$/);
     await expect(next).toHaveAttribute('href', /\/docs\/guide\/search$/);
 });
 
@@ -84,12 +84,15 @@ test('sidebar order falls back to alphabetical for default-ordered children', as
         'Caching',
         'CLI',
         'Grouping',
+        'Localisation',
         'Metadata',
         'PHP API',
+        'Robots',
         'Routing',
         'Search',
         'SEO',
         'Sitemap',
+        'Tags',
     ]);
 
     // Confirm it really is alphabetical (the default-order branch), comparing

@@ -22,6 +22,12 @@ jobs:
           php-version: '8.4'
           extensions: dom, libxml, mbstring
           coverage: none
+          # The default php.ini ships variables_order=GPCS, which leaves $_ENV
+          # empty under the built-in web server. Laravel's env() reads OS env
+          # vars through $_ENV, so LARADOCS_PATH (handed to the Playwright web
+          # servers) would be invisible and config('laradocs.path') would fall
+          # back to the empty Testbench skeleton docs dir. EGPCS populates $_ENV.
+          ini-values: variables_order=EGPCS
 
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist
@@ -37,30 +43,7 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Diagnose docs path resolution
-        run: |
-          echo "=== php variables_order ==="
-          php -i | grep -i variables_order || true
-          echo "=== config cache present? ==="
-          ls -la vendor/orchestra/testbench-core/laravel/bootstrap/cache/ || true
-          echo "=== boot default server with shell env, inspect served docs ==="
-          LARADOCS_PATH="${{ github.workspace }}/docs" LARADOCS_SEARCH_DRIVER=json \
-            composer serve > /tmp/srv.log 2>&1 &
-          for i in $(seq 1 40); do
-            curl -sf -o /dev/null http://127.0.0.1:8000/docs && break
-            sleep 1
-          done
-          echo "--- markers (skeleton path == BAD, 'Getting Started' == GOOD) ---"
-          curl -s http://127.0.0.1:8000/docs | grep -oE "testbench-core/laravel/docs|Getting Started" | sort -u || true
-          echo "--- server log tail ---"
-          tail -20 /tmp/srv.log || true
-          pkill -f "testbench serve" || true
-          sleep 2
-
       - name: Run Playwright tests
-        env:
-          LARADOCS_PATH: ${{ github.workspace }}/docs
-          LARADOCS_SEARCH_DRIVER: json
         run: npx playwright test
 
       - name: Upload Playwright report
