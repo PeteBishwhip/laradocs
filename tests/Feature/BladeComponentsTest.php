@@ -119,6 +119,15 @@ it('treats an opening tag with no closing > as literal text', function () {
     expect($html)->not->toContain('laradocs-pill');
 });
 
+it('treats a tag whose name runs straight up to end-of-input as literal', function () {
+    // Name characters extend to the final byte — the boundary check has to
+    // accept "past end of string" as a boundary so the parser can fall through
+    // to the no-`>` bail-out instead of treating the EOF as an attribute char.
+    $html = component('A trailing tag: <x-badge');
+
+    expect($html)->not->toContain('laradocs-pill');
+});
+
 it('tracks depth when the same component nests inside itself', function () {
     $html = component('<x-callout type="tip">outer <x-callout type="note">inner</x-callout> tail</x-callout>');
 
