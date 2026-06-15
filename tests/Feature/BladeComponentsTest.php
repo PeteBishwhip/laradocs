@@ -183,3 +183,35 @@ it('still expands a component on a line with an unbalanced inline backtick', fun
     expect($html)->toContain('laradocs-pill')
         ->and($html)->toContain('Beta');
 });
+
+it('reads bare, unquoted attribute values and casts them', function () {
+    app(Laradocs::class)->macro('vals', fn (array $arguments): string => sprintf(
+        '<b>%s|%s|%s|%s</b>',
+        var_export($arguments['flag'] ?? null, true),
+        var_export($arguments['off'] ?? null, true),
+        var_export($arguments['n'] ?? null, true),
+        var_export($arguments['s'] ?? null, true),
+    ));
+
+    // No quotes around any value — exercises the unquoted-value reader.
+    $html = component('<x-vals flag=true off=false n=42 s=plain />');
+
+    expect($html)->toContain("<b>true|false|42|'plain'</b>");
+});
+
+it('skips stray characters between attributes', function () {
+    // The leading `!` is not a valid attribute-name start, so the parser skips
+    // it and carries on reading the real `text` attribute.
+    $html = component('<x-badge ! text="Beta" />');
+
+    expect($html)->toContain('laradocs-pill')
+        ->and($html)->toContain('Beta');
+});
+
+it('treats an attribute with a trailing = and no value as valueless', function () {
+    // `text=` runs out before a value — it falls back to a valueless (true)
+    // attribute rather than erroring.
+    expect(fn () => component('<x-badge text= />'))->not->toThrow(Exception::class);
+
+    expect(component('<x-badge text= />'))->toContain('laradocs-pill');
+});

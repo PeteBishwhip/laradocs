@@ -256,13 +256,12 @@ final class BladeComponentExtension implements MarkdownExtension
         $first = $raw[$i];
 
         if ($first === '"' || $first === "'") {
+            // parseOpeningTag only ends a tag outside quotes, so a value-opening
+            // quote is always balanced within $raw; the false branch is a guard.
             $closing = strpos($raw, $first, $i + 1);
+            $stop = $closing === false ? $length : $closing + 1;
 
-            if ($closing === false) {
-                return [substr($raw, $i), $length];
-            }
-
-            return [substr($raw, $i, $closing - $i + 1), $closing + 1];
+            return [substr($raw, $i, $stop - $i), $stop];
         }
 
         $end = $i;
