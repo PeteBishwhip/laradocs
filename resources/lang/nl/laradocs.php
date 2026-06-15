@@ -69,11 +69,11 @@ return [
         'eyebrow' => 'Tags',
         'label' => 'Tags',
         'index_title' => 'Tags',
-        'index_intro' => 'Browse the documentation by topic.',
-        'show_title' => 'Pages tagged “:tag”',
-        'count' => '{0} No pages|{1} :count page|[2,*] :count pages',
-        'empty' => 'No tags yet.',
-        'all' => 'All tags',
+        'index_intro' => 'Blader door de documentatie op onderwerp.',
+        'show_title' => 'Pagina’s met de tag “:tag”',
+        'count' => '{0} Geen pagina’s|{1} :count pagina|[2,*] :count pagina’s',
+        'empty' => 'Nog geen tags.',
+        'all' => 'Alle tags',
     ],
 
     'empty' => [

@@ -1191,6 +1191,88 @@ body.laradocs {
   }
 }
 
+/* ─────────────────────── tag index pages ─────────────────────── */
+.laradocs-tag-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.laradocs-tag-cloud li { margin: 0; }
+
+.laradocs-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .3rem .7rem;
+  font-size: .85rem;
+  font-weight: 500;
+  color: var(--dc-fg) !important;
+  background: var(--dc-bg-elev);
+  border: 1px solid var(--dc-rule);
+  border-radius: 999px;
+  text-decoration: none;
+  transition: border-color .15s ease, color .15s ease, background .15s ease;
+}
+.laradocs-tag-chip:hover {
+  color: var(--dc-accent) !important;
+  border-color: var(--dc-accent-line);
+  background: var(--dc-accent-soft);
+}
+.laradocs-tag-chip-count {
+  min-width: 1.25rem;
+  padding: 0 .35rem;
+  font-size: .7rem;
+  font-weight: 600;
+  text-align: center;
+  color: var(--dc-accent);
+  background: var(--dc-accent-soft);
+  border-radius: 999px;
+}
+
+.laradocs-tag-pages {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: .85rem;
+}
+.laradocs-tag-page {
+  display: block;
+  padding: 1rem 1.1rem;
+  background: var(--dc-bg-elev);
+  border: 1px solid var(--dc-rule);
+  border-radius: var(--dc-radius-lg);
+  text-decoration: none;
+  transition: border-color .15s ease, background .15s ease;
+}
+.laradocs-tag-page:hover { border-color: var(--dc-accent-line); }
+.laradocs-tag-page-title {
+  display: block;
+  font-weight: 600;
+  color: var(--dc-fg);
+}
+.laradocs-tag-page:hover .laradocs-tag-page-title { color: var(--dc-accent); }
+.laradocs-tag-page-desc {
+  display: block;
+  margin-top: .25rem;
+  font-size: .9rem;
+  color: var(--dc-muted);
+}
+
+.laradocs-tag-back { margin-top: 2rem; font-size: .9rem; }
+.laradocs-tags-empty { color: var(--dc-muted); }
+
+/* Tag list on an individual document page. */
+.laradocs-page-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin: 2rem 0 0;
+}
+
 /* ─────────────────────── reduced motion ─────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

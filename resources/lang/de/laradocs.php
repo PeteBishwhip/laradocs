@@ -66,14 +66,14 @@ return [
     ],
 
     'tags' => [
-        'eyebrow' => 'Tags',
-        'label' => 'Tags',
-        'index_title' => 'Tags',
-        'index_intro' => 'Browse the documentation by topic.',
-        'show_title' => 'Pages tagged “:tag”',
-        'count' => '{0} No pages|{1} :count page|[2,*] :count pages',
-        'empty' => 'No tags yet.',
-        'all' => 'All tags',
+        'eyebrow' => 'Schlagwörter',
+        'label' => 'Schlagwörter',
+        'index_title' => 'Schlagwörter',
+        'index_intro' => 'Durchsuchen Sie die Dokumentation nach Thema.',
+        'show_title' => 'Seiten mit dem Schlagwort „:tag“',
+        'count' => '{0} Keine Seiten|{1} :count Seite|[2,*] :count Seiten',
+        'empty' => 'Noch keine Schlagwörter.',
+        'all' => 'Alle Schlagwörter',
     ],
 
     'empty' => [

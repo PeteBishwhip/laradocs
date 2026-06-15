@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Auto-generated tag index pages. A global index at `{prefix}/tags` lists every
+  tag declared in front-matter `tags:`, and `{prefix}/tag/{slug}` lists the pages
+  carrying a single tag. Tags are matched by slug (case- and spacing-insensitive),
+  listings respect `hidden`, and a real document occupying either slug always
+  takes precedence so the routes never shadow authored pages. A page's tags now
+  render as links at the foot of the page. Configurable via the `tags` block
+  (`enabled`, `index`, `prefix`); the listing views are publishable Blade.
+
 ## [0.3.0] - 2026-06-11
 
 ### Added

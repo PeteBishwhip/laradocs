@@ -66,14 +66,14 @@ return [
     ],
 
     'tags' => [
-        'eyebrow' => 'Tags',
-        'label' => 'Tags',
-        'index_title' => 'Tags',
-        'index_intro' => 'Browse the documentation by topic.',
-        'show_title' => 'Pages tagged “:tag”',
-        'count' => '{0} No pages|{1} :count page|[2,*] :count pages',
-        'empty' => 'No tags yet.',
-        'all' => 'All tags',
+        'eyebrow' => 'Etiquetas',
+        'label' => 'Etiquetas',
+        'index_title' => 'Etiquetas',
+        'index_intro' => 'Explora la documentación por tema.',
+        'show_title' => 'Páginas etiquetadas con «:tag»',
+        'count' => '{0} Ninguna página|{1} :count página|[2,*] :count páginas',
+        'empty' => 'Aún no hay etiquetas.',
+        'all' => 'Todas las etiquetas',
     ],
 
     'empty' => [
