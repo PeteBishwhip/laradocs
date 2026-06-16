@@ -20,35 +20,40 @@ return [
     */
 
     'nav' => [
-        'sections' => 'Sezioni',
-        'overview' => 'Panoramica',
-        'breadcrumb' => 'Pangrattato',
-        'home' => 'Casa',
-        'header' => 'Intestazione',
-        'footer' => 'Piè di pagina',
-        'pagination' => 'Paginazione',
-        'documentation' => 'Documentazione',
-        'toggle_navigation' => 'Attiva/disattiva navigazione',
-        'previous' => 'Precedente',
-        'next' => 'Successivo',
+        'sections' => 'Sections',
+        'overview' => 'Overview',
+        'breadcrumb' => 'Breadcrumb',
+        'home' => 'Home',
+        'header' => 'Header',
+        'footer' => 'Footer',
+        'pagination' => 'Pagination',
+        'documentation' => 'Documentation',
+        'toggle_navigation' => 'Toggle navigation',
+        'previous' => 'Previous',
+        'next' => 'Next',
     ],
 
     'search' => [
-        'label' => 'Ricerca rapida',
-        'placeholder' => 'Cerca pagine...',
-        'open' => 'Apri tavolozza comandi',
-        'trigger' => 'Cerca nei documenti...',
+        'label' => 'Quick search',
+        'placeholder' => 'Search pages...',
+        'open' => 'Open command palette',
+        'trigger' => 'Search the docs...',
         'navigate' => 'navigate',
-        'select' => 'apri',
-        'close' => 'chiudi',
+        'select' => 'open',
+        'close' => 'close',
     ],
 
     'theme' => [
-        'toggle' => 'Attiva/Disattiva tema',
+        'toggle' => 'Toggle theme',
     ],
 
     'toc' => [
-        'label' => 'Su questa pagina',
+        'label' => 'On this page',
+    ],
+
+    'language' => [
+        'label' => 'Language',
+        'select' => 'Select language',
     ],
 
     'version' => [
@@ -56,42 +61,37 @@ return [
         'select' => 'Select version',
     ],
 
-    'language' => [
-        'label' => 'Lingua',
-        'select' => 'Seleziona lingua',
-    ],
-
     'page' => [
-        'last_updated' => 'Ultimo aggiornamento :date',
-        'edit' => 'Modifica questa pagina',
+        'last_updated' => 'Last updated :date',
+        'edit' => 'Edit this page',
     ],
 
     'macros' => [
-        'read_more' => 'Leggi di più',
+        'read_more' => 'Read more',
     ],
 
     'tags' => [
-        'eyebrow' => 'Tag',
-        'label' => 'Tag',
-        'index_title' => 'Tag',
-        'index_intro' => 'Esplora la documentazione per argomento.',
-        'show_title' => 'Pagine con il tag «:tag»',
-        'count' => '{0} Nessuna pagina|{1} :count pagina|[2,*] :count pagine',
-        'empty' => 'Ancora nessun tag.',
-        'all' => 'Tutti i tag',
+        'eyebrow' => 'Tags',
+        'label' => 'Tags',
+        'index_title' => 'Tags',
+        'index_intro' => 'Browse the documentation by topic.',
+        'show_title' => 'Pages tagged “:tag”',
+        'count' => '{0} No pages|{1} :count page|[2,*] :count pages',
+        'empty' => 'No tags yet.',
+        'all' => 'All tags',
     ],
 
     'empty' => [
-        'eyebrow' => 'Per iniziare',
-        'title' => 'La tua documentazione, pronta quando ti trovi.',
-        'intro' => 'Laradocs è cablato e in attesa di contenuti. Le pagine provengono da :path.',
-        'step_one_title' => 'Struttura una pagina iniziale',
-        'step_one_body' => 'Eseguire :command per rilasciare una pagina di benvenuto e una cartella nella cartella docs.',
-        'step_two_title' => 'Scrivi la tua prima pagina',
-        'step_two_body' => 'Usa :command per generare un nuovo file markdown con front-matter.',
-        'step_three_title' => 'Sintonizza l\'aspetto',
-        'step_three_body' => 'Cambia preset con :preset o sintonizza l\'accento con :accent.',
-        'handbook' => 'Leggi il manuale &rarr;',
+        'eyebrow' => 'Get started',
+        'title' => 'Your documentation, ready when you are.',
+        'intro' => 'Laradocs is wired up and waiting for content. Pages are sourced from :path.',
+        'step_one_title' => 'Scaffold a starter page',
+        'step_one_body' => 'Run :command to drop a welcome page and folder into your docs directory.',
+        'step_two_title' => 'Write your first page',
+        'step_two_body' => 'Use :command to generate a new markdown file with front-matter.',
+        'step_three_title' => 'Tune the look',
+        'step_three_body' => 'Switch presets with :preset or tune the accent with :accent.',
+        'handbook' => 'Read the handbook &rarr;',
     ],
 
 ];
