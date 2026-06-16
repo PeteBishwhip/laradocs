@@ -20,35 +20,35 @@ return [
     */
 
     'nav' => [
-        'sections' => 'Secties',
-        'overview' => 'Overzicht',
-        'breadcrumb' => 'Kruimelpad',
-        'home' => 'Startpagina',
-        'header' => 'Koptekst',
-        'footer' => 'Voettekst',
-        'pagination' => 'Paginering',
-        'documentation' => 'Documentatie',
-        'toggle_navigation' => 'Navigatie in-/uitschakelen',
-        'previous' => 'Vorig',
-        'next' => 'Volgende',
+        'sections' => 'Avsnitt',
+        'overview' => 'Översikt',
+        'breadcrumb' => 'Länkstig',
+        'home' => 'Hem',
+        'header' => 'Rubrik',
+        'footer' => 'Sidfot',
+        'pagination' => 'Sidnumrering',
+        'documentation' => 'Dokumentation',
+        'toggle_navigation' => 'Växla navigering',
+        'previous' => 'Föregående',
+        'next' => 'Nästa',
     ],
 
     'search' => [
-        'label' => 'Snel zoeken',
-        'placeholder' => 'Zoek pagina\'s...',
-        'open' => 'Open opdracht palet',
-        'trigger' => 'Doorzoek de documenten...',
-        'navigate' => 'navigeren',
-        'select' => 'open',
-        'close' => 'sluiten',
+        'label' => 'Snabb sökning',
+        'placeholder' => 'Sök sidor...',
+        'open' => 'Öppna kommandopaletten',
+        'trigger' => 'Sök i dokumenten...',
+        'navigate' => 'navigera',
+        'select' => 'öppen',
+        'close' => 'stäng',
     ],
 
     'theme' => [
-        'toggle' => 'Thema aan/uit',
+        'toggle' => 'Växla tema',
     ],
 
     'toc' => [
-        'label' => 'Op deze pagina',
+        'label' => 'På denna sida',
     ],
 
     'version' => [
@@ -57,41 +57,41 @@ return [
     ],
 
     'language' => [
-        'label' => 'Taal',
-        'select' => 'Taal selecteren',
+        'label' => 'Språk',
+        'select' => 'Välj språk',
     ],
 
     'page' => [
-        'last_updated' => 'Laatst bijgewerkt :date',
-        'edit' => 'Deze pagina bewerken',
+        'last_updated' => 'Senast uppdaterad :date',
+        'edit' => 'Redigera denna sida',
     ],
 
     'macros' => [
-        'read_more' => 'Meer informatie',
+        'read_more' => 'Läs mer',
     ],
 
     'tags' => [
-        'eyebrow' => 'Tags',
-        'label' => 'Tags',
-        'index_title' => 'Tags',
-        'index_intro' => 'Blader door de documentatie op onderwerp.',
-        'show_title' => 'Pagina’s met de tag “:tag”',
-        'count' => '{0} Geen pagina’s|{1} :count pagina|[2,*] :count pagina’s',
-        'empty' => 'Nog geen tags.',
-        'all' => 'Alle tags',
+        'eyebrow' => 'Taggar',
+        'label' => 'Taggar',
+        'index_title' => 'Taggar',
+        'index_intro' => 'Bläddra i dokumentationen efter ämne.',
+        'show_title' => 'Sidor taggade med ”:tag”',
+        'count' => '{0} Inga sidor|{1} :count sida|[2,*] :count sidor',
+        'empty' => 'Inga taggar ännu.',
+        'all' => 'Alla taggar',
     ],
 
     'empty' => [
-        'eyebrow' => 'Aan de slag',
-        'title' => 'Uw documentatie, klaar wanneer u klaar bent.',
-        'intro' => 'LaraDocs is bedraad en wachten op inhoud. Pagina\'s zijn afkomstig uit :path.',
-        'step_one_title' => 'Steiger een startpagina',
-        'step_one_body' => 'Voer :command uit om een welkomstpagina en map in uw documentenmap te plaatsen.',
-        'step_two_title' => 'Schrijf je eerste pagina',
-        'step_two_body' => 'Gebruik :command om een nieuw markdown bestand te genereren met de voorkant.',
-        'step_three_title' => 'Pas het uiterlijk af',
-        'step_three_body' => 'Verander instellingen met :preset of pas het accent af met :accent.',
-        'handbook' => 'Lees de handleiding &rarr;',
+        'eyebrow' => 'Kom igång',
+        'title' => 'Din dokumentation, klar när du är.',
+        'intro' => 'Laradocs är uppkopplad och väntar på innehåll. Sidor hämtas från :path.',
+        'step_one_title' => 'Ställning en startsida',
+        'step_one_body' => 'Kör :command för att släppa en välkomstsida och mapp till din docs-katalog.',
+        'step_two_title' => 'Skriv din första sida',
+        'step_two_body' => 'Använd :command för att skapa en ny markdown-fil med front-matter.',
+        'step_three_title' => 'Justera utseendet',
+        'step_three_body' => 'Växla förval med :preset eller tonsätt accenten med :accent.',
+        'handbook' => 'Läs handboken &rarr;',
     ],
 
 ];
