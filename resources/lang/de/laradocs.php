@@ -20,35 +20,35 @@ return [
     */
 
     'nav' => [
-        'sections' => 'Secties',
-        'overview' => 'Overzicht',
-        'breadcrumb' => 'Kruimelpad',
-        'home' => 'Startpagina',
-        'header' => 'Koptekst',
-        'footer' => 'Voettekst',
-        'pagination' => 'Paginering',
-        'documentation' => 'Documentatie',
-        'toggle_navigation' => 'Navigatie in-/uitschakelen',
-        'previous' => 'Vorig',
-        'next' => 'Volgende',
+        'sections' => 'Abschnitte',
+        'overview' => 'Übersicht',
+        'breadcrumb' => 'Brotkrumen',
+        'home' => 'Heim',
+        'header' => 'Kopfzeile',
+        'footer' => 'Fußzeile',
+        'pagination' => 'Paginierung',
+        'documentation' => 'Dokumentation',
+        'toggle_navigation' => 'Navigation umschalten',
+        'previous' => 'Vorherige',
+        'next' => 'Nächste',
     ],
 
     'search' => [
-        'label' => 'Snel zoeken',
-        'placeholder' => 'Zoek pagina\'s...',
-        'open' => 'Open opdracht palet',
-        'trigger' => 'Doorzoek de documenten...',
-        'navigate' => 'navigeren',
-        'select' => 'open',
-        'close' => 'sluiten',
+        'label' => 'Schnellsuche',
+        'placeholder' => 'Seiten suchen...',
+        'open' => 'Kommandopalette öffnen',
+        'trigger' => 'Durchsuche die Dokumente...',
+        'navigate' => 'navigieren',
+        'select' => 'öffnen',
+        'close' => 'schließen',
     ],
 
     'theme' => [
-        'toggle' => 'Thema aan/uit',
+        'toggle' => 'Theme umschalten',
     ],
 
     'toc' => [
-        'label' => 'Op deze pagina',
+        'label' => 'Auf dieser Seite',
     ],
 
     'version' => [
@@ -57,41 +57,41 @@ return [
     ],
 
     'language' => [
-        'label' => 'Taal',
-        'select' => 'Taal selecteren',
+        'label' => 'Sprache',
+        'select' => 'Sprache auswählen',
     ],
 
     'page' => [
-        'last_updated' => 'Laatst bijgewerkt :date',
-        'edit' => 'Deze pagina bewerken',
+        'last_updated' => 'Zuletzt aktualisiert :date',
+        'edit' => 'Diese Seite bearbeiten',
     ],
 
     'macros' => [
-        'read_more' => 'Meer informatie',
+        'read_more' => 'Lesen Sie mehr',
     ],
 
     'tags' => [
-        'eyebrow' => 'Tags',
-        'label' => 'Tags',
-        'index_title' => 'Tags',
-        'index_intro' => 'Blader door de documentatie op onderwerp.',
-        'show_title' => 'Pagina’s met de tag “:tag”',
-        'count' => '{0} Geen pagina’s|{1} :count pagina|[2,*] :count pagina’s',
-        'empty' => 'Nog geen tags.',
-        'all' => 'Alle tags',
+        'eyebrow' => 'Schlagwörter',
+        'label' => 'Schlagwörter',
+        'index_title' => 'Schlagwörter',
+        'index_intro' => 'Durchsuchen Sie die Dokumentation nach Thema.',
+        'show_title' => 'Seiten mit dem Schlagwort „:tag“',
+        'count' => '{0} Keine Seiten|{1} :count Seite|[2,*] :count Seiten',
+        'empty' => 'Noch keine Schlagwörter.',
+        'all' => 'Alle Schlagwörter',
     ],
 
     'empty' => [
-        'eyebrow' => 'Aan de slag',
-        'title' => 'Uw documentatie, klaar wanneer u klaar bent.',
-        'intro' => 'LaraDocs is bedraad en wachten op inhoud. Pagina\'s zijn afkomstig uit :path.',
-        'step_one_title' => 'Steiger een startpagina',
-        'step_one_body' => 'Voer :command uit om een welkomstpagina en map in uw documentenmap te plaatsen.',
-        'step_two_title' => 'Schrijf je eerste pagina',
-        'step_two_body' => 'Gebruik :command om een nieuw markdown bestand te genereren met de voorkant.',
-        'step_three_title' => 'Pas het uiterlijk af',
-        'step_three_body' => 'Verander instellingen met :preset of pas het accent af met :accent.',
-        'handbook' => 'Lees de handleiding &rarr;',
+        'eyebrow' => 'Los geht\'s',
+        'title' => 'Ihre Dokumentation, bereit, wenn Sie es sind.',
+        'intro' => 'Laradocs ist verdrahtet und wartet auf Inhalte. Seiten werden aus :path.',
+        'step_one_title' => 'Starter-Seite Gerüst',
+        'step_one_body' => 'Führen Sie :command aus, um eine Willkommensseite und einen Ordner in Ihr Dokumentenverzeichnis zu legen.',
+        'step_two_title' => 'Schreibe deine erste Seite',
+        'step_two_body' => 'Verwenden Sie :command um eine neue Markdown Datei mit Front-matter zu erzeugen.',
+        'step_three_title' => 'Lookout verlängern',
+        'step_three_body' => 'Schalten Sie die Voreinstellungen mit :preset oder passen Sie den Akzent mit :accent an.',
+        'handbook' => 'Lesen Sie das Handbuch &rarr;',
     ],
 
 ];
