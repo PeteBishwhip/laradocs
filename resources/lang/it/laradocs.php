@@ -51,14 +51,14 @@ return [
         'label' => 'Su questa pagina',
     ],
 
-    'version' => [
-        'label' => 'Version',
-        'select' => 'Select version',
-    ],
-
     'language' => [
         'label' => 'Lingua',
         'select' => 'Seleziona lingua',
+    ],
+
+    'version' => [
+        'label' => 'Version',
+        'select' => 'Select version',
     ],
 
     'page' => [
