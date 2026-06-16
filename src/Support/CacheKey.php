@@ -17,7 +17,10 @@ final class CacheKey
 {
     public static function prefix(): string
     {
-        return Config::string('laradocs.cache.key_prefix', 'laradocs');
+        $base = Config::string('laradocs.cache.key_prefix', 'laradocs');
+        $version = Config::nullableString('laradocs._current_version');
+
+        return $version !== null ? "{$base}:{$version}" : $base;
     }
 
     public static function make(string ...$segments): string

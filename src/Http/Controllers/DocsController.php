@@ -46,6 +46,13 @@ final class DocsController
     {
         $slug = trim($path, '/');
 
+        // When multi-version middleware strips the version prefix the remainder
+        // may be empty (e.g. /docs/v1/ → slug ''). Delegate to index() so the
+        // version root shows the same landing document as the docs home page.
+        if ($slug === '') {
+            return $this->index();
+        }
+
         $document = $this->laradocs->find($slug);
 
         if ($document === null) {

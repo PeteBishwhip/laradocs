@@ -52,6 +52,46 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Multi-Version Docs
+    |--------------------------------------------------------------------------
+    |
+    | Serve more than one version of your documentation from sibling
+    | sub-directories of your docs path (e.g. docs/v1/, docs/v2/).
+    |
+    | "enabled"   Toggle multi-version support. When false the rest of these
+    |             settings are ignored and the docs behave as a single version.
+    | "default"   The version handle shown when a visitor arrives without an
+    |             explicit version in the URL (e.g. /docs/ instead of /docs/v2/).
+    |             Defaults to the first detected version when left null.
+    |             Set LARADOCS_VERSION_DEFAULT to override.
+    | "available" Version list offered in the in-page selector.
+    |             Leave null (the default) to auto-detect: the package scans
+    |             laradocs.docs.path and treats each sub-directory as a version.
+    |             Add a _version.php inside a version directory returning
+    |             ['label' => 'My Label'] for a custom display name; otherwise
+    |             the directory name is used.
+    |             Supply an explicit array to override auto-detection entirely:
+    |               'available' => ['v1' => 'Version 1', 'v2' => 'Version 2']
+    |             An empty array disables the selector outright.
+    | "selector"  Show the version switcher in the header. Hidden automatically
+    |             when fewer than two versions are available.
+    |
+    | URL structure: /docs/{version}/{page-slug}
+    | Cache keys are namespaced per version so each set is independent.
+    |
+    | See docs/multi-version-migration.md for a migration guide.
+    |
+    */
+
+    'versions' => [
+        'enabled' => (bool) env('LARADOCS_VERSIONS', false),
+        'default' => env('LARADOCS_VERSION_DEFAULT'),
+        'available' => null,
+        'selector' => (bool) env('LARADOCS_VERSION_SELECTOR', true),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Routing
     |--------------------------------------------------------------------------
     |
