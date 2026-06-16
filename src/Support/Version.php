@@ -46,16 +46,7 @@ final class Version
             return $explicit;
         }
 
-        if (! Config::bool('laradocs.cache.enabled', true)) {
-            return self::scan();
-        }
-
-        $key = Config::string('laradocs.cache.key_prefix', 'laradocs') . ':versions';
-        $ttl = Config::nullableInt('laradocs.cache.ttl') ?? 86400;
-
-        return cache()
-            ->store(Config::nullableString('laradocs.cache.store'))
-            ->remember($key, $ttl, self::scan(...));
+        return self::fromCache();
     }
 
     /**
@@ -119,6 +110,26 @@ final class Version
         $current = self::current();
 
         return $current !== null ? self::pathFor($current) : Config::string('laradocs.docs.path');
+    }
+
+    /**
+     * Return the auto-detected version list from cache, or scan directly when
+     * caching is disabled.
+     *
+     * @return array<string, string>
+     */
+    private static function fromCache(): array
+    {
+        if (! Config::bool('laradocs.cache.enabled', true)) {
+            return self::scan();
+        }
+
+        $key = Config::string('laradocs.cache.key_prefix', 'laradocs') . ':versions';
+        $ttl = Config::nullableInt('laradocs.cache.ttl') ?? 86400;
+
+        return cache()
+            ->store(Config::nullableString('laradocs.cache.store'))
+            ->remember($key, $ttl, self::scan(...));
     }
 
     /**

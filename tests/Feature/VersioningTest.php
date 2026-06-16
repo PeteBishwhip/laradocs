@@ -104,6 +104,13 @@ it('caches the auto-detected versions so the filesystem is scanned once', functi
     }
 });
 
+it('scans the filesystem directly when caching is disabled', function () {
+    config()->set('laradocs.cache.enabled', false);
+    $this->makeDocs(versionedDocs());
+
+    expect(Version::available())->toHaveKey('v1')->toHaveKey('v2');
+});
+
 it('reads the current version from runtime config', function () {
     expect(Version::current())->toBeNull();
 
