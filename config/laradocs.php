@@ -70,7 +70,9 @@ return [
 
     'locale' => [
         'default' => env('LARADOCS_LOCALE', 'en'),
-        'available' => null,
+        'available' => env('LARADOCS_LOCALE_AVAILABLE') !== null
+            ? (array) json_decode((string) env('LARADOCS_LOCALE_AVAILABLE'), true)
+            : null,
         'selector' => (bool) env('LARADOCS_LOCALE_SELECTOR', true),
         'cookie' => (bool) env('LARADOCS_LOCALE_COOKIE', false),
         'detect_browser' => (bool) env('LARADOCS_DETECT_BROWSER', true),

@@ -9,6 +9,7 @@
   "mobile-nav": { "spec": "mobile-nav.spec.ts" },
   "toc": { "spec": "toc.spec.ts" },
   "banner": { "spec": "banner.spec.ts" },
+  "locale": { "spec": "locale.spec.ts" },
   "assets": { "spec": "assets.spec.ts" },
   "seo": { "spec": "seo.spec.ts" }
 }

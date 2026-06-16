@@ -30,6 +30,29 @@ const LARADOCS_SEARCH_DRIVER = 'json';
 export const BANNER_MESSAGE =
   'Heads up: read the <a href="https://laradocs.test/upgrade">upgrade guide</a> before continuing.';
 
+/**
+ * Locale servers for locale.spec.ts.
+ *
+ * Two locales (en + de) are injected via LARADOCS_LOCALE_AVAILABLE rather than
+ * publishing lang files to the Testbench skeleton, so the test is hermetic and
+ * doesn't touch the shared filesystem state. The bundled translations in
+ * resources/lang/ are loaded automatically via loadTranslationsFrom() and are
+ * enough for the German strings to render correctly.
+ *
+ * LARADOCS_DETECT_BROWSER is forced off on both servers so a CI runner's
+ * Accept-Language header cannot interfere with assertions.
+ *
+ * Port 8002 — cookie persistence OFF (the default). Tests ?lang= forwarding and
+ * how internal links carry ?lang= to preserve locale across navigation.
+ *
+ * Port 8003 — cookie persistence ON. Tests that an explicit choice sets the
+ * cookie, that subsequent navigation reads it, and that internal links are clean
+ * (no ?lang=) because the cookie carries the state instead.
+ */
+export const LOCALE_AVAILABLE = JSON.stringify({ en: 'English', de: 'Deutsch' });
+export const LOCALE_SERVER = 'http://127.0.0.1:8002';
+export const COOKIE_SERVER = 'http://127.0.0.1:8003';
+
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
@@ -64,13 +87,37 @@ export default defineConfig({
         LARADOCS_BANNER_MESSAGE: BANNER_MESSAGE,
       },
     },
+    {
+      command: 'composer build && vendor/bin/testbench serve --ansi --port=8002',
+      url: `${LOCALE_SERVER}/docs`,
+      reuseExistingServer: !process.env.CI,
+      env: {
+        LARADOCS_PATH,
+        LARADOCS_SEARCH_DRIVER,
+        LARADOCS_LOCALE_AVAILABLE: LOCALE_AVAILABLE,
+        LARADOCS_DETECT_BROWSER: 'false',
+      },
+    },
+    {
+      command: 'composer build && vendor/bin/testbench serve --ansi --port=8003',
+      url: `${COOKIE_SERVER}/docs`,
+      reuseExistingServer: !process.env.CI,
+      env: {
+        LARADOCS_PATH,
+        LARADOCS_SEARCH_DRIVER,
+        LARADOCS_LOCALE_AVAILABLE: LOCALE_AVAILABLE,
+        LARADOCS_LOCALE_COOKIE: 'true',
+        LARADOCS_DETECT_BROWSER: 'false',
+      },
+    },
   ],
   projects: [
     {
       // Default desktop project. Owns mobile-nav.spec.ts, so it carries the
-      // mobile viewport; banner.spec.ts is excluded and handled below.
+      // mobile viewport; banner.spec.ts and locale.spec.ts are excluded and
+      // handled by their dedicated projects below.
       name: 'default',
-      testIgnore: /banner\.spec\.ts/,
+      testIgnore: /banner\.spec\.ts|locale\.spec\.ts/,
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 390, height: 844 },
@@ -84,6 +131,13 @@ export default defineConfig({
         ...devices['Desktop Chrome'],
         baseURL: 'http://127.0.0.1:8001/docs',
       },
+    },
+    {
+      // Locale tests use absolute URLs internally (two servers: 8002 and 8003)
+      // so no project-level baseURL is needed.
+      name: 'locale',
+      testMatch: /locale\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'] },
     },
   ],
 });

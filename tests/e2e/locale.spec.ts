@@ -1,0 +1,182 @@
+import { test, expect } from '@playwright/test';
+import { LOCALE_SERVER, COOKIE_SERVER } from '../../playwright.config';
+
+/**
+ * Locale / language-switcher e2e tests.
+ *
+ * Two dedicated servers are used:
+ *
+ *  - LOCALE_SERVER (port 8002) — cookie persistence OFF (the default). The
+ *    package forwards the active locale via ?lang= on every internal link so
+ *    readers stay in the chosen language as they navigate without needing a
+ *    cookie.
+ *
+ *  - COOKIE_SERVER (port 8003) — cookie persistence ON. An explicit ?lang=
+ *    choice writes a one-year `laradocs_locale` cookie; subsequent navigation
+ *    reads it, keeping the URL clean (no ?lang= query string).
+ *
+ * Both servers expose exactly two locales (en / de) via LARADOCS_LOCALE_AVAILABLE
+ * and disable Accept-Language detection (LARADOCS_DETECT_BROWSER=false) so the
+ * browser environment does not influence which locale is selected.
+ *
+ * German UI strings used as locale indicators:
+ *   search trigger  "Durchsuche die Dokumente..."  (en: "Search the docs...")
+ *   language label  "Sprache"                      (en: "Language")
+ */
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Language selector
+// ─────────────────────────────────────────────────────────────────────────────
+
+test.describe('language selector', () => {
+  test('is visible when multiple locales are available', async ({ page }) => {
+    await page.goto(`${LOCALE_SERVER}/docs`);
+
+    await expect(page.locator('[data-laradocs-lang]')).toBeVisible();
+  });
+
+  test('lists every available locale with its label', async ({ page }) => {
+    await page.goto(`${LOCALE_SERVER}/docs`);
+
+    // Open the <details> dropdown so menu items are visible.
+    await page.locator('[data-laradocs-lang] summary').click();
+
+    await expect(page.locator('[hreflang="en"]')).toBeVisible();
+    await expect(page.locator('[hreflang="de"]')).toBeVisible();
+    await expect(page.locator('[hreflang="en"]')).toContainText('English');
+    await expect(page.locator('[hreflang="de"]')).toContainText('Deutsch');
+  });
+
+  test('marks the active locale with aria-current and updates the summary label', async ({ page }) => {
+    await page.goto(`${LOCALE_SERVER}/docs?lang=de`);
+
+    await page.locator('[data-laradocs-lang] summary').click();
+
+    // The active entry carries aria-current="true".
+    await expect(page.locator('[hreflang="de"]')).toHaveAttribute('aria-current', 'true');
+    await expect(page.locator('[hreflang="en"]')).not.toHaveAttribute('aria-current', 'true');
+
+    // The collapsed summary shows the human-readable label for the active locale.
+    await expect(page.locator('.laradocs-lang-current')).toContainText('Deutsch');
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ?lang= query parameter (cookie persistence OFF)
+// ─────────────────────────────────────────────────────────────────────────────
+
+test.describe('?lang= query parameter (no cookie)', () => {
+  test('?lang=de renders German UI strings', async ({ page }) => {
+    await page.goto(`${LOCALE_SERVER}/docs?lang=de`);
+
+    // The search trigger button text is a reliable locale indicator — it is
+    // visible on every page and translated in the German language file.
+    await expect(page.locator('[data-laradocs-search-trigger]')).toContainText(
+      'Durchsuche die Dokumente...',
+    );
+  });
+
+  test('an unknown ?lang= is ignored and the default locale is used', async ({ page }) => {
+    await page.goto(`${LOCALE_SERVER}/docs?lang=xx`);
+
+    // "xx" is not in the available list so English (the default) is rendered.
+    await expect(page.locator('[data-laradocs-search-trigger]')).toContainText(
+      'Search the docs...',
+    );
+  });
+
+  test('sidebar links carry ?lang= so the chosen locale is preserved across navigation', async ({
+    page,
+  }) => {
+    await page.goto(`${LOCALE_SERVER}/docs?lang=de`);
+
+    // Every internal link DocumentUrl generates should forward ?lang=de when
+    // cookie persistence is off and the active locale is not the default.
+    const sidebarLinks = page.locator('aside.laradocs-sidebar a');
+    await expect(sidebarLinks.first()).toBeVisible();
+
+    const hrefs = await sidebarLinks.evaluateAll((els) =>
+      (els as HTMLAnchorElement[]).map((el) => el.getAttribute('href') ?? ''),
+    );
+
+    expect(hrefs.some((h) => h.includes('lang=de'))).toBe(true);
+  });
+
+  test('following a forwarded sidebar link preserves the German locale', async ({ page }) => {
+    await page.goto(`${LOCALE_SERVER}/docs?lang=de`);
+
+    // Click the first sidebar link that carries ?lang=de.
+    const target = page.locator('aside.laradocs-sidebar a[href*="lang=de"]').first();
+    await expect(target).toBeVisible();
+    await target.click();
+
+    // The linked page must also render in German — the forwarded ?lang= is
+    // picked up by the middleware on the new request.
+    await expect(page.locator('[data-laradocs-search-trigger]')).toContainText(
+      'Durchsuche die Dokumente...',
+    );
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Cookie persistence (cookie persistence ON)
+// ─────────────────────────────────────────────────────────────────────────────
+
+test.describe('cookie persistence', () => {
+  test('selecting a language via ?lang= sets the laradocs_locale cookie', async ({
+    page,
+    context,
+  }) => {
+    await page.goto(`${COOKIE_SERVER}/docs?lang=de`);
+
+    const cookies = await context.cookies(COOKIE_SERVER);
+    const localeCookie = cookies.find((c) => c.name === 'laradocs_locale');
+
+    expect(localeCookie).toBeDefined();
+    expect(localeCookie?.value).toBe('de');
+  });
+
+  test('the cookie preserves the locale across navigation without ?lang=', async ({ page }) => {
+    // First visit — sets the laradocs_locale=de cookie via ?lang=de.
+    await page.goto(`${COOKIE_SERVER}/docs?lang=de`);
+
+    // Navigate to another docs page without any ?lang= parameter.
+    await page.goto(`${COOKIE_SERVER}/docs`);
+
+    // The cookie carries the locale — the page must still render in German.
+    await expect(page.locator('[data-laradocs-search-trigger]')).toContainText(
+      'Durchsuche die Dokumente...',
+    );
+  });
+
+  test('internal links are clean (no ?lang=) when the cookie carries the locale', async ({
+    page,
+  }) => {
+    await page.goto(`${COOKIE_SERVER}/docs?lang=de`);
+
+    // When cookie persistence is on, DocumentUrl omits ?lang= from links
+    // because the cookie is the persistence mechanism.
+    const sidebarLinks = page.locator('aside.laradocs-sidebar a');
+    await expect(sidebarLinks.first()).toBeVisible();
+
+    const hrefs = await sidebarLinks.evaluateAll((els) =>
+      (els as HTMLAnchorElement[]).map((el) => el.getAttribute('href') ?? ''),
+    );
+
+    expect(hrefs.every((h) => !h.includes('lang='))).toBe(true);
+  });
+
+  test('browsing without making a language choice does not set the cookie', async ({
+    page,
+    context,
+  }) => {
+    // A plain visit with no ?lang= and no existing cookie must not write
+    // laradocs_locale — the cookie is only set on an explicit choice.
+    await page.goto(`${COOKIE_SERVER}/docs`);
+
+    const cookies = await context.cookies(COOKIE_SERVER);
+    const localeCookie = cookies.find((c) => c.name === 'laradocs_locale');
+
+    expect(localeCookie).toBeUndefined();
+  });
+});
