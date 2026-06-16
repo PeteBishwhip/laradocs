@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Laradocs\Cache\DocumentCache;
 use Laradocs\Console\CacheCommand;
+use Laradocs\Console\CheckCommand;
 use Laradocs\Console\ClearCommand;
 use Laradocs\Console\CloneProjectCommand;
 use Laradocs\Console\ConfigCommand;
@@ -428,6 +429,7 @@ final class LaradocsServiceProvider extends ServiceProvider
         $this->commands([
             InstallCommand::class,
             MakeDocCommand::class,
+            CheckCommand::class,
             CacheCommand::class,
             ClearCommand::class,
             IndexCommand::class,

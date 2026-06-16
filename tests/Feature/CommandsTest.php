@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\ServiceProvider;
 
@@ -109,4 +110,161 @@ it('prefers a published stub over the package one', function () {
 it('exposes a publish tag for the stubs', function () {
     expect(ServiceProvider::pathsToPublish(null, 'laradocs-stubs'))
         ->not->toBeEmpty();
+});
+
+// docs:check — link checker, orphan finder, redirect cycle detection
+
+it('docs:check exits 0 when docs are clean', function () {
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\n---\n\n# Home\n",
+        'guide/intro.md' => "---\ntitle: Intro\n---\n\nSee the [home page](/docs).\n",
+    ]);
+
+    $this->artisan('docs:check')->assertSuccessful();
+});
+
+it('docs:check exits non-zero on broken internal links', function () {
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\n---\n\n[broken](/docs/nowhere)\n",
+    ]);
+
+    $this->artisan('docs:check')->assertFailed();
+});
+
+it('docs:check reports broken links via --json', function () {
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\n---\n\n[broken](/docs/nowhere)\n",
+    ]);
+
+    $exit = Artisan::call('docs:check', ['--json' => true]);
+    $data = json_decode(Artisan::output(), true);
+
+    expect($exit)->not->toBe(0)
+        ->and($data['broken_links'])->toHaveCount(1)
+        ->and($data['broken_links'][0]['slug'])->toBe('nowhere')
+        ->and($data['summary']['total'])->toBe(1);
+});
+
+it('docs:check ignores external and anchor-only links', function () {
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\n---\n\n[ext](https://example.com) [anchor](#section)\n",
+    ]);
+
+    $this->artisan('docs:check')->assertSuccessful();
+});
+
+it('docs:check strips anchors from internal links before resolving', function () {
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\n---\n\n[link](/docs/guide/intro#section)\n",
+        'guide/intro.md' => "---\ntitle: Intro\n---\n\n# Section\n",
+    ]);
+
+    $this->artisan('docs:check')->assertSuccessful();
+});
+
+it('docs:check detects redirect cycles', function () {
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\n---\n\n# Home\n",
+        'a.md' => "---\ntitle: A\nredirect: b\n---\n",
+        'b.md' => "---\ntitle: B\nredirect: a\n---\n",
+    ]);
+
+    $this->artisan('docs:check')->assertFailed();
+});
+
+it('docs:check reports redirect cycles via --json', function () {
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\n---\n\n# Home\n",
+        'a.md' => "---\ntitle: A\nredirect: b\n---\n",
+        'b.md' => "---\ntitle: B\nredirect: a\n---\n",
+    ]);
+
+    $exit = Artisan::call('docs:check', ['--json' => true]);
+    $data = json_decode(Artisan::output(), true);
+
+    expect($exit)->not->toBe(0)
+        ->and($data['redirect_cycles'])->toHaveCount(1)
+        ->and($data['redirect_cycles'][0]['cycle'])->toContain('a')
+        ->and($data['redirect_cycles'][0]['cycle'])->toContain('b');
+});
+
+it('docs:check resolves prefixed redirect targets when detecting cycles', function () {
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\n---\n\n# Home\n",
+        'a.md' => "---\ntitle: A\nredirect: /docs/b\n---\n",
+        'b.md' => "---\ntitle: B\nredirect: /docs/a\n---\n",
+    ]);
+
+    $exit = Artisan::call('docs:check', ['--json' => true]);
+    $data = json_decode(Artisan::output(), true);
+
+    expect($exit)->not->toBe(0)
+        ->and($data['redirect_cycles'])->toHaveCount(1);
+});
+
+it('docs:check ignores redirects to non-existent slugs for cycle detection', function () {
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\n---\n\n# Home\n",
+        'a.md' => "---\ntitle: A\nredirect: missing\n---\n",
+    ]);
+
+    $exit = Artisan::call('docs:check', ['--json' => true]);
+    $data = json_decode(Artisan::output(), true);
+
+    expect($exit)->toBe(0)
+        ->and($data['redirect_cycles'])->toBeEmpty();
+});
+
+it('docs:check flags an unreachable hidden page as an orphan', function () {
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\n---\n\n# Home\n",
+        'secret.md' => "---\ntitle: Secret\nhidden: true\n---\n",
+    ]);
+
+    $exit = Artisan::call('docs:check', ['--json' => true]);
+    $data = json_decode(Artisan::output(), true);
+
+    expect($exit)->not->toBe(0)
+        ->and($data['orphans'])->toHaveCount(1)
+        ->and($data['orphans'][0]['slug'])->toBe('secret');
+});
+
+it('docs:check does not flag a hidden page that another page links to', function () {
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\n---\n\nSee the [secret](/docs/secret).\n",
+        'secret.md' => "---\ntitle: Secret\nhidden: true\n---\n",
+    ]);
+
+    $exit = Artisan::call('docs:check', ['--json' => true]);
+    $data = json_decode(Artisan::output(), true);
+
+    expect($exit)->toBe(0)
+        ->and($data['orphans'])->toBeEmpty();
+});
+
+it('docs:check renders orphan findings in the default output', function () {
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\n---\n\n# Home\n",
+        'secret.md' => "---\ntitle: Secret\nhidden: true\n---\n",
+    ]);
+
+    $this->artisan('docs:check')
+        ->assertFailed()
+        ->expectsOutputToContain('ORPHAN');
+});
+
+it('docs:check --json summary counts total findings', function () {
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\n---\n\n[broken](/docs/gone)\n",
+        'a.md' => "---\ntitle: A\nredirect: b\n---\n",
+        'b.md' => "---\ntitle: B\nredirect: a\n---\n",
+    ]);
+
+    $exit = Artisan::call('docs:check', ['--json' => true]);
+    $data = json_decode(Artisan::output(), true);
+
+    expect($exit)->not->toBe(0)
+        ->and($data['summary']['broken_links'])->toBe(1)
+        ->and($data['summary']['redirect_cycles'])->toBe(1)
+        ->and($data['summary']['total'])->toBeGreaterThanOrEqual(2);
 });

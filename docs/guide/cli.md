@@ -5,8 +5,80 @@ description: Every Artisan command shipped by Laradocs.
 
 # CLI
 
-Laradocs registers five Artisan commands. Run any of them with
+Laradocs registers these Artisan commands. Run any of them with
 `php artisan {name}`.
+
+## `docs:check`
+
+```bash
+php artisan docs:check [--json]
+```
+
+Walks the entire docs tree and reports:
+
+- **Broken internal links** — markdown links whose resolved slug does not match any
+  loaded document (e.g. `[text](/docs/missing-page)`).
+- **Orphaned pages** — documents that are unreachable: absent from the navigation tree
+  (i.e. `hidden`) *and* not the target of any internal link from another page. Visible
+  pages always appear in the auto-generated navigation, so the orphans surfaced here are
+  hidden pages that nothing links to — dead content you can reach by neither the menu nor
+  a cross-reference.
+- **Redirect cycles** — chains of `redirect:` front-matter that loop back to an earlier
+  slug (e.g. `a → b → a`). Only redirects whose target is a known slug are followed, so a
+  dangling redirect never produces a false positive.
+
+The command exits with a non-zero status whenever any finding is found, making it
+suitable for use in CI pipelines.
+
+Pass `--json` to receive a structured JSON report instead of formatted output:
+
+```bash
+php artisan docs:check --json
+```
+
+```json
+{
+  "broken_links": [
+    { "source": "guide/intro", "href": "/docs/missing", "slug": "missing" }
+  ],
+  "orphans": [],
+  "redirect_cycles": [
+    { "cycle": ["old-page", "new-page", "old-page"] }
+  ],
+  "summary": {
+    "broken_links": 1,
+    "orphans": 0,
+    "redirect_cycles": 1,
+    "total": 2
+  }
+}
+```
+
+> [!NOTE]
+> Only links whose path begins with the configured route prefix (default `/docs`) are
+> checked. External URLs, anchor-only links, and links to other parts of your application
+> are ignored.
+
+> [!TIP]
+> Add `php artisan docs:check` as a step in your CI workflow to catch broken links
+> before they reach production.
+
+### Fixture coverage
+
+The test suite exercises the following scenarios for `docs:check`:
+
+| Scenario | Expected outcome |
+|---|---|
+| Clean docs (all links resolve) | Exit 0, no findings |
+| Markdown link to a non-existent slug | Exit 1, reported in `broken_links` |
+| External / anchor-only links | Ignored — no false positives |
+| Internal link with `#anchor` suffix | Anchor stripped before slug lookup |
+| Two docs redirecting to each other | Exit 1, cycle reported |
+| Redirect written as `/docs/...` (prefixed) | Resolved to a slug before cycle detection |
+| Redirect pointing to a missing slug | No cycle reported (target unknown) |
+| Hidden page nothing links to | Exit 1, reported as an orphan |
+| Hidden page linked from another page | Not reported as an orphan |
+| `--json` flag | JSON to stdout, same exit codes |
 
 ## `laradocs:install`
 
