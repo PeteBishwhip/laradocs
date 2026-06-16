@@ -51,14 +51,14 @@ return [
         'label' => 'På denna sida',
     ],
 
-    'version' => [
-        'label' => 'Version',
-        'select' => 'Select version',
-    ],
-
     'language' => [
         'label' => 'Språk',
         'select' => 'Välj språk',
+    ],
+
+    'version' => [
+        'label' => 'Version',
+        'select' => 'Select version',
     ],
 
     'page' => [
