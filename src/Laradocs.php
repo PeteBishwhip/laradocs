@@ -18,6 +18,7 @@ use Laradocs\Macros\MacroRegistry;
 use Laradocs\Routing\FeedBuilder;
 use Laradocs\Routing\SitemapBuilder;
 use Laradocs\Search\SearchIndexBuilder;
+use Laradocs\Support\Locale;
 use Laradocs\Support\RateLimiterConfig;
 use Laradocs\Variables\VariableRegistry;
 
@@ -82,6 +83,32 @@ final class Laradocs
     public function rateLimit(Closure|int|false $resolver): self
     {
         $this->rateLimiterConfig->set($resolver);
+
+        return $this;
+    }
+
+    /**
+     * Register a callback that determines whether cookie persistence is enabled
+     * for the current request.
+     *
+     * Use this in your application's service provider once you have a working
+     * cookie-consent mechanism in place, instead of the static `locale.cookie`
+     * config flag:
+     *
+     *   Laradocs::cookiesEnabled(fn () => auth()->user()?->hasConsented('cookies'));
+     *   Laradocs::cookiesEnabled(fn () => Cookie::get('cookie_consent') === 'true');
+     *
+     * The callback is evaluated per request so it can inspect session state,
+     * consent cookies, or any other runtime condition. When no callback is
+     * registered the `laradocs.locale.cookie` config value is used (default:
+     * `false`).
+     *
+     * Pass `null` to clear a previously registered callback and revert to the
+     * config value.
+     */
+    public function cookiesEnabled(?Closure $resolver): self
+    {
+        Locale::setCookieResolver($resolver);
 
         return $this;
     }

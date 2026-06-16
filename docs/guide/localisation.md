@@ -135,7 +135,8 @@ Cookie persistence is **disabled by default**.
 > without a consent mechanism in place is not compliant for EU-facing
 > deployments.
 
-Enable it once your site has a working cookie-consent banner:
+**Option A — static config flag** (simplest, for sites that are already fully
+compliant or operate outside EU jurisdiction):
 
 ```php
 // config/laradocs.php
@@ -150,17 +151,36 @@ Or via the environment:
 LARADOCS_LOCALE_COOKIE=true
 ```
 
-When enabled, selecting a language via `?lang=fr` sets a `laradocs_locale`
-cookie that lasts one year. Every subsequent page visit — on any URL, without
-any query string — serves that language automatically, so the reader's choice
-survives navigation, back/forward, and new tabs. The cookie is **only** set
-when the visitor makes an explicit choice; browsing without selecting a language
-never writes the cookie.
+**Option B — runtime callback** (recommended when you have a consent banner):
+register a closure in your service provider that is evaluated on every request.
+The cookie is written and read only when the callback returns `true`:
+
+```php
+// App\Providers\AppServiceProvider::boot()
+use Laradocs\Facades\Laradocs;
+
+// Example: honour a consent cookie set by your banner library.
+Laradocs::cookiesEnabled(fn () => request()->cookie('cookie_consent') === 'true');
+
+// Example: check a per-user consent flag stored in the session.
+Laradocs::cookiesEnabled(fn () => session('cookies_accepted', false));
+```
+
+The callback takes full priority over the `locale.cookie` config flag, so you
+can leave the flag at its default `false` and drive everything from the callback.
+Pass `null` to clear a previously registered callback and revert to the config
+value.
+
+When enabled (by either option), selecting a language via `?lang=fr` sets a
+`laradocs_locale` cookie that lasts one year. Every subsequent page visit — on
+any URL, without any query string — serves that language automatically, so the
+reader's choice survives navigation, back/forward, and new tabs. The cookie is
+**only** set when the visitor makes an explicit choice; browsing without
+selecting a language never writes the cookie.
 
 > A first-class consent integration is tracked in [issue #95](https://github.com/PeteBishwhip/laradocs/issues/95).
-> Until that ships, use your application's own consent library and call the
-> Laradocs cookie endpoint (or set `locale.cookie` to `true`) only after consent
-> is granted.
+> Until that ships, use your application's own consent library with Option B
+> above to gate the cookie on an affirmative visitor choice.
 
 ### Navigation without a cookie
 

@@ -124,7 +124,7 @@ final class DocumentUrl
      */
     private static function langParam(): array
     {
-        if (Config::bool('laradocs.locale.cookie', false)) {
+        if (Locale::cookieEnabled()) {
             return [];
         }
 

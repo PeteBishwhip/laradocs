@@ -6,7 +6,6 @@ namespace Laradocs\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Laradocs\Support\Config;
 use Laradocs\Support\Locale;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -50,7 +49,7 @@ final class SetDocsLocale
             }
         }
 
-        if (Config::bool('laradocs.locale.cookie', false) && Locale::explicitChoice($request) !== null) {
+        if (Locale::cookieEnabled() && Locale::explicitChoice($request) !== null) {
             // Remember an explicit choice for a year so navigation keeps the
             // selected language without re-appending the query parameter.
             $response->headers->setCookie(cookie('laradocs_locale', $locale, 60 * 24 * 365));

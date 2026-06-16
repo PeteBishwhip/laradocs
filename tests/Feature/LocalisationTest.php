@@ -506,6 +506,57 @@ it('fromAcceptLanguage returns null when no header locale matches the available 
 // ---------------------------------------------------------------------------
 // Worker safety (Octane)
 // ---------------------------------------------------------------------------
+// cookiesEnabled() callback
+// ---------------------------------------------------------------------------
+
+it('cookiesEnabled callback returning true enables cookie reading regardless of config', function () {
+    config()->set('laradocs.locale.available', ['en' => 'English', 'fr' => 'Français']);
+    config()->set('laradocs.locale.cookie', false); // config says off
+
+    Locale::setCookieResolver(fn () => true); // callback overrides
+
+    try {
+        $request = Request::create('/docs', 'GET');
+        $request->cookies->set('laradocs_locale', 'fr');
+
+        expect(Locale::determine($request))->toBe('fr');
+    } finally {
+        Locale::setCookieResolver(null);
+    }
+});
+
+it('cookiesEnabled callback returning false disables cookies even when locale.cookie config is true', function () {
+    config()->set('laradocs.locale.available', ['en' => 'English', 'fr' => 'Français']);
+    config()->set('laradocs.locale.cookie', true); // config says on
+    config()->set('laradocs.locale.detect_browser', false);
+
+    Locale::setCookieResolver(fn () => false); // callback overrides
+
+    try {
+        $request = Request::create('/docs', 'GET');
+        $request->cookies->set('laradocs_locale', 'fr');
+
+        expect(Locale::determine($request))->toBe('en'); // cookie ignored → fallback
+    } finally {
+        Locale::setCookieResolver(null);
+    }
+});
+
+it('clearing the cookiesEnabled callback reverts to the locale.cookie config value', function () {
+    config()->set('laradocs.locale.available', ['en' => 'English', 'fr' => 'Français']);
+    config()->set('laradocs.locale.cookie', false);
+    config()->set('laradocs.locale.detect_browser', false);
+
+    Locale::setCookieResolver(fn () => true);
+    Locale::setCookieResolver(null); // clear — should fall back to config (false)
+
+    $request = Request::create('/docs', 'GET');
+    $request->cookies->set('laradocs_locale', 'fr');
+
+    expect(Locale::determine($request))->toBe('en'); // cookie ignored because config=false
+});
+
+// ---------------------------------------------------------------------------
 
 it('restores the application locale after a docs request so workers do not leak (octane-safe)', function () {
     File::ensureDirectoryExists(lang_path('vendor/laradocs/fr'));

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Laradocs\Support;
 
+use Closure;
 use Illuminate\Http\Request;
 
 /**
@@ -18,6 +19,44 @@ final class Locale
      * translations are published (`lang/vendor/laradocs`).
      */
     private const PUBLISHED = 'vendor/laradocs';
+
+    /**
+     * Optional application-supplied callback that determines whether cookie
+     * persistence is active for the current request. When registered it takes
+     * priority over the `laradocs.locale.cookie` config value.
+     *
+     * Register via `Laradocs::cookiesEnabled(fn () => ...)` in a service provider.
+     */
+    private static ?Closure $cookieResolver = null;
+
+    /**
+     * Register a callback that determines whether cookie persistence is enabled.
+     *
+     * The callback is evaluated on every check (i.e. per request), so it can
+     * inspect session state, consent flags, or any other runtime condition.
+     * Pass `null` to clear a previously registered callback and fall back to
+     * the `laradocs.locale.cookie` config value.
+     */
+    public static function setCookieResolver(?Closure $resolver): void
+    {
+        self::$cookieResolver = $resolver;
+    }
+
+    /**
+     * Whether cookie persistence is currently enabled.
+     *
+     * When a callback has been registered via `Laradocs::cookiesEnabled()` it is
+     * called and its boolean result is returned. Otherwise the config flag
+     * `laradocs.locale.cookie` (default `false`) is used.
+     */
+    public static function cookieEnabled(): bool
+    {
+        if (self::$cookieResolver !== null) {
+            return (bool) (self::$cookieResolver)();
+        }
+
+        return Config::bool('laradocs.locale.cookie', false);
+    }
 
     /**
      * The locales available for the documentation interface.
@@ -122,7 +161,7 @@ final class Locale
             return $explicit;
         }
 
-        if (Config::bool('laradocs.locale.cookie', false)) {
+        if (self::cookieEnabled()) {
             $available = self::available();
             $cookie = $request->cookie('laradocs_locale');
             if (is_string($cookie) && $cookie !== '' && array_key_exists($cookie, $available)) {
