@@ -5,15 +5,74 @@ description: Translate the documentation interface and offer readers a language 
 
 # Localisation
 
-Every user-facing string in the bundled views — navigation labels, the search
-palette, the table of contents, the empty state and more — is rendered through
-Laravel's translation helper. That means you can translate the entire
-documentation interface, ship multiple languages side by side, and let readers
-switch between them with the built-in language selector.
+Laradocs localises on two independent layers:
 
-> The strings being translated are the **interface** chrome. Your actual
-> documentation content lives in your markdown files; translate those by
-> creating per-language pages or directories.
+1. **Interface strings** — navigation labels, the search palette, the table of
+   contents, the empty state and so on. Every one is rendered through Laravel's
+   translation helper, so you can translate the entire chrome and ship several
+   languages side by side.
+2. **Page content** — your actual markdown pages. Drop a translated copy
+   alongside the original and Laradocs serves it for the matching locale, with
+   automatic fallback when a translation is missing.
+
+A built-in language selector in the header lets readers switch between the
+locales you offer; the choice drives both layers at once.
+
+## Translating content
+
+Translate a page by adding a locale-tagged copy of its markdown file. Two
+conventions are recognised — use whichever you prefer (you can even mix them):
+
+| Convention            | English original          | French translation              |
+| --------------------- | ------------------------- | ------------------------------- |
+| **Filename suffix**   | `guide/intro.md`          | `guide/intro.fr.md`             |
+| **Locale directory**  | `guide/intro.md`          | `fr/guide/intro.md`             |
+
+Both forms resolve to the **same slug** (`guide/intro`), so the public URL
+(`/docs/guide/intro`) is identical in every language — switching locale swaps
+the content under a stable address rather than sending the reader to a
+different path. Section index files work too: `_index.fr.md` or
+`fr/_index.md` translates the landing page.
+
+### Which locales are recognised
+
+A `.fr` suffix or `fr/` directory is only treated as a translation when `fr`
+is one of your **available locales** — the same list that powers the language
+selector (see [Choosing the available locales](#overriding-auto-detection)).
+This is what keeps an ordinary file such as `release-2.0.md` or a content
+directory that merely happens to share a locale's name from being mistaken for
+a translation.
+
+In practice this means: publish the language files, add a locale (e.g. copy
+`en` to `fr`, or list it in `locale.available`), and your `*.fr.md` /
+`fr/*.md` pages light up automatically.
+
+### Fallback rules
+
+For each page, the document served on a given request is resolved in this
+order:
+
+1. **The exact translation** for the request's locale, when it exists
+   (`intro.fr.md` for a French reader).
+2. **The default-locale page** otherwise — the un-suffixed file (e.g.
+   `intro.md`), which belongs to `locale.default`. This is the fallback for any
+   page a reader's language hasn't translated yet, so a partially translated
+   site never 404s: untranslated pages simply appear in the default language.
+3. **Any remaining variant**, as a last resort, so a page that exists *only* in
+   some non-default locale is still reachable rather than hidden outright.
+
+Because the fallback is per page, you can translate your documentation
+incrementally — start with the pages that matter most and the rest keep
+rendering in the default language until you get to them.
+
+> Keep a translation's slug aligned with its original. If you set an explicit
+> `slug:` in front-matter, use the same value in every language (or omit it and
+> let the shared filename drive the slug) so the translations collapse onto one
+> URL.
+
+Content translation composes with [multi-version docs](/docs/guide/versioning)
+— place locale files inside each version directory (e.g.
+`v2/guide/intro.fr.md`).
 
 ## Publishing the language files
 

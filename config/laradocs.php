@@ -25,6 +25,14 @@ return [
     | the language files with `php artisan vendor:publish --tag=laradocs-lang`
     | and add a directory per locale (e.g. lang/vendor/laradocs/fr).
     |
+    | Page *content* is localised too: add a translated copy of a markdown file
+    | as either a filename suffix (docs/guide.fr.md) or a locale directory
+    | (docs/fr/guide.md). Both resolve to the same slug, so the URL is stable
+    | across languages. A locale only counts as a content language when it is
+    | one of the "available" locales below; when a page has no translation for
+    | the active locale the default-locale file is served instead, so a
+    | partially translated site never 404s. See the "Localisation" guide.
+    |
     | "default"   The locale the docs render in. Defaults to "en". Set
     |             LARADOCS_LOCALE to override.
     | "available" Locales offered in the in-page language selector.
