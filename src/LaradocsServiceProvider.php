@@ -22,6 +22,7 @@ use Laradocs\Console\ConfigCommand;
 use Laradocs\Console\DeployCommand;
 use Laradocs\Console\IndexCommand;
 use Laradocs\Console\InstallCommand;
+use Laradocs\Console\LintCommand;
 use Laradocs\Console\LoginCommand;
 use Laradocs\Console\MakeDocCommand;
 use Laradocs\Contracts\DocumentLoader;
@@ -430,6 +431,7 @@ final class LaradocsServiceProvider extends ServiceProvider
             InstallCommand::class,
             MakeDocCommand::class,
             CheckCommand::class,
+            LintCommand::class,
             CacheCommand::class,
             ClearCommand::class,
             IndexCommand::class,

@@ -156,6 +156,25 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Front-matter Linter  (docs:lint)
+    |--------------------------------------------------------------------------
+    |
+    | "required" Front-matter fields that every document must declare.
+    |             Uses the YAML key name (e.g. "updated_at", not "updatedAt").
+    |             An empty array disables the missing-field check entirely.
+    | "layouts"  Allowlist of recognised layout names. When non-empty, any
+    |             document whose "layout:" value is not in this list is
+    |             flagged. An empty array disables the layout check.
+    |
+    */
+
+    'lint' => [
+        'required' => ['title'],
+        'layouts' => [],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Markdown Parser
     |--------------------------------------------------------------------------
     |
