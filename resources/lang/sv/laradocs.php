@@ -20,35 +20,40 @@ return [
     */
 
     'nav' => [
-        'sections' => 'Avsnitt',
-        'overview' => 'Översikt',
-        'breadcrumb' => 'Länkstig',
-        'home' => 'Hem',
-        'header' => 'Rubrik',
-        'footer' => 'Sidfot',
-        'pagination' => 'Sidnumrering',
-        'documentation' => 'Dokumentation',
-        'toggle_navigation' => 'Växla navigering',
-        'previous' => 'Föregående',
-        'next' => 'Nästa',
+        'sections' => 'Sections',
+        'overview' => 'Overview',
+        'breadcrumb' => 'Breadcrumb',
+        'home' => 'Home',
+        'header' => 'Header',
+        'footer' => 'Footer',
+        'pagination' => 'Pagination',
+        'documentation' => 'Documentation',
+        'toggle_navigation' => 'Toggle navigation',
+        'previous' => 'Previous',
+        'next' => 'Next',
     ],
 
     'search' => [
-        'label' => 'Snabb sökning',
-        'placeholder' => 'Sök sidor...',
-        'open' => 'Öppna kommandopaletten',
-        'trigger' => 'Sök i dokumenten...',
-        'navigate' => 'navigera',
-        'select' => 'öppen',
-        'close' => 'stäng',
+        'label' => 'Quick search',
+        'placeholder' => 'Search pages...',
+        'open' => 'Open command palette',
+        'trigger' => 'Search the docs...',
+        'navigate' => 'navigate',
+        'select' => 'open',
+        'close' => 'close',
     ],
 
     'theme' => [
-        'toggle' => 'Växla tema',
+        'toggle' => 'Toggle theme',
     ],
 
     'toc' => [
-        'label' => 'På denna sida',
+        'label' => 'On this page',
+    ],
+
+    'language' => [
+        'label' => 'Language',
+        'select' => 'Select language',
     ],
 
     'version' => [
@@ -56,42 +61,37 @@ return [
         'select' => 'Select version',
     ],
 
-    'language' => [
-        'label' => 'Språk',
-        'select' => 'Välj språk',
-    ],
-
     'page' => [
-        'last_updated' => 'Senast uppdaterad :date',
-        'edit' => 'Redigera denna sida',
+        'last_updated' => 'Last updated :date',
+        'edit' => 'Edit this page',
     ],
 
     'macros' => [
-        'read_more' => 'Läs mer',
+        'read_more' => 'Read more',
     ],
 
     'tags' => [
-        'eyebrow' => 'Taggar',
-        'label' => 'Taggar',
-        'index_title' => 'Taggar',
-        'index_intro' => 'Bläddra i dokumentationen efter ämne.',
-        'show_title' => 'Sidor taggade med ”:tag”',
-        'count' => '{0} Inga sidor|{1} :count sida|[2,*] :count sidor',
-        'empty' => 'Inga taggar ännu.',
-        'all' => 'Alla taggar',
+        'eyebrow' => 'Tags',
+        'label' => 'Tags',
+        'index_title' => 'Tags',
+        'index_intro' => 'Browse the documentation by topic.',
+        'show_title' => 'Pages tagged “:tag”',
+        'count' => '{0} No pages|{1} :count page|[2,*] :count pages',
+        'empty' => 'No tags yet.',
+        'all' => 'All tags',
     ],
 
     'empty' => [
-        'eyebrow' => 'Kom igång',
-        'title' => 'Din dokumentation, klar när du är.',
-        'intro' => 'Laradocs är uppkopplad och väntar på innehåll. Sidor hämtas från :path.',
-        'step_one_title' => 'Ställning en startsida',
-        'step_one_body' => 'Kör :command för att släppa en välkomstsida och mapp till din docs-katalog.',
-        'step_two_title' => 'Skriv din första sida',
-        'step_two_body' => 'Använd :command för att skapa en ny markdown-fil med front-matter.',
-        'step_three_title' => 'Justera utseendet',
-        'step_three_body' => 'Växla förval med :preset eller tonsätt accenten med :accent.',
-        'handbook' => 'Läs handboken &rarr;',
+        'eyebrow' => 'Get started',
+        'title' => 'Your documentation, ready when you are.',
+        'intro' => 'Laradocs is wired up and waiting for content. Pages are sourced from :path.',
+        'step_one_title' => 'Scaffold a starter page',
+        'step_one_body' => 'Run :command to drop a welcome page and folder into your docs directory.',
+        'step_two_title' => 'Write your first page',
+        'step_two_body' => 'Use :command to generate a new markdown file with front-matter.',
+        'step_three_title' => 'Tune the look',
+        'step_three_body' => 'Switch presets with :preset or tune the accent with :accent.',
+        'handbook' => 'Read the handbook &rarr;',
     ],
 
 ];
