@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\ServiceProvider;
 
@@ -135,8 +136,8 @@ it('docs:check reports broken links via --json', function () {
         '_index.md' => "---\ntitle: Home\n---\n\n[broken](/docs/nowhere)\n",
     ]);
 
-    $exit = \Artisan::call('docs:check', ['--json' => true]);
-    $data = json_decode(\Artisan::output(), true);
+    $exit = Artisan::call('docs:check', ['--json' => true]);
+    $data = json_decode(Artisan::output(), true);
 
     expect($exit)->not->toBe(0)
         ->and($data['broken_links'])->toHaveCount(1)
@@ -178,13 +179,27 @@ it('docs:check reports redirect cycles via --json', function () {
         'b.md' => "---\ntitle: B\nredirect: a\n---\n",
     ]);
 
-    $exit = \Artisan::call('docs:check', ['--json' => true]);
-    $data = json_decode(\Artisan::output(), true);
+    $exit = Artisan::call('docs:check', ['--json' => true]);
+    $data = json_decode(Artisan::output(), true);
 
     expect($exit)->not->toBe(0)
         ->and($data['redirect_cycles'])->toHaveCount(1)
         ->and($data['redirect_cycles'][0]['cycle'])->toContain('a')
         ->and($data['redirect_cycles'][0]['cycle'])->toContain('b');
+});
+
+it('docs:check resolves prefixed redirect targets when detecting cycles', function () {
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\n---\n\n# Home\n",
+        'a.md' => "---\ntitle: A\nredirect: /docs/b\n---\n",
+        'b.md' => "---\ntitle: B\nredirect: /docs/a\n---\n",
+    ]);
+
+    $exit = Artisan::call('docs:check', ['--json' => true]);
+    $data = json_decode(Artisan::output(), true);
+
+    expect($exit)->not->toBe(0)
+        ->and($data['redirect_cycles'])->toHaveCount(1);
 });
 
 it('docs:check ignores redirects to non-existent slugs for cycle detection', function () {
@@ -193,24 +208,49 @@ it('docs:check ignores redirects to non-existent slugs for cycle detection', fun
         'a.md' => "---\ntitle: A\nredirect: missing\n---\n",
     ]);
 
-    $exit = \Artisan::call('docs:check', ['--json' => true]);
-    $data = json_decode(\Artisan::output(), true);
+    $exit = Artisan::call('docs:check', ['--json' => true]);
+    $data = json_decode(Artisan::output(), true);
 
     expect($exit)->toBe(0)
         ->and($data['redirect_cycles'])->toBeEmpty();
 });
 
-it('docs:check does not flag hidden docs as orphans', function () {
+it('docs:check flags an unreachable hidden page as an orphan', function () {
     $this->makeDocs([
         '_index.md' => "---\ntitle: Home\n---\n\n# Home\n",
         'secret.md' => "---\ntitle: Secret\nhidden: true\n---\n",
     ]);
 
-    $exit = \Artisan::call('docs:check', ['--json' => true]);
-    $data = json_decode(\Artisan::output(), true);
+    $exit = Artisan::call('docs:check', ['--json' => true]);
+    $data = json_decode(Artisan::output(), true);
+
+    expect($exit)->not->toBe(0)
+        ->and($data['orphans'])->toHaveCount(1)
+        ->and($data['orphans'][0]['slug'])->toBe('secret');
+});
+
+it('docs:check does not flag a hidden page that another page links to', function () {
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\n---\n\nSee the [secret](/docs/secret).\n",
+        'secret.md' => "---\ntitle: Secret\nhidden: true\n---\n",
+    ]);
+
+    $exit = Artisan::call('docs:check', ['--json' => true]);
+    $data = json_decode(Artisan::output(), true);
 
     expect($exit)->toBe(0)
         ->and($data['orphans'])->toBeEmpty();
+});
+
+it('docs:check renders orphan findings in the default output', function () {
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\n---\n\n# Home\n",
+        'secret.md' => "---\ntitle: Secret\nhidden: true\n---\n",
+    ]);
+
+    $this->artisan('docs:check')
+        ->assertFailed()
+        ->expectsOutputToContain('ORPHAN');
 });
 
 it('docs:check --json summary counts total findings', function () {
@@ -220,8 +260,8 @@ it('docs:check --json summary counts total findings', function () {
         'b.md' => "---\ntitle: B\nredirect: a\n---\n",
     ]);
 
-    $exit = \Artisan::call('docs:check', ['--json' => true]);
-    $data = json_decode(\Artisan::output(), true);
+    $exit = Artisan::call('docs:check', ['--json' => true]);
+    $data = json_decode(Artisan::output(), true);
 
     expect($exit)->not->toBe(0)
         ->and($data['summary']['broken_links'])->toBe(1)

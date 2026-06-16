@@ -25,14 +25,27 @@ final class CheckCommand extends Command
     {
         $documents = $laradocs->all();
 
-        $this->slugIndex = $documents
-            ->mapWithKeys(fn (Document $doc): array => [$doc->slug => true])
-            ->all();
+        $this->slugIndex = [];
+
+        foreach ($documents as $document) {
+            $this->slugIndex[$document->slug] = true;
+        }
 
         $tree = DocumentTree::fromDocuments($documents);
+        $links = $this->collectLinks($documents);
 
-        $brokenLinks = $this->findBrokenLinks($documents);
-        $orphans = $this->findOrphans($documents, $tree);
+        $brokenLinks = array_values(array_filter(
+            $links,
+            fn (array $link): bool => ! isset($this->slugIndex[$link['slug']]),
+        ));
+
+        $linkedSlugs = [];
+
+        foreach ($links as $link) {
+            $linkedSlugs[$link['slug']] = true;
+        }
+
+        $orphans = $this->findOrphans($documents, $tree, $linkedSlugs);
         $redirectCycles = $this->findRedirectCycles($documents);
 
         $total = count($brokenLinks) + count($orphans) + count($redirectCycles);
@@ -48,7 +61,7 @@ final class CheckCommand extends Command
                     'redirect_cycles' => count($redirectCycles),
                     'total' => $total,
                 ],
-            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
 
             return $total > 0 ? self::FAILURE : self::SUCCESS;
         }
@@ -63,16 +76,16 @@ final class CheckCommand extends Command
     }
 
     /**
-     * Parse every document's markdown for internal links and report any whose
-     * resolved slug does not match a loaded document.
+     * Extract every internal markdown link (those pointing at the docs route
+     * prefix) across all documents, paired with their resolved target slug.
      *
      * @param  DocumentCollection<int, Document>  $documents
      * @return array<int, array{source: string, href: string, slug: string}>
      */
-    private function findBrokenLinks(DocumentCollection $documents): array
+    private function collectLinks(DocumentCollection $documents): array
     {
         $prefix = '/' . trim(Config::string('laradocs.route.prefix', 'docs'), '/');
-        $findings = [];
+        $links = [];
 
         foreach ($documents as $document) {
             preg_match_all('/\[(?:[^\]]*)\]\(([^)\s]+)\)/', $document->markdown, $matches);
@@ -82,29 +95,30 @@ final class CheckCommand extends Command
                     continue;
                 }
 
-                $slug = $this->hrefToSlug($href, $prefix);
-
-                if (! isset($this->slugIndex[$slug])) {
-                    $findings[] = [
-                        'source' => $document->slug,
-                        'href' => $href,
-                        'slug' => $slug,
-                    ];
-                }
+                $links[] = [
+                    'source' => $document->slug,
+                    'href' => $href,
+                    'slug' => $this->hrefToSlug($href, $prefix),
+                ];
             }
         }
 
-        return $findings;
+        return $links;
     }
 
     /**
-     * Collect every slug reachable via the navigation tree and report visible
-     * documents whose slug does not appear in it.
+     * Report documents that are unreachable: absent from the navigation tree
+     * (i.e. hidden) and not the target of any internal link from another page.
+     *
+     * Visible documents always appear in the auto-generated navigation, so the
+     * only orphans are hidden pages that nothing links to — dead content that
+     * can be reached by neither the menu nor a cross-reference.
      *
      * @param  DocumentCollection<int, Document>  $documents
+     * @param  array<string, true>  $linkedSlugs
      * @return array<int, array{slug: string, title: string, path: string}>
      */
-    private function findOrphans(DocumentCollection $documents, DocumentTree $tree): array
+    private function findOrphans(DocumentCollection $documents, DocumentTree $tree, array $linkedSlugs): array
     {
         $navSlugs = [];
 
@@ -117,17 +131,15 @@ final class CheckCommand extends Command
         $findings = [];
 
         foreach ($documents as $document) {
-            if ($document->isHidden()) {
+            if (isset($navSlugs[$document->slug]) || isset($linkedSlugs[$document->slug])) {
                 continue;
             }
 
-            if (! isset($navSlugs[$document->slug])) {
-                $findings[] = [
-                    'slug' => $document->slug,
-                    'title' => $document->title(),
-                    'path' => $document->relativePath,
-                ];
-            }
+            $findings[] = [
+                'slug' => $document->slug,
+                'title' => $document->title(),
+                'path' => $document->relativePath,
+            ];
         }
 
         return $findings;
