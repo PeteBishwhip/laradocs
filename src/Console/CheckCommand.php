@@ -88,7 +88,7 @@ final class CheckCommand extends Command
         $links = [];
 
         foreach ($documents as $document) {
-            preg_match_all('/\[(?:[^\]]*)\]\(([^)\s]+)\)/', $document->markdown, $matches);
+            preg_match_all('/\[[^\]]*\]\(([^)\s]+)\)/', $document->markdown, $matches);
 
             foreach ($matches[1] as $href) {
                 if (! str_starts_with($href, $prefix)) {
@@ -153,26 +153,7 @@ final class CheckCommand extends Command
      */
     private function findRedirectCycles(DocumentCollection $documents): array
     {
-        $prefix = '/' . trim(Config::string('laradocs.route.prefix', 'docs'), '/');
-
-        /** @var array<string, string> $redirectMap */
-        $redirectMap = [];
-
-        foreach ($documents as $document) {
-            $raw = $document->redirect();
-
-            if ($raw === null || $raw === '') {
-                continue;
-            }
-
-            $target = str_starts_with($raw, $prefix)
-                ? $this->hrefToSlug($raw, $prefix)
-                : $raw;
-
-            if (isset($this->slugIndex[$target])) {
-                $redirectMap[$document->slug] = $target;
-            }
-        }
+        $redirectMap = $this->buildRedirectMap($documents);
 
         $findings = [];
         $checked = [];
@@ -201,6 +182,36 @@ final class CheckCommand extends Command
         }
 
         return $findings;
+    }
+
+    /**
+     * Build a slug → target map of every redirect whose destination is a known document.
+     *
+     * @param  DocumentCollection<int, Document>  $documents
+     * @return array<string, string>
+     */
+    private function buildRedirectMap(DocumentCollection $documents): array
+    {
+        $prefix = '/' . trim(Config::string('laradocs.route.prefix', 'docs'), '/');
+        $map = [];
+
+        foreach ($documents as $document) {
+            $raw = $document->redirect();
+
+            if ($raw === null || $raw === '') {
+                continue;
+            }
+
+            $target = str_starts_with($raw, $prefix)
+                ? $this->hrefToSlug($raw, $prefix)
+                : $raw;
+
+            if (isset($this->slugIndex[$target])) {
+                $map[$document->slug] = $target;
+            }
+        }
+
+        return $map;
     }
 
     /**
