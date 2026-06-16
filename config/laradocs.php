@@ -67,8 +67,8 @@ return [
     | "available" Version list offered in the in-page selector.
     |             Leave null (the default) to auto-detect: the package scans
     |             laradocs.docs.path and treats each sub-directory as a version.
-    |             Add a _version.php inside a version directory returning
-    |             ['label' => 'My Label'] for a custom display name; otherwise
+    |             Add a _version.json inside a version directory containing
+    |             {"label": "My Label"} for a custom display name; otherwise
     |             the directory name is used.
     |             Supply an explicit array to override auto-detection entirely:
     |               'available' => ['v1' => 'Version 1', 'v2' => 'Version 2']

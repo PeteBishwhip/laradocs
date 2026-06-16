@@ -27,9 +27,9 @@ final class Version
      * path is scanned for sub-directories and the result is cached to avoid
      * repeated filesystem hits.
      *
-     * Each version directory may contain an optional `_version.php` returning
-     * an array with a `'label'` key for a custom display name; otherwise the
-     * directory name is used.
+     * Each version directory may contain an optional `_version.json` file with
+     * a `"label"` key for a custom display name; otherwise the directory name
+     * is used.
      *
      * @return array<string, string> Keys are version handles; values are labels.
      */
@@ -152,16 +152,18 @@ final class Version
     /**
      * The human-readable label for a version directory.
      *
-     * Reads `_version.php` when present and it exposes a string `label` key;
-     * otherwise the version handle itself is used as the label.
+     * Reads `_version.json` when present and it exposes a string `label` key;
+     * otherwise the version handle itself is used as the label. A plain JSON
+     * sidecar is used rather than an executable PHP file so labels can come
+     * from a separate docs branch or directory without executing its code.
      */
     private static function label(string $handle, string $dir): string
     {
-        $meta = "{$dir}/_version.php";
+        $meta = "{$dir}/_version.json";
 
         if (is_file($meta)) {
             /** @var mixed $data */
-            $data = require $meta;
+            $data = json_decode((string) file_get_contents($meta), true);
 
             if (is_array($data) && isset($data['label']) && is_string($data['label'])) {
                 return $data['label'];

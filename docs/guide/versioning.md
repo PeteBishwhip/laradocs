@@ -57,11 +57,11 @@ By default Laradocs auto-detects versions by scanning every **sub-directory** of
 
 ### Custom labels
 
-Add a `_version.php` file inside any version directory to give it a human-readable label:
+Add a `_version.json` file inside any version directory to give it a human-readable label:
 
-```php
-// docs/v2/_version.php
-return ['label' => 'v2 (latest)'];
+```json
+// docs/v2/_version.json
+{ "label": "v2 (latest)" }
 ```
 
 ### Explicit version list

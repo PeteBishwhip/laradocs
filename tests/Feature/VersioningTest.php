@@ -52,15 +52,15 @@ it('auto-detects versions from sub-directories of the docs path', function () {
     expect(Version::available())->toHaveKey('v1')->toHaveKey('v2');
 });
 
-it('uses the directory name as the label when no _version.php is present', function () {
+it('uses the directory name as the label when no _version.json is present', function () {
     $this->makeDocs(versionedDocs());
 
     expect(Version::available()['v1'])->toBe('v1');
 });
 
-it('reads a custom label from _version.php when present', function () {
+it('reads a custom label from _version.json when present', function () {
     $root = $this->makeDocs(versionedDocs());
-    file_put_contents($root . '/v2/_version.php', "<?php\n\nreturn ['label' => 'Version 2 (latest)'];\n");
+    file_put_contents($root . '/v2/_version.json', '{"label": "Version 2 (latest)"}');
 
     expect(Version::available()['v2'])->toBe('Version 2 (latest)');
 });
