@@ -47,6 +47,7 @@
 
     <div class="laradocs-spacer"></div>
 
+    @include('laradocs::partials.version-selector')
     @include('laradocs::partials.language-selector')
 
     <button class="laradocs-icon-btn" type="button" data-laradocs-theme-toggle aria-label="{{ __('laradocs::laradocs.theme.toggle') }}">

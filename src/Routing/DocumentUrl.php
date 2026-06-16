@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Laradocs\Routing;
 
 use Laradocs\Support\Config;
+use Laradocs\Support\Version;
 
 /**
  * Centralised URL generation for the package's routes. Every internal link is
@@ -31,10 +32,20 @@ final class DocumentUrl
     /**
      * URL to a documentation page by slug. An empty slug is the docs root and
      * resolves to the index route; every other slug hits the show route.
+     *
+     * When multi-version docs are active the current version handle is
+     * prepended to the slug automatically, e.g. "v2/getting-started".
      */
     public static function toSlug(string $slug): string
     {
         $slug = trim($slug, '/');
+        $version = Version::current();
+
+        if ($version !== null) {
+            $path = $slug !== '' ? "{$version}/{$slug}" : $version;
+
+            return route(self::prefix() . 'show', ['path' => $path]);
+        }
 
         return $slug === ''
             ? self::index()
@@ -43,7 +54,25 @@ final class DocumentUrl
 
     public static function index(): string
     {
+        $version = Version::current();
+
+        if ($version !== null) {
+            return route(self::prefix() . 'show', ['path' => $version]);
+        }
+
         return route(self::prefix() . 'index');
+    }
+
+    /**
+     * URL to a documentation page in a specific version. Used by the version
+     * switcher to cross-link to the same page in a different version.
+     */
+    public static function forVersion(string $slug, string $version): string
+    {
+        $slug = trim($slug, '/');
+        $path = $slug !== '' ? "{$version}/{$slug}" : $version;
+
+        return route(self::prefix() . 'show', ['path' => $path]);
     }
 
     public static function asset(string $file): string

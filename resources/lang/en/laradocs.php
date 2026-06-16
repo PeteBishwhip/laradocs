@@ -56,6 +56,11 @@ return [
         'select' => 'Select language',
     ],
 
+    'version' => [
+        'label' => 'Version',
+        'select' => 'Select version',
+    ],
+
     'page' => [
         'last_updated' => 'Last updated :date',
         'edit' => 'Edit this page',

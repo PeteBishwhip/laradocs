@@ -51,6 +51,11 @@ return [
         'label' => 'En esta página',
     ],
 
+    'version' => [
+        'label' => 'Version',
+        'select' => 'Select version',
+    ],
+
     'language' => [
         'label' => 'Idioma',
         'select' => 'Seleccionar idioma',

@@ -51,6 +51,11 @@ return [
         'label' => 'Op deze pagina',
     ],
 
+    'version' => [
+        'label' => 'Version',
+        'select' => 'Select version',
+    ],
+
     'language' => [
         'label' => 'Taal',
         'select' => 'Taal selecteren',

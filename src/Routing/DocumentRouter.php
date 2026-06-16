@@ -16,6 +16,7 @@ use Laradocs\Http\Controllers\SitemapController;
 use Laradocs\Http\Controllers\TagController;
 use Laradocs\Http\Middleware\EnsureDocsEnabled;
 use Laradocs\Http\Middleware\SetDocsLocale;
+use Laradocs\Http\Middleware\SetDocsVersion;
 use Laradocs\Http\Middleware\ThrottleApiRequests;
 use Laradocs\Support\Config;
 
@@ -30,7 +31,7 @@ final class DocumentRouter
     public function register(Registrar $router, array $config): void
     {
         $baseMiddleware = (array) ($config['middleware'] ?? ['web']);
-        $middleware = array_merge($baseMiddleware, [EnsureDocsEnabled::class, SetDocsLocale::class]);
+        $middleware = array_merge($baseMiddleware, [EnsureDocsEnabled::class, SetDocsLocale::class, SetDocsVersion::class]);
 
         $attributes = [
             'prefix' => $config['prefix'] ?? 'docs',

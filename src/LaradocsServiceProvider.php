@@ -53,6 +53,7 @@ use Laradocs\Search\SearchManager;
 use Laradocs\Seo\SeoFactory;
 use Laradocs\Support\Config;
 use Laradocs\Support\RateLimiterConfig;
+use Laradocs\Support\Version;
 use Laradocs\Variables\VariableRegistry;
 use Laravel\Scout\EngineManager;
 use League\CommonMark\Environment\Environment;
@@ -146,7 +147,7 @@ final class LaradocsServiceProvider extends ServiceProvider
                 new Filesystem,
                 $app->make(MetadataResolver::class),
                 $app->make(SlugResolver::class),
-                fn (): string => Config::string('laradocs.docs.path'),
+                fn (): string => Version::docsPath(),
                 $extensions,
                 $ignored,
                 $defaults,
