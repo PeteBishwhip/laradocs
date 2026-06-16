@@ -57,8 +57,8 @@ return [
     ],
 
     'version' => [
-        'label' => 'Version',
-        'select' => 'Select version',
+        'label' => 'Versie',
+        'select' => 'Selecteer versie',
     ],
 
     'page' => [
