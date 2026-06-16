@@ -268,3 +268,177 @@ it('docs:check --json summary counts total findings', function () {
         ->and($data['summary']['redirect_cycles'])->toBe(1)
         ->and($data['summary']['total'])->toBeGreaterThanOrEqual(2);
 });
+
+// docs:lint — front-matter validator
+
+it('docs:lint exits 0 when all docs pass', function () {
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\n---\n\n# Home\n",
+        'guide/intro.md' => "---\ntitle: Intro\nupdated_at: 2026-01-15\n---\n",
+    ]);
+
+    $this->artisan('docs:lint')->assertSuccessful();
+});
+
+it('docs:lint fails when a required field is missing', function () {
+    $this->makeDocs([
+        '_index.md' => "---\n---\n\n# Home\n",
+    ]);
+
+    $this->artisan('docs:lint')->assertFailed();
+});
+
+it('docs:lint reports missing fields via --json', function () {
+    $this->makeDocs([
+        '_index.md' => "---\n---\n\n# Home\n",
+    ]);
+
+    $exit = Artisan::call('docs:lint', ['--json' => true]);
+    $data = json_decode(Artisan::output(), true);
+
+    expect($exit)->not->toBe(0)
+        ->and($data['missing_fields'])->toHaveCount(1)
+        ->and($data['missing_fields'][0]['field'])->toBe('title')
+        ->and($data['summary']['missing_fields'])->toBe(1)
+        ->and($data['summary']['total'])->toBe(1);
+});
+
+it('docs:lint required fields are config-driven', function () {
+    config()->set('laradocs.lint.required', ['title', 'description']);
+
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\n---\n",
+    ]);
+
+    $exit = Artisan::call('docs:lint', ['--json' => true]);
+    $data = json_decode(Artisan::output(), true);
+
+    expect($exit)->not->toBe(0)
+        ->and($data['missing_fields'])->toHaveCount(1)
+        ->and($data['missing_fields'][0]['field'])->toBe('description');
+});
+
+it('docs:lint passes when required list is empty', function () {
+    config()->set('laradocs.lint.required', []);
+
+    $this->makeDocs([
+        '_index.md' => "---\n---\n\n# No title\n",
+    ]);
+
+    $this->artisan('docs:lint')->assertSuccessful();
+});
+
+it('docs:lint detects slug collisions', function () {
+    $this->makeDocs([
+        'intro.md' => "---\ntitle: Intro A\n---\n",
+        'sub/intro.md' => "---\ntitle: Intro B\nslug: intro\n---\n",
+    ]);
+
+    $exit = Artisan::call('docs:lint', ['--json' => true]);
+    $data = json_decode(Artisan::output(), true);
+
+    expect($exit)->not->toBe(0)
+        ->and($data['slug_collisions'])->toHaveCount(1)
+        ->and($data['slug_collisions'][0]['slug'])->toBe('intro')
+        ->and($data['slug_collisions'][0]['paths'])->toHaveCount(2);
+});
+
+it('docs:lint detects unknown layout names when layouts allowlist is set', function () {
+    config()->set('laradocs.lint.layouts', ['docs', 'landing']);
+
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\nlayout: ghost\n---\n",
+    ]);
+
+    $exit = Artisan::call('docs:lint', ['--json' => true]);
+    $data = json_decode(Artisan::output(), true);
+
+    expect($exit)->not->toBe(0)
+        ->and($data['unknown_layouts'])->toHaveCount(1)
+        ->and($data['unknown_layouts'][0]['layout'])->toBe('ghost');
+});
+
+it('docs:lint skips layout check when layouts allowlist is empty', function () {
+    config()->set('laradocs.lint.layouts', []);
+
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\nlayout: anything\n---\n",
+    ]);
+
+    $this->artisan('docs:lint')->assertSuccessful();
+});
+
+it('docs:lint accepts a known layout name', function () {
+    config()->set('laradocs.lint.layouts', ['docs', 'landing']);
+
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\nlayout: docs\n---\n",
+    ]);
+
+    $this->artisan('docs:lint')->assertSuccessful();
+});
+
+it('docs:lint accepts a valid updated_at date', function () {
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\nupdated_at: 2026-03-15\n---\n",
+    ]);
+
+    $this->artisan('docs:lint')->assertSuccessful();
+});
+
+it('docs:lint accepts a valid updated_at datetime', function () {
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\nupdated_at: '2026-03-15 10:30:00'\n---\n",
+    ]);
+
+    $this->artisan('docs:lint')->assertSuccessful();
+});
+
+it('docs:lint flags an invalid updated_at format', function () {
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\nupdated_at: 15th March 2026\n---\n",
+    ]);
+
+    $exit = Artisan::call('docs:lint', ['--json' => true]);
+    $data = json_decode(Artisan::output(), true);
+
+    expect($exit)->not->toBe(0)
+        ->and($data['invalid_dates'])->toHaveCount(1)
+        ->and($data['invalid_dates'][0]['value'])->toBe('15th March 2026');
+});
+
+it('docs:lint does not flag a missing updated_at', function () {
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\n---\n",
+    ]);
+
+    $this->artisan('docs:lint')->assertSuccessful();
+});
+
+it('docs:lint --json summary counts all findings', function () {
+    config()->set('laradocs.lint.layouts', ['docs']);
+
+    $this->makeDocs([
+        '_index.md' => "---\n---\n",
+        'guide.md' => "---\ntitle: Guide\nlayout: ghost\nupdated_at: not-a-date\n---\n",
+    ]);
+
+    $exit = Artisan::call('docs:lint', ['--json' => true]);
+    $data = json_decode(Artisan::output(), true);
+
+    expect($exit)->not->toBe(0)
+        ->and($data['summary']['missing_fields'])->toBeGreaterThanOrEqual(1)
+        ->and($data['summary']['unknown_layouts'])->toBe(1)
+        ->and($data['summary']['invalid_dates'])->toBe(1)
+        ->and($data['summary']['total'])->toBeGreaterThanOrEqual(3);
+});
+
+it('docs:lint renders human-readable output for findings', function () {
+    $this->makeDocs([
+        '_index.md' => "---\n---\n\n# Home\n",
+    ]);
+
+    $this->artisan('docs:lint')
+        ->assertFailed()
+        ->expectsOutputToContain('MISSING FIELD');
+});
