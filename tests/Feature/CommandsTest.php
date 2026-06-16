@@ -442,3 +442,19 @@ it('docs:lint renders human-readable output for findings', function () {
         ->assertFailed()
         ->expectsOutputToContain('MISSING FIELD');
 });
+
+it('docs:lint renders every finding type in human-readable output', function () {
+    config()->set('laradocs.lint.layouts', ['docs']);
+
+    $this->makeDocs([
+        'intro.md' => "---\ntitle: Intro A\n---\n",
+        'sub/intro.md' => "---\ntitle: Intro B\nslug: intro\n---\n",
+        'guide.md' => "---\ntitle: Guide\nlayout: ghost\nupdated_at: not-a-date\n---\n",
+    ]);
+
+    $this->artisan('docs:lint')
+        ->assertFailed()
+        ->expectsOutputToContain('SLUG COLLISION')
+        ->expectsOutputToContain('UNKNOWN LAYOUT')
+        ->expectsOutputToContain('INVALID DATE');
+});
