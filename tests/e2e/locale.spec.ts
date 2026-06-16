@@ -71,7 +71,7 @@ test.describe('?lang= query parameter (no cookie)', () => {
 
     // The search trigger button text is a reliable locale indicator — it is
     // visible on every page and translated in the German language file.
-    await expect(page.locator('[data-laradocs-search-trigger]')).toContainText(
+    await expect(page.locator('.laradocs-palette-trigger')).toContainText(
       'Durchsuche die Dokumente...',
     );
   });
@@ -80,7 +80,7 @@ test.describe('?lang= query parameter (no cookie)', () => {
     await page.goto(`${LOCALE_SERVER}/docs?lang=xx`);
 
     // "xx" is not in the available list so English (the default) is rendered.
-    await expect(page.locator('[data-laradocs-search-trigger]')).toContainText(
+    await expect(page.locator('.laradocs-palette-trigger')).toContainText(
       'Search the docs...',
     );
   });
@@ -112,7 +112,7 @@ test.describe('?lang= query parameter (no cookie)', () => {
 
     // The linked page must also render in German — the forwarded ?lang= is
     // picked up by the middleware on the new request.
-    await expect(page.locator('[data-laradocs-search-trigger]')).toContainText(
+    await expect(page.locator('.laradocs-palette-trigger')).toContainText(
       'Durchsuche die Dokumente...',
     );
   });
@@ -132,8 +132,18 @@ test.describe('cookie persistence', () => {
     const cookies = await context.cookies(COOKIE_SERVER);
     const localeCookie = cookies.find((c) => c.name === 'laradocs_locale');
 
+    // The cookie is written on an explicit choice. Its raw value is the
+    // Laravel-encrypted payload (EncryptCookies middleware), not the plain
+    // "de" — the server decrypts it transparently on the next request. We
+    // therefore assert the cookie exists, has a non-empty value and a long
+    // (one-year) lifetime; the "preserves the locale across navigation" test
+    // below proves the decrypted value actually drives the rendered language.
     expect(localeCookie).toBeDefined();
-    expect(localeCookie?.value).toBe('de');
+    expect(localeCookie?.value).toBeTruthy();
+
+    // ~one year ahead (cookie('laradocs_locale', …, 60 * 24 * 365) minutes).
+    const oneYearFromNow = Date.now() / 1000 + 60 * 60 * 24 * 365;
+    expect(localeCookie?.expires).toBeGreaterThan(oneYearFromNow - 60 * 60 * 24); // allow a day of slack
   });
 
   test('the cookie preserves the locale across navigation without ?lang=', async ({ page }) => {
@@ -144,7 +154,7 @@ test.describe('cookie persistence', () => {
     await page.goto(`${COOKIE_SERVER}/docs`);
 
     // The cookie carries the locale — the page must still render in German.
-    await expect(page.locator('[data-laradocs-search-trigger]')).toContainText(
+    await expect(page.locator('.laradocs-palette-trigger')).toContainText(
       'Durchsuche die Dokumente...',
     );
   });
