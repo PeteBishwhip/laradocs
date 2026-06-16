@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\ServiceProvider;
+use Laradocs\Laradocs;
 use Laradocs\Support\Locale;
 
 /**
@@ -503,17 +504,27 @@ it('fromAcceptLanguage returns null when no header locale matches the available 
     expect(Locale::fromAcceptLanguage('ja, zh', ['en' => 'English']))->toBeNull();
 });
 
+it('fromAcceptLanguage skips empty segments in the header', function () {
+    // A header with stray/trailing commas yields empty segments that must be
+    // ignored rather than treated as a (blank) language tag.
+    expect(Locale::fromAcceptLanguage('fr, , en', ['en' => 'English']))->toBe('en')
+        ->and(Locale::fromAcceptLanguage(',,', ['en' => 'English']))->toBeNull();
+});
+
 // ---------------------------------------------------------------------------
 // Worker safety (Octane)
 // ---------------------------------------------------------------------------
 // cookiesEnabled() callback
 // ---------------------------------------------------------------------------
 
-it('cookiesEnabled callback returning true enables cookie reading regardless of config', function () {
+it('Laradocs::cookiesEnabled registers a callback that enables cookie reading regardless of config', function () {
     config()->set('laradocs.locale.available', ['en' => 'English', 'fr' => 'Français']);
     config()->set('laradocs.locale.cookie', false); // config says off
 
-    Locale::setCookieResolver(fn () => true); // callback overrides
+    // Register through the public fluent API (not Locale::setCookieResolver
+    // directly) so the entry point developers actually use is covered.
+    $laradocs = app(Laradocs::class);
+    expect($laradocs->cookiesEnabled(fn () => true))->toBe($laradocs); // callback overrides, fluent
 
     try {
         $request = Request::create('/docs', 'GET');
