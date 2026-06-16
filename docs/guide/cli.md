@@ -80,6 +80,113 @@ The test suite exercises the following scenarios for `docs:check`:
 | Hidden page linked from another page | Not reported as an orphan |
 | `--json` flag | JSON to stdout, same exit codes |
 
+## `docs:lint`
+
+```bash
+php artisan docs:lint [--json]
+```
+
+Validates the front-matter of every document and reports four categories of problem:
+
+- **Missing required fields** — any field listed in `laradocs.lint.required` that is absent
+  or empty. Defaults to `['title']`; add any front-matter key you want to enforce
+  (e.g. `description`, `author`, `updated_at`).
+- **Slug collisions** — two or more documents that resolve to the same URL slug, whether
+  from a path-derived slug or an explicit `slug:` front-matter override.
+- **Unknown layout names** — when `laradocs.lint.layouts` is non-empty, any `layout:` value
+  that is not in that allowlist. An empty list disables the check entirely.
+- **Invalid `updated_at` formats** — a present `updated_at` value that cannot be parsed as a
+  recognised date or datetime. Accepted formats: `YYYY-MM-DD`,
+  `YYYY-MM-DD HH:MM:SS`, `YYYY-MM-DDTHH:MM:SS`, and `YYYY-MM-DDTHH:MM:SS+HH:MM`.
+
+The command exits with a non-zero status whenever any finding is reported, making it
+suitable for CI pipelines.
+
+Pass `--json` to receive a structured report instead of formatted output:
+
+```bash
+php artisan docs:lint --json
+```
+
+```json
+{
+  "missing_fields": [
+    { "slug": "guide/intro", "path": "guide/intro.md", "field": "title" }
+  ],
+  "slug_collisions": [
+    { "slug": "intro", "paths": ["intro.md", "sub/intro.md"] }
+  ],
+  "unknown_layouts": [
+    { "slug": "landing", "path": "landing.md", "layout": "ghost" }
+  ],
+  "invalid_dates": [
+    { "slug": "guide/intro", "path": "guide/intro.md", "value": "March 2026" }
+  ],
+  "summary": {
+    "missing_fields": 1,
+    "slug_collisions": 1,
+    "unknown_layouts": 1,
+    "invalid_dates": 1,
+    "total": 4
+  }
+}
+```
+
+### Configuration
+
+The linter is configured under the `lint` key in `config/laradocs.php`:
+
+```php
+'lint' => [
+    // Fields every document must declare. Use the YAML key name.
+    'required' => ['title'],
+
+    // Allowlist of valid layout names. Empty = skip the layout check.
+    'layouts' => [],
+],
+```
+
+To enforce additional required fields across your whole docs tree, extend the list:
+
+```php
+'required' => ['title', 'description', 'updated_at'],
+```
+
+To restrict which layouts documents may use, set an explicit allowlist:
+
+```php
+'layouts' => ['docs', 'landing', 'changelog'],
+```
+
+> [!NOTE]
+> YAML 1.1 (used by the underlying parser) silently converts bare date scalars such as
+> `updated_at: 2026-01-15` to Unix timestamps before Laradocs sees them. The linter
+> recognises this and does not flag such values. To write a date string that bypasses
+> YAML's conversion, quote it: `updated_at: '2026-01-15'`.
+
+> [!TIP]
+> Add `php artisan docs:lint` as a CI step alongside `docs:check` to enforce
+> front-matter quality gates before every deployment.
+
+### Fixture coverage
+
+| Scenario | Expected outcome |
+|---|---|
+| All docs have required fields, valid dates, and known layouts | Exit 0, no findings |
+| Document missing a required field (e.g. `title`) | Exit 1, reported in `missing_fields` |
+| Required-field list overridden via config | Only configured fields enforced |
+| Required list empty | Missing-field check disabled; exit 0 |
+| Two docs resolve to the same slug | Exit 1, reported in `slug_collisions` |
+| `layout:` value not in the allowlist | Exit 1, reported in `unknown_layouts` |
+| `layouts` config is empty | Layout check skipped; exit 0 |
+| `layout:` value matches the allowlist | Not reported |
+| `updated_at: 2026-01-15` (bare YAML date) | Accepted (YAML converts to timestamp) |
+| `updated_at: '2026-03-15 10:30:00'` (quoted datetime) | Accepted |
+| `updated_at: March 2026` | Exit 1, reported in `invalid_dates` |
+| `updated_at` absent | Not reported |
+| `--json` flag | JSON to stdout, same exit codes |
+| Multiple finding types at once | All reported; summary total is their sum |
+
 ## `laradocs:install`
 
 ```bash
