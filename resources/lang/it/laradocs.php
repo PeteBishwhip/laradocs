@@ -56,6 +56,11 @@ return [
         'select' => 'Seleziona lingua',
     ],
 
+    'version' => [
+        'label' => 'Version',
+        'select' => 'Select version',
+    ],
+
     'page' => [
         'last_updated' => 'Ultimo aggiornamento :date',
         'edit' => 'Modifica questa pagina',
@@ -66,14 +71,14 @@ return [
     ],
 
     'tags' => [
-        'eyebrow' => 'Tag',
-        'label' => 'Tag',
-        'index_title' => 'Tag',
-        'index_intro' => 'Esplora la documentazione per argomento.',
-        'show_title' => 'Pagine con il tag «:tag»',
-        'count' => '{0} Nessuna pagina|{1} :count pagina|[2,*] :count pagine',
-        'empty' => 'Ancora nessun tag.',
-        'all' => 'Tutti i tag',
+        'eyebrow' => 'Tags',
+        'label' => 'Tags',
+        'index_title' => 'Tags',
+        'index_intro' => 'Browse the documentation by topic.',
+        'show_title' => 'Pages tagged “:tag”',
+        'count' => '{0} No pages|{1} :count page|[2,*] :count pages',
+        'empty' => 'No tags yet.',
+        'all' => 'All tags',
     ],
 
     'empty' => [
