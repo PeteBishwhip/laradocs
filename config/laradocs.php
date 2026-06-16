@@ -47,8 +47,24 @@ return [
     | "selector"  Show the language selector in the header. It is hidden
     |             automatically when fewer than two locales are available.
     |
-    | A visitor can switch language with a `?lang=<code>` query parameter; the
-    | choice is remembered in a cookie. See the "Localisation" guide.
+    | A visitor can switch language with a `?lang=<code>` query parameter. If
+    | the visitor has made no explicit choice, the browser's Accept-Language
+    | header is consulted (when detect_browser is true) before falling back to
+    | the default locale. See the "Localisation" guide.
+    |
+    | "cookie"          Persist the visitor's language choice in a one-year
+    |                   `laradocs_locale` cookie so it survives navigation
+    |                   without re-appending ?lang=. Disabled by default — EU
+    |                   deployments require cookie consent before setting
+    |                   non-essential cookies. Enable once your site has an
+    |                   appropriate consent mechanism in place, or see GitHub
+    |                   issue #95 for a first-class consent integration.
+    |                   Set LARADOCS_LOCALE_COOKIE=true to enable.
+    | "detect_browser"  Honour the browser's Accept-Language header for
+    |                   first-time visitors who haven't made an explicit choice.
+    |                   When true (the default) the highest-quality header
+    |                   locale that matches an available locale is selected. Set
+    |                   LARADOCS_DETECT_BROWSER=false to disable.
     |
     */
 
@@ -56,6 +72,8 @@ return [
         'default' => env('LARADOCS_LOCALE', 'en'),
         'available' => null,
         'selector' => (bool) env('LARADOCS_LOCALE_SELECTOR', true),
+        'cookie' => (bool) env('LARADOCS_LOCALE_COOKIE', false),
+        'detect_browser' => (bool) env('LARADOCS_DETECT_BROWSER', true),
     ],
 
     /*

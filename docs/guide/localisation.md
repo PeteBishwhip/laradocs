@@ -108,30 +108,102 @@ return [
 You don't have to translate every key — anything you leave out falls back to
 the package's default string automatically.
 
-## Choosing the default language
+## How the locale is resolved
 
-Which language the docs render in is resolved on every request. The default is
-`en`. Override it with the `locale.default` option (or the `LARADOCS_LOCALE`
-environment variable):
+On every request Laradocs runs through the following steps, in order, and uses
+the first match:
+
+| Priority | Source | When it applies |
+| -------- | ------ | --------------- |
+| 1 | `?lang=<code>` query parameter | Visitor clicked the language selector or constructed the URL manually |
+| 2 | `laradocs_locale` cookie | Visitor made an explicit choice on a previous visit |
+| 3 | `Accept-Language` header | First-time visitor — browser declares a preferred language |
+| 4 | Configured default (`locale.default`) | Fallback when nothing else matches |
+
+Unknown locale codes are silently ignored at every step so neither a crafted
+URL nor an unusual browser header can force the UI into an untranslated locale.
+
+### Cookie persistence
+
+Cookie persistence is **disabled by default**.
+
+> [!WARNING]
+> Under EU law (ePrivacy Directive / GDPR), a cookie that remembers a user's
+> language preference falls under **Preferences & Functionality** cookies —
+> these enhance the site rather than enable its core function, so they require
+> the visitor's prior, informed consent before being set. Enabling persistence
+> without a consent mechanism in place is not compliant for EU-facing
+> deployments.
+
+Enable it once your site has a working cookie-consent banner:
 
 ```php
 // config/laradocs.php
 'locale' => [
-    'default' => env('LARADOCS_LOCALE', 'en'),
+    'cookie' => true,
 ],
 ```
 
-The full resolution order is implemented by `Laradocs\Support\Locale::fallback()`:
+Or via the environment:
 
-1. The explicit `laradocs.locale.default` value.
-2. The application locale, when a matching `available` entry exists.
-3. The first locale listed in `available`.
+```bash
+LARADOCS_LOCALE_COOKIE=true
+```
 
-The locale actually used for a given request is decided by
-`Laradocs\Support\Locale::determine()`, which lets a visitor's explicit choice
-win over the default (see below) before falling back to it.
+When enabled, selecting a language via `?lang=fr` sets a `laradocs_locale`
+cookie that lasts one year. Every subsequent page visit — on any URL, without
+any query string — serves that language automatically, so the reader's choice
+survives navigation, back/forward, and new tabs. The cookie is **only** set
+when the visitor makes an explicit choice; browsing without selecting a language
+never writes the cookie.
 
-## The language selector
+> A first-class consent integration is tracked in [issue #95](https://github.com/PeteBishwhip/laradocs/issues/95).
+> Until that ships, use your application's own consent library and call the
+> Laradocs cookie endpoint (or set `locale.cookie` to `true`) only after consent
+> is granted.
+
+### Navigation without a cookie
+
+When cookie persistence is off (the default), every internal link Laradocs
+renders — sidebar, breadcrumbs, pagination — automatically carries `?lang=` in
+its query string whenever the active locale differs from the default. This means
+a visitor who arrives at `/docs/guide/intro?lang=fr` can follow every link on
+the page and stay in French without needing a cookie at all:
+
+```
+/docs/guide/intro?lang=fr   →  prev/next/sidebar all link with ?lang=fr
+```
+
+The `?lang=` parameter is omitted from links when the visitor is on the default
+locale (no visual noise for the majority of readers), and dropped entirely from
+all links the moment `locale.cookie` is enabled (the cookie takes over).
+
+### Browser language detection
+
+When a visitor arrives for the first time (no cookie, no `?lang=`), Laradocs
+reads the browser's `Accept-Language` header and matches it against the
+available locales. Quality weights (`q=` values) are respected, so a header
+like `fr-CA;q=0.9, en;q=0.8` prefers French-Canadian, falls back to plain
+`fr` if that is available, and then to English.
+
+To disable browser detection — for example if you want every visitor to start
+in the configured default regardless of their browser settings — set
+`locale.detect_browser` to `false`:
+
+```php
+// config/laradocs.php
+'locale' => [
+    'detect_browser' => false,
+],
+```
+
+Or via the environment:
+
+```bash
+LARADOCS_DETECT_BROWSER=false
+```
+
+### The language selector
 
 Once you have at least two locale directories under `lang/vendor/laradocs/`,
 the package detects them automatically and shows a language selector in the
@@ -179,13 +251,23 @@ an array. Any array value takes precedence over the filesystem scan:
 Leave it `null` (the default) to use auto-detection. Set it to an empty array
 (`[]`) to opt out entirely and hide the selector regardless of what is on disk.
 
-### How switching works
+## Choosing the default language
 
-Selecting a language appends a `?lang=<code>` query parameter; the package
-validates it against the detected locales, applies it for the request, and
-stores the choice in a `laradocs_locale` cookie so it persists as the reader
-navigates. Unknown codes are ignored, so the query string can never force the
-UI into a locale that has no translation directory.
+Override the fallback locale with the `locale.default` option (or the
+`LARADOCS_LOCALE` environment variable):
+
+```php
+// config/laradocs.php
+'locale' => [
+    'default' => env('LARADOCS_LOCALE', 'en'),
+],
+```
+
+The default is resolved by `Laradocs\Support\Locale::fallback()` in this order:
+
+1. The explicit `laradocs.locale.default` value.
+2. The application locale, when a matching `available` entry exists.
+3. The first locale listed in `available`.
 
 The locale is applied per request and the previous locale is restored once the
 response has rendered, so the package is safe to run under
