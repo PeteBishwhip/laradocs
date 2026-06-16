@@ -20,35 +20,40 @@ return [
     */
 
     'nav' => [
-        'sections' => 'Secties',
-        'overview' => 'Overzicht',
-        'breadcrumb' => 'Kruimelpad',
-        'home' => 'Startpagina',
-        'header' => 'Koptekst',
-        'footer' => 'Voettekst',
-        'pagination' => 'Paginering',
-        'documentation' => 'Documentatie',
-        'toggle_navigation' => 'Navigatie in-/uitschakelen',
-        'previous' => 'Vorig',
-        'next' => 'Volgende',
+        'sections' => 'Sections',
+        'overview' => 'Overview',
+        'breadcrumb' => 'Breadcrumb',
+        'home' => 'Home',
+        'header' => 'Header',
+        'footer' => 'Footer',
+        'pagination' => 'Pagination',
+        'documentation' => 'Documentation',
+        'toggle_navigation' => 'Toggle navigation',
+        'previous' => 'Previous',
+        'next' => 'Next',
     ],
 
     'search' => [
-        'label' => 'Snel zoeken',
-        'placeholder' => 'Zoek pagina\'s...',
-        'open' => 'Open opdracht palet',
-        'trigger' => 'Doorzoek de documenten...',
-        'navigate' => 'navigeren',
+        'label' => 'Quick search',
+        'placeholder' => 'Search pages...',
+        'open' => 'Open command palette',
+        'trigger' => 'Search the docs...',
+        'navigate' => 'navigate',
         'select' => 'open',
-        'close' => 'sluiten',
+        'close' => 'close',
     ],
 
     'theme' => [
-        'toggle' => 'Thema aan/uit',
+        'toggle' => 'Toggle theme',
     ],
 
     'toc' => [
-        'label' => 'Op deze pagina',
+        'label' => 'On this page',
+    ],
+
+    'language' => [
+        'label' => 'Language',
+        'select' => 'Select language',
     ],
 
     'version' => [
@@ -56,42 +61,37 @@ return [
         'select' => 'Select version',
     ],
 
-    'language' => [
-        'label' => 'Taal',
-        'select' => 'Taal selecteren',
-    ],
-
     'page' => [
-        'last_updated' => 'Laatst bijgewerkt :date',
-        'edit' => 'Deze pagina bewerken',
+        'last_updated' => 'Last updated :date',
+        'edit' => 'Edit this page',
     ],
 
     'macros' => [
-        'read_more' => 'Meer informatie',
+        'read_more' => 'Read more',
     ],
 
     'tags' => [
         'eyebrow' => 'Tags',
         'label' => 'Tags',
         'index_title' => 'Tags',
-        'index_intro' => 'Blader door de documentatie op onderwerp.',
-        'show_title' => 'Pagina’s met de tag “:tag”',
-        'count' => '{0} Geen pagina’s|{1} :count pagina|[2,*] :count pagina’s',
-        'empty' => 'Nog geen tags.',
-        'all' => 'Alle tags',
+        'index_intro' => 'Browse the documentation by topic.',
+        'show_title' => 'Pages tagged “:tag”',
+        'count' => '{0} No pages|{1} :count page|[2,*] :count pages',
+        'empty' => 'No tags yet.',
+        'all' => 'All tags',
     ],
 
     'empty' => [
-        'eyebrow' => 'Aan de slag',
-        'title' => 'Uw documentatie, klaar wanneer u klaar bent.',
-        'intro' => 'LaraDocs is bedraad en wachten op inhoud. Pagina\'s zijn afkomstig uit :path.',
-        'step_one_title' => 'Steiger een startpagina',
-        'step_one_body' => 'Voer :command uit om een welkomstpagina en map in uw documentenmap te plaatsen.',
-        'step_two_title' => 'Schrijf je eerste pagina',
-        'step_two_body' => 'Gebruik :command om een nieuw markdown bestand te genereren met de voorkant.',
-        'step_three_title' => 'Pas het uiterlijk af',
-        'step_three_body' => 'Verander instellingen met :preset of pas het accent af met :accent.',
-        'handbook' => 'Lees de handleiding &rarr;',
+        'eyebrow' => 'Get started',
+        'title' => 'Your documentation, ready when you are.',
+        'intro' => 'Laradocs is wired up and waiting for content. Pages are sourced from :path.',
+        'step_one_title' => 'Scaffold a starter page',
+        'step_one_body' => 'Run :command to drop a welcome page and folder into your docs directory.',
+        'step_two_title' => 'Write your first page',
+        'step_two_body' => 'Use :command to generate a new markdown file with front-matter.',
+        'step_three_title' => 'Tune the look',
+        'step_three_body' => 'Switch presets with :preset or tune the accent with :accent.',
+        'handbook' => 'Read the handbook &rarr;',
     ],
 
 ];
