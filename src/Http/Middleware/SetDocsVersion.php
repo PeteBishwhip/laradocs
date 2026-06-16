@@ -13,18 +13,16 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * When multi-version docs are enabled, this middleware:
  *
- *  1. Detects which version the request targets by reading the first segment of
- *     the `{path}` route parameter (e.g. "v2" in /docs/v2/getting-started).
- *  2. Falls back to the configured default version when none is found.
- *  3. Rewrites `laradocs.docs.path` to the version's sub-directory so that the
- *     FilesystemLoader picks up the right content without any controller changes.
- *  4. Stores the resolved handle in `laradocs._current_version` so CacheKey and
- *     DocumentUrl can read it without re-interrogating the request.
- *  5. Strips the version segment from the `{path}` route parameter so that
- *     DocsController always receives a plain slug.
+ *  1. Detects which version the request targets from the first segment of the
+ *     `{path}` route parameter (e.g. "v2" in /docs/v2/getting-started).
+ *  2. Falls back to the configured default version when none is present.
+ *  3. Records the resolved handle in `laradocs._current_version`, which the
+ *     loader (via {@see Version::docsPath()}), CacheKey, DocumentUrl and
+ *     DocsController all read to scope content, cache keys and URLs.
  *
- * Both mutations are restored after the response renders, keeping Octane
- * workers free from cross-request state leakage.
+ * The base `laradocs.docs.path` is never touched, so version auto-detection
+ * keeps working mid-request. The runtime key is restored after the response
+ * renders, keeping long-lived workers (Laravel Octane) free of state leakage.
  */
 final class SetDocsVersion
 {
@@ -39,36 +37,21 @@ final class SetDocsVersion
 
         $versions = Version::available();
 
-        if (empty($versions)) {
+        if ($versions === []) {
             return $next($request);
         }
 
-        $previousPath = Config::string('laradocs.docs.path');
         $previousVersion = Config::nullableString('laradocs._current_version');
 
         $detected = $this->detectVersion($request, $versions);
-        $resolved = $detected ?? Version::default() ?? (string) array_key_first($versions);
+        $resolved = $detected ?? Version::default() ?? array_key_first($versions);
 
-        config([
-            'laradocs._current_version' => $resolved,
-            'laradocs.docs.path' => Version::pathFor($resolved),
-        ]);
-
-        // Strip the version prefix from the {path} route parameter so that
-        // DocsController::show() receives a clean slug.
-        if ($request->route() !== null && $detected !== null) {
-            $raw = ltrim((string) ($request->route('path') ?? ''), '/');
-            $clean = ltrim(substr($raw, strlen($detected)), '/');
-            $request->route()->setParameter('path', $clean);
-        }
+        config(['laradocs._current_version' => $resolved]);
 
         try {
             $response = $next($request);
         } finally {
-            config([
-                'laradocs.docs.path' => $previousPath,
-                'laradocs._current_version' => $previousVersion,
-            ]);
+            config(['laradocs._current_version' => $previousVersion]);
         }
 
         return $response;
@@ -81,11 +64,7 @@ final class SetDocsVersion
      */
     private function detectVersion(Request $request, array $versions): ?string
     {
-        if ($request->route() === null) {
-            return null;
-        }
-
-        $path = ltrim((string) ($request->route('path') ?? ''), '/');
+        $path = ltrim((string) $request->route('path'), '/');
         $first = explode('/', $path)[0];
 
         return isset($versions[$first]) ? $first : null;

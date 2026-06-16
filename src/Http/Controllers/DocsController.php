@@ -12,6 +12,7 @@ use Laradocs\Routing\DocumentUrl;
 use Laradocs\Seo\SeoFactory;
 use Laradocs\Support\Config;
 use Laradocs\Support\Navigation;
+use Laradocs\Support\Version;
 use Laradocs\Toc\TableOfContents;
 use RalphJSmit\Laravel\SEO\Support\SEOData;
 
@@ -46,9 +47,17 @@ final class DocsController
     {
         $slug = trim($path, '/');
 
-        // When multi-version middleware strips the version prefix the remainder
-        // may be empty (e.g. /docs/v1/ → slug ''). Delegate to index() so the
-        // version root shows the same landing document as the docs home page.
+        // With multi-version docs the URL carries a version prefix (e.g.
+        // /docs/v2/getting-started). The path is already version-scoped by the
+        // middleware, so strip the prefix to resolve the slug against that
+        // version's document set. A bare version root (/docs/v2) leaves an
+        // empty slug, which falls through to the version's landing page.
+        $version = Version::current();
+
+        if ($version !== null && str_starts_with($slug . '/', $version . '/')) {
+            $slug = ltrim(substr($slug, strlen($version)), '/');
+        }
+
         if ($slug === '') {
             return $this->index();
         }

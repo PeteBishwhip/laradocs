@@ -93,6 +93,7 @@ test('sidebar order falls back to alphabetical for default-ordered children', as
         'SEO',
         'Sitemap',
         'Tags',
+        'Versioning',
     ]);
 
     // Confirm it really is alphabetical (the default-order branch), comparing

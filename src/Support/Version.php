@@ -108,6 +108,20 @@ final class Version
     }
 
     /**
+     * The docs path the loader should read for the current request: the base
+     * path when no version is active, or the active version's sub-directory.
+     *
+     * The base `laradocs.docs.path` is never mutated, so version auto-detection
+     * keeps scanning the parent directory for the lifetime of the request.
+     */
+    public static function docsPath(): string
+    {
+        $current = self::current();
+
+        return $current !== null ? self::pathFor($current) : Config::string('laradocs.docs.path');
+    }
+
+    /**
      * Scan the docs path for version sub-directories.
      *
      * @return array<string, string>
