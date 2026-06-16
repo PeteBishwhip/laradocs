@@ -56,6 +56,11 @@ return [
         'select' => 'Välj språk',
     ],
 
+    'version' => [
+        'label' => 'Version',
+        'select' => 'Select version',
+    ],
+
     'page' => [
         'last_updated' => 'Senast uppdaterad :date',
         'edit' => 'Redigera denna sida',
@@ -66,14 +71,14 @@ return [
     ],
 
     'tags' => [
-        'eyebrow' => 'Taggar',
-        'label' => 'Taggar',
-        'index_title' => 'Taggar',
-        'index_intro' => 'Bläddra i dokumentationen efter ämne.',
-        'show_title' => 'Sidor taggade med ”:tag”',
-        'count' => '{0} Inga sidor|{1} :count sida|[2,*] :count sidor',
-        'empty' => 'Inga taggar ännu.',
-        'all' => 'Alla taggar',
+        'eyebrow' => 'Tags',
+        'label' => 'Tags',
+        'index_title' => 'Tags',
+        'index_intro' => 'Browse the documentation by topic.',
+        'show_title' => 'Pages tagged “:tag”',
+        'count' => '{0} No pages|{1} :count page|[2,*] :count pages',
+        'empty' => 'No tags yet.',
+        'all' => 'All tags',
     ],
 
     'empty' => [
