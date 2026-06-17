@@ -8,6 +8,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Localised page content and an in-header language switcher. A page can be
+  translated by filename suffix (`docs/guide.fr.md`) or locale directory
+  (`docs/fr/guide.md`); both resolve to the same slug so URLs stay stable
+  across languages, and a missing translation falls back to the default-locale
+  file so a partially translated site never 404s. First-time visitors are
+  matched against their `Accept-Language` header (`detect_browser`), an
+  explicit choice can be persisted in a `laradocs_locale` cookie (`cookie`,
+  off by default for consent reasons), and `available` locales can be set via
+  `LARADOCS_LOCALE_AVAILABLE`. See the "Localisation" guide.
+- Multi-version documentation support. Serve several versions from sibling
+  sub-directories of the docs path (`docs/v1/`, `docs/v2/`) under
+  `/docs/{version}/{slug}`, with a version switcher in the header and
+  per-version cache namespacing. Versions auto-detect from the directory tree
+  (drop a `_version.json` with `{"label": "…"}` for a custom name) or can be
+  listed explicitly. Configurable via the `versions` block (`enabled`,
+  `default`, `available`, `selector`); opt in with `LARADOCS_VERSIONS=true`.
+  See the multi-version migration guide.
+- `docs:lint` Artisan command validating front-matter: flags documents missing
+  required fields and, when an allowlist is set, unrecognised `layout` values.
+  Configurable via the `lint` block (`required`, `layouts`).
+- `docs:check` Artisan command for content integrity: validates internal links,
+  detects orphaned pages, and reports redirect cycles.
+- Updated translations via Crowdin.
+
+## [0.4.0] - 2026-06-15
+
+### Added
 - Blade-component-style tags in markdown: authors can drop `<x-name attr="value">…</x-name>`
   (or self-closing `<x-name />`) straight into a page. Components resolve through the
   existing macro engine — `<x-name>` renders the macro registered under `name`, so the
@@ -135,7 +162,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Artisan commands: `laradocs:install`, `make:doc`, `laradocs:cache`, `laradocs:clear`.
 - Publishable config, views and assets; `php artisan about` integration.
 
-[Unreleased]: https://github.com/petebishwhip/laradocs/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/petebishwhip/laradocs/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/petebishwhip/laradocs/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/petebishwhip/laradocs/compare/v0.2.0.1...v0.3.0
 [0.2.0]: https://github.com/petebishwhip/laradocs/compare/v0.1.4...v0.2.0
 [0.1.4]: https://github.com/petebishwhip/laradocs/compare/v0.1.3...v0.1.4
