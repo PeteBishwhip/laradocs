@@ -156,27 +156,33 @@ final class Locale
      */
     public static function determine(Request $request): string
     {
-        $explicit = self::explicitChoice($request);
-        if ($explicit !== null) {
-            return $explicit;
+        return self::explicitChoice($request)
+            ?? self::cookieLocale($request)
+            ?? self::browserLocale($request)
+            ?? self::fallback();
+    }
+
+    private static function cookieLocale(Request $request): ?string
+    {
+        if (! self::cookieEnabled()) {
+            return null;
         }
 
-        if (self::cookieEnabled()) {
-            $available = self::available();
-            $cookie = $request->cookie('laradocs_locale');
-            if (is_string($cookie) && $cookie !== '' && array_key_exists($cookie, $available)) {
-                return $cookie;
-            }
+        $cookie = $request->cookie('laradocs_locale');
+        $available = self::available();
+
+        return is_string($cookie) && $cookie !== '' && array_key_exists($cookie, $available)
+            ? $cookie
+            : null;
+    }
+
+    private static function browserLocale(Request $request): ?string
+    {
+        if (! Config::bool('laradocs.locale.detect_browser', true)) {
+            return null;
         }
 
-        if (Config::bool('laradocs.locale.detect_browser', true)) {
-            $browser = self::fromAcceptLanguage($request->header('Accept-Language', ''), self::available());
-            if ($browser !== null) {
-                return $browser;
-            }
-        }
-
-        return self::fallback();
+        return self::fromAcceptLanguage($request->header('Accept-Language', ''), self::available());
     }
 
     /**
@@ -197,8 +203,20 @@ final class Locale
             return null;
         }
 
-        // Parse "fr-CA;q=0.9, en;q=0.8" into [['tag' => 'fr-CA', 'q' => 0.9], …]
-        // sorted descending by quality weight.
+        $tags = self::parseAcceptLanguageTags($header);
+
+        return self::matchExactTag($tags, $available)
+            ?? self::matchPrimaryTag($tags, $available);
+    }
+
+    /**
+     * Parse "fr-CA;q=0.9, en;q=0.8" into [['tag' => 'fr-CA', 'q' => 0.9], …]
+     * sorted descending by quality weight.
+     *
+     * @return array<int, array{tag: string, q: float}>
+     */
+    private static function parseAcceptLanguageTags(string $header): array
+    {
         $tags = [];
 
         foreach (explode(',', $header) as $part) {
@@ -228,14 +246,34 @@ final class Locale
 
         usort($tags, fn (array $a, array $b): int => $b['q'] <=> $a['q']);
 
-        // Pass 1 — exact match (handles "de" → "de", "zh-TW" → "zh-TW").
+        return $tags;
+    }
+
+    /**
+     * Pass 1 — exact match (handles "de" → "de", "zh-TW" → "zh-TW").
+     *
+     * @param  array<int, array{tag: string, q: float}>  $tags
+     * @param  array<string, string>  $available
+     */
+    private static function matchExactTag(array $tags, array $available): ?string
+    {
         foreach ($tags as ['tag' => $tag]) {
             if (array_key_exists($tag, $available)) {
                 return $tag;
             }
         }
 
-        // Pass 2 — primary-subtag match (handles "fr-CA" → "fr").
+        return null;
+    }
+
+    /**
+     * Pass 2 — primary-subtag match (handles "fr-CA" → "fr").
+     *
+     * @param  array<int, array{tag: string, q: float}>  $tags
+     * @param  array<string, string>  $available
+     */
+    private static function matchPrimaryTag(array $tags, array $available): ?string
+    {
         foreach ($tags as ['tag' => $tag]) {
             $primary = explode('-', $tag)[0];
 

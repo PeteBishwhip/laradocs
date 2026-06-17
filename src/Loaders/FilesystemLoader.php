@@ -226,15 +226,38 @@ final class FilesystemLoader implements DocumentLoader
 
         $path = str_replace('\\', '/', $relativePath);
 
-        // Directory prefix: a leading "{locale}/" segment.
+        return $this->detectDirectoryLocale($path, $locales)
+            ?? $this->detectSuffixLocale($path, $locales)
+            ?? [null, $path];
+    }
+
+    /**
+     * Detect a locale encoded as a leading directory segment: "{locale}/rest/of/path".
+     *
+     * @param  array<int, string>  $locales
+     * @return array{0: string, 1: string}|null
+     */
+    private function detectDirectoryLocale(string $path, array $locales): ?array
+    {
         $slash = strpos($path, '/');
 
         if ($slash !== false && in_array(substr($path, 0, $slash), $locales, true)) {
             return [substr($path, 0, $slash), substr($path, $slash + 1)];
         }
 
-        // Filename suffix: "name.{locale}.ext" (requires a name and extension
-        // either side of the locale, so single-dot names never match).
+        return null;
+    }
+
+    /**
+     * Detect a locale encoded as a filename suffix: "name.{locale}.ext".
+     * Requires a base name and an extension on either side of the locale code
+     * so that ordinary dotted filenames (e.g. "release-2.0.md") never match.
+     *
+     * @param  array<int, string>  $locales
+     * @return array{0: string, 1: string}|null
+     */
+    private function detectSuffixLocale(string $path, array $locales): ?array
+    {
         $dir = '';
         $file = $path;
 
@@ -247,7 +270,7 @@ final class FilesystemLoader implements DocumentLoader
             return [$m[2], $dir . $m[1] . '.' . $m[3]];
         }
 
-        return [null, $path];
+        return null;
     }
 
     private function relativePath(SplFileInfo $file, string $basePath): string
