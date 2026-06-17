@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Laradocs\Routing;
 
 use Laradocs\Support\Config;
+use Laradocs\Support\Locale;
 use Laradocs\Support\Version;
 
 /**
@@ -35,6 +36,11 @@ final class DocumentUrl
      *
      * When multi-version docs are active the current version handle is
      * prepended to the slug automatically, e.g. "v2/getting-started".
+     *
+     * When cookie persistence is disabled (`locale.cookie = false`) and the
+     * active locale differs from the default, a `?lang=` query parameter is
+     * appended automatically so the language survives navigation without
+     * requiring a cookie.
      */
     public static function toSlug(string $slug): string
     {
@@ -44,12 +50,14 @@ final class DocumentUrl
         if ($version !== null) {
             $path = $slug !== '' ? "{$version}/{$slug}" : $version;
 
-            return route(self::prefix() . 'show', ['path' => $path]);
+            return route(self::prefix() . 'show', array_merge(['path' => $path], self::langParam()));
         }
 
-        return $slug === ''
-            ? self::index()
-            : route(self::prefix() . 'show', ['path' => $slug]);
+        if ($slug === '') {
+            return self::index();
+        }
+
+        return route(self::prefix() . 'show', array_merge(['path' => $slug], self::langParam()));
     }
 
     public static function index(): string
@@ -57,15 +65,17 @@ final class DocumentUrl
         $version = Version::current();
 
         if ($version !== null) {
-            return route(self::prefix() . 'show', ['path' => $version]);
+            return route(self::prefix() . 'show', array_merge(['path' => $version], self::langParam()));
         }
 
-        return route(self::prefix() . 'index');
+        return route(self::prefix() . 'index', self::langParam());
     }
 
     /**
      * URL to a documentation page in a specific version. Used by the version
-     * switcher to cross-link to the same page in a different version.
+     * switcher to cross-link to the same page in a different version. Language
+     * is intentionally not forwarded here — the switcher constructs its own
+     * URLs with the explicit target locale.
      */
     public static function forVersion(string $slug, string $version): string
     {
@@ -90,7 +100,7 @@ final class DocumentUrl
      */
     public static function tags(): string
     {
-        return route(self::prefix() . 'tags.index');
+        return route(self::prefix() . 'tags.index', self::langParam());
     }
 
     /**
@@ -98,7 +108,30 @@ final class DocumentUrl
      */
     public static function tag(string $slug): string
     {
-        return route(self::prefix() . 'tags.show', ['tag' => $slug]);
+        return route(self::prefix() . 'tags.show', array_merge(['tag' => $slug], self::langParam()));
+    }
+
+    /**
+     * A `['lang' => $code]` array to append to internal route parameters when
+     * cookie persistence is disabled and the active locale is not the default.
+     *
+     * Without a cookie to carry the choice, every internal link must forward
+     * `?lang=` in its query string so the visitor stays in the selected
+     * language as they navigate. When cookie persistence is enabled the cookie
+     * handles this and the parameter is omitted to keep URLs clean.
+     *
+     * @return array<string, string>
+     */
+    private static function langParam(): array
+    {
+        if (Locale::cookieEnabled()) {
+            return [];
+        }
+
+        $locale = (string) app()->getLocale();
+        $default = Locale::fallback();
+
+        return $locale !== $default ? ['lang' => $locale] : [];
     }
 
     public static function sitemap(): string

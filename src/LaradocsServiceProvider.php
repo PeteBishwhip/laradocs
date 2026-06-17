@@ -52,6 +52,7 @@ use Laradocs\Search\ScoutSearchEngine;
 use Laradocs\Search\SearchManager;
 use Laradocs\Seo\SeoFactory;
 use Laradocs\Support\Config;
+use Laradocs\Support\Locale;
 use Laradocs\Support\RateLimiterConfig;
 use Laradocs\Support\Version;
 use Laradocs\Variables\VariableRegistry;
@@ -151,6 +152,13 @@ final class LaradocsServiceProvider extends ServiceProvider
                 $extensions,
                 $ignored,
                 $defaults,
+                // Content localisation recognises the same locales offered in
+                // the in-page switcher. Per-language pages (page.fr.md or
+                // fr/page.md) are served for the request's locale, falling back
+                // to the default-locale file when a translation is missing.
+                fn (): array => array_keys(Locale::available()),
+                fn (): string => (string) $app->getLocale(),
+                fn (): string => Locale::fallback(),
             );
         });
 

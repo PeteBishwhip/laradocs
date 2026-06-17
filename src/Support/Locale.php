@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Laradocs\Support;
 
+use Closure;
 use Illuminate\Http\Request;
 
 /**
@@ -18,6 +19,44 @@ final class Locale
      * translations are published (`lang/vendor/laradocs`).
      */
     private const PUBLISHED = 'vendor/laradocs';
+
+    /**
+     * Optional application-supplied callback that determines whether cookie
+     * persistence is active for the current request. When registered it takes
+     * priority over the `laradocs.locale.cookie` config value.
+     *
+     * Register via `Laradocs::cookiesEnabled(fn () => ...)` in a service provider.
+     */
+    private static ?Closure $cookieResolver = null;
+
+    /**
+     * Register a callback that determines whether cookie persistence is enabled.
+     *
+     * The callback is evaluated on every check (i.e. per request), so it can
+     * inspect session state, consent flags, or any other runtime condition.
+     * Pass `null` to clear a previously registered callback and fall back to
+     * the `laradocs.locale.cookie` config value.
+     */
+    public static function setCookieResolver(?Closure $resolver): void
+    {
+        self::$cookieResolver = $resolver;
+    }
+
+    /**
+     * Whether cookie persistence is currently enabled.
+     *
+     * When a callback has been registered via `Laradocs::cookiesEnabled()` it is
+     * called and its boolean result is returned. Otherwise the config flag
+     * `laradocs.locale.cookie` (default `false`) is used.
+     */
+    public static function cookieEnabled(): bool
+    {
+        if (self::$cookieResolver !== null) {
+            return (bool) (self::$cookieResolver)();
+        }
+
+        return Config::bool('laradocs.locale.cookie', false);
+    }
 
     /**
      * The locales available for the documentation interface.
@@ -102,25 +141,148 @@ final class Locale
     /**
      * The locale to render the current docs request in.
      *
-     * An explicit choice — the `?lang=` query parameter or the cookie it sets —
-     * wins when it maps to a detected `available` locale; otherwise the
-     * {@see self::fallback()} is used. Unknown codes are ignored so the query
-     * string can never force an untranslated locale.
+     * Resolution order (first match wins):
+     *   1. The `?lang=` query parameter, validated against available locales.
+     *   2. The `laradocs_locale` cookie, **only** when `locale.cookie` is
+     *      enabled — the cookie is both written and read only when that flag is
+     *      on, so it can be disabled for EU cookie-consent compliance.
+     *   3. The browser's `Accept-Language` header, when
+     *      `laradocs.locale.detect_browser` is true (the default) — the
+     *      highest-quality header locale that maps to an available locale wins.
+     *   4. The configured fallback locale.
+     *
+     * Unknown codes are ignored at every step so neither the query string nor
+     * the browser header can force the UI into an untranslated locale.
      */
     public static function determine(Request $request): string
     {
-        $explicit = self::explicitChoice($request);
-        if ($explicit !== null) {
-            return $explicit;
+        return self::explicitChoice($request)
+            ?? self::cookieLocale($request)
+            ?? self::browserLocale($request)
+            ?? self::fallback();
+    }
+
+    private static function cookieLocale(Request $request): ?string
+    {
+        if (! self::cookieEnabled()) {
+            return null;
         }
 
-        $available = self::available();
         $cookie = $request->cookie('laradocs_locale');
-        if (is_string($cookie) && $cookie !== '' && array_key_exists($cookie, $available)) {
-            return $cookie;
+        $available = self::available();
+
+        return is_string($cookie) && $cookie !== '' && array_key_exists($cookie, $available)
+            ? $cookie
+            : null;
+    }
+
+    private static function browserLocale(Request $request): ?string
+    {
+        if (! Config::bool('laradocs.locale.detect_browser', true)) {
+            return null;
         }
 
-        return self::fallback();
+        return self::fromAcceptLanguage($request->header('Accept-Language', ''), self::available());
+    }
+
+    /**
+     * Parse an `Accept-Language` header and return the highest-quality code
+     * that matches an available locale, or null if none match.
+     *
+     * Matching is attempted in two passes so a header like `fr-CA, fr;q=0.9`
+     * can match an available `fr` locale even when `fr-CA` is absent:
+     *   1. Exact match against the full tag (e.g. "fr-CA" → "fr-CA").
+     *   2. Primary-subtag match — the language prefix before the first `-`
+     *      (e.g. "fr-CA" → "fr").
+     *
+     * @param  array<string, string>  $available
+     */
+    public static function fromAcceptLanguage(string $header, array $available): ?string
+    {
+        if ($header === '' || $available === []) {
+            return null;
+        }
+
+        $tags = self::parseAcceptLanguageTags($header);
+
+        return self::matchExactTag($tags, $available)
+            ?? self::matchPrimaryTag($tags, $available);
+    }
+
+    /**
+     * Parse "fr-CA;q=0.9, en;q=0.8" into [['tag' => 'fr-CA', 'q' => 0.9], …]
+     * sorted descending by quality weight.
+     *
+     * @return array<int, array{tag: string, q: float}>
+     */
+    private static function parseAcceptLanguageTags(string $header): array
+    {
+        $tags = [];
+
+        foreach (explode(',', $header) as $part) {
+            $part = trim($part);
+
+            if ($part === '') {
+                continue;
+            }
+
+            $segments = explode(';', $part);
+            $tag = trim($segments[0]);
+            $q = 1.0;
+
+            foreach (array_slice($segments, 1) as $param) {
+                $param = trim($param);
+                if (str_starts_with($param, 'q=')) {
+                    $q = (float) substr($param, 2);
+
+                    break;
+                }
+            }
+
+            if ($tag !== '' && $tag !== '*') {
+                $tags[] = ['tag' => $tag, 'q' => $q];
+            }
+        }
+
+        usort($tags, fn (array $a, array $b): int => $b['q'] <=> $a['q']);
+
+        return $tags;
+    }
+
+    /**
+     * Pass 1 — exact match (handles "de" → "de", "zh-TW" → "zh-TW").
+     *
+     * @param  array<int, array{tag: string, q: float}>  $tags
+     * @param  array<string, string>  $available
+     */
+    private static function matchExactTag(array $tags, array $available): ?string
+    {
+        foreach ($tags as ['tag' => $tag]) {
+            if (array_key_exists($tag, $available)) {
+                return $tag;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Pass 2 — primary-subtag match (handles "fr-CA" → "fr").
+     *
+     * @param  array<int, array{tag: string, q: float}>  $tags
+     * @param  array<string, string>  $available
+     */
+    private static function matchPrimaryTag(array $tags, array $available): ?string
+    {
+        foreach ($tags as ['tag' => $tag]) {
+            $primary = explode('-', $tag)[0];
+
+            if ($primary !== $tag && array_key_exists($primary, $available)) {
+                return $primary;
+            }
+        }
+
+        return null;
     }
 
     /**

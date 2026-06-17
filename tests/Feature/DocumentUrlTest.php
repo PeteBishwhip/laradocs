@@ -28,6 +28,43 @@ it('builds index, asset, search, sitemap and api urls', function () {
         ->and(DocumentUrl::apiSearch())->toBe(url('/docs/_laradocs/api/search'));
 });
 
+// ---------------------------------------------------------------------------
+// Lang forwarding when cookie persistence is disabled
+// ---------------------------------------------------------------------------
+
+it('appends ?lang= to all internal links when cookie is off and locale is not the default', function () {
+    config()->set('laradocs.locale.available', ['en' => 'English', 'fr' => 'Français']);
+    config()->set('laradocs.locale.default', 'en');
+    config()->set('laradocs.locale.cookie', false);
+    app()->setLocale('fr');
+
+    expect(DocumentUrl::toSlug('guide/intro'))->toBe(url('/docs/guide/intro') . '?lang=fr')
+        ->and(DocumentUrl::index())->toBe(url('/docs') . '?lang=fr')
+        ->and(DocumentUrl::tags())->toBe(url('/docs/tags') . '?lang=fr')
+        ->and(DocumentUrl::tag('getting-started'))->toBe(url('/docs/tag/getting-started') . '?lang=fr');
+});
+
+it('omits ?lang= from links when the active locale matches the default', function () {
+    config()->set('laradocs.locale.available', ['en' => 'English', 'fr' => 'Français']);
+    config()->set('laradocs.locale.default', 'en');
+    config()->set('laradocs.locale.cookie', false);
+    app()->setLocale('en');
+
+    expect(DocumentUrl::toSlug('guide/intro'))->toBe(url('/docs/guide/intro'))
+        ->and(DocumentUrl::index())->toBe(url('/docs'));
+});
+
+it('omits ?lang= from links when locale.cookie is enabled', function () {
+    config()->set('laradocs.locale.available', ['en' => 'English', 'fr' => 'Français']);
+    config()->set('laradocs.locale.default', 'en');
+    config()->set('laradocs.locale.cookie', true);
+    app()->setLocale('fr');
+
+    // Cookie will carry the language; adding ?lang= would clutter every URL.
+    expect(DocumentUrl::toSlug('guide/intro'))->toBe(url('/docs/guide/intro'))
+        ->and(DocumentUrl::index())->toBe(url('/docs'));
+});
+
 it('respects a configured route-name prefix', function () {
     config()->set('laradocs.route.name', 'manual.');
 

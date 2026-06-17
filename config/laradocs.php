@@ -25,6 +25,14 @@ return [
     | the language files with `php artisan vendor:publish --tag=laradocs-lang`
     | and add a directory per locale (e.g. lang/vendor/laradocs/fr).
     |
+    | Page *content* is localised too: add a translated copy of a markdown file
+    | as either a filename suffix (docs/guide.fr.md) or a locale directory
+    | (docs/fr/guide.md). Both resolve to the same slug, so the URL is stable
+    | across languages. A locale only counts as a content language when it is
+    | one of the "available" locales below; when a page has no translation for
+    | the active locale the default-locale file is served instead, so a
+    | partially translated site never 404s. See the "Localisation" guide.
+    |
     | "default"   The locale the docs render in. Defaults to "en". Set
     |             LARADOCS_LOCALE to override.
     | "available" Locales offered in the in-page language selector.
@@ -39,15 +47,35 @@ return [
     | "selector"  Show the language selector in the header. It is hidden
     |             automatically when fewer than two locales are available.
     |
-    | A visitor can switch language with a `?lang=<code>` query parameter; the
-    | choice is remembered in a cookie. See the "Localisation" guide.
+    | A visitor can switch language with a `?lang=<code>` query parameter. If
+    | the visitor has made no explicit choice, the browser's Accept-Language
+    | header is consulted (when detect_browser is true) before falling back to
+    | the default locale. See the "Localisation" guide.
+    |
+    | "cookie"          Persist the visitor's language choice in a one-year
+    |                   `laradocs_locale` cookie so it survives navigation
+    |                   without re-appending ?lang=. Disabled by default — EU
+    |                   deployments require cookie consent before setting
+    |                   non-essential cookies. Enable once your site has an
+    |                   appropriate consent mechanism in place, or see GitHub
+    |                   issue #95 for a first-class consent integration.
+    |                   Set LARADOCS_LOCALE_COOKIE=true to enable.
+    | "detect_browser"  Honour the browser's Accept-Language header for
+    |                   first-time visitors who haven't made an explicit choice.
+    |                   When true (the default) the highest-quality header
+    |                   locale that matches an available locale is selected. Set
+    |                   LARADOCS_DETECT_BROWSER=false to disable.
     |
     */
 
     'locale' => [
         'default' => env('LARADOCS_LOCALE', 'en'),
-        'available' => null,
+        'available' => env('LARADOCS_LOCALE_AVAILABLE') !== null
+            ? (array) json_decode((string) env('LARADOCS_LOCALE_AVAILABLE'), true)
+            : null,
         'selector' => (bool) env('LARADOCS_LOCALE_SELECTOR', true),
+        'cookie' => (bool) env('LARADOCS_LOCALE_COOKIE', false),
+        'detect_browser' => (bool) env('LARADOCS_DETECT_BROWSER', true),
     ],
 
     /*

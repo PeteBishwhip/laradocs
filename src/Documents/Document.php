@@ -15,6 +15,12 @@ use Laradocs\Metadata\Metadata;
  */
 final class Document implements Arrayable
 {
+    /**
+     * @param  string|null  $locale  The content locale this page is written in,
+     *                               derived from a `page.fr.md` suffix or a
+     *                               `fr/page.md` directory. Null when content
+     *                               localisation is not in play.
+     */
     public function __construct(
         public readonly string $path,
         public readonly string $relativePath,
@@ -23,6 +29,7 @@ final class Document implements Arrayable
         public readonly string $markdown,
         public readonly ?string $html = null,
         public readonly int $modifiedAt = 0,
+        public readonly ?string $locale = null,
     ) {}
 
     /**
@@ -38,6 +45,7 @@ final class Document implements Arrayable
             $this->markdown,
             $html,
             $this->modifiedAt,
+            $this->locale,
         );
     }
 
@@ -117,6 +125,7 @@ final class Document implements Arrayable
             'slug' => $this->slug,
             'title' => $this->title(),
             'relative_path' => $this->relativePath,
+            'locale' => $this->locale,
             'metadata' => $this->metadata->toArray(),
             'html' => $this->html,
         ];
