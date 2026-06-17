@@ -183,3 +183,39 @@ it('still expands a component on a line with an unbalanced inline backtick', fun
     expect($html)->toContain('laradocs-pill')
         ->and($html)->toContain('Beta');
 });
+
+it('skips a stray non-name character mixed into the attribute list', function () {
+    // `?` is neither a name char nor whitespace — the parser should advance
+    // past it and keep parsing the surrounding well-formed attributes.
+    $html = component('<x-badge ? text="Beta" />');
+
+    expect($html)->toContain('laradocs-pill')
+        ->and($html)->toContain('Beta');
+});
+
+it('treats `attr=` with no value as a value-less attribute', function () {
+    app(Laradocs::class)->macro('emptyeq', fn (array $arguments): string => sprintf(
+        '<i>%s</i>',
+        var_export($arguments['flag'] ?? null, true),
+    ));
+
+    // The trailing space before `/>` survives the rtrim-then-strip-`/` step
+    // inside the opening-tag parser, so the attribute reader has to bail out
+    // of the `= value` lookup when it skips spaces straight to end-of-input.
+    $html = component('<x-emptyeq flag= />');
+
+    expect($html)->toContain('<i>true</i>');
+});
+
+it('reads an unquoted attribute value up to the next whitespace', function () {
+    app(Laradocs::class)->macro('bareval', fn (array $arguments): string => sprintf(
+        '<i>%s</i>',
+        var_export($arguments['n'] ?? null, true),
+    ));
+
+    // No quotes — the value scan runs until whitespace and the literal casts
+    // through ValueCaster the same as a quoted numeric.
+    $html = component('<x-bareval n=7 />');
+
+    expect($html)->toContain('<i>7</i>');
+});

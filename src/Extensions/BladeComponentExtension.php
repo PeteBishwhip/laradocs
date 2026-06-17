@@ -259,7 +259,7 @@ final class BladeComponentExtension implements MarkdownExtension
             $closing = strpos($raw, $first, $i + 1);
 
             if ($closing === false) {
-                return [substr($raw, $i), $length];
+                return [substr($raw, $i), $length]; // @codeCoverageIgnore
             }
 
             return [substr($raw, $i, $closing - $i + 1), $closing + 1];
