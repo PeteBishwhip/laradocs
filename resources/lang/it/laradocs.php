@@ -38,7 +38,7 @@ return [
         'placeholder' => 'Cerca pagine...',
         'open' => 'Apri tavolozza comandi',
         'trigger' => 'Cerca nei documenti...',
-        'navigate' => 'navigate',
+        'navigate' => 'navigare',
         'select' => 'apri',
         'close' => 'chiudi',
     ],
@@ -57,8 +57,8 @@ return [
     ],
 
     'version' => [
-        'label' => 'Version',
-        'select' => 'Select version',
+        'label' => 'Versione',
+        'select' => 'Seleziona la versione',
     ],
 
     'page' => [
