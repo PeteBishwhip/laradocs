@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- MCP server endpoint (`POST /docs/_laradocs/mcp`) over Streamable-HTTP transport.
+  Opt-in via `LARADOCS_MCP=true`. Exposes three tools: `search_docs`, `list_pages`, `fetch_page`.
+  Connect with: `{"mcpServers":{"laradocs":{"type":"http","url":"https://example.com/docs/_laradocs/mcp"}}}`.
+
 ## [0.5.0] - 2026-06-17
 
 ### Added
