@@ -1,7 +1,7 @@
 ---
 title: Getting Started
 description: Install Laradocs and publish your first page in minutes.
-order: 2
+order: 3
 ---
 
 # Getting Started
