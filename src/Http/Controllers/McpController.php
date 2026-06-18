@@ -9,7 +9,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Laradocs\Laradocs;
+use Laradocs\Routing\DocumentUrl;
 use Laradocs\Search\Contracts\SearchEngine;
+use Laradocs\Search\Excerpt;
 
 /**
  * MCP (Model Context Protocol) endpoint.
@@ -24,9 +26,7 @@ final class McpController
     private const PROTOCOL_VERSION = '2025-03-26';
 
     public function __construct(
-        // @phpstan-ignore property.onlyWritten (consumed by tools/call in a later story)
         private readonly Laradocs $laradocs,
-        // @phpstan-ignore property.onlyWritten (consumed by tools/call in a later story)
         private readonly SearchEngine $engine,
     ) {}
 
@@ -147,10 +147,50 @@ final class McpController
     private function handleToolsCall(mixed $id, array $body): JsonResponse
     {
         $params = is_array($body['params'] ?? null) ? $body['params'] : [];
-        $name = is_string($params['name'] ?? null) ? $params['name'] : '';
 
-        // No tools are registered yet; the dispatch lands here once tools exist.
-        return $this->toolError($id, "Unknown tool: {$name}");
+        // A missing or non-string tool name is a malformed request, not a tool
+        // failure — surface it as a JSON-RPC protocol error.
+        if (! is_string($params['name'] ?? null)) {
+            return $this->jsonRpcError($id, -32602, 'Invalid params: tool name is required');
+        }
+
+        $name = $params['name'];
+        $arguments = is_array($params['arguments'] ?? null) ? $params['arguments'] : [];
+
+        return match ($name) {
+            'search_docs' => $this->callSearchDocs($id, $arguments),
+            default => $this->toolError($id, "Unknown tool: {$name}"),
+        };
+    }
+
+    /**
+     * The `search_docs` tool: full-text search over the index, returning the
+     * matching pages with a short excerpt for each.
+     *
+     * @param  array<mixed>  $arguments
+     */
+    private function callSearchDocs(mixed $id, array $arguments): JsonResponse
+    {
+        if (! is_string($arguments['query'] ?? null)) {
+            return $this->toolError($id, 'The "query" argument is required and must be a string.');
+        }
+
+        $query = $arguments['query'];
+        $limitRaw = $arguments['limit'] ?? 10;
+        $limit = is_numeric($limitRaw) ? (int) $limitRaw : 10;
+        $limit = max(1, min(100, $limit));
+
+        $results = $this->engine->search($query, $this->laradocs->searchIndex(), $limit);
+
+        $mapped = array_map(fn (array $entry): array => [
+            'slug' => $entry['slug'],
+            'title' => $entry['title'],
+            'group' => $entry['group'],
+            'url' => DocumentUrl::toSlug($entry['slug']),
+            'excerpt' => Excerpt::make($entry['content'], $query),
+        ], $results);
+
+        return $this->toolContent($id, ['results' => $mapped]);
     }
 
     private function serverVersion(): string
@@ -180,8 +220,6 @@ final class McpController
      * A successful `tools/call` result carrying text content.
      *
      * @param  array<string, mixed>  $data
-     *
-     * @phpstan-ignore method.unused (wired into tools/call in a later story)
      */
     private function toolContent(mixed $id, array $data): JsonResponse
     {

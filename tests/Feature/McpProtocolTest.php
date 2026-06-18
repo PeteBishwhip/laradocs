@@ -161,8 +161,95 @@ it('tools/call for an unknown tool returns a tool error result', function () {
         ->assertJsonPath('result.content.0.text', 'Unknown tool: mystery');
 });
 
-it('tools/call tolerates a missing params object', function () {
+it('tools/call with a missing params object returns invalid params -32602', function () {
     $this->postJson(MCP_URI, ['jsonrpc' => '2.0', 'id' => 4, 'method' => 'tools/call'])
+        ->assertOk()
+        ->assertJsonPath('error.code', -32602);
+});
+
+it('tools/call with no tool name returns invalid params -32602', function () {
+    $this->postJson(MCP_URI, [
+        'jsonrpc' => '2.0',
+        'id' => 4,
+        'method' => 'tools/call',
+        'params' => ['arguments' => ['query' => 'anything']],
+    ])
+        ->assertOk()
+        ->assertJsonPath('error.code', -32602);
+});
+
+it('search_docs returns matching pages with excerpts', function () {
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\n---\n# Home\n",
+        'guide/install.md' => "---\ntitle: Installation\ngroup: Guide\n---\nRun composer require to add the package to your app.\n",
+    ]);
+
+    $response = $this->postJson(MCP_URI, [
+        'jsonrpc' => '2.0',
+        'id' => 5,
+        'method' => 'tools/call',
+        'params' => ['name' => 'search_docs', 'arguments' => ['query' => 'composer']],
+    ])->assertOk();
+
+    expect($response->json('result.isError'))->toBeFalse();
+
+    $payload = json_decode($response->json('result.content.0.text'), true);
+
+    expect($payload['results'])->toBeArray()->not->toBeEmpty();
+
+    $first = $payload['results'][0];
+    expect($first['slug'])->toBe('guide/install')
+        ->and($first['title'])->toBe('Installation')
+        ->and($first['group'])->toBe('Guide')
+        ->and($first['url'])->toBe(url('/docs/guide/install'))
+        ->and($first['excerpt'])->toContain('composer');
+});
+
+it('search_docs honours the limit argument', function () {
+    $this->makeDocs([
+        'a.md' => "---\ntitle: Alpha\n---\nshared keyword alpha\n",
+        'b.md' => "---\ntitle: Bravo\n---\nshared keyword bravo\n",
+        'c.md' => "---\ntitle: Charlie\n---\nshared keyword charlie\n",
+    ]);
+
+    $response = $this->postJson(MCP_URI, [
+        'jsonrpc' => '2.0',
+        'id' => 6,
+        'method' => 'tools/call',
+        'params' => ['name' => 'search_docs', 'arguments' => ['query' => 'shared', 'limit' => 1]],
+    ])->assertOk();
+
+    $payload = json_decode($response->json('result.content.0.text'), true);
+
+    expect($payload['results'])->toHaveCount(1);
+});
+
+it('search_docs returns an empty results array when nothing matches', function () {
+    $this->makeDocs([
+        'guide/install.md' => "---\ntitle: Installation\n---\nRun composer require here.\n",
+    ]);
+
+    $response = $this->postJson(MCP_URI, [
+        'jsonrpc' => '2.0',
+        'id' => 7,
+        'method' => 'tools/call',
+        'params' => ['name' => 'search_docs', 'arguments' => ['query' => 'zzzznomatchzzzz']],
+    ])->assertOk();
+
+    expect($response->json('result.isError'))->toBeFalse();
+
+    $payload = json_decode($response->json('result.content.0.text'), true);
+
+    expect($payload['results'])->toBe([]);
+});
+
+it('search_docs without a query argument returns a tool error', function () {
+    $this->postJson(MCP_URI, [
+        'jsonrpc' => '2.0',
+        'id' => 8,
+        'method' => 'tools/call',
+        'params' => ['name' => 'search_docs', 'arguments' => []],
+    ])
         ->assertOk()
         ->assertJsonPath('result.isError', true);
 });
