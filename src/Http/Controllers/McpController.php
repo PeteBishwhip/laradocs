@@ -79,8 +79,66 @@ final class McpController
 
     private function handleToolsList(mixed $id): JsonResponse
     {
-        // Tool definitions are registered in a later story.
-        return $this->success($id, ['tools' => []]);
+        return $this->success($id, ['tools' => $this->toolDefinitions()]);
+    }
+
+    /**
+     * The full MCP tool catalogue advertised to clients, each entry carrying a
+     * JSON Schema describing its parameters.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function toolDefinitions(): array
+    {
+        return [
+            [
+                'name' => 'search_docs',
+                'description' => 'Full-text search across the documentation. Returns matching pages ranked by relevance.',
+                'inputSchema' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'query' => [
+                            'type' => 'string',
+                            'description' => 'The search query.',
+                        ],
+                        'limit' => [
+                            'type' => 'integer',
+                            'description' => 'Maximum number of results to return.',
+                            'default' => 10,
+                        ],
+                    ],
+                    'required' => ['query'],
+                ],
+            ],
+            [
+                'name' => 'list_pages',
+                'description' => 'List the available documentation pages, optionally filtered to a single group.',
+                'inputSchema' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'group' => [
+                            'type' => 'string',
+                            'description' => 'Restrict the listing to pages within this group.',
+                        ],
+                    ],
+                    'required' => [],
+                ],
+            ],
+            [
+                'name' => 'fetch_page',
+                'description' => 'Fetch the full rendered content of a single documentation page by slug.',
+                'inputSchema' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'slug' => [
+                            'type' => 'string',
+                            'description' => 'The slug of the page to fetch.',
+                        ],
+                    ],
+                    'required' => ['slug'],
+                ],
+            ],
+        ];
     }
 
     /**

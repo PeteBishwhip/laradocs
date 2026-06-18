@@ -96,11 +96,57 @@ it('a request with a non-string method falls through to method not found', funct
         ->assertJsonPath('error.code', -32601);
 });
 
-it('tools/list returns a (currently empty) tools array', function () {
+it('tools/list returns all three tool definitions', function () {
     $response = $this->postJson(MCP_URI, ['jsonrpc' => '2.0', 'id' => 2, 'method' => 'tools/list'])
         ->assertOk();
 
-    expect($response->json('result.tools'))->toBe([]);
+    $tools = $response->json('result.tools');
+
+    expect($tools)->toBeArray()->toHaveCount(3);
+
+    $names = array_column($tools, 'name');
+    expect($names)->toEqualCanonicalizing(['search_docs', 'list_pages', 'fetch_page']);
+});
+
+it('tools/list gives every tool an object input schema', function () {
+    $response = $this->postJson(MCP_URI, ['jsonrpc' => '2.0', 'id' => 2, 'method' => 'tools/list'])
+        ->assertOk();
+
+    foreach ($response->json('result.tools') as $tool) {
+        expect($tool['inputSchema']['type'])->toBe('object')
+            ->and($tool['inputSchema'])->toHaveKeys(['properties', 'required'])
+            ->and($tool['description'])->toBeString()->not->toBe('');
+    }
+});
+
+it('tools/list marks query as required for search_docs', function () {
+    $response = $this->postJson(MCP_URI, ['jsonrpc' => '2.0', 'id' => 2, 'method' => 'tools/list'])
+        ->assertOk();
+
+    $tool = collect($response->json('result.tools'))->firstWhere('name', 'search_docs');
+
+    expect($tool['inputSchema']['required'])->toBe(['query'])
+        ->and($tool['inputSchema']['properties'])->toHaveKeys(['query', 'limit'])
+        ->and($tool['inputSchema']['properties']['limit']['default'])->toBe(10);
+});
+
+it('tools/list marks slug as required for fetch_page', function () {
+    $response = $this->postJson(MCP_URI, ['jsonrpc' => '2.0', 'id' => 2, 'method' => 'tools/list'])
+        ->assertOk();
+
+    $tool = collect($response->json('result.tools'))->firstWhere('name', 'fetch_page');
+
+    expect($tool['inputSchema']['required'])->toBe(['slug']);
+});
+
+it('tools/list leaves list_pages with no required fields', function () {
+    $response = $this->postJson(MCP_URI, ['jsonrpc' => '2.0', 'id' => 2, 'method' => 'tools/list'])
+        ->assertOk();
+
+    $tool = collect($response->json('result.tools'))->firstWhere('name', 'list_pages');
+
+    expect($tool['inputSchema']['required'])->toBe([])
+        ->and($tool['inputSchema']['properties'])->toHaveKey('group');
 });
 
 it('tools/call for an unknown tool returns a tool error result', function () {
