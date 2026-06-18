@@ -1,7 +1,7 @@
 ---
 title: Features
 description: Variables, macros and rich content.
-order: 5
+order: 6
 ---
 
 # Features

@@ -478,8 +478,29 @@ return [
         'auto_description' => (bool) env('LARADOCS_SEO_AUTO_DESCRIPTION', true),
 
         // Default social / Open Graph image (absolute URL, or a path that
-        // resolves under your public directory).
+        // resolves under your public directory). Takes precedence over a
+        // generated card; a page's own front-matter `image` wins over both.
         'image' => env('LARADOCS_SEO_IMAGE'),
+
+        // Dynamically generated Open Graph cards. When a page declares no image
+        // (neither front-matter `image` nor seo.image above), a 1200×630 card
+        // is rendered on the fly from the page title + description, branded with
+        // your accent colour / logo, and cached. Requires simonhamp/the-og, or
+        // bind your own \Laradocs\Contracts\OgImageGenerator to take over.
+        'og_image' => [
+            'enabled' => (bool) env('LARADOCS_SEO_OG_IMAGE', true),
+
+            // Card theme: "light" or "dark".
+            'theme' => env('LARADOCS_SEO_OG_THEME', 'light'),
+
+            // Optional background colour (any CSS colour). Null uses the theme's.
+            'background_color' => env('LARADOCS_SEO_OG_BACKGROUND'),
+
+            // How long (seconds) a generated card is cached. Defaults to 30 days;
+            // the cache key folds in the page's mtime and your branding, so edits
+            // and theme changes bust it automatically.
+            'cache_ttl' => (int) env('LARADOCS_SEO_OG_TTL', 60 * 60 * 24 * 30),
+        ],
 
         // Default author attribution for article meta + schema.
         'author' => env('LARADOCS_SEO_AUTHOR'),
