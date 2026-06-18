@@ -18,6 +18,14 @@ use Laradocs\Support\Config;
  */
 final readonly class OgImageData
 {
+    /**
+     * Dimensions of a default (the-og) social card. Exposed so the SEO layer can
+     * advertise og:image:width / og:image:height for the generated card.
+     */
+    public const int WIDTH = 1200;
+
+    public const int HEIGHT = 630;
+
     public function __construct(
         public string $title,
         public ?string $description = null,
