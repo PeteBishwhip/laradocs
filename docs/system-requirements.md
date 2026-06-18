@@ -1,7 +1,7 @@
 ---
 title: System Requirements
 description: PHP, Laravel, and extension requirements for running Laradocs.
-order: 2
+order: 3
 ---
 
 # System Requirements
