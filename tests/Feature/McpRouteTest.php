@@ -59,7 +59,11 @@ it('404s the mcp endpoint when mcp is disabled', function () {
 it('dispatches to the controller when mcp is enabled', function () {
     config()->set('laradocs.mcp.enabled', true);
 
-    $this->postJson('/docs/_laradocs/mcp')
+    $this->postJson('/docs/_laradocs/mcp', [
+        'jsonrpc' => '2.0',
+        'id' => 1,
+        'method' => 'does-not-exist',
+    ])
         ->assertOk()
         ->assertJson([
             'jsonrpc' => '2.0',
