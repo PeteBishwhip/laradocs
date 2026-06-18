@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Laradocs\Routing;
 
+use Laradocs\Seo\OgImage;
 use Laradocs\Support\Config;
 use Laradocs\Support\Locale;
 use Laradocs\Support\Version;
@@ -88,6 +89,34 @@ final class DocumentUrl
     public static function asset(string $file): string
     {
         return route(self::prefix() . 'asset', ['file' => $file]);
+    }
+
+    /**
+     * Absolute URL to the generated Open Graph image for a page, or null when
+     * generation is disabled / unavailable or the route isn't registered (e.g.
+     * a consumer app that owns its own docs URLs but hasn't wired an og route).
+     *
+     * An empty slug resolves to the landing-page card; every other slug carries
+     * the active version handle, mirroring {@see self::toSlug()} so the og
+     * controller resolves the same document the page itself renders.
+     */
+    public static function ogImage(string $slug): ?string
+    {
+        $slug = trim($slug, '/');
+        $name = self::prefix() . ($slug === '' ? 'og.index' : 'og');
+
+        if (! OgImage::enabled() || ! app('router')->has($name)) {
+            return null;
+        }
+
+        if ($slug === '') {
+            return route($name);
+        }
+
+        $version = Version::current();
+        $path = $version !== null ? "{$version}/{$slug}" : $slug;
+
+        return route($name, ['path' => $path]);
     }
 
     public static function search(): string

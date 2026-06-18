@@ -1,7 +1,7 @@
 ---
 title: API Reference
 description: HTTP endpoints for programmatic access to the navigation tree and search index.
-order: 8
+order: 7
 ---
 
 # API Reference

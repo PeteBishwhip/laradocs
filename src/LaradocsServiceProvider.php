@@ -30,6 +30,7 @@ use Laradocs\Contracts\DocumentParser;
 use Laradocs\Contracts\HtmlExtension;
 use Laradocs\Contracts\MarkdownExtension;
 use Laradocs\Contracts\MetadataResolver;
+use Laradocs\Contracts\OgImageGenerator;
 use Laradocs\Extensions\BladeComponentExtension;
 use Laradocs\Extensions\CalloutExtension;
 use Laradocs\Extensions\CodeBlockExtension;
@@ -51,6 +52,7 @@ use Laradocs\Search\JsonSearchEngine;
 use Laradocs\Search\ScoutSearchEngine;
 use Laradocs\Search\SearchManager;
 use Laradocs\Seo\SeoFactory;
+use Laradocs\Seo\TheOgImageGenerator;
 use Laradocs\Support\Config;
 use Laradocs\Support\Locale;
 use Laradocs\Support\RateLimiterConfig;
@@ -63,6 +65,7 @@ use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
 use League\CommonMark\Extension\Footnote\FootnoteExtension;
 use League\CommonMark\Extension\GithubFlavoredMarkdownExtension;
 use League\CommonMark\MarkdownConverter;
+use SimonHamp\TheOg\Image;
 
 final class LaradocsServiceProvider extends ServiceProvider
 {
@@ -177,6 +180,15 @@ final class LaradocsServiceProvider extends ServiceProvider
     private function registerCore(): void
     {
         $this->app->singleton(SeoFactory::class);
+
+        // Default social-card generator. Bound only when simonhamp/the-og is
+        // installed so the package stays dependency-light; consumers can bind
+        // their own OgImageGenerator (in any provider) to override it, with or
+        // without the-og present. OgImage::enabled() gates the SEO/route layer
+        // on this binding existing, so an unbound contract never 500s a card.
+        if (class_exists(Image::class)) {
+            $this->app->bindIf(OgImageGenerator::class, TheOgImageGenerator::class);
+        }
 
         $this->app->bind(Laradocs::class, function (Application $app): Laradocs {
             /** @var array<int, string> $searchExclude */

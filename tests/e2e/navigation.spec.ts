@@ -49,9 +49,10 @@ test('sidebar order honours explicit order at the top level', async ({ page }) =
     await page.goto('/docs/guide');
 
     // Top-level (single-segment slug) links in their rendered order. Explicit
-    // `order:` front-matter drives this: Getting Started (2) → Configuration
-    // (3) → Guide (4) → Features (5) → API Reference (8). Note this is NOT
-    // alphabetical — "Configuration" would sort before "Getting Started".
+    // `order:` front-matter drives this: Getting Started (2) → System
+    // Requirements (3) → Configuration (4) → Guide (5) → Features (6) → API
+    // Reference (7). Note this is NOT alphabetical — "Configuration" would sort
+    // before "Getting Started".
     const topLevel = await page
         .locator(`${sidebarNav} a[href*="/docs/"]`)
         .evaluateAll((links) =>
@@ -63,7 +64,7 @@ test('sidebar order honours explicit order at the top level', async ({ page }) =
                 .map((el) => (el.textContent ?? '').trim()),
         );
 
-    const expectedHead = ['Getting Started', 'Configuration', 'Guide', 'Features', 'API Reference'];
+    const expectedHead = ['Getting Started', 'System Requirements', 'Configuration', 'Guide', 'Features', 'API Reference'];
     expect(topLevel.slice(0, expectedHead.length)).toEqual(expectedHead);
 
     // Explicit order beats alphabetical default.
