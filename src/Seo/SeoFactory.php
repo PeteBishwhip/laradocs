@@ -66,7 +66,9 @@ final class SeoFactory
             title: $this->suffixedTitle($title),
             description: $description,
             author: self::asString($this->pick($seo, $meta, 'author')) ?? $this->stringOrNull('laradocs.seo.author'),
-            image: self::asString($this->pick($seo, $meta, 'image')) ?? $this->stringOrNull('laradocs.seo.image'),
+            // An explicit image (front-matter or seo.image) always wins; only
+            // when none is declared do we fall back to a generated card.
+            image: $this->explicitImage($document) ?? $this->generatedImage($document->slug),
             // We bake the suffix into the title (above) and disable the SEO
             // package's own suffixing, which would otherwise also drag the
             // brand into og:title / x:title. Social cards instead read
@@ -101,7 +103,7 @@ final class SeoFactory
             title: $this->suffixedTitle($title),
             description: $description ?? $this->fallbackDescription(),
             author: $this->stringOrNull('laradocs.seo.author'),
-            image: $this->stringOrNull('laradocs.seo.image'),
+            image: $this->stringOrNull('laradocs.seo.image') ?? $this->generatedImage(''),
             enableTitleSuffix: false,
             twitter_username: $this->stringOrNull('laradocs.seo.x'),
             type: 'website',
@@ -248,6 +250,32 @@ final class SeoFactory
         }
 
         return $trail;
+    }
+
+    /**
+     * The image a page explicitly declares — its front-matter `image` (top-level
+     * or in the `seo:` block), then the site-wide `seo.image` default. Returns
+     * null when the page leaves the choice to generation.
+     *
+     * Exposed so the og-image controller can honour the same precedence the
+     * meta tags do: an explicit image short-circuits generation entirely.
+     */
+    public function explicitImage(Document $document): ?string
+    {
+        $meta = $document->metadata;
+        $seo = $this->seoBlock($meta);
+
+        return self::asString($this->pick($seo, $meta, 'image'))
+            ?? $this->stringOrNull('laradocs.seo.image');
+    }
+
+    /**
+     * URL of the generated social card for a slug, or null when generation is
+     * disabled / unavailable.
+     */
+    private function generatedImage(string $slug): ?string
+    {
+        return DocumentUrl::ogImage($slug);
     }
 
     /**

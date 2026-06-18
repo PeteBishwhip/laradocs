@@ -35,11 +35,13 @@
         "pestphp/pest": "^3.0 || ^4.0",
         "pestphp/pest-plugin-laravel": "^3.0 || ^4.0",
         "phpstan/phpstan": "^1.11 || ^2.0",
-        "rector/rector": "^1.2 || ^2.0"
+        "rector/rector": "^1.2 || ^2.0",
+        "simonhamp/the-og": "^0.8"
     },
     "suggest": {
         "laravel/scout": "Power full-text docs search with Meilisearch, Typesense or Algolia (falls back to a built-in JSON index).",
-        "nyholm/psr7": "When using Meilisearch via Scout, install a PSR-17 factory (nyholm/psr7, guzzlehttp/psr7 ^2, or symfony/http-client) so the Meilisearch SDK can build HTTP requests."
+        "nyholm/psr7": "When using Meilisearch via Scout, install a PSR-17 factory (nyholm/psr7, guzzlehttp/psr7 ^2, or symfony/http-client) so the Meilisearch SDK can build HTTP requests.",
+        "simonhamp/the-og": "Generate Open Graph / social card images for pages that don't declare their own (the default OgImageGenerator)."
     },
     "autoload": {
         "psr-4": {

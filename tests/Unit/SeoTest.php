@@ -304,10 +304,18 @@ describe('SeoFactory', function () {
         expect($seo->image)->toBe('https://example.com/site.png');
     });
 
-    it('leaves image null when neither page nor site image is configured', function () {
+    it('leaves image null when no image is configured and generation is off', function () {
+        config()->set('laradocs.seo.og_image.enabled', false);
+
         $seo = app(SeoFactory::class)->forDocument(makeDocument(SEO_SLUG, ['title' => 'Intro']));
 
         expect($seo->image)->toBeNull();
+    });
+
+    it('falls back to a generated card url when no image is configured', function () {
+        $seo = app(SeoFactory::class)->forDocument(makeDocument(SEO_SLUG, ['title' => 'Intro']));
+
+        expect($seo->image)->toContain('/docs/_laradocs/og/');
     });
 
     it('builds a breadcrumb trail from linked ancestors', function () {
