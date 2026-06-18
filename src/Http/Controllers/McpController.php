@@ -8,6 +8,7 @@ use Composer\InstalledVersions;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Laradocs\Documents\Document;
 use Laradocs\Laradocs;
 use Laradocs\Routing\DocumentUrl;
 use Laradocs\Search\Contracts\SearchEngine;
@@ -159,6 +160,8 @@ final class McpController
 
         return match ($name) {
             'search_docs' => $this->callSearchDocs($id, $arguments),
+            'list_pages' => $this->callListPages($id, $arguments),
+            'fetch_page' => $this->callFetchPage($id, $arguments),
             default => $this->toolError($id, "Unknown tool: {$name}"),
         };
     }
@@ -191,6 +194,73 @@ final class McpController
         ], $results);
 
         return $this->toolContent($id, ['results' => $mapped]);
+    }
+
+    /**
+     * The `list_pages` tool: enumerate every visible page, optionally narrowed
+     * to a single group, without triggering the HTML render pipeline.
+     *
+     * @param  array<mixed>  $arguments
+     */
+    private function callListPages(mixed $id, array $arguments): JsonResponse
+    {
+        $group = is_string($arguments['group'] ?? null) ? $arguments['group'] : null;
+
+        $pages = $this->laradocs->all()->visible()->ordered();
+
+        if ($group !== null) {
+            $pages = $pages->filter(
+                fn (Document $doc): bool => $doc->group() === $group
+            )->values();
+        }
+
+        $mapped = $pages->map(fn (Document $doc): array => [
+            'slug' => $doc->slug,
+            'title' => $doc->title(),
+            'group' => $doc->group(),
+            'url' => DocumentUrl::toSlug($doc->slug),
+        ])->all();
+
+        return $this->toolContent($id, ['pages' => $mapped]);
+    }
+
+    /**
+     * The `fetch_page` tool: return the raw markdown and front-matter metadata
+     * for a single page, looked up by slug. Deliberately avoids
+     * `Laradocs::find()`, which would render (and cache) the page's HTML.
+     *
+     * @param  array<mixed>  $arguments
+     */
+    private function callFetchPage(mixed $id, array $arguments): JsonResponse
+    {
+        if (! is_string($arguments['slug'] ?? null)) {
+            return $this->toolError($id, 'The "slug" argument is required and must be a string.');
+        }
+
+        $slug = $arguments['slug'];
+        $document = $this->laradocs->all()->findBySlug($slug);
+
+        if ($document === null) {
+            return $this->toolError($id, 'Page not found: ' . $slug);
+        }
+
+        $metadata = $document->metadata;
+
+        return $this->toolContent($id, [
+            'slug' => $document->slug,
+            'title' => $document->title(),
+            'group' => $document->group(),
+            'url' => DocumentUrl::toSlug($document->slug),
+            'markdown' => $document->markdown,
+            'metadata' => [
+                'description' => $metadata->description,
+                'author' => $metadata->author,
+                'updated_at' => $metadata->updatedAt,
+                'tags' => $metadata->tags,
+                'hidden' => $metadata->hidden,
+                'order' => $metadata->order === PHP_INT_MAX ? null : $metadata->order,
+            ],
+        ]);
     }
 
     private function serverVersion(): string

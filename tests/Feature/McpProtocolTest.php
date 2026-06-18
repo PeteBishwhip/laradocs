@@ -254,6 +254,144 @@ it('search_docs without a query argument returns a tool error', function () {
         ->assertJsonPath('result.isError', true);
 });
 
+it('list_pages returns all visible pages and excludes hidden ones', function () {
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\n---\n# Home\n",
+        'guide/install.md' => "---\ntitle: Installation\ngroup: Guide\n---\nInstall it.\n",
+        'secret.md' => "---\ntitle: Secret\nhidden: true\n---\nHidden away.\n",
+    ]);
+
+    $response = $this->postJson(MCP_URI, [
+        'jsonrpc' => '2.0',
+        'id' => 10,
+        'method' => 'tools/call',
+        'params' => ['name' => 'list_pages'],
+    ])->assertOk();
+
+    expect($response->json('result.isError'))->toBeFalse();
+
+    $payload = json_decode($response->json('result.content.0.text'), true);
+
+    $slugs = array_column($payload['pages'], 'slug');
+    expect($slugs)->toContain('guide/install')
+        ->and($slugs)->not->toContain('secret');
+});
+
+it('list_pages returns each page with slug, title, group and url fields', function () {
+    $this->makeDocs([
+        'guide/install.md' => "---\ntitle: Installation\ngroup: Guide\n---\nInstall it.\n",
+    ]);
+
+    $response = $this->postJson(MCP_URI, [
+        'jsonrpc' => '2.0',
+        'id' => 11,
+        'method' => 'tools/call',
+        'params' => ['name' => 'list_pages'],
+    ])->assertOk();
+
+    $payload = json_decode($response->json('result.content.0.text'), true);
+
+    $page = collect($payload['pages'])->firstWhere('slug', 'guide/install');
+
+    expect($page)->toHaveKeys(['slug', 'title', 'group', 'url'])
+        ->and($page['title'])->toBe('Installation')
+        ->and($page['group'])->toBe('Guide')
+        ->and($page['url'])->toBe(url('/docs/guide/install'));
+});
+
+it('list_pages with a group filter returns only matching pages', function () {
+    $this->makeDocs([
+        'guide/install.md' => "---\ntitle: Installation\ngroup: Guide\n---\nInstall it.\n",
+        'api/auth.md' => "---\ntitle: Auth\ngroup: API\n---\nAuthenticate.\n",
+    ]);
+
+    $response = $this->postJson(MCP_URI, [
+        'jsonrpc' => '2.0',
+        'id' => 12,
+        'method' => 'tools/call',
+        'params' => ['name' => 'list_pages', 'arguments' => ['group' => 'Guide']],
+    ])->assertOk();
+
+    $payload = json_decode($response->json('result.content.0.text'), true);
+
+    $groups = array_column($payload['pages'], 'group');
+    expect($groups)->not->toBeEmpty()
+        ->and(array_unique($groups))->toBe(['Guide']);
+});
+
+it('fetch_page returns the raw markdown and metadata for a valid slug', function () {
+    $this->makeDocs([
+        'guide/install.md' => "---\ntitle: Installation\ngroup: Guide\ndescription: How to install\norder: 2\n---\nRun the installer.\n",
+    ]);
+
+    $response = $this->postJson(MCP_URI, [
+        'jsonrpc' => '2.0',
+        'id' => 13,
+        'method' => 'tools/call',
+        'params' => ['name' => 'fetch_page', 'arguments' => ['slug' => 'guide/install']],
+    ])->assertOk();
+
+    expect($response->json('result.isError'))->toBeFalse();
+
+    $payload = json_decode($response->json('result.content.0.text'), true);
+
+    expect($payload['slug'])->toBe('guide/install')
+        ->and($payload['title'])->toBe('Installation')
+        ->and($payload['group'])->toBe('Guide')
+        ->and($payload['url'])->toBe(url('/docs/guide/install'))
+        ->and($payload['markdown'])->toContain('Run the installer.')
+        ->and($payload['metadata'])->toHaveKeys(['description', 'hidden', 'order'])
+        ->and($payload['metadata']['description'])->toBe('How to install')
+        ->and($payload['metadata']['hidden'])->toBeFalse()
+        ->and($payload['metadata']['order'])->toBe(2);
+});
+
+it('fetch_page reports a null order when none is set', function () {
+    config()->set('laradocs.metadata.default', ['hidden' => false]);
+
+    $this->makeDocs([
+        'guide/install.md' => "---\ntitle: Installation\n---\nInstall it.\n",
+    ]);
+
+    $response = $this->postJson(MCP_URI, [
+        'jsonrpc' => '2.0',
+        'id' => 14,
+        'method' => 'tools/call',
+        'params' => ['name' => 'fetch_page', 'arguments' => ['slug' => 'guide/install']],
+    ])->assertOk();
+
+    $payload = json_decode($response->json('result.content.0.text'), true);
+
+    expect($payload['metadata']['order'])->toBeNull();
+});
+
+it('fetch_page returns an error result for an unknown slug', function () {
+    $this->makeDocs([
+        'guide/install.md' => "---\ntitle: Installation\n---\nInstall it.\n",
+    ]);
+
+    $this->postJson(MCP_URI, [
+        'jsonrpc' => '2.0',
+        'id' => 15,
+        'method' => 'tools/call',
+        'params' => ['name' => 'fetch_page', 'arguments' => ['slug' => 'nope/missing']],
+    ])
+        ->assertOk()
+        ->assertJsonPath('result.isError', true)
+        ->assertJsonPath('result.content.0.text', 'Page not found: nope/missing');
+});
+
+it('fetch_page without a slug argument returns a tool error', function () {
+    $this->postJson(MCP_URI, [
+        'jsonrpc' => '2.0',
+        'id' => 16,
+        'method' => 'tools/call',
+        'params' => ['name' => 'fetch_page', 'arguments' => []],
+    ])
+        ->assertOk()
+        ->assertJsonPath('result.isError', true);
+});
+
 it('every response carries an application/json content type', function () {
     $response = $this->postJson(MCP_URI, ['jsonrpc' => '2.0', 'id' => 1, 'method' => 'ping']);
 
