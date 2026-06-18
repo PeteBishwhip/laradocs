@@ -13,6 +13,7 @@ use Laradocs\Routing\DocumentUrl;
 use Laradocs\Support\Config;
 use RalphJSmit\Laravel\SEO\Schema\BreadcrumbListSchema;
 use RalphJSmit\Laravel\SEO\SchemaCollection;
+use RalphJSmit\Laravel\SEO\Support\ImageMeta;
 use RalphJSmit\Laravel\SEO\Support\SEOData;
 use Throwable;
 
@@ -62,18 +63,23 @@ final class SeoFactory
             ?? $this->autoDescription($document)
             ?? $this->fallbackDescription();
 
+        [$image, $imageMeta] = $this->resolveImage($this->explicitImage($document), $document->slug);
+
         return new SEOData(
             title: $this->suffixedTitle($title),
             description: $description,
             author: SeoValue::asString($this->pick($seo, $meta, 'author')) ?? $this->stringOrNull('laradocs.seo.author'),
             // An explicit image (front-matter or seo.image) always wins; only
             // when none is declared do we fall back to a generated card.
-            image: $this->explicitImage($document) ?? DocumentUrl::ogImage($document->slug),
+            image: $image,
             // We bake the suffix into the title (above) and disable the SEO
             // package's own suffixing, which would otherwise also drag the
             // brand into og:title / x:title. Social cards instead read
             // the clean title from openGraphTitle below.
             enableTitleSuffix: false,
+            // Generated cards carry their known dimensions so og:image:width /
+            // og:image:height (and the Twitter image size) are advertised.
+            imageMeta: $imageMeta,
             published_time: $this->publishedTime($seo, $meta),
             modified_time: $this->timestamp($document->modifiedAt),
             section: SeoValue::asString($this->pick($seo, $meta, 'section')) ?? $meta->group,
@@ -99,12 +105,15 @@ final class SeoFactory
 
         $this->lastXCard = $this->stringOrNull('laradocs.seo.x_card') ?? 'summary_large_image';
 
+        [$image, $imageMeta] = $this->resolveImage($this->stringOrNull('laradocs.seo.image'), '');
+
         return new SEOData(
             title: $this->suffixedTitle($title),
             description: $description ?? $this->fallbackDescription(),
             author: $this->stringOrNull('laradocs.seo.author'),
-            image: $this->stringOrNull('laradocs.seo.image') ?? DocumentUrl::ogImage(''),
+            image: $image,
             enableTitleSuffix: false,
+            imageMeta: $imageMeta,
             twitter_username: $this->stringOrNull('laradocs.seo.x'),
             type: 'website',
             site_name: $this->siteName(),
@@ -267,6 +276,33 @@ final class SeoFactory
 
         return SeoValue::asString($this->pick($seo, $meta, 'image'))
             ?? $this->stringOrNull('laradocs.seo.image');
+    }
+
+    /**
+     * Resolve the social image and its dimension metadata. An explicit image is
+     * used as-is (dimensions unknown); otherwise a generated card is used and
+     * tagged with its known size so og:image:width / og:image:height are emitted.
+     *
+     * @return array{0: ?string, 1: ?ImageMeta}
+     */
+    private function resolveImage(?string $explicit, string $slug): array
+    {
+        if ($explicit !== null) {
+            return [$explicit, null];
+        }
+
+        $generated = DocumentUrl::ogImage($slug);
+
+        if ($generated === null) {
+            return [null, null];
+        }
+
+        // ImageMeta leaves width/height null for a URL; set the known card size.
+        $imageMeta = new ImageMeta($generated);
+        $imageMeta->width = OgImageData::WIDTH;
+        $imageMeta->height = OgImageData::HEIGHT;
+
+        return [$generated, $imageMeta];
     }
 
     /**

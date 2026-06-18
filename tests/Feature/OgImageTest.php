@@ -60,6 +60,19 @@ it('serves a generated card as image/png for a document', function () {
         ->assertHeader('Content-Type', 'image/png');
 });
 
+it('advertises the generated card dimensions and a single twitter:card', function () {
+    $html = $this->get('/docs/guide/intro')->assertOk()->getContent();
+
+    expect($html)
+        ->toContain('og:image:width')
+        ->toContain('1200')
+        ->toContain('og:image:height')
+        ->toContain('630')
+        // The explicit override tag is suppressed for the default card type, so
+        // ralphjsmit's tag is the only twitter:card.
+        ->and(substr_count($html, 'name="twitter:card"'))->toBe(1);
+});
+
 it('serves a generated card for the landing page', function () {
     $this->get('/docs/_laradocs/og')
         ->assertOk()

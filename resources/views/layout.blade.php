@@ -24,10 +24,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     @php $hasSeo = ! empty($seo) && function_exists('seo'); @endphp
     @if($hasSeo)
-        {{-- Explicit twitter:card comes first — X/Twitter parsers use the first
-             occurrence, so this takes precedence over the auto-detected value
-             that ralphjsmit/laravel-seo emits below. --}}
-        @if(! empty($xCard))
+        {{-- ralphjsmit/laravel-seo already emits summary_large_image for pages
+             with an image (our default), so only emit an explicit card when the
+             page overrides it to a different type (summary / app / player). This
+             avoids a duplicate twitter:card tag in the common case; X/Twitter
+             honour the first occurrence, so the override comes first. --}}
+        @if(! empty($xCard) && $xCard !== 'summary_large_image')
             <meta name="twitter:card" content="{{ $xCard }}">
         @endif
         {{-- Rich SEO meta (title, description, Open Graph, Twitter, canonical,
