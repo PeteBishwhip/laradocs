@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Intervention\Image\Exceptions\InvalidArgumentException;
 use Laradocs\Contracts\OgImageGenerator;
 use Laradocs\Routing\DocumentUrl;
 use Laradocs\Seo\OgImageData;
@@ -180,6 +179,6 @@ describe('TheOgImageGenerator', function () {
     it('rethrows when rendering fails for a reason other than the logo', function () {
         expect(fn () => (new TheOgImageGenerator)->generate(
             new OgImageData(title: 'Bad', accentColor: 'not-a-real-colour'),
-        ))->toThrow(InvalidArgumentException::class);
+        ))->toThrow(\RuntimeException::class);
     });
 });
