@@ -57,15 +57,15 @@ final class SeoFactory
 
         $this->lastXCard = $this->resolveXCard($seo, $meta);
 
-        $title = self::asString($this->pick($seo, $meta, 'title')) ?? $document->title();
-        $description = self::asString($this->pick($seo, $meta, 'description'))
+        $title = SeoValue::asString($this->pick($seo, $meta, 'title')) ?? $document->title();
+        $description = SeoValue::asString($this->pick($seo, $meta, 'description'))
             ?? $this->autoDescription($document)
             ?? $this->fallbackDescription();
 
         return new SEOData(
             title: $this->suffixedTitle($title),
             description: $description,
-            author: self::asString($this->pick($seo, $meta, 'author')) ?? $this->stringOrNull('laradocs.seo.author'),
+            author: SeoValue::asString($this->pick($seo, $meta, 'author')) ?? $this->stringOrNull('laradocs.seo.author'),
             // An explicit image (front-matter or seo.image) always wins; only
             // when none is declared do we fall back to a generated card.
             image: $this->explicitImage($document) ?? DocumentUrl::ogImage($document->slug),
@@ -76,15 +76,15 @@ final class SeoFactory
             enableTitleSuffix: false,
             published_time: $this->publishedTime($seo, $meta),
             modified_time: $this->timestamp($document->modifiedAt),
-            section: self::asString($this->pick($seo, $meta, 'section')) ?? $meta->group,
+            section: SeoValue::asString($this->pick($seo, $meta, 'section')) ?? $meta->group,
             tags: $this->resolveTags($seo, $meta),
             twitter_username: $this->stringOrNull('laradocs.seo.x'),
             schema: $this->schema($breadcrumbs),
-            type: self::asString($this->pick($seo, $meta, 'type')) ?? $this->stringOrNull('laradocs.seo.type') ?? 'article',
+            type: SeoValue::asString($this->pick($seo, $meta, 'type')) ?? $this->stringOrNull('laradocs.seo.type') ?? 'article',
             site_name: $this->siteName(),
             favicon: $this->stringOrNull('laradocs.ui.brand.favicon'),
             robots: $this->resolveRobots($seo, $meta),
-            canonical_url: self::asString($this->pick($seo, $meta, 'canonical')),
+            canonical_url: SeoValue::asString($this->pick($seo, $meta, 'canonical')),
             openGraphTitle: $title,
         );
     }
@@ -123,7 +123,7 @@ final class SeoFactory
      */
     private function resolveXCard(array $seo, Metadata $meta): string
     {
-        $value = self::asString($this->pick($seo, $meta, 'x_card'));
+        $value = SeoValue::asString($this->pick($seo, $meta, 'x_card'));
 
         return $value ?? $this->stringOrNull('laradocs.seo.x_card') ?? 'summary_large_image';
     }
@@ -146,9 +146,9 @@ final class SeoFactory
      */
     private function resolveRobots(array $seo, Metadata $meta): ?string
     {
-        $robots = self::asString($this->pick($seo, $meta, 'robots'));
+        $robots = SeoValue::asString($this->pick($seo, $meta, 'robots'));
 
-        if ($robots === null && self::truthy($this->pick($seo, $meta, 'noindex'))) {
+        if ($robots === null && SeoValue::truthy($this->pick($seo, $meta, 'noindex'))) {
             $robots = 'noindex, nofollow';
         }
 
@@ -265,7 +265,7 @@ final class SeoFactory
         $meta = $document->metadata;
         $seo = $this->seoBlock($meta);
 
-        return self::asString($this->pick($seo, $meta, 'image'))
+        return SeoValue::asString($this->pick($seo, $meta, 'image'))
             ?? $this->stringOrNull('laradocs.seo.image');
     }
 
@@ -316,7 +316,7 @@ final class SeoFactory
 
         if ($suffix === null) {
             $site = $this->siteName();
-            $suffix = $site !== '' && ! self::same($title, $site) ? ' · ' . $site : '';
+            $suffix = $site !== '' && ! SeoValue::same($title, $site) ? ' · ' . $site : '';
         }
 
         return $title . $suffix;
@@ -333,36 +333,5 @@ final class SeoFactory
         $value = Config::nullableString($key);
 
         return $value === null || $value === '' ? null : $value;
-    }
-
-    private static function asString(mixed $value): ?string
-    {
-        if (is_string($value)) {
-            return trim($value) === '' ? null : $value;
-        }
-
-        if (is_int($value) || is_float($value)) {
-            return (string) $value;
-        }
-
-        return null;
-    }
-
-    private static function truthy(mixed $value): bool
-    {
-        if (is_bool($value)) {
-            return $value;
-        }
-
-        if (is_string($value)) {
-            return in_array(strtolower(trim($value)), ['1', 'true', 'yes', 'on'], true);
-        }
-
-        return (bool) $value;
-    }
-
-    private static function same(string $a, string $b): bool
-    {
-        return mb_strtolower(trim($a)) === mb_strtolower(trim($b));
     }
 }
