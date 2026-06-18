@@ -68,7 +68,7 @@ final class SeoFactory
             author: self::asString($this->pick($seo, $meta, 'author')) ?? $this->stringOrNull('laradocs.seo.author'),
             // An explicit image (front-matter or seo.image) always wins; only
             // when none is declared do we fall back to a generated card.
-            image: $this->explicitImage($document) ?? $this->generatedImage($document->slug),
+            image: $this->explicitImage($document) ?? DocumentUrl::ogImage($document->slug),
             // We bake the suffix into the title (above) and disable the SEO
             // package's own suffixing, which would otherwise also drag the
             // brand into og:title / x:title. Social cards instead read
@@ -103,7 +103,7 @@ final class SeoFactory
             title: $this->suffixedTitle($title),
             description: $description ?? $this->fallbackDescription(),
             author: $this->stringOrNull('laradocs.seo.author'),
-            image: $this->stringOrNull('laradocs.seo.image') ?? $this->generatedImage(''),
+            image: $this->stringOrNull('laradocs.seo.image') ?? DocumentUrl::ogImage(''),
             enableTitleSuffix: false,
             twitter_username: $this->stringOrNull('laradocs.seo.x'),
             type: 'website',
@@ -267,15 +267,6 @@ final class SeoFactory
 
         return self::asString($this->pick($seo, $meta, 'image'))
             ?? $this->stringOrNull('laradocs.seo.image');
-    }
-
-    /**
-     * URL of the generated social card for a slug, or null when generation is
-     * disabled / unavailable.
-     */
-    private function generatedImage(string $slug): ?string
-    {
-        return DocumentUrl::ogImage($slug);
     }
 
     /**

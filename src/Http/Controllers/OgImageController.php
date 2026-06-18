@@ -105,17 +105,14 @@ final readonly class OgImageController
 
         $store = app(CacheFactory::class)->store(Config::nullableString('laradocs.cache.store'));
 
-        /** @var string $bytes */
-        $bytes = $store->remember($this->cacheKey($document), $this->ttl(), $callback);
-
-        return $bytes;
+        return $store->remember($this->cacheKey($document), $this->ttl(), $callback);
     }
 
     private function cacheKey(?Document $document): string
     {
         $prefix = Config::string('laradocs.cache.key_prefix', 'laradocs');
 
-        $fingerprint = md5(implode('|', [
+        $fingerprint = hash('sha256', implode('|', [
             $document instanceof Document ? $document->slug : '',
             $document instanceof Document ? (string) $document->modifiedAt : '',
             Config::string('laradocs.ui.accent', ''),

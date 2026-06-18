@@ -102,14 +102,10 @@ final class DocumentUrl
      */
     public static function ogImage(string $slug): ?string
     {
-        if (! OgImage::enabled()) {
-            return null;
-        }
-
         $slug = trim($slug, '/');
         $name = self::prefix() . ($slug === '' ? 'og.index' : 'og');
 
-        if (! app('router')->has($name)) {
+        if (! OgImage::enabled() || ! app('router')->has($name)) {
             return null;
         }
 
