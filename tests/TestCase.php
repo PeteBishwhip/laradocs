@@ -6,6 +6,7 @@ namespace Laradocs\Tests;
 
 use Illuminate\Filesystem\Filesystem;
 use Laradocs\LaradocsServiceProvider;
+use Laravel\Mcp\Server\McpServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 use RalphJSmit\Laravel\SEO\LaravelSEOServiceProvider;
 
@@ -34,10 +35,20 @@ abstract class TestCase extends Orchestra
      */
     protected function getPackageProviders($app): array
     {
-        return [
+        $providers = [
             LaravelSEOServiceProvider::class,
             LaradocsServiceProvider::class,
         ];
+
+        // laravel/mcp is an optional dependency. When it is installed, register
+        // its service provider so the MCP request/argument container bindings
+        // are wired up for the MCP integration tests; auto-discovery handles
+        // this in a real application.
+        if (class_exists(McpServiceProvider::class)) {
+            $providers[] = McpServiceProvider::class;
+        }
+
+        return $providers;
     }
 
     protected function defineEnvironment($app): void

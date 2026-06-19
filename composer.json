@@ -39,6 +39,7 @@
         "simonhamp/the-og": "^0.8"
     },
     "suggest": {
+        "laravel/mcp": "Expose your docs as an MCP server so AI assistants can search and browse them. Enable with LARADOCS_MCP=true after installing.",
         "laravel/scout": "Power full-text docs search with Meilisearch, Typesense or Algolia (falls back to a built-in JSON index).",
         "nyholm/psr7": "When using Meilisearch via Scout, install a PSR-17 factory (nyholm/psr7, guzzlehttp/psr7 ^2, or symfony/http-client) so the Meilisearch SDK can build HTTP requests.",
         "simonhamp/the-og": "Generate Open Graph / social card images for pages that don't declare their own (the default OgImageGenerator)."

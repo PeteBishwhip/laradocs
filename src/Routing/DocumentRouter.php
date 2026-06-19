@@ -5,17 +5,22 @@ declare(strict_types=1);
 namespace Laradocs\Routing;
 
 use Illuminate\Contracts\Routing\Registrar;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Laradocs\Http\Controllers\ApiSearchController;
 use Laradocs\Http\Controllers\ApiTreeController;
 use Laradocs\Http\Controllers\AssetController;
 use Laradocs\Http\Controllers\DocsController;
 use Laradocs\Http\Controllers\FeedController;
+use Laradocs\Http\Controllers\McpController;
 use Laradocs\Http\Controllers\OgImageController;
 use Laradocs\Http\Controllers\RobotsController;
 use Laradocs\Http\Controllers\SearchController;
 use Laradocs\Http\Controllers\SitemapController;
 use Laradocs\Http\Controllers\TagController;
 use Laradocs\Http\Middleware\EnsureDocsEnabled;
+use Laradocs\Http\Middleware\EnsureMcpAuthenticated;
+use Laradocs\Http\Middleware\EnsureMcpEnabled;
 use Laradocs\Http\Middleware\SetDocsLocale;
 use Laradocs\Http\Middleware\SetDocsVersion;
 use Laradocs\Http\Middleware\ThrottleApiRequests;
@@ -75,6 +80,18 @@ final class DocumentRouter
             $router->get('_laradocs/api/search', ApiSearchController::class)
                 ->middleware(ThrottleApiRequests::class)
                 ->name('api.search');
+
+            // POST /mcp → MCP JSON-RPC server. GET /mcp falls through to the
+            // catch-all below, which renders mcp.md as a normal doc page when
+            // that file exists — giving browsers the human-readable guide while
+            // AI clients that POST application/json get the protocol server.
+            $router->post('mcp', McpController::class)
+                ->middleware([EnsureMcpEnabled::class, EnsureMcpAuthenticated::class, ThrottleApiRequests::class])
+                ->withoutMiddleware([
+                    VerifyCsrfToken::class,
+                    PreventRequestForgery::class,
+                ])
+                ->name('mcp');
 
             // Tag index pages are registered ahead of the catch-all show route
             // so their fixed paths take priority; the controller still defers
