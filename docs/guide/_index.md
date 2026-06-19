@@ -1,7 +1,7 @@
 ---
 title: Guide
 description: Core concepts — routing, metadata, caching, CLI, and the PHP API.
-order: 4
+order: 5
 ---
 
 # Guide

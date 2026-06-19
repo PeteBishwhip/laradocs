@@ -13,6 +13,7 @@ use Laradocs\Http\Controllers\AssetController;
 use Laradocs\Http\Controllers\DocsController;
 use Laradocs\Http\Controllers\FeedController;
 use Laradocs\Http\Controllers\McpController;
+use Laradocs\Http\Controllers\OgImageController;
 use Laradocs\Http\Controllers\RobotsController;
 use Laradocs\Http\Controllers\SearchController;
 use Laradocs\Http\Controllers\SitemapController;
@@ -65,6 +66,13 @@ final class DocumentRouter
                 ->where('file', '[\w.\-]+')
                 ->name('asset');
             $router->get('_laradocs/search', SearchController::class)->name('search');
+
+            if (Config::bool('laradocs.seo.og_image.enabled', true)) {
+                $router->get('_laradocs/og', OgImageController::class)->name('og.index');
+                $router->get('_laradocs/og/{path}', OgImageController::class)
+                    ->where('path', '.+')
+                    ->name('og');
+            }
             $router->get('_laradocs/api/tree', ApiTreeController::class)
                 ->middleware(ThrottleApiRequests::class)
                 ->name('api.tree');

@@ -1,7 +1,7 @@
 ---
 title: Configuration
 description: Every Laradocs option and the environment variables that drive it.
-order: 3
+order: 4
 ---
 
 # Configuration

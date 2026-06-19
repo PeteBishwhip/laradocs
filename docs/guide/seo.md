@@ -193,6 +193,68 @@ Set `seo.enabled` to `false` and Laradocs falls back to a plain `<title>` and
 LARADOCS_SEO=false
 ```
 
+## Open Graph images
+
+Install [`simonhamp/the-og`](https://github.com/simonhamp/the-og) and Laradocs
+will automatically generate a social card image for every page — no `image:`
+front-matter needed.
+
+```bash
+composer require simonhamp/the-og
+```
+
+Cards are served from `{prefix}/_laradocs/og/{slug}` and wired into `og:image`
+and `twitter:image` automatically. A page that declares an explicit `image:` (or
+`seo.image`) in its front-matter redirects to that URL instead, so hand-crafted
+images always take priority over generated ones.
+
+Generated cards pick up your site branding automatically:
+
+- the page **title** and **description** (from front-matter or the auto-excerpt);
+- your **accent colour** (`LARADOCS_UI_ACCENT`);
+- your **brand logo** (`LARADOCS_UI_BRAND_LOGO`), placed as a watermark — an
+  unreadable or missing logo is silently skipped so a stale asset can never
+  break generation;
+- your **site name** (`LARADOCS_SEO_SITE_NAME`).
+
+Cards are cached (default 30 days). The cache key includes the page's last-modified
+time and every branding value, so any content or theme change busts the card
+automatically.
+
+### Configuration
+
+| Option | Env | Default |
+|---|---|---|
+| `seo.og_image.enabled` | `LARADOCS_SEO_OG_IMAGE` | `true` |
+| `seo.og_image.theme` | `LARADOCS_SEO_OG_THEME` | `light` |
+| `seo.og_image.background_color` | `LARADOCS_SEO_OG_BACKGROUND` | `null` (uses theme default) |
+| `seo.og_image.cache_ttl` | `LARADOCS_SEO_OG_TTL` | `2592000` (30 days) |
+
+`theme` accepts `light` or `dark`. `background_color` takes any CSS colour
+string and overrides the theme's default.
+
+### Custom generator
+
+Bind your own `\Laradocs\Contracts\OgImageGenerator` in a service provider to
+replace the default renderer entirely — with or without `simonhamp/the-og`
+installed:
+
+```php
+use Laradocs\Contracts\OgImageGenerator;
+use App\Docs\MyOgGenerator;
+
+$this->app->bind(OgImageGenerator::class, MyOgGenerator::class);
+```
+
+`OgImageGenerator` is a single-method interface: `generate(OgImageData $data): string`
+returning raw PNG bytes.
+
+To disable generation entirely and fall back to a static image:
+
+```dotenv
+LARADOCS_SEO_OG_IMAGE=false
+```
+
 ## Going further
 
 Under the hood, Laradocs hands a `SEOData` object to the SEO package for every

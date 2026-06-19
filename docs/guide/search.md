@@ -76,6 +76,16 @@ composer require laravel/scout
 php artisan laradocs:index
 ```
 
+> [!NOTE]
+> When using **Meilisearch**, its PHP SDK requires a [PSR-17 HTTP factory](https://www.php-fig.org/psr/psr-17/).
+> Install one alongside Scout if you don't already have one:
+>
+> ```bash
+> composer require nyholm/psr7
+> ```
+>
+> `guzzlehttp/psr7 ^2` and `symfony/http-client` also satisfy this requirement.
+
 Laradocs indexes pages through Scout without needing an Eloquent model or a
 database table, and maps results back onto the pre-rendered index for display.
 Re-run `laradocs:index` (or `laradocs:cache`) after changing content to refresh

@@ -75,7 +75,9 @@ it('renders og:image when a site-wide image is configured', function () {
         ->assertSee('https://example.com/og.png', false);
 });
 
-it('emits no og:image when no image is configured', function () {
+it('emits no og:image when none is configured and generation is disabled', function () {
+    config()->set('laradocs.seo.og_image.enabled', false);
+
     $this->get('/docs/guide/intro')
         ->assertOk()
         ->assertDontSee('property="og:image"', false);
