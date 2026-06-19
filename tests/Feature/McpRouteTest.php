@@ -8,6 +8,7 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Route;
 use Laradocs\Http\Controllers\McpController;
 use Laradocs\Http\Middleware\EnsureDocsEnabled;
+use Laradocs\Http\Middleware\EnsureMcpAuthenticated;
 use Laradocs\Http\Middleware\EnsureMcpEnabled;
 use Laradocs\Http\Middleware\ThrottleApiRequests;
 
@@ -38,6 +39,7 @@ it('guards the mcp route with the mcp and docs middleware', function () {
 
     expect($middleware)
         ->toContain(EnsureMcpEnabled::class)
+        ->toContain(EnsureMcpAuthenticated::class)
         ->toContain(EnsureDocsEnabled::class)
         ->toContain(ThrottleApiRequests::class);
 });

@@ -19,6 +19,7 @@ use Laradocs\Http\Controllers\SearchController;
 use Laradocs\Http\Controllers\SitemapController;
 use Laradocs\Http\Controllers\TagController;
 use Laradocs\Http\Middleware\EnsureDocsEnabled;
+use Laradocs\Http\Middleware\EnsureMcpAuthenticated;
 use Laradocs\Http\Middleware\EnsureMcpEnabled;
 use Laradocs\Http\Middleware\SetDocsLocale;
 use Laradocs\Http\Middleware\SetDocsVersion;
@@ -81,7 +82,7 @@ final class DocumentRouter
                 ->name('api.search');
 
             $router->post('_laradocs/mcp', McpController::class)
-                ->middleware([EnsureMcpEnabled::class, ThrottleApiRequests::class])
+                ->middleware([EnsureMcpEnabled::class, EnsureMcpAuthenticated::class, ThrottleApiRequests::class])
                 ->withoutMiddleware([
                     VerifyCsrfToken::class,
                     PreventRequestForgery::class,
