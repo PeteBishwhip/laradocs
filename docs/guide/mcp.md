@@ -19,8 +19,12 @@ is reachable:
 LARADOCS_MCP=true
 ```
 
-The endpoint is registered at `POST {prefix}/_laradocs/mcp` (default:
-`/docs/_laradocs/mcp`).
+The endpoint lives at `{prefix}/mcp` (default: `/docs/mcp`) and uses HTTP
+method to serve two audiences from the same URL:
+
+- **`GET /docs/mcp`** — renders this page as a normal documentation page in the
+  browser, provided `mcp.md` (or `docs/mcp.md`) exists in your content directory.
+- **`POST /docs/mcp`** — the MCP JSON-RPC server, consumed by AI assistants.
 
 ## Connecting an AI assistant
 
@@ -31,7 +35,7 @@ Add the server to your MCP client configuration:
   "mcpServers": {
     "laradocs": {
       "type": "http",
-      "url": "https://your-app.example.com/docs/_laradocs/mcp"
+      "url": "https://your-app.example.com/docs/mcp"
     }
   }
 }
@@ -136,7 +140,7 @@ curl -s -X POST https://your-app.example.com/oauth/token \
   "mcpServers": {
     "laradocs": {
       "type": "http",
-      "url": "https://your-app.example.com/docs/_laradocs/mcp",
+      "url": "https://your-app.example.com/docs/mcp",
       "headers": {
         "Authorization": "Bearer YOUR_ACCESS_TOKEN"
       }

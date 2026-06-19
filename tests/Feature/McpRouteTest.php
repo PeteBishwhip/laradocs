@@ -26,12 +26,12 @@ it('registers the named mcp route as a POST to McpController', function () {
     $route = laradocsMcpRoute();
 
     expect($route->methods())->toContain('POST')
-        ->and($route->uri())->toBe('docs/_laradocs/mcp')
+        ->and($route->uri())->toBe('docs/mcp')
         ->and($route->getActionName())->toBe(McpController::class);
 });
 
 it('resolves the named mcp route to the correct url', function () {
-    expect(route('laradocs.mcp'))->toEndWith('/docs/_laradocs/mcp');
+    expect(route('laradocs.mcp'))->toEndWith('/docs/mcp');
 });
 
 it('guards the mcp route with the mcp and docs middleware', function () {
@@ -55,13 +55,13 @@ it('excludes csrf middleware so non-browser clients can call it', function () {
 it('404s the mcp endpoint when mcp is disabled', function () {
     config()->set('laradocs.mcp.enabled', false);
 
-    $this->postJson('/docs/_laradocs/mcp')->assertNotFound();
+    $this->postJson('/docs/mcp')->assertNotFound();
 });
 
 it('dispatches to the controller when mcp is enabled', function () {
     config()->set('laradocs.mcp.enabled', true);
 
-    $this->postJson('/docs/_laradocs/mcp', [
+    $this->postJson('/docs/mcp', [
         'jsonrpc' => '2.0',
         'id' => 1,
         'method' => 'does-not-exist',

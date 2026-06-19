@@ -8,9 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- MCP server endpoint (`POST /docs/_laradocs/mcp`) over Streamable-HTTP transport.
+- MCP server endpoint (`POST /docs/mcp`) over Streamable-HTTP transport.
   Opt-in via `LARADOCS_MCP=true`. Exposes three tools: `search_docs`, `list_pages`, `fetch_page`.
-  Connect with: `{"mcpServers":{"laradocs":{"type":"http","url":"https://example.com/docs/_laradocs/mcp"}}}`.
+  Connect with: `{"mcpServers":{"laradocs":{"type":"http","url":"https://example.com/docs/mcp"}}}`.
+  `GET /docs/mcp` renders `mcp.md` as a normal doc page when that file exists.
 - MCP authentication support via any Laravel auth guard (`LARADOCS_MCP_AUTH_GUARD`).
   Open by default; set to a guard name (e.g. `api`) to require a Bearer token.
   Full Laravel Passport and Sanctum setup guide in `docs/guide/mcp.md`.

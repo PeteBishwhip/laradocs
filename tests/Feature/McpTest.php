@@ -6,7 +6,7 @@ use Illuminate\Contracts\Routing\Registrar;
 use Illuminate\Routing\Route;
 use Illuminate\Testing\TestResponse;
 
-const MCP_ENDPOINT = '/docs/_laradocs/mcp';
+const MCP_ENDPOINT = '/docs/mcp';
 
 beforeEach(function () {
     config()->set('laradocs.mcp.enabled', true);

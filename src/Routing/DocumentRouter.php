@@ -81,7 +81,11 @@ final class DocumentRouter
                 ->middleware(ThrottleApiRequests::class)
                 ->name('api.search');
 
-            $router->post('_laradocs/mcp', McpController::class)
+            // POST /mcp → MCP JSON-RPC server. GET /mcp falls through to the
+            // catch-all below, which renders mcp.md as a normal doc page when
+            // that file exists — giving browsers the human-readable guide while
+            // AI clients that POST application/json get the protocol server.
+            $router->post('mcp', McpController::class)
                 ->middleware([EnsureMcpEnabled::class, EnsureMcpAuthenticated::class, ThrottleApiRequests::class])
                 ->withoutMiddleware([
                     VerifyCsrfToken::class,

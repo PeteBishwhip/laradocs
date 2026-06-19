@@ -6,7 +6,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Testing\TestResponse;
 use Laradocs\Http\Controllers\McpController;
 
-const MCP_URI = '/docs/_laradocs/mcp';
+const MCP_URI = '/docs/mcp';
 
 beforeEach(function () {
     config()->set('laradocs.mcp.enabled', true);
