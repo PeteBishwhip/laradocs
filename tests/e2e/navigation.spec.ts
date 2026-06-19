@@ -86,6 +86,7 @@ test('sidebar order falls back to alphabetical for default-ordered children', as
         'CLI',
         'Grouping',
         'Localisation',
+        'MCP Server',
         'Metadata',
         'PHP API',
         'Robots',

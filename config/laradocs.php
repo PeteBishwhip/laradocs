@@ -692,6 +692,33 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | MCP
+    |--------------------------------------------------------------------------
+    |
+    | Controls the Model Context Protocol endpoint. Toggled independently of the
+    | rest of the docs so it can be enabled or disabled on its own.
+    |
+    */
+
+    'mcp' => [
+        'enabled' => env('LARADOCS_MCP', false),
+
+        // Authentication for the MCP endpoint. Open (unauthenticated) by default.
+        // Set `guard` to any Laravel auth guard name to require a valid token.
+        //
+        // Example – Laravel Passport "api" guard:
+        //   LARADOCS_MCP_AUTH_GUARD=api
+        //
+        // Clients must then pass: Authorization: Bearer <token>
+        //
+        // See docs/guide/mcp.md for a full Laravel Passport setup guide.
+        'auth' => [
+            'guard' => env('LARADOCS_MCP_AUTH_GUARD'),
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Deploy
     |--------------------------------------------------------------------------
     |
