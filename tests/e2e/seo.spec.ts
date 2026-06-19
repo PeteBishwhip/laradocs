@@ -29,6 +29,20 @@ for (const path of PAGES) {
       await expect(
         page.locator('meta[property="og:description"]'),
       ).toHaveAttribute('content', /.+/);
+
+      // Generated og:image card — must be present and resolve to a PNG.
+      const ogImage = page.locator('meta[property="og:image"]');
+      await expect(ogImage).toHaveCount(1);
+      const imageUrl = await ogImage.getAttribute('content');
+      expect(imageUrl).toBeTruthy();
+      const imageResponse = await page.request.get(imageUrl!);
+      expect(imageResponse.status()).toBe(200);
+      expect(imageResponse.headers()['content-type']).toContain('image/png');
+
+      // Twitter card should use the large image variant when an image is present.
+      await expect(
+        page.locator('meta[name="twitter:card"]'),
+      ).toHaveAttribute('content', 'summary_large_image');
     });
   });
 }
