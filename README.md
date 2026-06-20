@@ -127,6 +127,21 @@ are themselves built with Laradocs. Highlights:
 The source for those pages lives in [`docs/`](docs); browse there or serve a
 local copy with `composer serve`.
 
+## Sponsors
+
+Laradocs is free and open source. If it saves you time, please consider
+[sponsoring its development](https://github.com/sponsors/PeteBishwhip) — it keeps
+the project actively maintained.
+
+<p align="center">
+  <a href="https://github.com/sponsors/PeteBishwhip">
+    <img src="./sponsors.svg" alt="Sponsors of PeteBishwhip" />
+  </a>
+</p>
+
+The image above is regenerated daily by the [`Scheduler`](.github/workflows/scheduler.yml)
+workflow via [sponsorkit](https://github.com/antfu/sponsorkit).
+
 ## Contributing & Security
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
