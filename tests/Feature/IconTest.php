@@ -1,0 +1,111 @@
+<?php
+
+declare(strict_types=1);
+
+use Laradocs\Contracts\DocumentParser;
+use Laradocs\Icons\IconRegistry;
+use Laradocs\Laradocs;
+
+function registerFakeIcons(): void
+{
+    app(IconRegistry::class)->register('heroicons', fn (string $name, string $variant): string =>
+        "<svg data-icon=\"{$name}\" data-variant=\"{$variant}\"></svg>"
+    );
+}
+
+it('expands @icon() shorthand in markdown body', function () {
+    registerFakeIcons();
+
+    $html = app(DocumentParser::class)->parse("Look at this. @icon('arrow-long-left') - It's got an arrow.");
+
+    expect($html)
+        ->toContain('laradocs-icon')
+        ->toContain('data-icon="arrow-long-left"');
+});
+
+it('passes a variant to @icon() when specified', function () {
+    registerFakeIcons();
+
+    $html = app(DocumentParser::class)->parse("@icon('check', variant: 'solid')");
+
+    expect($html)->toContain('data-variant="solid"');
+});
+
+it('passes a set to @icon() when specified', function () {
+    app(IconRegistry::class)->register('phosphor', fn (string $name): string =>
+        "<svg data-set=\"phosphor\" data-icon=\"{$name}\"></svg>"
+    );
+
+    $html = app(DocumentParser::class)->parse("@icon('arrow', set: 'phosphor')");
+
+    expect($html)
+        ->toContain('data-set="phosphor"')
+        ->toContain('data-icon="arrow"');
+});
+
+it('renders nothing for an @icon() call with no matching set', function () {
+    $html = app(DocumentParser::class)->parse("before @icon('missing-icon') after");
+
+    expect($html)
+        ->not->toContain('laradocs-icon')
+        ->toContain('before')
+        ->toContain('after');
+});
+
+it('leaves @icon() inside code blocks untouched', function () {
+    registerFakeIcons();
+
+    $html = app(DocumentParser::class)->parse("```\n@icon('arrow')\n```");
+
+    expect($html)
+        ->toContain("@icon('arrow')")
+        ->not->toContain('laradocs-icon');
+});
+
+it('leaves @icon() inside inline code untouched', function () {
+    registerFakeIcons();
+
+    $html = app(DocumentParser::class)->parse("Use `@icon('arrow')` literally.");
+
+    expect($html)
+        ->toContain("@icon('arrow')")
+        ->not->toContain('laradocs-icon');
+});
+
+it('renders an icon via the @docs(icon) macro', function () {
+    registerFakeIcons();
+
+    $html = app(DocumentParser::class)->parse("@docs('icon', 'arrow-long-right')");
+
+    expect($html)
+        ->toContain('laradocs-icon')
+        ->toContain('data-icon="arrow-long-right"');
+});
+
+it('renders an icon via the @docs(icon:heroicons) macro', function () {
+    registerFakeIcons();
+
+    $html = app(DocumentParser::class)->parse("@docs('icon:heroicons', 'arrow-long-right')");
+
+    expect($html)
+        ->toContain('laradocs-icon')
+        ->toContain('data-icon="arrow-long-right"');
+});
+
+it('uses the variant argument in the icon macro', function () {
+    registerFakeIcons();
+
+    $html = app(DocumentParser::class)->parse("@docs('icon', 'check', variant: 'solid')");
+
+    expect($html)->toContain('data-variant="solid"');
+});
+
+it('can register a custom icon set via Laradocs::registerIconSet()', function () {
+    app(Laradocs::class)->registerIconSet('custom', fn (string $name): string =>
+        "<svg data-custom=\"{$name}\"></svg>"
+    );
+
+    $html = app(DocumentParser::class)->parse("@icon('star', set: 'custom')");
+
+    expect($html)->toContain('data-custom="star"');
+});

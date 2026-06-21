@@ -35,12 +35,15 @@ use Laradocs\Extensions\BladeComponentExtension;
 use Laradocs\Extensions\CalloutExtension;
 use Laradocs\Extensions\CodeBlockExtension;
 use Laradocs\Extensions\HeadingAnchorExtension;
+use Laradocs\Extensions\IconExtension;
 use Laradocs\Extensions\ImageExtension;
 use Laradocs\Extensions\KatexExtension;
 use Laradocs\Extensions\MacroExtension;
 use Laradocs\Extensions\MermaidExtension;
 use Laradocs\Extensions\VariableExtension;
 use Laradocs\Extensions\VideoExtension;
+use Laradocs\Icons\HeroiconProvider;
+use Laradocs\Icons\IconRegistry;
 use Laradocs\Loaders\FilesystemLoader;
 use Laradocs\Macros\MacroRegistry;
 use Laradocs\Metadata\FrontMatterMetadataResolver;
@@ -119,6 +122,21 @@ final class LaradocsServiceProvider extends ServiceProvider
             $macros = Config::array('laradocs.macros');
 
             return new MacroRegistry($macros);
+        });
+
+        $this->app->singleton(IconRegistry::class, function (Application $app): IconRegistry {
+            $default = Config::string('laradocs.icons.driver', 'heroicons');
+            $registry = new IconRegistry($default);
+
+            $heroiconsPath = Config::nullableString('laradocs.icons.heroicons.path')
+                ?? HeroiconProvider::detect();
+
+            if ($heroiconsPath !== null) {
+                $provider = new HeroiconProvider($heroiconsPath, $app->make(Filesystem::class));
+                $registry->register('heroicons', fn (string $name, string $variant): string => $provider($name, $variant));
+            }
+
+            return $registry;
         });
 
         $this->app->singleton(SlugResolver::class, fn (): SlugResolver => new SlugResolver(
@@ -204,6 +222,7 @@ final class LaradocsServiceProvider extends ServiceProvider
                 $app->make(DocumentCache::class),
                 $app->make(VariableRegistry::class),
                 $app->make(MacroRegistry::class),
+                $app->make(IconRegistry::class),
                 $app->make(RateLimiterConfig::class),
                 Config::string('laradocs.docs.index', '_index'),
                 Config::int('laradocs.search.max_chars', 10000),
@@ -329,6 +348,10 @@ final class LaradocsServiceProvider extends ServiceProvider
             );
         }
 
+        if ($config['icons'] ?? true) {
+            $extensions[] = new IconExtension($app->make(IconRegistry::class));
+        }
+
         if ($config['macros'] ?? true) {
             $extensions[] = new MacroExtension($app->make(MacroRegistry::class));
         }
@@ -427,6 +450,28 @@ final class LaradocsServiceProvider extends ServiceProvider
             if (! $macros->has($name)) {
                 $macros->register($name, "laradocs::macros.{$name}");
             }
+        }
+
+        $icons = $this->app->make(IconRegistry::class);
+        $defaultVariant = Config::string('laradocs.icons.heroicons.variant', 'outline');
+
+        if (! $macros->has('icon')) {
+            $macros->register('icon', function (array $arguments) use ($icons, $defaultVariant): string {
+                $name = (string) ($arguments[0] ?? '');
+                $variant = is_string($arguments['variant'] ?? null) ? $arguments['variant'] : $defaultVariant;
+                $set = is_string($arguments['set'] ?? null) ? $arguments['set'] : null;
+
+                return $icons->render($name, $variant, $set);
+            });
+        }
+
+        if (! $macros->has('icon:heroicons')) {
+            $macros->register('icon:heroicons', function (array $arguments) use ($icons, $defaultVariant): string {
+                $name = (string) ($arguments[0] ?? '');
+                $variant = is_string($arguments['variant'] ?? null) ? $arguments['variant'] : $defaultVariant;
+
+                return $icons->render($name, $variant, 'heroicons');
+            });
         }
     }
 

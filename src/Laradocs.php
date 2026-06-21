@@ -14,6 +14,7 @@ use Laradocs\Documents\Document;
 use Laradocs\Documents\DocumentCollection;
 use Laradocs\Documents\DocumentTree;
 use Laradocs\Documents\Tag;
+use Laradocs\Icons\IconRegistry;
 use Laradocs\Macros\MacroRegistry;
 use Laradocs\Routing\FeedBuilder;
 use Laradocs\Routing\SitemapBuilder;
@@ -38,6 +39,7 @@ final class Laradocs
         private readonly DocumentCache $cache,
         private readonly VariableRegistry $variables,
         private readonly MacroRegistry $macros,
+        private readonly IconRegistry $icons,
         private readonly RateLimiterConfig $rateLimiterConfig,
         private readonly string $indexName = '_index',
         private readonly int $searchMaxChars = 10000,
@@ -119,6 +121,25 @@ final class Laradocs
     public function macro(string $name, Closure|string $handler): self
     {
         $this->macros->register($name, $handler);
+
+        return $this;
+    }
+
+    /**
+     * Register a custom icon set provider.
+     *
+     * The closure receives the icon name and variant string and must return a
+     * raw SVG string, or an empty string when the icon is not found.
+     *
+     *   Laradocs::registerIconSet('phosphor', function (string $name, string $variant): string {
+     *       return file_get_contents(resource_path("icons/phosphor/{$name}.svg")) ?: '';
+     *   });
+     *
+     * @param  Closure(string, string): string  $provider
+     */
+    public function registerIconSet(string $name, Closure $provider): self
+    {
+        $this->icons->register($name, $provider);
 
         return $this;
     }
