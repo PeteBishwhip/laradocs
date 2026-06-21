@@ -26,6 +26,7 @@
     },
     "require-dev": {
         "larastan/larastan": "^2.9 || ^3.0",
+        "laravel/mcp": "^0.8",
         "laravel/pint": "^1.18",
         "laravel/scout": "^11.2",
         "meilisearch/meilisearch-php": "^1.0",
