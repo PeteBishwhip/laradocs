@@ -29,4 +29,4 @@ composer serve   # preview the bundled docs site
 
 This project follows [Semantic Versioning](https://semver.org). Breaking changes
 land in major releases only. Supported Laravel versions: 11, 12 and 13. Supported
-PHP versions: 8.2, 8.3 and 8.4.
+PHP versions: 8.3, 8.4 and 8.5.
