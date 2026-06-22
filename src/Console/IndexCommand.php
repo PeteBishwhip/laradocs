@@ -8,6 +8,7 @@ use Illuminate\Console\Command;
 use Laradocs\Laradocs;
 use Laradocs\Search\Contracts\SearchEngine;
 use Laradocs\Support\Config;
+use Laradocs\Support\VersionInfo;
 use Laradocs\Support\VersionRegistry;
 use Throwable;
 
@@ -23,26 +24,44 @@ final class IndexCommand extends Command
 
     public function handle(Laradocs $laradocs, SearchEngine $engine, VersionRegistry $versions): int
     {
-        $requested = $this->option('docs-version');
         $available = $versions->all();
+        $requested = $this->option('docs-version');
 
-        // A requested version must be a known handle.
         if (is_string($requested) && $requested !== '') {
-            if (! isset($available[$requested])) {
-                $this->error(sprintf('Unknown version "%s".', $requested));
-
-                return self::FAILURE;
-            }
-
-            return $this->rebuild($laradocs, $engine, $requested);
+            return $this->rebuildSingle($laradocs, $engine, $available, $requested);
         }
 
-        // No versions detected: keep the original single-pass behaviour.
         if (! Config::bool('laradocs.versions.enabled', false) || $available === []) {
             return $this->rebuild($laradocs, $engine, null);
         }
 
-        // Rebuild every detected version in sequence, reporting progress.
+        return $this->rebuildAll($laradocs, $engine, $available);
+    }
+
+    /**
+     * Validate a specific version handle and rebuild only that version's index.
+     *
+     * @param  array<string, VersionInfo>  $available
+     */
+    private function rebuildSingle(Laradocs $laradocs, SearchEngine $engine, array $available, string $requested): int
+    {
+        if (! isset($available[$requested])) {
+            $this->error(sprintf('Unknown version "%s".', $requested));
+
+            return self::FAILURE;
+        }
+
+        return $this->rebuild($laradocs, $engine, $requested);
+    }
+
+    /**
+     * Rebuild every detected version in sequence, returning FAILURE if any sync
+     * fails so CI catches partial index breakage.
+     *
+     * @param  array<string, VersionInfo>  $available
+     */
+    private function rebuildAll(Laradocs $laradocs, SearchEngine $engine, array $available): int
+    {
         $failed = false;
 
         foreach (array_keys($available) as $key) {

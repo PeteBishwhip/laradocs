@@ -177,25 +177,15 @@ final class SeoFactory
      */
     private function versionRobots(): ?string
     {
-        if (! Config::bool('laradocs.versions.enabled', false)) {
-            return null;
-        }
-
         $current = Version::current();
 
-        if ($current === null) {
+        if (! Config::bool('laradocs.versions.enabled', false) || $current === null || Version::isDefault($current)) {
             return null;
         }
 
-        if (Version::info($current)?->deprecated === true) {
-            return 'noindex, nofollow';
-        }
-
-        if (! Version::isDefault($current)) {
-            return 'noindex, follow';
-        }
-
-        return null;
+        return Version::info($current)?->deprecated === true
+            ? 'noindex, nofollow'
+            : 'noindex, follow';
     }
 
     /**

@@ -48,12 +48,10 @@ final class VersionRegistry
         $key = Config::string('laradocs.cache.key_prefix', 'laradocs') . ':versions';
         $ttl = Config::nullableInt('laradocs.cache.ttl') ?? 86400;
 
-        /** @var array<string, VersionInfo> $cached */
-        $cached = cache()
+        /** @var array<string, VersionInfo> */
+        return cache()
             ->store(Config::nullableString('laradocs.cache.store'))
             ->remember($key, $ttl, fn (): array => $this->resolve());
-
-        return $cached;
     }
 
     /**
@@ -210,9 +208,8 @@ final class VersionRegistry
         foreach (Config::array('laradocs.versions.available') as $key => $value) {
             $handle = (string) $key;
 
-            $meta = is_array($value)
-                ? $value
-                : ['label' => is_string($value) ? $value : $handle];
+            $label = is_string($value) ? $value : $handle;
+            $meta = is_array($value) ? $value : ['label' => $label];
 
             $versions[$handle] = $this->makeInfo($handle, $meta);
         }
@@ -245,7 +242,7 @@ final class VersionRegistry
      */
     private function finalise(array $versions): array
     {
-        uasort($versions, fn (VersionInfo $a, VersionInfo $b): int => self::compareInfo($b, $a));
+        uasort($versions, fn (VersionInfo $a, VersionInfo $b): int => -self::compareInfo($a, $b));
 
         $latest = $this->computeLatest($versions);
 

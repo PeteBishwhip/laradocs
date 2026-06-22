@@ -40,16 +40,24 @@ final class SetDocsVersion
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (! Config::bool('laradocs.versions.enabled', false)) {
-            return $next($request);
-        }
-
         $versions = Version::available();
 
-        if ($versions === []) {
+        if (! Config::bool('laradocs.versions.enabled', false) || $versions === []) {
             return $next($request);
         }
 
+        return $this->resolveVersion($request, $next, $versions);
+    }
+
+    /**
+     * Walk the resolution chain once we know versioning is active and versions
+     * exist: alias → 301, known version → activate, unversioned → policy.
+     *
+     * @param  array<string, string>  $versions
+     * @param  Closure(Request): Response  $next
+     */
+    private function resolveVersion(Request $request, Closure $next, array $versions): Response
+    {
         $registry = Version::registry();
         $path = ltrim((string) $request->route('path'), '/');
         $segment = explode('/', $path)[0];
@@ -59,9 +67,7 @@ final class SetDocsVersion
             $canonical = $registry->resolveAlias($segment);
 
             if ($canonical !== null) {
-                $rest = implode('/', array_slice(explode('/', $path), 1));
-
-                return $this->redirect($canonical, $rest);
+                return $this->redirect($canonical, implode('/', array_slice(explode('/', $path), 1)));
             }
         }
 
@@ -81,11 +87,9 @@ final class SetDocsVersion
         // Unrecognised or absent segment: apply the unversioned policy.
         $default = Version::default() ?? (string) array_key_first($versions);
 
-        if (Config::string('laradocs.versions.unversioned', 'redirect') === 'redirect') {
-            return $this->redirect($default, $path);
-        }
-
-        return $this->activate($request, $next, $default);
+        return Config::string('laradocs.versions.unversioned', 'redirect') === 'redirect'
+            ? $this->redirect($default, $path)
+            : $this->activate($request, $next, $default);
     }
 
     /**
