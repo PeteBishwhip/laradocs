@@ -25,7 +25,13 @@ it('builds index, asset, search, sitemap and api urls', function () {
         ->and(DocumentUrl::search())->toBe(url('/docs/_laradocs/search'))
         ->and(DocumentUrl::sitemap())->toBe(url('/docs/sitemap.xml'))
         ->and(DocumentUrl::apiTree())->toBe(url('/docs/_laradocs/api/tree'))
-        ->and(DocumentUrl::apiSearch())->toBe(url('/docs/_laradocs/api/search'));
+        ->and(DocumentUrl::apiSearch())->toBe(url('/docs/_laradocs/api/search'))
+        ->and(DocumentUrl::apiVersions())->toBe(url('/docs/_laradocs/api/versions'));
+});
+
+it('builds version-scoped tree and search urls carrying the version as a query parameter', function () {
+    expect(DocumentUrl::apiVersionTree('v2'))->toBe(url('/docs/_laradocs/api/tree') . '?version=v2')
+        ->and(DocumentUrl::apiVersionSearch('v2'))->toBe(url('/docs/_laradocs/api/search') . '?version=v2');
 });
 
 // ---------------------------------------------------------------------------

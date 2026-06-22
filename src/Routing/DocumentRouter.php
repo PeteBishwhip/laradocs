@@ -9,6 +9,7 @@ use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Laradocs\Http\Controllers\ApiSearchController;
 use Laradocs\Http\Controllers\ApiTreeController;
+use Laradocs\Http\Controllers\ApiVersionsController;
 use Laradocs\Http\Controllers\AssetController;
 use Laradocs\Http\Controllers\DocsController;
 use Laradocs\Http\Controllers\FeedController;
@@ -80,6 +81,13 @@ final class DocumentRouter
             $router->get('_laradocs/api/search', ApiSearchController::class)
                 ->middleware(ThrottleApiRequests::class)
                 ->name('api.search');
+            // The versions endpoint lists every version, so it is version-
+            // agnostic: SetDocsVersion is dropped to stop its unversioned-URL
+            // policy from redirecting this flat API route to a default version.
+            $router->get('_laradocs/api/versions', ApiVersionsController::class)
+                ->middleware(ThrottleApiRequests::class)
+                ->withoutMiddleware(SetDocsVersion::class)
+                ->name('api.versions');
 
             // POST /mcp → MCP JSON-RPC server. GET /mcp falls through to the
             // catch-all below, which renders mcp.md as a normal doc page when

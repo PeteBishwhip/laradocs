@@ -182,4 +182,32 @@ final class DocumentUrl
     {
         return route(self::prefix() . 'api.search');
     }
+
+    /**
+     * URL to the versions API endpoint, listing every advertised version with
+     * its metadata so clients can build version-aware navigation.
+     */
+    public static function apiVersions(): string
+    {
+        return route(self::prefix() . 'api.versions');
+    }
+
+    /**
+     * URL to the tree API scoped to a specific version. The handle is carried
+     * as a `?version=` query parameter (the route itself has no version
+     * segment) so clients can fetch a single version's navigation tree.
+     */
+    public static function apiVersionTree(string $v): string
+    {
+        return route(self::prefix() . 'api.tree', ['version' => $v]);
+    }
+
+    /**
+     * URL to the search API scoped to a specific version, mirroring
+     * {@see self::apiVersionTree()} — the handle rides along as `?version=`.
+     */
+    public static function apiVersionSearch(string $v): string
+    {
+        return route(self::prefix() . 'api.search', ['version' => $v]);
+    }
 }
