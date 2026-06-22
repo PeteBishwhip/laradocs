@@ -40,6 +40,7 @@ use Laradocs\Extensions\KatexExtension;
 use Laradocs\Extensions\MacroExtension;
 use Laradocs\Extensions\MermaidExtension;
 use Laradocs\Extensions\VariableExtension;
+use Laradocs\Extensions\VersionBlockExtension;
 use Laradocs\Extensions\VideoExtension;
 use Laradocs\Loaders\FilesystemLoader;
 use Laradocs\Macros\MacroRegistry;
@@ -326,6 +327,15 @@ final class LaradocsServiceProvider extends ServiceProvider
     {
         $config = Config::array('laradocs.parser.extensions');
         $extensions = [];
+
+        // Must run first so the `:::version-*` directives are rewritten into
+        // HTML blocks before the variable/macro/component extensions process
+        // their inner content.
+        if (Config::bool('laradocs.versions.inline.enabled', false)) {
+            $extensions[] = new VersionBlockExtension(
+                Config::string('laradocs.versions.inline.behaviour', 'client') === 'server',
+            );
+        }
 
         if ($config['variables'] ?? true) {
             $extensions[] = new VariableExtension(

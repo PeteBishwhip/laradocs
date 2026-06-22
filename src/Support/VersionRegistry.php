@@ -131,6 +131,26 @@ final class VersionRegistry
     }
 
     /**
+     * Compare two raw version handles by semver, returning -1, 0 or 1.
+     *
+     * Shares the registry's parsing and comparison rules so consumers (e.g. the
+     * inline `:::version-*` directives) evaluate versions identically to the
+     * sort order. An unparseable handle sorts below a parseable one and equal to
+     * another unparseable handle.
+     */
+    public static function compare(string $a, string $b): int
+    {
+        $pa = self::parseSemver($a);
+        $pb = self::parseSemver($b);
+
+        if ($pa === null || $pb === null) {
+            return ($pa === null ? 0 : 1) <=> ($pb === null ? 0 : 1);
+        }
+
+        return self::compareSemver($pa, $pb);
+    }
+
+    /**
      * Assemble the version list for the configured strategy, then sort it and
      * mark the latest entry.
      *
