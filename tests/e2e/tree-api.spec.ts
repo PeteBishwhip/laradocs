@@ -5,7 +5,7 @@ import { expect, test } from '@playwright/test';
  *
  * `data` holds the top-level nodes; their descendants are flattened into a
  * compound-document `included` array, with parent→child links carried in each
- * node's relationships. The hidden fixture page added in US-003
+ * node's relationships. The hidden fixture page
  * (docs/hidden-from-sitemap.md, front-matter `hidden: true`) is excluded from
  * the navigation tree, so it must appear in neither `data` nor `included`.
  */

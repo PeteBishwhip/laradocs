@@ -5,7 +5,7 @@ import { expect, test } from '@playwright/test';
  * document tree. Every visible, non-redirecting page is emitted in tree order
  * as a <url> with a <loc>, an optional <lastmod> (ISO-8601) and a <priority>
  * that falls off with depth. Hidden pages (front-matter `hidden: true`, e.g.
- * the docs/hidden-from-sitemap.md fixture from US-003) are excluded.
+ * the docs/hidden-from-sitemap.md fixture) are excluded.
  *
  * Playwright ships no XML parser, so we pull the <url> blocks apart with small
  * regexes — enough to assert structure without a heavyweight dependency.

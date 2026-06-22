@@ -9,9 +9,9 @@ use Laradocs\Support\VersionInfo;
 use Laradocs\Support\VersionRegistry;
 
 /**
- * Consolidated feature coverage for the whole semantic-versioning feature set
- * (US-001 .. US-012). Each `describe()` block maps to one of the eight areas
- * called out in US-013 so a regression in any of them fails CI here.
+ * Consolidated feature coverage for the whole semantic-versioning feature set.
+ * Each `describe()` block maps to one of the eight areas of the feature so a
+ * regression in any of them fails CI here.
  *
  * Helpers are namespaced with a `vb` prefix to avoid colliding with the global
  * test helpers (`versionedDocs`, `registry`) defined in the sibling
