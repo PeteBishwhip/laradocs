@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Filesystem\Filesystem;
 use Laradocs\Contracts\DocumentParser;
 use Laradocs\Icons\Icon;
 use Laradocs\Icons\IconRegistry;
@@ -51,6 +52,16 @@ it('renders nothing for an @icon() call with no matching set', function () {
         ->not->toContain('laradocs-icon')
         ->toContain('before')
         ->toContain('after');
+});
+
+it('leaves an @icon() call with an empty name verbatim', function () {
+    registerFakeIcons();
+
+    $html = app(DocumentParser::class)->parse('before @icon( ) after');
+
+    expect($html)
+        ->not->toContain('laradocs-icon')
+        ->toContain('@icon( )');
 });
 
 it('leaves @icon() inside code blocks untouched', function () {
@@ -131,4 +142,21 @@ it('passes variant through the Icon view helper', function () {
     $html = Icon::render('check', 'solid');
 
     expect($html)->toContain('data-variant="solid"');
+});
+
+it('registers the heroicons set from a configured path', function () {
+    $root = sys_get_temp_dir() . '/laradocs-heroicons-' . bin2hex(random_bytes(4));
+    $files = new Filesystem;
+    $files->ensureDirectoryExists($root . '/24/outline');
+    $files->put($root . '/24/outline/arrow-long-right.svg', '<svg data-real="1"></svg>');
+
+    config()->set('laradocs.icons.heroicons.path', $root);
+    app()->forgetInstance(IconRegistry::class);
+
+    $registry = app(IconRegistry::class);
+
+    expect($registry->has('heroicons'))->toBeTrue()
+        ->and($registry->render('arrow-long-right'))->toContain('data-real="1"');
+
+    $files->deleteDirectory($root);
 });
