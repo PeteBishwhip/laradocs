@@ -206,6 +206,49 @@ it('laradocs:index rebuilds every detected version in sequence', function () {
         ->assertSuccessful();
 });
 
+it('laradocs:index returns a failure exit when one version sync fails', function () {
+    config()->set('laradocs.versions.enabled', true);
+    config()->set('laradocs.versions.available', null);
+    $this->makeDocs([
+        'v1/a.md' => ALPHA_DOC,
+        'v2/a.md' => ALPHA_DOC,
+    ]);
+
+    // Bind an engine that throws on the first sync call (v2, the latest) so the
+    // multi-version loop sets $failed = true (line 54) and returns FAILURE.
+    $calls = 0;
+
+    app()->bind(SearchEngine::class, function () use (&$calls): SearchEngine {
+        return new class($calls) implements SearchEngine
+        {
+            public function __construct(private int &$calls) {}
+
+            public function search(string $query, array $index, int $limit): array
+            {
+                return [];
+            }
+
+            public function sync(array $index): void
+            {
+                if (++$this->calls === 1) {
+                    throw new RuntimeException('engine unreachable');
+                }
+            }
+
+            public function flush(): void {}
+
+            public function name(): string
+            {
+                return 'broken';
+            }
+        };
+    });
+
+    $this->artisan('laradocs:index')
+        ->expectsOutputToContain('Failed to index')
+        ->assertFailed();
+});
+
 it('laradocs:cache also rebuilds the search index', function () {
     config()->set('laradocs.cache.enabled', true);
     config()->set('laradocs.cache.store', 'array');
