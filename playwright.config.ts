@@ -14,6 +14,18 @@ const repoRoot = dirname(fileURLToPath(import.meta.url));
 const LARADOCS_PATH = resolve(repoRoot, 'docs');
 
 /**
+ * The `versioning` project boots a dedicated `testbench serve` instance pointed
+ * at the hermetic fixture tree in tests/e2e/fixtures/versioned/ (v1.0.0/ +
+ * v2.0.0/, each with a _version.json sidecar). Versioning is enabled with the
+ * auto strategy, so the registry discovers both semver dirs and flags v2.0.0 as
+ * latest. The env mirrors a real versioned site: unversioned URLs redirect to
+ * the latest version, inline version-since blocks toggle client-side, and the
+ * outdated banner shows on the older version.
+ */
+const VERSIONED_PATH = resolve(repoRoot, 'tests/e2e/fixtures/versioned');
+export const VERSIONING_SERVER = 'http://127.0.0.1:8004';
+
+/**
  * The search "driver" defaults to `auto`, which prefers Laravel Scout when it's
  * installed (it is, in vendor/). Under Testbench serve the Scout collection
  * engine blows up (SearchableDocument::query() is undefined), 500-ing both the
@@ -110,6 +122,19 @@ export default defineConfig({
         LARADOCS_DETECT_BROWSER: 'false',
       },
     },
+    {
+      command: 'composer build && vendor/bin/testbench serve --ansi --port=8004',
+      url: `${VERSIONING_SERVER}/docs/v2.0.0`,
+      reuseExistingServer: !process.env.CI,
+      env: {
+        LARADOCS_PATH: VERSIONED_PATH,
+        LARADOCS_SEARCH_DRIVER,
+        LARADOCS_VERSIONS: 'true',
+        LARADOCS_VERSION_UNVERSIONED: 'redirect',
+        LARADOCS_VERSION_INLINE: 'true',
+        LARADOCS_VERSION_OUTDATED_BANNER: 'true',
+      },
+    },
   ],
   projects: [
     {
@@ -117,7 +142,7 @@ export default defineConfig({
       // mobile viewport; banner.spec.ts and locale.spec.ts are excluded and
       // handled by their dedicated projects below.
       name: 'default',
-      testIgnore: /banner\.spec\.ts|locale\.spec\.ts/,
+      testIgnore: /banner\.spec\.ts|locale\.spec\.ts|versioning\.spec\.ts/,
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 390, height: 844 },
@@ -138,6 +163,17 @@ export default defineConfig({
       name: 'locale',
       testMatch: /locale\.spec\.ts/,
       use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      // Talks to the versioning-enabled server on port 8004 (fixture tree with
+      // v1.0.0 + v2.0.0). baseURL targets /docs so unversioned-redirect specs
+      // can navigate to the bare prefix.
+      name: 'versioning',
+      testMatch: /versioning\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: `${VERSIONING_SERVER}/docs`,
+      },
     },
   ],
 });

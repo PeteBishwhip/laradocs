@@ -64,8 +64,14 @@ final class DocumentRouter
             $router->get('/', [DocsController::class, 'index'])->name('index');
             $router->get('sitemap.xml', SitemapController::class)->name('sitemap');
             $router->get('feed.xml', FeedController::class)->name('feed');
+            // Bundled assets (laradocs.js / laradocs.css) are served by file
+            // name and carry no version segment. SetDocsVersion is dropped so
+            // its unversioned-URL policy cannot 301-redirect the asset to a
+            // default version — which would otherwise break every page's CSS
+            // and JS the moment versioning is enabled with unversioned=redirect.
             $router->get('_laradocs/asset/{file}', AssetController::class)
                 ->where('file', '[\w.\-]+')
+                ->withoutMiddleware(SetDocsVersion::class)
                 ->name('asset');
             $router->get('_laradocs/search', SearchController::class)->name('search');
 

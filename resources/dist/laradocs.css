@@ -121,6 +121,9 @@ body.laradocs {
   padding: .5rem 1.25rem;
   font-size: .875rem; font-weight: 500; line-height: 1.4; text-align: center;
 }
+/* The class selector's `display: flex` outranks the UA `[hidden]` rule, so
+   without this the JS-dismissed outdated banner would stay visible. */
+.laradocs-banner[hidden] { display: none; }
 .laradocs-banner-inner { max-width: var(--dc-content-w); }
 .laradocs-banner a { color: inherit; text-decoration: underline; }
 .laradocs-banner a:hover { opacity: .8; }
