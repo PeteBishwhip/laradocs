@@ -5,7 +5,7 @@
   "description": "Test harness for the bundled palette JS. The package itself ships no Node build step — `resources/dist/laradocs.js` is hand-authored and committed.",
   "scripts": {
     "build": "sponsorkit",
-    "test": "node --test --test-reporter=spec tests/js/palette.test.mjs",
+    "test": "node --test --test-reporter=spec tests/js/palette.test.mjs tests/js/version.test.mjs",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui"
   },

@@ -34,6 +34,8 @@ final class Metadata implements Arrayable
         public readonly ?string $redirect = null,
         public readonly bool $searchable = true,
         public readonly float $searchRank = 1.0,
+        public readonly ?bool $versionBanner = null,
+        public readonly ?string $unchangedSince = null,
         public readonly array $extra = [],
     ) {}
 
@@ -51,6 +53,7 @@ final class Metadata implements Arrayable
             'title', 'description', 'slug', 'order', 'hidden', 'group',
             'badge', 'icon', 'tags', 'updated_at', 'author', 'layout',
             'image', 'redirect', 'search', 'search_rank',
+            'version_banner', 'unchanged_since',
         ];
 
         $extra = array_diff_key($data, array_flip($known));
@@ -74,6 +77,8 @@ final class Metadata implements Arrayable
             redirect: self::nullableString($data, 'redirect'),
             searchable: self::toBool($data['search'] ?? true),
             searchRank: is_numeric($data['search_rank'] ?? null) ? max(0.0, (float) $data['search_rank']) : 1.0,
+            versionBanner: array_key_exists('version_banner', $data) ? self::toBool($data['version_banner']) : null,
+            unchangedSince: self::nullableString($data, 'unchanged_since'),
             extra: $extra,
         );
     }
@@ -112,6 +117,8 @@ final class Metadata implements Arrayable
             'redirect' => $this->redirect,
             'search' => $this->searchable,
             'search_rank' => $this->searchRank,
+            'version_banner' => $this->versionBanner,
+            'unchanged_since' => $this->unchangedSince,
         ], $this->extra);
     }
 

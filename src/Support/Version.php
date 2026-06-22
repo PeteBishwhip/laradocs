@@ -8,9 +8,10 @@ use Laradocs\Http\Middleware\SetDocsVersion;
 
 /**
  * Resolves which documentation versions are available and which one the current
- * request is serving. Auto-detection scans sub-directories of the configured
- * docs path, so developers don't need to maintain a config list alongside the
- * filesystem.
+ * request is serving. Discovery, sorting and alias resolution are delegated to
+ * the {@see VersionRegistry} singleton; this class keeps a thin, backward-
+ * compatible static facade over it (notably {@see self::available()} returning a
+ * `[handle => label]` array) plus the request-scoped helpers.
  *
  * The active version for a given request is set by {@see SetDocsVersion}
  * into the `laradocs._current_version` runtime config key and can be read back
@@ -46,7 +47,44 @@ final class Version
             return $explicit;
         }
 
-        return self::fromCache();
+        return array_map(
+            static fn (VersionInfo $info): string => $info->label,
+            self::registry()->all(),
+        );
+    }
+
+    /**
+     * The shared {@see VersionRegistry} singleton — the authoritative source of
+     * truth for version discovery, sorting and alias resolution. Resolved from
+     * the container so the assembled list is built once per request.
+     */
+    public static function registry(): VersionRegistry
+    {
+        return app(VersionRegistry::class);
+    }
+
+    /**
+     * The handle carrying the `latest` flag, delegating to the registry.
+     */
+    public static function latest(): ?string
+    {
+        return self::registry()->latest();
+    }
+
+    /**
+     * The {@see VersionInfo} for a handle, or null when it is not a version.
+     */
+    public static function info(string $key): ?VersionInfo
+    {
+        return self::registry()->get($key);
+    }
+
+    /**
+     * Whether the given handle is the resolved default version.
+     */
+    public static function isDefault(string $v): bool
+    {
+        return $v === self::default();
     }
 
     /**
@@ -64,7 +102,9 @@ final class Version
      * The version to fall back to when no explicit version is present in a URL.
      *
      * Resolution order:
-     *   1. `laradocs.versions.default` (or LARADOCS_VERSION_DEFAULT env var).
+     *   1. `laradocs.versions.default` (or LARADOCS_VERSION_DEFAULT env var). A
+     *      `latest` / `stable` keyword (or any configured alias) is resolved to a
+     *      concrete handle via {@see VersionRegistry::resolveAlias()}.
      *   2. The first detected version from {@see self::available()}.
      *
      * Returns null when versioning is disabled.
@@ -78,7 +118,7 @@ final class Version
         $configured = Config::nullableString('laradocs.versions.default');
 
         if ($configured !== null && $configured !== '') {
-            return $configured;
+            return self::registry()->resolveAlias($configured) ?? $configured;
         }
 
         $available = self::available();
@@ -110,77 +150,5 @@ final class Version
         $current = self::current();
 
         return $current !== null ? self::pathFor($current) : Config::string('laradocs.docs.path');
-    }
-
-    /**
-     * Return the auto-detected version list from cache, or scan directly when
-     * caching is disabled.
-     *
-     * @return array<string, string>
-     */
-    private static function fromCache(): array
-    {
-        if (! Config::bool('laradocs.cache.enabled', true)) {
-            return self::scan();
-        }
-
-        $key = Config::string('laradocs.cache.key_prefix', 'laradocs') . ':versions';
-        $ttl = Config::nullableInt('laradocs.cache.ttl') ?? 86400;
-
-        return cache()
-            ->store(Config::nullableString('laradocs.cache.store'))
-            ->remember($key, $ttl, self::scan(...));
-    }
-
-    /**
-     * Scan the docs path for version sub-directories.
-     *
-     * @return array<string, string>
-     */
-    private static function scan(): array
-    {
-        $base = Config::string('laradocs.docs.path');
-
-        if (! is_dir($base)) {
-            return [];
-        }
-
-        $versions = [];
-
-        foreach (array_diff((array) scandir($base), ['.', '..']) as $entry) {
-            $entry = (string) $entry;
-
-            if (! is_dir("{$base}/{$entry}")) {
-                continue;
-            }
-
-            $versions[$entry] = self::label($entry, "{$base}/{$entry}");
-        }
-
-        return $versions;
-    }
-
-    /**
-     * The human-readable label for a version directory.
-     *
-     * Reads `_version.json` when present and it exposes a string `label` key;
-     * otherwise the version handle itself is used as the label. A plain JSON
-     * sidecar is used rather than an executable PHP file so labels can come
-     * from a separate docs branch or directory without executing its code.
-     */
-    private static function label(string $handle, string $dir): string
-    {
-        $meta = "{$dir}/_version.json";
-
-        if (is_file($meta)) {
-            /** @var mixed $data */
-            $data = json_decode((string) file_get_contents($meta), true);
-
-            if (is_array($data) && isset($data['label']) && is_string($data['label'])) {
-                return $data['label'];
-            }
-        }
-
-        return $handle;
     }
 }

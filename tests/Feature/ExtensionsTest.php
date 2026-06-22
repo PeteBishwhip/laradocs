@@ -291,3 +291,25 @@ MD);
     expect($html)->not->toContain('data-laradocs-katex')
         ->and($html)->not->toContain('katex.min.js');
 });
+
+it('renders inline version directives through the pipeline when enabled', function () {
+    config()->set('laradocs.versions.inline.enabled', true);
+    config()->set('laradocs.versions.inline.behaviour', 'client');
+    app()->forgetInstance(DocumentParser::class);
+
+    $html = render(":::version-since[2.0]\n## New stuff\n:::");
+
+    expect($html)->toContain('class="version-block"')
+        ->and($html)->toContain('data-version-since="2.0"')
+        ->and($html)->toContain('hidden')
+        ->and($html)->toContain('<h2');
+});
+
+it('does not register the version block extension when inline is disabled', function () {
+    config()->set('laradocs.versions.inline.enabled', false);
+    app()->forgetInstance(DocumentParser::class);
+
+    $html = render(":::version-since[2.0]\nNew stuff\n:::");
+
+    expect($html)->not->toContain('version-block');
+});

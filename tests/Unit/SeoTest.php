@@ -318,6 +318,69 @@ describe('SeoFactory', function () {
         expect($seo->image)->toContain('/docs/_laradocs/og/');
     });
 
+    it('noindexes a non-default version page', function () {
+        config()->set('laradocs.versions.enabled', true);
+        config()->set('laradocs.versions.strategy', 'config');
+        config()->set('laradocs.versions.default', 'v2');
+        config()->set('laradocs.versions.available', [
+            'v2' => ['label' => 'v2.0'],
+            'v1' => ['label' => 'v1.0'],
+        ]);
+        config()->set('laradocs._current_version', 'v1');
+
+        $seo = app(SeoFactory::class)->forDocument(makeDocument(SEO_SLUG, ['title' => 'Intro']));
+
+        expect($seo->robots)->toBe('noindex, follow');
+    });
+
+    it('noindex+nofollows a deprecated version page', function () {
+        config()->set('laradocs.versions.enabled', true);
+        config()->set('laradocs.versions.strategy', 'config');
+        config()->set('laradocs.versions.default', 'v2');
+        config()->set('laradocs.versions.available', [
+            'v2' => ['label' => 'v2.0'],
+            'v1' => ['label' => 'v1.0', 'deprecated' => true],
+        ]);
+        config()->set('laradocs._current_version', 'v1');
+
+        $seo = app(SeoFactory::class)->forDocument(makeDocument(SEO_SLUG, ['title' => 'Intro']));
+
+        expect($seo->robots)->toBe(SEO_NOINDEX);
+    });
+
+    it('indexes the default version page normally', function () {
+        config()->set('laradocs.versions.enabled', true);
+        config()->set('laradocs.versions.strategy', 'config');
+        config()->set('laradocs.versions.default', 'v2');
+        config()->set('laradocs.versions.available', [
+            'v2' => ['label' => 'v2.0'],
+            'v1' => ['label' => 'v1.0'],
+        ]);
+        config()->set('laradocs._current_version', 'v2');
+
+        $seo = app(SeoFactory::class)->forDocument(makeDocument(SEO_SLUG, ['title' => 'Intro']));
+
+        expect($seo->robots)->toBeNull();
+    });
+
+    it('lets front-matter seo.robots override the automatic noindex', function () {
+        config()->set('laradocs.versions.enabled', true);
+        config()->set('laradocs.versions.strategy', 'config');
+        config()->set('laradocs.versions.default', 'v2');
+        config()->set('laradocs.versions.available', [
+            'v2' => ['label' => 'v2.0'],
+            'v1' => ['label' => 'v1.0'],
+        ]);
+        config()->set('laradocs._current_version', 'v1');
+
+        $seo = app(SeoFactory::class)->forDocument(makeDocument(SEO_SLUG, [
+            'title' => 'Intro',
+            'seo' => ['robots' => 'index, follow'],
+        ]));
+
+        expect($seo->robots)->toBe('index, follow');
+    });
+
     it('builds a breadcrumb trail from linked ancestors', function () {
         $ancestor = new TreeNode(
             title: 'Guide',

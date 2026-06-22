@@ -7,6 +7,8 @@ namespace Laradocs\Routing;
 use Laradocs\Documents\Document;
 use Laradocs\Documents\DocumentTree;
 use Laradocs\Documents\TreeNode;
+use Laradocs\Support\Config;
+use Laradocs\Support\Version;
 
 /**
  * Renders a sitemaps.org-compliant XML document from a document tree.
@@ -49,7 +51,32 @@ final class SitemapBuilder
 
     private function includes(Document $document): bool
     {
+        if ($this->versionExcluded()) {
+            return false;
+        }
+
         return ! $document->isHidden() && $document->redirect() === null;
+    }
+
+    /**
+     * Whether the active (non-default) version's pages should be left out of the
+     * sitemap. The sitemap is built per active version, so this gates the whole
+     * tree: non-default versions are excluded unless `seo.sitemap_all_versions`
+     * opts every version in.
+     */
+    private function versionExcluded(): bool
+    {
+        if (! Config::bool('laradocs.versions.enabled', false)) {
+            return false;
+        }
+
+        if (Config::bool('laradocs.seo.sitemap_all_versions', false)) {
+            return false;
+        }
+
+        $current = Version::current();
+
+        return $current !== null && ! Version::isDefault($current);
     }
 
     private function urlFor(Document $document, int $depth): string

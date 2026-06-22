@@ -11,6 +11,7 @@ use Laradocs\Documents\TreeNode;
 use Laradocs\Metadata\Metadata;
 use Laradocs\Routing\DocumentUrl;
 use Laradocs\Support\Config;
+use Laradocs\Support\Version;
 use RalphJSmit\Laravel\SEO\Schema\BreadcrumbListSchema;
 use RalphJSmit\Laravel\SEO\SchemaCollection;
 use RalphJSmit\Laravel\SEO\Support\ImageMeta;
@@ -161,7 +162,30 @@ final class SeoFactory
             $robots = 'noindex, nofollow';
         }
 
-        return $robots ?? $this->stringOrNull('laradocs.seo.robots');
+        // An explicit front-matter directive always wins; otherwise non-default
+        // (and deprecated) versions are excluded from indexing automatically.
+        return $robots
+            ?? $this->versionRobots()
+            ?? $this->stringOrNull('laradocs.seo.robots');
+    }
+
+    /**
+     * The automatic robots directive for the active version: deprecated
+     * versions are noindex, nofollow; any non-default version is noindex,
+     * follow. Returns null when versioning is off, no version is active, or the
+     * active version is the default (which indexes normally).
+     */
+    private function versionRobots(): ?string
+    {
+        $current = Version::current();
+
+        if (! Config::bool('laradocs.versions.enabled', false) || $current === null || Version::isDefault($current)) {
+            return null;
+        }
+
+        return Version::info($current)?->deprecated === true
+            ? 'noindex, nofollow'
+            : 'noindex, follow';
     }
 
     /**

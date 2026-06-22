@@ -25,6 +25,7 @@ use Laradocs\Console\InstallCommand;
 use Laradocs\Console\LintCommand;
 use Laradocs\Console\LoginCommand;
 use Laradocs\Console\MakeDocCommand;
+use Laradocs\Console\VersionsCommand;
 use Laradocs\Contracts\DocumentLoader;
 use Laradocs\Contracts\DocumentParser;
 use Laradocs\Contracts\HtmlExtension;
@@ -41,6 +42,7 @@ use Laradocs\Extensions\KatexExtension;
 use Laradocs\Extensions\MacroExtension;
 use Laradocs\Extensions\MermaidExtension;
 use Laradocs\Extensions\VariableExtension;
+use Laradocs\Extensions\VersionBlockExtension;
 use Laradocs\Extensions\VideoExtension;
 use Laradocs\Icons\HeroiconProvider;
 use Laradocs\Icons\IconRegistry;
@@ -60,6 +62,7 @@ use Laradocs\Support\Config;
 use Laradocs\Support\Locale;
 use Laradocs\Support\RateLimiterConfig;
 use Laradocs\Support\Version;
+use Laradocs\Support\VersionRegistry;
 use Laradocs\Variables\VariableRegistry;
 use Laravel\Scout\EngineManager;
 use League\CommonMark\Environment\Environment;
@@ -145,6 +148,10 @@ final class LaradocsServiceProvider extends ServiceProvider
         ));
 
         $this->app->singleton(MetadataResolver::class, FrontMatterMetadataResolver::class);
+
+        // The authoritative version list: discovers, sorts and resolves
+        // documentation versions once per request for every consumer.
+        $this->app->singleton(VersionRegistry::class);
     }
 
     private function registerPipeline(): void
@@ -340,6 +347,15 @@ final class LaradocsServiceProvider extends ServiceProvider
         $config = Config::array('laradocs.parser.extensions');
         $extensions = [];
 
+        // Must run first so the `:::version-*` directives are rewritten into
+        // HTML blocks before the variable/macro/component extensions process
+        // their inner content.
+        if (Config::bool('laradocs.versions.inline.enabled', false)) {
+            $extensions[] = new VersionBlockExtension(
+                Config::string('laradocs.versions.inline.behaviour', 'client') === 'server',
+            );
+        }
+
         if ($config['variables'] ?? true) {
             $extensions[] = new VariableExtension(
                 $app->make(VariableRegistry::class),
@@ -517,6 +533,7 @@ final class LaradocsServiceProvider extends ServiceProvider
             DeployCommand::class,
             CloneProjectCommand::class,
             ConfigCommand::class,
+            VersionsCommand::class,
         ]);
 
         // `laradocs:cache` builds a sitemap whose URLs come from

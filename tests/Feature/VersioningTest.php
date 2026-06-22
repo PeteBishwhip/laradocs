@@ -212,15 +212,71 @@ it('serves a bare version root as that version landing page', function () {
     $this->get('/docs/v2')->assertOk()->assertSee('Welcome to v2.');
 });
 
-it('falls back to the default version when the url omits one', function () {
+it('renders the default version in place for unversioned urls when configured', function () {
     $this->makeDocs(versionedDocs());
     config()->set('laradocs.versions.default', 'v2');
+    config()->set('laradocs.versions.unversioned', 'render');
 
     // Index route: no version segment present.
     $this->get('/docs')->assertOk()->assertSee('Welcome to v2.');
 
     // Show route with an unprefixed slug resolves against the default version.
     $this->get('/docs/getting-started')->assertOk()->assertSee('This is the v2 guide.');
+});
+
+it('redirects unversioned urls to the default version when configured', function () {
+    $this->makeDocs(versionedDocs());
+    config()->set('laradocs.versions.default', 'v2');
+    config()->set('laradocs.versions.unversioned', 'redirect');
+
+    // Index route: no version segment → redirect to the bare default root.
+    $this->get('/docs')->assertRedirect(url('/docs/v2'))->assertStatus(301);
+
+    // Unprefixed slug → redirect carrying the full path under the default.
+    $this->get('/docs/getting-started')
+        ->assertRedirect(url('/docs/v2/getting-started'))
+        ->assertStatus(301);
+});
+
+it('redirects the latest alias to the resolved latest version', function () {
+    $this->makeDocs(versionedDocs());
+
+    $this->get('/docs/latest/getting-started')
+        ->assertRedirect(url('/docs/v2/getting-started'))
+        ->assertStatus(301);
+});
+
+it('redirects the stable alias to the resolved stable version', function () {
+    $this->makeDocs(versionedDocs());
+
+    $this->get('/docs/stable/getting-started')
+        ->assertRedirect(url('/docs/v2/getting-started'))
+        ->assertStatus(301);
+});
+
+it('redirects a configured custom alias to its target version', function () {
+    $this->makeDocs(versionedDocs());
+    config()->set('laradocs.versions.aliases', ['old' => 'v1']);
+
+    $this->get('/docs/old/getting-started')
+        ->assertRedirect(url('/docs/v1/getting-started'))
+        ->assertStatus(301);
+});
+
+it('redirects a bare alias root to the resolved version root', function () {
+    $this->makeDocs(versionedDocs());
+
+    $this->get('/docs/latest')
+        ->assertRedirect(url('/docs/v2'))
+        ->assertStatus(301);
+});
+
+it('returns 404 when accessing a hidden version directly', function () {
+    $root = $this->makeDocs(versionedDocs());
+    file_put_contents($root . '/v1/_version.json', '{"hidden": true}');
+
+    $this->get('/docs/v1/getting-started')->assertNotFound();
+    $this->get('/docs/v1')->assertNotFound();
 });
 
 it('renders the version selector with each available version', function () {
@@ -232,6 +288,48 @@ it('renders the version selector with each available version', function () {
         ->assertSee('data-laradocs-version', false)
         ->assertSee('laradocs-version-current', false)
         ->assertSee(url('/docs/v2/getting-started'), false);
+});
+
+it('shows a latest badge next to the latest version in the picker', function () {
+    $this->makeDocs(versionedDocs());
+
+    $this->get('/docs/v1/getting-started')
+        ->assertOk()
+        ->assertSee('laradocs-version-badge--latest', false)
+        ->assertSee('>latest<', false);
+});
+
+it('shows deprecated and pre-release badges in the picker', function () {
+    config()->set('laradocs.versions.enabled', true);
+    config()->set('laradocs.versions.available', null);
+    $root = $this->makeDocs([
+        'v3.0.0-beta/getting-started.md' => "---\ntitle: Start\n---\n# Beta Start\n\nv3 beta guide.\n",
+        'v2.0.0/getting-started.md' => "---\ntitle: Start\n---\n# Start\n\nv2 guide.\n",
+        'v1.0.0/getting-started.md' => "---\ntitle: Start\n---\n# Start\n\nv1 guide.\n",
+    ]);
+    file_put_contents($root . '/v1.0.0/_version.json', '{"deprecated": true}');
+
+    $this->get('/docs/v2.0.0/getting-started')
+        ->assertOk()
+        ->assertSee('laradocs-version-badge--deprecated', false)
+        ->assertSee('>deprecated<', false)
+        ->assertSee('laradocs-version-badge--pre-release', false)
+        ->assertSee('>pre-release<', false);
+});
+
+it('emits no badge for versions with no special status', function () {
+    config()->set('laradocs.versions.enabled', true);
+    config()->set('laradocs.versions.available', null);
+    $this->makeDocs([
+        'v2.0.0/getting-started.md' => "---\ntitle: Start\n---\n# Start\n\nv2 guide.\n",
+        'v1.0.0/getting-started.md' => "---\ntitle: Start\n---\n# Start\n\nv1 guide.\n",
+    ]);
+
+    // v1 is neither latest, deprecated nor pre-release: its entry carries no badge.
+    $this->get('/docs/v1.0.0/getting-started')
+        ->assertOk()
+        ->assertDontSee('laradocs-version-badge--deprecated', false)
+        ->assertDontSee('laradocs-version-badge--pre-release', false);
 });
 
 it('hides the version selector when versioning is disabled', function () {
@@ -264,4 +362,100 @@ it('restores the docs path after a versioned request (octane-safe)', function ()
     // The worker's global config is reset so the next request starts clean.
     expect(config('laradocs.docs.path'))->toBe($root)
         ->and(config('laradocs._current_version'))->toBeNull();
+});
+
+/*
+|--------------------------------------------------------------------------
+| Outdated-version banner
+|--------------------------------------------------------------------------
+*/
+
+it('shows the outdated-version banner when viewing a non-default version', function () {
+    // Default resolves to v2 (the latest), so v1 is "outdated".
+    $this->makeDocs(versionedDocs());
+
+    $this->get('/docs/v1/getting-started')
+        ->assertOk()
+        ->assertSee('laradocs-version-outdated', false)
+        ->assertSee('You are viewing', false)
+        // Links to the same page slug in the default (current) version.
+        ->assertSee(url('/docs/v2/getting-started'), false)
+        // Carries a dismiss control.
+        ->assertSee('data-laradocs-dismiss-version-banner', false);
+});
+
+it('hides the outdated-version banner when viewing the default version', function () {
+    $this->makeDocs(versionedDocs());
+
+    $this->get('/docs/v2/getting-started')
+        ->assertOk()
+        ->assertDontSee('laradocs-version-outdated', false);
+});
+
+it('hides the outdated-version banner when versions.outdated_banner is false', function () {
+    $this->makeDocs(versionedDocs());
+    config()->set('laradocs.versions.outdated_banner', false);
+
+    $this->get('/docs/v1/getting-started')
+        ->assertOk()
+        ->assertDontSee('laradocs-version-outdated', false);
+});
+
+it('suppresses the outdated-version banner for a page with version_banner: false', function () {
+    config()->set('laradocs.versions.enabled', true);
+    config()->set('laradocs.versions.available', null);
+    $this->makeDocs([
+        'v1/index.md' => "---\ntitle: Home\norder: 1\n---\n# V1 Home\n",
+        'v1/no-banner.md' => "---\ntitle: Quiet\nversion_banner: false\n---\n# Quiet\n\nNo banner here.\n",
+        'v2/index.md' => "---\ntitle: Home\norder: 1\n---\n# V2 Home\n",
+    ]);
+
+    $this->get('/docs/v1/no-banner')
+        ->assertOk()
+        ->assertDontSee('laradocs-version-outdated', false);
+});
+
+it('shows the deprecatedMessage in the banner when the version sets one', function () {
+    config()->set('laradocs.versions.enabled', true);
+    config()->set('laradocs.versions.available', null);
+    $root = $this->makeDocs([
+        'v2.0.0/getting-started.md' => "---\ntitle: Start\n---\n# Start\n\nv2 guide.\n",
+        'v1.0.0/getting-started.md' => "---\ntitle: Start\n---\n# Start\n\nv1 guide.\n",
+    ]);
+    file_put_contents(
+        $root . '/v1.0.0/_version.json',
+        '{"deprecated": true, "deprecated_message": "v1 reached end of life."}',
+    );
+
+    $this->get('/docs/v1.0.0/getting-started')
+        ->assertOk()
+        ->assertSee('laradocs-version-outdated', false)
+        ->assertSee('v1 reached end of life.', false)
+        // The generic "viewing" text is replaced by the deprecation message.
+        ->assertDontSee('You are viewing', false);
+});
+
+/*
+|--------------------------------------------------------------------------
+| Client-side version hint (window.__laradocsVersion)
+|--------------------------------------------------------------------------
+*/
+
+it('emits the active version to the page head when a version is active', function () {
+    $this->makeDocs(versionedDocs());
+
+    $this->get('/docs/v1/getting-started')
+        ->assertOk()
+        ->assertSee("window.__laradocsVersion = 'v1';", false);
+});
+
+it('does not emit the version hint when no version is active', function () {
+    config()->set('laradocs.versions.enabled', false);
+    $this->makeDocs([
+        'getting-started.md' => "---\ntitle: Start\n---\n# Start\n\nUnversioned content.\n",
+    ]);
+
+    $this->get('/docs/getting-started')
+        ->assertOk()
+        ->assertDontSee('window.__laradocsVersion', false);
 });

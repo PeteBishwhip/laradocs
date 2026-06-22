@@ -121,6 +121,9 @@ body.laradocs {
   padding: .5rem 1.25rem;
   font-size: .875rem; font-weight: 500; line-height: 1.4; text-align: center;
 }
+/* The class selector's `display: flex` outranks the UA `[hidden]` rule, so
+   without this the JS-dismissed outdated banner would stay visible. */
+.laradocs-banner[hidden] { display: none; }
 .laradocs-banner-inner { max-width: var(--dc-content-w); }
 .laradocs-banner a { color: inherit; text-decoration: underline; }
 .laradocs-banner a:hover { opacity: .8; }
@@ -140,6 +143,23 @@ body.laradocs {
   :root[data-theme="auto"] .laradocs-banner-alert  { background: #451a03; color: #fcd34d; }
   :root:not([data-theme]) .laradocs-banner-danger,
   :root[data-theme="auto"] .laradocs-banner-danger { background: #4c0519; color: #fca5a5; }
+}
+
+/* Outdated-version banner: an amber alert linking to the current version. */
+.laradocs-version-outdated { gap: .75rem; background: #fffbeb; color: #92400e; }
+.laradocs-version-outdated-dismiss {
+  display: inline-flex; align-items: center; justify-content: center;
+  flex: none; padding: .125rem; border: 0; background: none;
+  color: inherit; cursor: pointer; opacity: .7;
+}
+.laradocs-version-outdated-dismiss:hover { opacity: 1; }
+.laradocs-version-outdated-dismiss svg { width: 1rem; height: 1rem; }
+
+[data-theme="dark"] .laradocs-version-outdated { background: #451a03; color: #fcd34d; }
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .laradocs-version-outdated,
+  :root[data-theme="auto"] .laradocs-version-outdated { background: #451a03; color: #fcd34d; }
 }
 
 /* ─────────────────────── header ─────────────────────── */
@@ -417,6 +437,27 @@ body.laradocs {
   background: var(--dc-accent-soft);
   color: var(--dc-accent);
   border-radius: 3px;
+}
+.laradocs-version-badge {
+  display: inline-block;
+  margin-left: .35rem;
+  padding: .05rem .3rem;
+  font-size: .6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+  background: var(--dc-accent-soft);
+  color: var(--dc-accent);
+  border-radius: 3px;
+  vertical-align: middle;
+}
+.laradocs-version-badge--deprecated {
+  background: #fde8e8;
+  color: #b91c1c;
+}
+.laradocs-version-badge--pre-release {
+  background: #fef3c7;
+  color: #92400e;
 }
 
 /* Desktop: fixed so the footer can't push the sidebar above the header */

@@ -98,11 +98,35 @@ return [
     |             Add a _version.json inside a version directory containing
     |             {"label": "My Label"} for a custom display name; otherwise
     |             the directory name is used.
-    |             Supply an explicit array to override auto-detection entirely:
+    |             Supply an explicit array to override auto-detection entirely.
+    |             Entries accept the legacy string-value form:
     |               'available' => ['v1' => 'Version 1', 'v2' => 'Version 2']
+    |             or a richer per-version array carrying extra metadata:
+    |               'available' => [
+    |                 'v2.0' => ['label' => 'v2.0', 'stable' => true, 'deprecated' => false],
+    |               ]
     |             An empty array disables the selector outright.
     | "selector"  Show the version switcher in the header. Hidden automatically
     |             when fewer than two versions are available.
+    | "strategy"  How the available version list is resolved: "auto" scans the
+    |             docs path, "config" uses only the explicit "available" array,
+    |             "both" merges auto-detected versions with config metadata.
+    | "unversioned" What to serve at the bare prefix (e.g. /docs) when versioning
+    |             is on: "redirect" to the default version's URL, or "render"
+    |             the default version's content in place.
+    | "aliases"   Map alias handles to real version keys so stable URLs survive
+    |             version bumps, e.g. ['latest' => 'v2.0', 'stable' => 'v1.0'].
+    | "outdated_banner" Show an "outdated version" banner when a visitor is
+    |             viewing any version other than the latest.
+    | "shared"    Pages served identically across every version (e.g. a global
+    |             changelog) so they need not be duplicated per version directory.
+    |               "enabled"   Toggle shared pages on or off.
+    |               "directory" Sub-directory (relative to the docs path) holding
+    |                           the shared pages.
+    |               "nav_label" Heading the shared pages appear under in the nav.
+    | "inline"    Version metadata surfaced inside page content.
+    |               "enabled"   Toggle inline version annotations on or off.
+    |               "behaviour" How annotations render — e.g. "badge" or "note".
     |
     | URL structure: /docs/{version}/{page-slug}
     | Cache keys are namespaced per version so each set is independent.
@@ -116,6 +140,31 @@ return [
         'default' => env('LARADOCS_VERSION_DEFAULT'),
         'available' => null,
         'selector' => (bool) env('LARADOCS_VERSION_SELECTOR', true),
+
+        // How the version list is resolved: auto | config | both.
+        'strategy' => env('LARADOCS_VERSION_STRATEGY', 'auto'),
+
+        // What to serve at the bare prefix when versioning is on: redirect | render.
+        'unversioned' => env('LARADOCS_VERSION_UNVERSIONED', 'redirect'),
+
+        // Alias handle => real version key, e.g. ['latest' => 'v2.0'].
+        'aliases' => [],
+
+        // Show an "outdated version" banner on any non-latest version.
+        'outdated_banner' => (bool) env('LARADOCS_VERSION_OUTDATED_BANNER', true),
+
+        // Pages shared identically across every version (e.g. a global changelog).
+        'shared' => [
+            'enabled' => (bool) env('LARADOCS_VERSION_SHARED', false),
+            'directory' => env('LARADOCS_VERSION_SHARED_DIR', '_shared'),
+            'nav_label' => env('LARADOCS_VERSION_SHARED_NAV_LABEL', 'Shared'),
+        ],
+
+        // Version metadata surfaced inside page content.
+        'inline' => [
+            'enabled' => (bool) env('LARADOCS_VERSION_INLINE', false),
+            'behaviour' => env('LARADOCS_VERSION_INLINE_BEHAVIOUR', 'badge'),
+        ],
     ],
 
     /*
@@ -525,7 +574,15 @@ return [
 
         // Robots directive. Null keeps the package's crawler-friendly default;
         // set e.g. "noindex, nofollow" to keep the docs out of search engines.
+        // When versioning is enabled, non-default versions are automatically
+        // served "noindex, follow" (deprecated versions "noindex, nofollow")
+        // unless a page overrides it via its front-matter `seo.robots`.
         'robots' => env('LARADOCS_SEO_ROBOTS'),
+
+        // Include every version's pages in the sitemap. By default only the
+        // default version is advertised, keeping duplicate older versions out
+        // of search engines; set true to list all versions.
+        'sitemap_all_versions' => (bool) env('LARADOCS_SEO_SITEMAP_ALL_VERSIONS', false),
 
         // JSON-LD structured data emitted into the document <head>.
         'schema' => [
