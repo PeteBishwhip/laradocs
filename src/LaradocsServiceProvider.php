@@ -222,7 +222,6 @@ final class LaradocsServiceProvider extends ServiceProvider
                 $app->make(DocumentCache::class),
                 $app->make(VariableRegistry::class),
                 $app->make(MacroRegistry::class),
-                $app->make(IconRegistry::class),
                 $app->make(RateLimiterConfig::class),
                 Config::string('laradocs.docs.index', '_index'),
                 Config::int('laradocs.search.max_chars', 10000),
@@ -457,12 +456,7 @@ final class LaradocsServiceProvider extends ServiceProvider
 
         if (! $macros->has('icon')) {
             $macros->register('icon', function (array $arguments) use ($icons, $defaultVariant): string {
-                $rawName = $arguments[0] ?? '';
-                $name = is_scalar($rawName) ? (string) $rawName : '';
-                $variantArg = $arguments['variant'] ?? null;
-                $variant = is_string($variantArg) ? $variantArg : $defaultVariant;
-                $setArg = $arguments['set'] ?? null;
-                $set = is_string($setArg) ? $setArg : null;
+                [$name, $variant, $set] = self::parseIconArguments($arguments, $defaultVariant);
 
                 return $icons->render($name, $variant, $set);
             });
@@ -470,14 +464,27 @@ final class LaradocsServiceProvider extends ServiceProvider
 
         if (! $macros->has('icon:heroicons')) {
             $macros->register('icon:heroicons', function (array $arguments) use ($icons, $defaultVariant): string {
-                $rawName = $arguments[0] ?? '';
-                $name = is_scalar($rawName) ? (string) $rawName : '';
-                $variantArg = $arguments['variant'] ?? null;
-                $variant = is_string($variantArg) ? $variantArg : $defaultVariant;
+                [$name, $variant] = self::parseIconArguments($arguments, $defaultVariant);
 
                 return $icons->render($name, $variant, 'heroicons');
             });
         }
+    }
+
+    /**
+     * @param  array<int|string, mixed>  $arguments
+     * @return array{string, string, string|null}
+     */
+    private static function parseIconArguments(array $arguments, string $defaultVariant): array
+    {
+        $rawName = $arguments[0] ?? '';
+        $name = is_scalar($rawName) ? (string) $rawName : '';
+        $variantArg = $arguments['variant'] ?? null;
+        $variant = is_string($variantArg) ? $variantArg : $defaultVariant;
+        $setArg = $arguments['set'] ?? null;
+        $set = is_string($setArg) ? $setArg : null;
+
+        return [$name, $variant, $set];
     }
 
     private function registerPublishing(): void

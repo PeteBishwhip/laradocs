@@ -144,14 +144,14 @@ changes the icon colour automatically.
 
 ## Custom icon sets
 
-Register any additional icon set from a service provider using the `Laradocs`
-facade. The closure receives the icon name and variant string and must return a
-raw SVG string, or an empty string when the icon is not found:
+Register any additional icon set from a service provider. The closure receives
+the icon name and variant string and must return a raw SVG string, or an empty
+string when the icon is not found:
 
 ```php
-use Laradocs\Facades\Laradocs;
+use Laradocs\Icons\IconRegistry;
 
-Laradocs::registerIconSet('phosphor', function (string $name, string $variant): string {
+app(IconRegistry::class)->register('phosphor', function (string $name, string $variant): string {
     $path = resource_path("icons/phosphor/{$name}.svg");
 
     return file_exists($path) ? file_get_contents($path) : '';

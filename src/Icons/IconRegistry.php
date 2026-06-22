@@ -76,10 +76,6 @@ final class IconRegistry
 
         $svg = ($this->sets[$set])($icon, $variant);
 
-        if ($svg === '') {
-            return '';
-        }
-
-        return '<span class="laradocs-icon" aria-hidden="true">' . $svg . '</span>';
+        return $svg === '' ? '' : '<span class="laradocs-icon" aria-hidden="true">' . $svg . '</span>';
     }
 }

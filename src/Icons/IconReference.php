@@ -37,7 +37,7 @@ final class IconReference
         $set = null;
 
         foreach ($tokens as $token) {
-            if (preg_match('/^([a-zA-Z_][a-zA-Z0-9_]*)\s*:\s*(.+)$/s', $token, $m) !== 1) {
+            if (preg_match('/^([a-zA-Z_]\w*)\s*:\s*(.+)$/s', $token, $m) !== 1) {
                 continue;
             }
 

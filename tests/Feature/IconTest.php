@@ -6,7 +6,6 @@ use Illuminate\Filesystem\Filesystem;
 use Laradocs\Contracts\DocumentParser;
 use Laradocs\Icons\Icon;
 use Laradocs\Icons\IconRegistry;
-use Laradocs\Laradocs;
 
 function registerFakeIcons(): void
 {
@@ -112,8 +111,8 @@ it('uses the variant argument in the icon macro', function () {
     expect($html)->toContain('data-variant="solid"');
 });
 
-it('can register a custom icon set via Laradocs::registerIconSet()', function () {
-    app(Laradocs::class)->registerIconSet('custom', function (string $name): string {
+it('can register a custom icon set via IconRegistry::register()', function () {
+    app(IconRegistry::class)->register('custom', function (string $name): string {
         return "<svg data-custom=\"{$name}\"></svg>";
     });
 
