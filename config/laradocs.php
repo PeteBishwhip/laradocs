@@ -233,12 +233,18 @@ return [
     | "layouts"  Allowlist of recognised layout names. When non-empty, any
     |             document whose "layout:" value is not in this list is
     |             flagged. An empty array disables the layout check.
+    | "icons"    Flag icon references (the "icon:" front-matter field and inline
+    |             @icon() calls) that do not resolve to an SVG. This is what
+    |             surfaces a missing icon dependency — e.g. the heroicons npm
+    |             package not being installed. Set false to skip the check (for
+    |             instance in CI without node_modules).
     |
     */
 
     'lint' => [
         'required' => ['title'],
         'layouts' => [],
+        'icons' => true,
     ],
 
     /*

@@ -46,6 +46,16 @@ final class IconRegistry
     }
 
     /**
+     * Whether the given icon resolves to a non-empty SVG. Useful for validation
+     * (e.g. the linter) where you want to know if a reference is renderable
+     * without inspecting the wrapped HTML.
+     */
+    public function resolves(string $icon, string $variant = 'outline', ?string $set = null): bool
+    {
+        return $this->render($icon, $variant, $set) !== '';
+    }
+
+    /**
      * Render an icon name to an HTML string.
      *
      * Returns an empty string when the set is not registered or the icon is

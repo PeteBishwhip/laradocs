@@ -91,6 +91,7 @@ These supply values when a page omits them.
 | `parser.extensions.video` | — | `true` |
 | `parser.extensions.mermaid` | — | `true` |
 | `parser.extensions.variables` | — | `true` |
+| `parser.extensions.icons` | — | `true` |
 | `parser.extensions.macros` | — | `true` |
 | `parser.mermaid.src` | `LARADOCS_MERMAID_SRC` | jsDelivr mermaid@11 ESM |
 | `parser.highlighter` | `LARADOCS_HIGHLIGHTER` | `shiki-css` |
@@ -104,6 +105,23 @@ nothing, `raw` keeps the literal braces. The TOC only renders when a page has
 at least `min_headings` headings inside the level range.
 
 See [Rich Content](/docs/features/rich-content) for what each extension enables.
+
+## Icons
+
+| Option | Env | Default |
+|---|---|---|
+| `icons.driver` | `LARADOCS_ICONS_DRIVER` | `heroicons` |
+| `icons.heroicons.path` | `LARADOCS_HEROICONS_PATH` | auto-detect |
+| `icons.heroicons.variant` | `LARADOCS_HEROICONS_VARIANT` | `outline` |
+
+`icons.driver` sets the default icon set used by `@icon('name')` and
+`@docs('icon', 'name')`. The built-in set is `heroicons`; set to `null` to
+disable automatic rendering entirely. The `heroicons` set requires
+`npm install heroicons` — the package is auto-detected under
+`node_modules/heroicons/`. Set `heroicons.path` to an absolute path when it
+lives elsewhere.
+
+See [Icons](/docs/features/icons) for the full guide including custom sets.
 
 ## UI
 

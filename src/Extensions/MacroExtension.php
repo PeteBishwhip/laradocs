@@ -128,39 +128,6 @@ final class MacroExtension implements MarkdownExtension
      */
     private function tokenize(string $inner): array
     {
-        $tokens = [];
-        $buffer = '';
-        $quote = null;
-        $len = strlen($inner);
-
-        for ($i = 0; $i < $len; $i++) {
-            $char = $inner[$i];
-
-            if ($quote !== null) {
-                $buffer .= $char;
-
-                if ($char === $quote) {
-                    $quote = null;
-                }
-
-                continue;
-            }
-
-            if ($char === '"' || $char === "'") {
-                $quote = $char;
-                $buffer .= $char;
-            } elseif ($char === ',') {
-                $tokens[] = trim($buffer);
-                $buffer = '';
-            } else {
-                $buffer .= $char;
-            }
-        }
-
-        if (trim($buffer) !== '') {
-            $tokens[] = trim($buffer);
-        }
-
-        return $tokens;
+        return ValueCaster::tokenize($inner);
     }
 }
