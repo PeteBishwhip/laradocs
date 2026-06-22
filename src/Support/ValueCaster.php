@@ -6,8 +6,8 @@ namespace Laradocs\Support;
 
 /**
  * Coerces raw textual argument values into PHP scalars. Shared by the macro
- * (`@docs(...)`) and Blade-component (`<x-...>`) syntaxes so equivalent calls
- * resolve to identical arguments — the two front-ends round-trip cleanly.
+ * (`@docs(...)`), Blade-component (`<x-...>`), and icon (`@icon(...)`) syntaxes
+ * so equivalent calls resolve to identical arguments.
  */
 final class ValueCaster
 {
@@ -25,6 +25,50 @@ final class ValueCaster
             is_numeric($value) => $value + 0,
             default => self::unquote($value),
         };
+    }
+
+    /**
+     * Split a comma-separated argument list on commas, respecting quoted strings.
+     * Used by @docs(...), <x-...>, and @icon(...) so the tokeniser is not duplicated.
+     *
+     * @return array<int, string>
+     */
+    public static function tokenize(string $inner): array
+    {
+        $tokens = [];
+        $buffer = '';
+        $quote = null;
+        $len = strlen($inner);
+
+        for ($i = 0; $i < $len; $i++) {
+            $char = $inner[$i];
+
+            if ($quote !== null) {
+                $buffer .= $char;
+
+                if ($char === $quote) {
+                    $quote = null;
+                }
+
+                continue;
+            }
+
+            if ($char === '"' || $char === "'") {
+                $quote = $char;
+                $buffer .= $char;
+            } elseif ($char === ',') {
+                $tokens[] = trim($buffer);
+                $buffer = '';
+            } else {
+                $buffer .= $char;
+            }
+        }
+
+        if (trim($buffer) !== '') {
+            $tokens[] = trim($buffer);
+        }
+
+        return $tokens;
     }
 
     /**

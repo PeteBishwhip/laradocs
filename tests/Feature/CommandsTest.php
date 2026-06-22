@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\ServiceProvider;
+use Laradocs\Icons\IconRegistry;
 
 it('scaffolds a starter document with laradocs:install', function () {
     $path = sys_get_temp_dir() . '/laradocs-install-' . bin2hex(random_bytes(4));
@@ -415,6 +416,82 @@ it('docs:lint does not flag a missing updated_at', function () {
     $this->artisan('docs:lint')->assertSuccessful();
 });
 
+it('docs:lint flags a front-matter icon when the set is unavailable', function () {
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\nicon: arrow-long-right\n---\n",
+    ]);
+
+    $exit = Artisan::call('docs:lint', ['--json' => true]);
+    $data = json_decode(Artisan::output(), true);
+
+    expect($exit)->not->toBe(0)
+        ->and($data['unresolved_icons'])->toHaveCount(1)
+        ->and($data['unresolved_icons'][0]['icon'])->toBe('arrow-long-right')
+        ->and($data['unresolved_icons'][0]['set'])->toBe('heroicons')
+        ->and($data['unresolved_icons'][0]['reason'])->toBe('set_unavailable')
+        ->and($data['summary']['unresolved_icons'])->toBe(1);
+});
+
+it('docs:lint flags an inline @icon() call when the set is unavailable', function () {
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\n---\n\nClick @icon('plus') to add.\n",
+    ]);
+
+    $exit = Artisan::call('docs:lint', ['--json' => true]);
+    $data = json_decode(Artisan::output(), true);
+
+    expect($exit)->not->toBe(0)
+        ->and($data['unresolved_icons'])->toHaveCount(1)
+        ->and($data['unresolved_icons'][0]['icon'])->toBe('plus');
+});
+
+it('docs:lint ignores @icon() inside code blocks', function () {
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\n---\n\n```\n@icon('plus')\n```\n",
+    ]);
+
+    $this->artisan('docs:lint')->assertSuccessful();
+});
+
+it('docs:lint flags an unknown icon name when the set is available', function () {
+    app(IconRegistry::class)->register('heroicons', function (string $name): string {
+        return $name === 'real-icon' ? '<svg></svg>' : '';
+    });
+
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\nicon: made-up-icon\n---\n",
+    ]);
+
+    $exit = Artisan::call('docs:lint', ['--json' => true]);
+    $data = json_decode(Artisan::output(), true);
+
+    expect($exit)->not->toBe(0)
+        ->and($data['unresolved_icons'])->toHaveCount(1)
+        ->and($data['unresolved_icons'][0]['reason'])->toBe('unknown_icon');
+});
+
+it('docs:lint passes when a referenced icon resolves', function () {
+    app(IconRegistry::class)->register('heroicons', function (): string {
+        return '<svg></svg>';
+    });
+
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\nicon: arrow-long-right\n---\n\nUse @icon('check').\n",
+    ]);
+
+    $this->artisan('docs:lint')->assertSuccessful();
+});
+
+it('docs:lint skips the icon check when laradocs.lint.icons is false', function () {
+    config()->set('laradocs.lint.icons', false);
+
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\nicon: arrow-long-right\n---\n",
+    ]);
+
+    $this->artisan('docs:lint')->assertSuccessful();
+});
+
 it('docs:lint --json summary counts all findings', function () {
     config()->set('laradocs.lint.layouts', ['docs']);
 
@@ -504,12 +581,48 @@ it('docs:lint renders every finding type in human-readable output', function () 
     $this->makeDocs([
         'intro.md' => "---\ntitle: Intro A\n---\n",
         'sub/intro.md' => "---\ntitle: Intro B\nslug: intro\n---\n",
-        'guide.md' => "---\ntitle: Guide\nlayout: ghost\nupdated_at: not-a-date\n---\n",
+        'guide.md' => "---\ntitle: Guide\nlayout: ghost\nupdated_at: not-a-date\nicon: arrow-long-right\n---\n",
     ]);
 
     $this->artisan('docs:lint')
         ->assertFailed()
         ->expectsOutputToContain('SLUG COLLISION')
         ->expectsOutputToContain('UNKNOWN LAYOUT')
-        ->expectsOutputToContain('INVALID DATE');
+        ->expectsOutputToContain('INVALID DATE')
+        ->expectsOutputToContain('UNRESOLVED ICON');
+});
+
+it('docs:lint hints at the npm install for a missing heroicons set', function () {
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\nicon: arrow-long-right\n---\n",
+    ]);
+
+    $this->artisan('docs:lint')
+        ->assertFailed()
+        ->expectsOutputToContain('npm install heroicons');
+});
+
+it('docs:lint reports a missing custom set without the npm hint', function () {
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\n---\n\n@icon('star', set: 'phosphor')\n",
+    ]);
+
+    $this->artisan('docs:lint')
+        ->assertFailed()
+        ->expectsOutputToContain('icon set "phosphor" is not available')
+        ->doesntExpectOutputToContain('npm install');
+});
+
+it('docs:lint names the missing icon when the set is available', function () {
+    app(IconRegistry::class)->register('heroicons', function (): string {
+        return '';
+    });
+
+    $this->makeDocs([
+        '_index.md' => "---\ntitle: Home\nicon: made-up\n---\n",
+    ]);
+
+    $this->artisan('docs:lint')
+        ->assertFailed()
+        ->expectsOutputToContain('not found in icon set');
 });

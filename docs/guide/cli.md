@@ -86,7 +86,7 @@ The test suite exercises the following scenarios for `docs:check`:
 php artisan docs:lint [--json]
 ```
 
-Validates the front-matter of every document and reports four categories of problem:
+Validates the front-matter and icon usage of every document and reports five categories of problem:
 
 - **Missing required fields** — any field listed in `laradocs.lint.required` that is absent
   or empty. Defaults to `['title']`; add any front-matter key you want to enforce
@@ -98,6 +98,13 @@ Validates the front-matter of every document and reports four categories of prob
 - **Invalid `updated_at` formats** — a present `updated_at` value that cannot be parsed as a
   recognised date or datetime. Accepted formats: `YYYY-MM-DD`,
   `YYYY-MM-DD HH:MM:SS`, `YYYY-MM-DDTHH:MM:SS`, and `YYYY-MM-DDTHH:MM:SS+HH:MM`.
+- **Unresolved icons** — an `icon:` front-matter value or an inline `@icon()` call that does
+  not resolve to an SVG. This surfaces a missing icon dependency: the built-in `heroicons`
+  set is only available once its npm package is installed, so a deployment that uses icons
+  without it would otherwise render nothing silently. The finding distinguishes an
+  unavailable set (with an `npm install heroicons` hint) from an unknown icon name. Calls
+  inside code blocks are ignored. Disable with `laradocs.lint.icons => false`. See
+  [Icons](/docs/features/icons#linting-icon-references).
 
 The command exits with a non-zero status whenever any finding is reported, making it
 suitable for CI pipelines.
@@ -122,12 +129,16 @@ php artisan docs:lint --json
   "invalid_dates": [
     { "slug": "guide/intro", "path": "guide/intro.md", "value": "March 2026" }
   ],
+  "unresolved_icons": [
+    { "slug": "guide/intro", "path": "guide/intro.md", "icon": "arrow-long-right", "set": "heroicons", "reason": "set_unavailable" }
+  ],
   "summary": {
     "missing_fields": 1,
     "slug_collisions": 1,
     "unknown_layouts": 1,
     "invalid_dates": 1,
-    "total": 4
+    "unresolved_icons": 1,
+    "total": 5
   }
 }
 ```
@@ -143,6 +154,10 @@ The linter is configured under the `lint` key in `config/laradocs.php`:
 
     // Allowlist of valid layout names. Empty = skip the layout check.
     'layouts' => [],
+
+    // Validate that referenced icons resolve to an SVG. Set false to skip
+    // (e.g. in CI environments without node_modules).
+    'icons' => true,
 ],
 ```
 
@@ -180,6 +195,10 @@ To restrict which layouts documents may use, set an explicit allowlist:
 | `layout:` value not in the allowlist | Exit 1, reported in `unknown_layouts` |
 | `layouts` config is empty | Layout check skipped; exit 0 |
 | `layout:` value matches the allowlist | Not reported |
+| Icon referenced but its set is unavailable | Exit 1, `unresolved_icons` with reason `set_unavailable` |
+| Unknown icon name in an available set | Exit 1, `unresolved_icons` with reason `unknown_icon` |
+| `@icon()` inside a code block | Ignored; not reported |
+| `lint.icons` config is `false` | Icon check skipped; exit 0 |
 | `updated_at: 2026-01-15` (bare YAML date) | Accepted (YAML converts to timestamp) |
 | `updated_at: '2026-03-15 10:30:00'` (quoted datetime) | Accepted |
 | `updated_at: March 2026` | Exit 1, reported in `invalid_dates` |
