@@ -3,14 +3,15 @@
 declare(strict_types=1);
 
 use Laradocs\Contracts\DocumentParser;
+use Laradocs\Icons\Icon;
 use Laradocs\Icons\IconRegistry;
 use Laradocs\Laradocs;
 
 function registerFakeIcons(): void
 {
-    app(IconRegistry::class)->register('heroicons', fn (string $name, string $variant): string =>
-        "<svg data-icon=\"{$name}\" data-variant=\"{$variant}\"></svg>"
-    );
+    app(IconRegistry::class)->register('heroicons', function (string $name, string $variant): string {
+        return "<svg data-icon=\"{$name}\" data-variant=\"{$variant}\"></svg>";
+    });
 }
 
 it('expands @icon() shorthand in markdown body', function () {
@@ -32,9 +33,9 @@ it('passes a variant to @icon() when specified', function () {
 });
 
 it('passes a set to @icon() when specified', function () {
-    app(IconRegistry::class)->register('phosphor', fn (string $name): string =>
-        "<svg data-set=\"phosphor\" data-icon=\"{$name}\"></svg>"
-    );
+    app(IconRegistry::class)->register('phosphor', function (string $name): string {
+        return "<svg data-set=\"phosphor\" data-icon=\"{$name}\"></svg>";
+    });
 
     $html = app(DocumentParser::class)->parse("@icon('arrow', set: 'phosphor')");
 
@@ -101,11 +102,33 @@ it('uses the variant argument in the icon macro', function () {
 });
 
 it('can register a custom icon set via Laradocs::registerIconSet()', function () {
-    app(Laradocs::class)->registerIconSet('custom', fn (string $name): string =>
-        "<svg data-custom=\"{$name}\"></svg>"
-    );
+    app(Laradocs::class)->registerIconSet('custom', function (string $name): string {
+        return "<svg data-custom=\"{$name}\"></svg>";
+    });
 
     $html = app(DocumentParser::class)->parse("@icon('star', set: 'custom')");
 
     expect($html)->toContain('data-custom="star"');
+});
+
+it('renders an icon via the Icon view helper', function () {
+    registerFakeIcons();
+
+    $html = Icon::render('arrow-long-right');
+
+    expect($html)
+        ->toContain('laradocs-icon')
+        ->toContain('data-icon="arrow-long-right"');
+});
+
+it('renders empty string from Icon helper for null name', function () {
+    expect(Icon::render(null))->toBe('');
+});
+
+it('passes variant through the Icon view helper', function () {
+    registerFakeIcons();
+
+    $html = Icon::render('check', 'solid');
+
+    expect($html)->toContain('data-variant="solid"');
 });

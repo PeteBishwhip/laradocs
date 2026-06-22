@@ -2,7 +2,13 @@
 
 declare(strict_types=1);
 
+use Illuminate\Filesystem\Filesystem;
+use Laradocs\Icons\HeroiconProvider;
 use Laradocs\Icons\IconRegistry;
+
+// ---------------------------------------------------------------------------
+// IconRegistry
+// ---------------------------------------------------------------------------
 
 it('renders an icon from a registered set', function () {
     $registry = new IconRegistry('my-set');
@@ -71,4 +77,123 @@ it('reports whether a set is registered', function () {
 
     expect($registry->has('heroicons'))->toBeTrue()
         ->and($registry->has('phosphor'))->toBeFalse();
+});
+
+it('returns the default set name', function () {
+    $registry = new IconRegistry('heroicons');
+
+    expect($registry->getDefaultSet())->toBe('heroicons');
+});
+
+// ---------------------------------------------------------------------------
+// HeroiconProvider
+// ---------------------------------------------------------------------------
+
+it('reads an SVG file from the heroicons directory', function () {
+    $root = sys_get_temp_dir() . '/laradocs-heroicons-' . bin2hex(random_bytes(4));
+    $files = new Filesystem;
+    $files->ensureDirectoryExists($root . '/24/outline');
+    $files->put($root . '/24/outline/arrow-right.svg', '<svg><path d="M1"/></svg>');
+
+    $provider = new HeroiconProvider($root, $files);
+
+    expect($provider('arrow-right'))->toContain('<svg>');
+
+    $files->deleteDirectory($root);
+});
+
+it('reads the solid variant', function () {
+    $root = sys_get_temp_dir() . '/laradocs-heroicons-' . bin2hex(random_bytes(4));
+    $files = new Filesystem;
+    $files->ensureDirectoryExists($root . '/24/solid');
+    $files->put($root . '/24/solid/check.svg', '<svg class="solid"></svg>');
+
+    $provider = new HeroiconProvider($root, $files);
+
+    expect($provider('check', 'solid'))->toContain('class="solid"');
+
+    $files->deleteDirectory($root);
+});
+
+it('reads the mini variant from the 20px directory', function () {
+    $root = sys_get_temp_dir() . '/laradocs-heroicons-' . bin2hex(random_bytes(4));
+    $files = new Filesystem;
+    $files->ensureDirectoryExists($root . '/20/mini');
+    $files->put($root . '/20/mini/star.svg', '<svg class="mini"></svg>');
+
+    $provider = new HeroiconProvider($root, $files);
+
+    expect($provider('star', 'mini'))->toContain('class="mini"');
+
+    $files->deleteDirectory($root);
+});
+
+it('reads the micro variant from the 16px directory', function () {
+    $root = sys_get_temp_dir() . '/laradocs-heroicons-' . bin2hex(random_bytes(4));
+    $files = new Filesystem;
+    $files->ensureDirectoryExists($root . '/16/micro');
+    $files->put($root . '/16/micro/x-mark.svg', '<svg class="micro"></svg>');
+
+    $provider = new HeroiconProvider($root, $files);
+
+    expect($provider('x-mark', 'micro'))->toContain('class="micro"');
+
+    $files->deleteDirectory($root);
+});
+
+it('falls back to outline for an unknown variant', function () {
+    $root = sys_get_temp_dir() . '/laradocs-heroicons-' . bin2hex(random_bytes(4));
+    $files = new Filesystem;
+    $files->ensureDirectoryExists($root . '/24/outline');
+    $files->put($root . '/24/outline/check.svg', '<svg class="outline"></svg>');
+
+    $provider = new HeroiconProvider($root, $files);
+
+    expect($provider('check', 'unknown-variant'))->toContain('class="outline"');
+
+    $files->deleteDirectory($root);
+});
+
+it('returns empty string when the SVG file does not exist', function () {
+    $root = sys_get_temp_dir() . '/laradocs-heroicons-' . bin2hex(random_bytes(4));
+    $files = new Filesystem;
+    $files->ensureDirectoryExists($root . '/24/outline');
+
+    $provider = new HeroiconProvider($root, $files);
+
+    expect($provider('nonexistent-icon'))->toBe('');
+
+    $files->deleteDirectory($root);
+});
+
+it('strips the XML declaration from returned SVG', function () {
+    $root = sys_get_temp_dir() . '/laradocs-heroicons-' . bin2hex(random_bytes(4));
+    $files = new Filesystem;
+    $files->ensureDirectoryExists($root . '/24/outline');
+    $files->put($root . '/24/outline/arrow-right.svg', "<?xml version=\"1.0\"?>\n<svg></svg>");
+
+    $provider = new HeroiconProvider($root, $files);
+
+    $svg = $provider('arrow-right');
+
+    expect($svg)->not->toContain('<?xml')
+        ->and($svg)->toContain('<svg>');
+
+    $files->deleteDirectory($root);
+});
+
+it('detect() returns null when heroicons is not installed', function () {
+    expect(HeroiconProvider::detect())->toBeNull();
+});
+
+it('detect() returns the path when heroicons is installed under node_modules', function () {
+    $heroiconsPath = base_path('node_modules/heroicons');
+    $files = new Filesystem;
+    $files->ensureDirectoryExists($heroiconsPath);
+
+    $result = HeroiconProvider::detect();
+
+    $files->deleteDirectory(base_path('node_modules'));
+
+    expect($result)->toBe($heroiconsPath);
 });

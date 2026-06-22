@@ -457,9 +457,12 @@ final class LaradocsServiceProvider extends ServiceProvider
 
         if (! $macros->has('icon')) {
             $macros->register('icon', function (array $arguments) use ($icons, $defaultVariant): string {
-                $name = (string) ($arguments[0] ?? '');
-                $variant = is_string($arguments['variant'] ?? null) ? $arguments['variant'] : $defaultVariant;
-                $set = is_string($arguments['set'] ?? null) ? $arguments['set'] : null;
+                $rawName = $arguments[0] ?? '';
+                $name = is_scalar($rawName) ? (string) $rawName : '';
+                $variantArg = $arguments['variant'] ?? null;
+                $variant = is_string($variantArg) ? $variantArg : $defaultVariant;
+                $setArg = $arguments['set'] ?? null;
+                $set = is_string($setArg) ? $setArg : null;
 
                 return $icons->render($name, $variant, $set);
             });
@@ -467,8 +470,10 @@ final class LaradocsServiceProvider extends ServiceProvider
 
         if (! $macros->has('icon:heroicons')) {
             $macros->register('icon:heroicons', function (array $arguments) use ($icons, $defaultVariant): string {
-                $name = (string) ($arguments[0] ?? '');
-                $variant = is_string($arguments['variant'] ?? null) ? $arguments['variant'] : $defaultVariant;
+                $rawName = $arguments[0] ?? '';
+                $name = is_scalar($rawName) ? (string) $rawName : '';
+                $variantArg = $arguments['variant'] ?? null;
+                $variant = is_string($variantArg) ? $variantArg : $defaultVariant;
 
                 return $icons->render($name, $variant, 'heroicons');
             });
