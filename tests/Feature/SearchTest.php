@@ -165,6 +165,47 @@ it('laradocs:index reports the indexed page count and engine', function () {
         ->assertSuccessful();
 });
 
+it('laradocs:index --docs-version rebuilds only the requested version', function () {
+    config()->set('laradocs.versions.enabled', true);
+    config()->set('laradocs.versions.available', null);
+    $this->makeDocs([
+        'v1/a.md' => ALPHA_DOC,
+        'v2/a.md' => ALPHA_DOC,
+        'v2/b.md' => "---\ntitle: Beta\n---\nbody\n",
+    ]);
+
+    $this->artisan('laradocs:index', ['--docs-version' => 'v1'])
+        ->expectsOutputToContain('Indexed 1 page(s) for search (json engine).')
+        ->assertSuccessful();
+});
+
+it('laradocs:index aborts on an unknown --docs-version', function () {
+    config()->set('laradocs.versions.enabled', true);
+    config()->set('laradocs.versions.available', null);
+    $this->makeDocs(['v1/a.md' => ALPHA_DOC]);
+
+    $this->artisan('laradocs:index', ['--docs-version' => 'v9'])
+        ->expectsOutputToContain('Unknown version "v9".')
+        ->assertFailed();
+});
+
+it('laradocs:index rebuilds every detected version in sequence', function () {
+    config()->set('laradocs.versions.enabled', true);
+    config()->set('laradocs.versions.available', null);
+    $this->makeDocs([
+        'v1/a.md' => ALPHA_DOC,
+        'v2/a.md' => ALPHA_DOC,
+        'v2/b.md' => "---\ntitle: Beta\n---\nbody\n",
+    ]);
+
+    $this->artisan('laradocs:index')
+        ->expectsOutputToContain('Rebuilding the search index for version v1.')
+        ->expectsOutputToContain('Rebuilding the search index for version v2.')
+        ->expectsOutputToContain('Indexed 1 page(s) for search (json engine).')
+        ->expectsOutputToContain('Indexed 2 page(s) for search (json engine).')
+        ->assertSuccessful();
+});
+
 it('laradocs:cache also rebuilds the search index', function () {
     config()->set('laradocs.cache.enabled', true);
     config()->set('laradocs.cache.store', 'array');
