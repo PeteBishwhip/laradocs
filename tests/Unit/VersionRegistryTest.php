@@ -83,6 +83,18 @@ it('normalises partial and prefixed handles into a semver string', function () {
         ->and($all['3']->semver)->toBe('3.0.0');
 });
 
+it('compares unparseable handles, sorting them below parseable ones', function () {
+    // Two parseable handles compare by semver.
+    expect(VersionRegistry::compare('v2.0.0', 'v1.0.0'))->toBe(1);
+
+    // An unparseable handle sorts below a parseable one (and vice versa).
+    expect(VersionRegistry::compare('nightly', 'v1.0.0'))->toBe(-1)
+        ->and(VersionRegistry::compare('v1.0.0', 'nightly'))->toBe(1);
+
+    // Two unparseable handles are treated as equal.
+    expect(VersionRegistry::compare('nightly', 'edge'))->toBe(0);
+});
+
 it('flags the pre-release nature of a handle', function () {
     $this->makeDocs([
         'v3.0.0-beta.1/index.md' => "# beta\n",
