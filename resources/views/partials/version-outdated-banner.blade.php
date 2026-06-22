@@ -8,10 +8,9 @@
     $defaultVersion = Version::default();
     $currentInfo = $currentVersion !== null ? Version::info($currentVersion) : null;
 
-    // A page may opt out of the banner with `version_banner: false` front-matter.
-    $bannerMeta = isset($document) ? $document->metadata->get('version_banner', true) : true;
-    $suppressed = $bannerMeta === false
-        || (is_string($bannerMeta) && in_array(strtolower(trim($bannerMeta)), ['false', '0', 'no', 'off'], true));
+    // A page may opt out of the banner with `version_banner: false` front-matter,
+    // surfaced as the typed Metadata::$versionBanner property (null = unset).
+    $suppressed = isset($document) && $document->metadata->versionBanner === false;
 
     $showOutdated = $versionsEnabled
         && $outdatedEnabled

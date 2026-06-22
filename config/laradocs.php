@@ -567,7 +567,15 @@ return [
 
         // Robots directive. Null keeps the package's crawler-friendly default;
         // set e.g. "noindex, nofollow" to keep the docs out of search engines.
+        // When versioning is enabled, non-default versions are automatically
+        // served "noindex, follow" (deprecated versions "noindex, nofollow")
+        // unless a page overrides it via its front-matter `seo.robots`.
         'robots' => env('LARADOCS_SEO_ROBOTS'),
+
+        // Include every version's pages in the sitemap. By default only the
+        // default version is advertised, keeping duplicate older versions out
+        // of search engines; set true to list all versions.
+        'sitemap_all_versions' => (bool) env('LARADOCS_SEO_SITEMAP_ALL_VERSIONS', false),
 
         // JSON-LD structured data emitted into the document <head>.
         'schema' => [

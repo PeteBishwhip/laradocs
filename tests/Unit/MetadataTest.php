@@ -28,6 +28,27 @@ it('maps and coerces known fields', function () {
         ->and($meta->slug)->toBe('intro');
 });
 
+it('populates versionBanner from version_banner front-matter', function () {
+    expect(Metadata::fromArray(['version_banner' => false])->versionBanner)->toBeFalse()
+        ->and(Metadata::fromArray(['version_banner' => 'off'])->versionBanner)->toBeFalse()
+        ->and(Metadata::fromArray(['version_banner' => true])->versionBanner)->toBeTrue();
+});
+
+it('leaves versionBanner null when unset and keeps it out of extra', function () {
+    $meta = Metadata::fromArray(['version_banner' => false]);
+
+    expect(Metadata::fromArray([])->versionBanner)->toBeNull()
+        ->and($meta->extra)->toBe([]);
+});
+
+it('populates unchangedSince from unchanged_since front-matter', function () {
+    $meta = Metadata::fromArray(['unchanged_since' => 'v1.0']);
+
+    expect($meta->unchangedSince)->toBe('v1.0')
+        ->and(Metadata::fromArray([])->unchangedSince)->toBeNull()
+        ->and($meta->extra)->toBe([]);
+});
+
 it('normalises a scalar tag into a list', function () {
     expect(Metadata::fromArray(['tags' => 'solo'])->tags)->toBe(['solo']);
 });
