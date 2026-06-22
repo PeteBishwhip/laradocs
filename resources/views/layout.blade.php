@@ -1,4 +1,5 @@
 @use('Laradocs\Routing\DocumentUrl')
+@use('Laradocs\Support\Version')
 @php
     /** @var array<string, mixed> $brand */
     $brand = (array) config('laradocs.ui.brand', []);
@@ -52,6 +53,7 @@
             } catch (e) {}
         })();
     </script>
+    @if(Version::current() !== null)<script>window.__laradocsVersion = '{{ Version::current() }}';</script>@endif
     @if($loadWebfonts)
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

@@ -27,7 +27,7 @@
 
 @if($showOutdated)
     @php($currentUrl = DocumentUrl::forVersion(isset($document) ? $document->slug : '', $defaultVersion))
-    <div class="laradocs-banner laradocs-version-outdated" role="alert">
+    <div class="laradocs-banner laradocs-version-outdated" role="alert" data-laradocs-outdated-banner>
         <div class="laradocs-banner-inner">
             @if($deprecatedMessage !== null && $deprecatedMessage !== '')
                 {{ $deprecatedMessage }}

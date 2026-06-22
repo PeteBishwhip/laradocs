@@ -486,6 +486,64 @@
     input.addEventListener('input', onInput);
   }
 
+  // Parse a version handle (e.g. "v2.0", "2.0.1", "1") into [major, minor, patch].
+  // A leading "v" and any pre-release/build suffix are ignored; missing parts are 0.
+  function parseSemver(value) {
+    var m = String(value == null ? '' : value).trim().match(/^v?(\d+)(?:\.(\d+))?(?:\.(\d+))?/);
+    if (!m) return null;
+    return [parseInt(m[1], 10), parseInt(m[2] || '0', 10), parseInt(m[3] || '0', 10)];
+  }
+
+  // Compare two version handles. Returns -1, 0 or 1; null operands sort last.
+  function compareSemver(a, b) {
+    var pa = parseSemver(a);
+    var pb = parseSemver(b);
+    if (!pa && !pb) return 0;
+    if (!pa) return 1;
+    if (!pb) return -1;
+    for (var i = 0; i < 3; i++) {
+      if (pa[i] !== pb[i]) return pa[i] < pb[i] ? -1 : 1;
+    }
+    return 0;
+  }
+
+  // Show or hide inline version blocks based on the active version. Each block
+  // carries one of data-version-since / -until / -only and starts out hidden;
+  // matching blocks have the `hidden` attribute removed on load.
+  function initVersionBlocks() {
+    var current = window.__laradocsVersion;
+    if (current == null || current === '') return;
+    document.querySelectorAll('.version-block[data-version-since]').forEach(function (el) {
+      if (compareSemver(current, el.getAttribute('data-version-since')) >= 0) el.removeAttribute('hidden');
+    });
+    document.querySelectorAll('.version-block[data-version-until]').forEach(function (el) {
+      if (compareSemver(current, el.getAttribute('data-version-until')) < 0) el.removeAttribute('hidden');
+    });
+    document.querySelectorAll('.version-block[data-version-only]').forEach(function (el) {
+      var allowed = (el.getAttribute('data-version-only') || '').split(',').map(function (s) { return s.trim(); });
+      var match = allowed.some(function (v) { return v !== '' && compareSemver(current, v) === 0; });
+      if (match) el.removeAttribute('hidden');
+    });
+  }
+
+  // Keep the outdated-version banner dismissed for the session. Dismissal is
+  // stored per active version so switching versions re-shows the banner.
+  function initVersionBanner() {
+    var banner = document.querySelector('[data-laradocs-outdated-banner]');
+    if (!banner) return;
+    var version = window.__laradocsVersion || '';
+    var key = 'laradocs-banner-dismissed-' + version;
+    try {
+      if (sessionStorage.getItem(key) === '1') banner.hidden = true;
+    } catch (e) {}
+    var button = banner.querySelector('[data-laradocs-dismiss-version-banner]');
+    if (!button) return;
+    button.addEventListener('click', function () {
+      banner.hidden = true;
+      try { sessionStorage.setItem(key, '1'); } catch (e) {}
+    });
+  }
+
   function boot() {
     initTheme();
     initCopy();
@@ -497,6 +555,8 @@
     initSidebarCollapse();
     initSearchShortcut();
     initPalette();
+    initVersionBlocks();
+    initVersionBanner();
   }
 
   if (document.readyState !== 'loading') {

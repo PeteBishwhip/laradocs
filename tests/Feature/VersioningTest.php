@@ -434,3 +434,28 @@ it('shows the deprecatedMessage in the banner when the version sets one', functi
         // The generic "viewing" text is replaced by the deprecation message.
         ->assertDontSee('You are viewing', false);
 });
+
+/*
+|--------------------------------------------------------------------------
+| Client-side version hint (window.__laradocsVersion)
+|--------------------------------------------------------------------------
+*/
+
+it('emits the active version to the page head when a version is active', function () {
+    $this->makeDocs(versionedDocs());
+
+    $this->get('/docs/v1/getting-started')
+        ->assertOk()
+        ->assertSee("window.__laradocsVersion = 'v1';", false);
+});
+
+it('does not emit the version hint when no version is active', function () {
+    config()->set('laradocs.versions.enabled', false);
+    $this->makeDocs([
+        'getting-started.md' => "---\ntitle: Start\n---\n# Start\n\nUnversioned content.\n",
+    ]);
+
+    $this->get('/docs/getting-started')
+        ->assertOk()
+        ->assertDontSee('window.__laradocsVersion', false);
+});
