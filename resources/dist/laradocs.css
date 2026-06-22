@@ -418,6 +418,27 @@ body.laradocs {
   color: var(--dc-accent);
   border-radius: 3px;
 }
+.laradocs-version-badge {
+  display: inline-block;
+  margin-left: .35rem;
+  padding: .05rem .3rem;
+  font-size: .6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+  background: var(--dc-accent-soft);
+  color: var(--dc-accent);
+  border-radius: 3px;
+  vertical-align: middle;
+}
+.laradocs-version-badge--deprecated {
+  background: #fde8e8;
+  color: #b91c1c;
+}
+.laradocs-version-badge--pre-release {
+  background: #fef3c7;
+  color: #92400e;
+}
 
 /* Desktop: fixed so the footer can't push the sidebar above the header */
 @media (min-width: 1025px) {

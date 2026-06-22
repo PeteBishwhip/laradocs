@@ -290,6 +290,48 @@ it('renders the version selector with each available version', function () {
         ->assertSee(url('/docs/v2/getting-started'), false);
 });
 
+it('shows a latest badge next to the latest version in the picker', function () {
+    $this->makeDocs(versionedDocs());
+
+    $this->get('/docs/v1/getting-started')
+        ->assertOk()
+        ->assertSee('laradocs-version-badge--latest', false)
+        ->assertSee('>latest<', false);
+});
+
+it('shows deprecated and pre-release badges in the picker', function () {
+    config()->set('laradocs.versions.enabled', true);
+    config()->set('laradocs.versions.available', null);
+    $root = $this->makeDocs([
+        'v3.0.0-beta/getting-started.md' => "---\ntitle: Start\n---\n# Beta Start\n\nv3 beta guide.\n",
+        'v2.0.0/getting-started.md' => "---\ntitle: Start\n---\n# Start\n\nv2 guide.\n",
+        'v1.0.0/getting-started.md' => "---\ntitle: Start\n---\n# Start\n\nv1 guide.\n",
+    ]);
+    file_put_contents($root . '/v1.0.0/_version.json', '{"deprecated": true}');
+
+    $this->get('/docs/v2.0.0/getting-started')
+        ->assertOk()
+        ->assertSee('laradocs-version-badge--deprecated', false)
+        ->assertSee('>deprecated<', false)
+        ->assertSee('laradocs-version-badge--pre-release', false)
+        ->assertSee('>pre-release<', false);
+});
+
+it('emits no badge for versions with no special status', function () {
+    config()->set('laradocs.versions.enabled', true);
+    config()->set('laradocs.versions.available', null);
+    $this->makeDocs([
+        'v2.0.0/getting-started.md' => "---\ntitle: Start\n---\n# Start\n\nv2 guide.\n",
+        'v1.0.0/getting-started.md' => "---\ntitle: Start\n---\n# Start\n\nv1 guide.\n",
+    ]);
+
+    // v1 is neither latest, deprecated nor pre-release: its entry carries no badge.
+    $this->get('/docs/v1.0.0/getting-started')
+        ->assertOk()
+        ->assertDontSee('laradocs-version-badge--deprecated', false)
+        ->assertDontSee('laradocs-version-badge--pre-release', false);
+});
+
 it('hides the version selector when versioning is disabled', function () {
     config()->set('laradocs.versions.enabled', false);
     $this->makeDocs([

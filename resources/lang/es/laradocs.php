@@ -59,6 +59,11 @@ return [
     'version' => [
         'label' => 'Versión',
         'select' => 'Seleccionar versión',
+        'badge' => [
+            'latest' => 'más reciente',
+            'deprecated' => 'obsoleta',
+            'pre_release' => 'versión preliminar',
+        ],
     ],
 
     'page' => [

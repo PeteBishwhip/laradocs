@@ -59,6 +59,11 @@ return [
     'version' => [
         'label' => 'Versie',
         'select' => 'Selecteer versie',
+        'badge' => [
+            'latest' => 'nieuwste',
+            'deprecated' => 'verouderd',
+            'pre_release' => 'voorlopig',
+        ],
     ],
 
     'page' => [
