@@ -233,12 +233,18 @@ return [
     | "layouts"  Allowlist of recognised layout names. When non-empty, any
     |             document whose "layout:" value is not in this list is
     |             flagged. An empty array disables the layout check.
+    | "icons"    Flag icon references (the "icon:" front-matter field and inline
+    |             @icon() calls) that do not resolve to an SVG. This is what
+    |             surfaces a missing icon dependency — e.g. the heroicons npm
+    |             package not being installed. Set false to skip the check (for
+    |             instance in CI without node_modules).
     |
     */
 
     'lint' => [
         'required' => ['title'],
         'layouts' => [],
+        'icons' => true,
     ],
 
     /*
@@ -264,6 +270,7 @@ return [
             'mermaid' => true,
             'katex' => true,
             'variables' => true,
+            'icons' => true,
             'macros' => true,
             'components' => true,
         ],
@@ -667,6 +674,42 @@ return [
 
     'macros' => [
         // 'alert' => 'laradocs::macros.alert',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Icons
+    |--------------------------------------------------------------------------
+    |
+    | Inline icon rendering for page content (@icon('name')) and frontmatter
+    | (icon: arrow-long-right — displayed in the sidebar and page header).
+    |
+    | "driver"       The default icon set. Built-in: "heroicons". Set to null
+    |                to disable automatic icon rendering.
+    |
+    | "heroicons"    Configuration for the Heroicons set. Requires the heroicons
+    |                npm package (npm install heroicons). The package is
+    |                auto-detected under node_modules/heroicons; override "path"
+    |                when installed elsewhere.
+    |
+    |   "path"       Absolute path to the heroicons package directory.
+    |                Defaults to auto-detection (node_modules/heroicons).
+    |   "variant"    Default variant: outline | solid | mini | micro.
+    |
+    | Additional icon sets can be registered in a service provider:
+    |
+    |   Laradocs::registerIconSet('phosphor', function (string $name, string $variant): string {
+    |       return file_get_contents(resource_path("icons/phosphor/{$name}.svg")) ?: '';
+    |   });
+    |
+    */
+
+    'icons' => [
+        'driver' => env('LARADOCS_ICONS_DRIVER', 'heroicons'),
+        'heroicons' => [
+            'path' => env('LARADOCS_HEROICONS_PATH'),
+            'variant' => env('LARADOCS_HEROICONS_VARIANT', 'outline'),
+        ],
     ],
 
     /*

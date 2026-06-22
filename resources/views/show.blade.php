@@ -1,6 +1,7 @@
 @extends('laradocs::layout')
 
 @use('Laradocs\Routing\DocumentUrl')
+@use('Laradocs\Icons\Icon')
 @use('Illuminate\Support\Str')
 
 @section('title', $document->title())
@@ -32,7 +33,12 @@
         @if($eyebrow)
             <span class="laradocs-page-eyebrow">{{ $eyebrow }}</span>
         @endif
-        <h1 class="laradocs-page-title">{{ $document->title() }}</h1>
+        <h1 class="laradocs-page-title">
+            @if($document->metadata->icon)
+                {!! Icon::render($document->metadata->icon) !!}
+            @endif
+            {{ $document->title() }}
+        </h1>
         @if($document->metadata->description)
             <p class="laradocs-page-description">{{ $document->metadata->description }}</p>
         @endif
