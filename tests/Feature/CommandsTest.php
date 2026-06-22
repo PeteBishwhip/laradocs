@@ -433,6 +433,61 @@ it('docs:lint --json summary counts all findings', function () {
         ->and($data['summary']['total'])->toBeGreaterThanOrEqual(3);
 });
 
+// laradocs:versions — tabular version listing
+
+it('laradocs:versions lists detected versions with metadata columns', function () {
+    config()->set('laradocs.versions.enabled', true);
+    config()->set('laradocs.versions.strategy', 'config');
+    config()->set('laradocs.versions.available', [
+        'v2.0' => ['label' => 'Version 2', 'stable' => true],
+        'v1.0' => ['label' => 'Version 1', 'deprecated' => true],
+    ]);
+
+    $exit = Artisan::call('laradocs:versions');
+    $output = Artisan::output();
+
+    expect($exit)->toBe(0)
+        ->and($output)->toContain('key')
+        ->and($output)->toContain('label')
+        ->and($output)->toContain('semver')
+        ->and($output)->toContain('stable')
+        ->and($output)->toContain('deprecated')
+        ->and($output)->toContain('hidden')
+        ->and($output)->toContain('latest')
+        ->and($output)->toContain('Version 2')
+        ->and($output)->toContain('Version 1');
+});
+
+it('laradocs:versions renders boolean columns as yes/no and flags the latest', function () {
+    config()->set('laradocs.versions.enabled', true);
+    config()->set('laradocs.versions.strategy', 'config');
+    config()->set('laradocs.versions.available', [
+        'v2.0' => ['label' => 'Version 2'],
+        'v1.0' => ['label' => 'Version 1', 'deprecated' => true],
+    ]);
+
+    $exit = Artisan::call('laradocs:versions');
+    $output = Artisan::output();
+
+    expect($exit)->toBe(0)
+        ->and($output)->toContain('yes')
+        ->and($output)->toContain('no');
+});
+
+it('laradocs:versions prints a friendly message when no versions are detected', function () {
+    config()->set('laradocs.versions.enabled', false);
+    config()->set('laradocs.versions.strategy', 'config');
+    config()->set('laradocs.versions.available', []);
+
+    $this->artisan('laradocs:versions')
+        ->assertSuccessful()
+        ->expectsOutputToContain('No documentation versions detected');
+});
+
+it('laradocs:versions is registered and appears in the command list', function () {
+    expect(Artisan::all())->toHaveKey('laradocs:versions');
+});
+
 it('docs:lint renders human-readable output for findings', function () {
     $this->makeDocs([
         '_index.md' => "---\n---\n\n# Home\n",

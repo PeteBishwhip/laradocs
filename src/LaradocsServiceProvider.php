@@ -25,6 +25,7 @@ use Laradocs\Console\InstallCommand;
 use Laradocs\Console\LintCommand;
 use Laradocs\Console\LoginCommand;
 use Laradocs\Console\MakeDocCommand;
+use Laradocs\Console\VersionsCommand;
 use Laradocs\Contracts\DocumentLoader;
 use Laradocs\Contracts\DocumentParser;
 use Laradocs\Contracts\HtmlExtension;
@@ -475,6 +476,7 @@ final class LaradocsServiceProvider extends ServiceProvider
             DeployCommand::class,
             CloneProjectCommand::class,
             ConfigCommand::class,
+            VersionsCommand::class,
         ]);
 
         // `laradocs:cache` builds a sitemap whose URLs come from
