@@ -363,3 +363,74 @@ it('restores the docs path after a versioned request (octane-safe)', function ()
     expect(config('laradocs.docs.path'))->toBe($root)
         ->and(config('laradocs._current_version'))->toBeNull();
 });
+
+/*
+|--------------------------------------------------------------------------
+| Outdated-version banner
+|--------------------------------------------------------------------------
+*/
+
+it('shows the outdated-version banner when viewing a non-default version', function () {
+    // Default resolves to v2 (the latest), so v1 is "outdated".
+    $this->makeDocs(versionedDocs());
+
+    $this->get('/docs/v1/getting-started')
+        ->assertOk()
+        ->assertSee('laradocs-version-outdated', false)
+        ->assertSee('You are viewing', false)
+        // Links to the same page slug in the default (current) version.
+        ->assertSee(url('/docs/v2/getting-started'), false)
+        // Carries a dismiss control.
+        ->assertSee('data-laradocs-dismiss-version-banner', false);
+});
+
+it('hides the outdated-version banner when viewing the default version', function () {
+    $this->makeDocs(versionedDocs());
+
+    $this->get('/docs/v2/getting-started')
+        ->assertOk()
+        ->assertDontSee('laradocs-version-outdated', false);
+});
+
+it('hides the outdated-version banner when versions.outdated_banner is false', function () {
+    $this->makeDocs(versionedDocs());
+    config()->set('laradocs.versions.outdated_banner', false);
+
+    $this->get('/docs/v1/getting-started')
+        ->assertOk()
+        ->assertDontSee('laradocs-version-outdated', false);
+});
+
+it('suppresses the outdated-version banner for a page with version_banner: false', function () {
+    config()->set('laradocs.versions.enabled', true);
+    config()->set('laradocs.versions.available', null);
+    $this->makeDocs([
+        'v1/index.md' => "---\ntitle: Home\norder: 1\n---\n# V1 Home\n",
+        'v1/no-banner.md' => "---\ntitle: Quiet\nversion_banner: false\n---\n# Quiet\n\nNo banner here.\n",
+        'v2/index.md' => "---\ntitle: Home\norder: 1\n---\n# V2 Home\n",
+    ]);
+
+    $this->get('/docs/v1/no-banner')
+        ->assertOk()
+        ->assertDontSee('laradocs-version-outdated', false);
+});
+
+it('shows the deprecatedMessage in the banner when the version sets one', function () {
+    config()->set('laradocs.versions.enabled', true);
+    config()->set('laradocs.versions.available', null);
+    $root = $this->makeDocs([
+        'v2.0.0/getting-started.md' => "---\ntitle: Start\n---\n# Start\n\nv2 guide.\n",
+        'v1.0.0/getting-started.md' => "---\ntitle: Start\n---\n# Start\n\nv1 guide.\n",
+    ]);
+    file_put_contents(
+        $root . '/v1.0.0/_version.json',
+        '{"deprecated": true, "deprecated_message": "v1 reached end of life."}',
+    );
+
+    $this->get('/docs/v1.0.0/getting-started')
+        ->assertOk()
+        ->assertSee('laradocs-version-outdated', false)
+        ->assertSee('v1 reached end of life.', false)
+        // The generic "viewing" text is replaced by the deprecation message.
+        ->assertDontSee('You are viewing', false);
+});

@@ -76,6 +76,8 @@
 
     @include('laradocs::partials.banner')
 
+    @include('laradocs::partials.version-outdated-banner')
+
     @include('laradocs::partials.header', ['brand' => $brand, 'tagline' => $tagline, 'title' => $title, 'tree' => $tree ?? null])
 
     @if(isset($tree) && method_exists($tree, 'grouped'))

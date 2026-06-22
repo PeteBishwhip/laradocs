@@ -64,6 +64,11 @@ return [
             'deprecated' => 'verouderd',
             'pre_release' => 'voorlopig',
         ],
+        'outdated' => [
+            'viewing' => 'Je bekijkt :version.',
+            'link' => 'Bekijk de huidige versie.',
+            'dismiss' => 'Sluiten',
+        ],
     ],
 
     'page' => [

@@ -142,6 +142,23 @@ body.laradocs {
   :root[data-theme="auto"] .laradocs-banner-danger { background: #4c0519; color: #fca5a5; }
 }
 
+/* Outdated-version banner: an amber alert linking to the current version. */
+.laradocs-version-outdated { gap: .75rem; background: #fffbeb; color: #92400e; }
+.laradocs-version-outdated-dismiss {
+  display: inline-flex; align-items: center; justify-content: center;
+  flex: none; padding: .125rem; border: 0; background: none;
+  color: inherit; cursor: pointer; opacity: .7;
+}
+.laradocs-version-outdated-dismiss:hover { opacity: 1; }
+.laradocs-version-outdated-dismiss svg { width: 1rem; height: 1rem; }
+
+[data-theme="dark"] .laradocs-version-outdated { background: #451a03; color: #fcd34d; }
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .laradocs-version-outdated,
+  :root[data-theme="auto"] .laradocs-version-outdated { background: #451a03; color: #fcd34d; }
+}
+
 /* ─────────────────────── header ─────────────────────── */
 .laradocs-header {
   position: sticky; top: 0; z-index: 10;

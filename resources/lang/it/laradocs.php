@@ -64,6 +64,11 @@ return [
             'deprecated' => 'obsoleta',
             'pre_release' => 'anteprima',
         ],
+        'outdated' => [
+            'viewing' => 'Stai visualizzando :version.',
+            'link' => 'Vai alla versione attuale.',
+            'dismiss' => 'Chiudi',
+        ],
     ],
 
     'page' => [
