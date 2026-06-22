@@ -57,6 +57,7 @@ use Laradocs\Support\Config;
 use Laradocs\Support\Locale;
 use Laradocs\Support\RateLimiterConfig;
 use Laradocs\Support\Version;
+use Laradocs\Support\VersionRegistry;
 use Laradocs\Variables\VariableRegistry;
 use Laravel\Scout\EngineManager;
 use League\CommonMark\Environment\Environment;
@@ -127,6 +128,10 @@ final class LaradocsServiceProvider extends ServiceProvider
         ));
 
         $this->app->singleton(MetadataResolver::class, FrontMatterMetadataResolver::class);
+
+        // The authoritative version list: discovers, sorts and resolves
+        // documentation versions once per request for every consumer.
+        $this->app->singleton(VersionRegistry::class);
     }
 
     private function registerPipeline(): void
