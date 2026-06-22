@@ -212,15 +212,71 @@ it('serves a bare version root as that version landing page', function () {
     $this->get('/docs/v2')->assertOk()->assertSee('Welcome to v2.');
 });
 
-it('falls back to the default version when the url omits one', function () {
+it('renders the default version in place for unversioned urls when configured', function () {
     $this->makeDocs(versionedDocs());
     config()->set('laradocs.versions.default', 'v2');
+    config()->set('laradocs.versions.unversioned', 'render');
 
     // Index route: no version segment present.
     $this->get('/docs')->assertOk()->assertSee('Welcome to v2.');
 
     // Show route with an unprefixed slug resolves against the default version.
     $this->get('/docs/getting-started')->assertOk()->assertSee('This is the v2 guide.');
+});
+
+it('redirects unversioned urls to the default version when configured', function () {
+    $this->makeDocs(versionedDocs());
+    config()->set('laradocs.versions.default', 'v2');
+    config()->set('laradocs.versions.unversioned', 'redirect');
+
+    // Index route: no version segment → redirect to the bare default root.
+    $this->get('/docs')->assertRedirect(url('/docs/v2'))->assertStatus(301);
+
+    // Unprefixed slug → redirect carrying the full path under the default.
+    $this->get('/docs/getting-started')
+        ->assertRedirect(url('/docs/v2/getting-started'))
+        ->assertStatus(301);
+});
+
+it('redirects the latest alias to the resolved latest version', function () {
+    $this->makeDocs(versionedDocs());
+
+    $this->get('/docs/latest/getting-started')
+        ->assertRedirect(url('/docs/v2/getting-started'))
+        ->assertStatus(301);
+});
+
+it('redirects the stable alias to the resolved stable version', function () {
+    $this->makeDocs(versionedDocs());
+
+    $this->get('/docs/stable/getting-started')
+        ->assertRedirect(url('/docs/v2/getting-started'))
+        ->assertStatus(301);
+});
+
+it('redirects a configured custom alias to its target version', function () {
+    $this->makeDocs(versionedDocs());
+    config()->set('laradocs.versions.aliases', ['old' => 'v1']);
+
+    $this->get('/docs/old/getting-started')
+        ->assertRedirect(url('/docs/v1/getting-started'))
+        ->assertStatus(301);
+});
+
+it('redirects a bare alias root to the resolved version root', function () {
+    $this->makeDocs(versionedDocs());
+
+    $this->get('/docs/latest')
+        ->assertRedirect(url('/docs/v2'))
+        ->assertStatus(301);
+});
+
+it('returns 404 when accessing a hidden version directly', function () {
+    $root = $this->makeDocs(versionedDocs());
+    file_put_contents($root . '/v1/_version.json', '{"hidden": true}');
+
+    $this->get('/docs/v1/getting-started')->assertNotFound();
+    $this->get('/docs/v1')->assertNotFound();
 });
 
 it('renders the version selector with each available version', function () {
