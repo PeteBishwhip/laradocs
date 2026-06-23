@@ -21,6 +21,8 @@ final class LangCommand extends Command
 
     private const PACKAGE_LANG = __DIR__ . '/../../resources/lang';
 
+    private const LANG_FILE = '/laradocs.php';
+
     /**
      * Sentinel a translator can enter to step back to the previous string.
      */
@@ -45,7 +47,7 @@ final class LangCommand extends Command
 
     private function scaffoldLocale(string $locale, Filesystem $files): int
     {
-        $target = lang_path('vendor/laradocs/' . $locale . '/laradocs.php');
+        $target = lang_path('vendor/laradocs/' . $locale . self::LANG_FILE);
 
         if ($files->exists($target) && ! $this->option('force')) {
             $this->components->error('Translation file already exists: ' . $target);
@@ -59,7 +61,7 @@ final class LangCommand extends Command
         $files->ensureDirectoryExists(dirname($target));
         $files->copy($source, $target);
 
-        $usingBundled = $source === self::PACKAGE_LANG . '/' . $locale . '/laradocs.php';
+        $usingBundled = $source === self::PACKAGE_LANG . '/' . $locale . self::LANG_FILE;
 
         if (! $usingBundled) {
             $this->components->info('The file contains English strings. Translate each value to complete the ' . $locale . ' locale.');
@@ -265,19 +267,19 @@ final class LangCommand extends Command
      */
     private function sourceFile(string $locale, Filesystem $files): string
     {
-        $bundled = self::PACKAGE_LANG . '/' . $locale . '/laradocs.php';
+        $bundled = self::PACKAGE_LANG . '/' . $locale . self::LANG_FILE;
 
         if (is_file($bundled)) {
             return $bundled;
         }
 
-        $publishedEn = lang_path('vendor/laradocs/en/laradocs.php');
+        $publishedEn = lang_path('vendor/laradocs/en' . self::LANG_FILE);
 
         if ($files->exists($publishedEn)) {
             return $publishedEn;
         }
 
-        return self::PACKAGE_LANG . '/en/laradocs.php';
+        return self::PACKAGE_LANG . '/en' . self::LANG_FILE;
     }
 
     private function listLocales(Filesystem $files): int
