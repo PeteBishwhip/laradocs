@@ -59,6 +59,16 @@ return [
     'version' => [
         'label' => 'Version',
         'select' => 'Välj version',
+        'badge' => [
+            'latest' => 'senaste',
+            'deprecated' => 'föråldrad',
+            'pre_release' => 'förhandsversion',
+        ],
+        'outdated' => [
+            'viewing' => 'Du visar :version.',
+            'link' => 'Visa den aktuella versionen.',
+            'dismiss' => 'Stäng',
+        ],
     ],
 
     'page' => [
