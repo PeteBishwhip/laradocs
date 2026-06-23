@@ -12,5 +12,6 @@
   "locale": { "spec": "locale.spec.ts" },
   "assets": { "spec": "assets.spec.ts" },
   "seo": { "spec": "seo.spec.ts" },
-  "versioning": { "spec": "versioning.spec.ts" }
+  "versioning": { "spec": "versioning.spec.ts" },
+  "print": { "spec": "print.spec.ts" }
 }
