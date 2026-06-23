@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\ServiceProvider;
+use Laradocs\Http\Middleware\SetDocsLocale;
 use Laradocs\Laradocs;
 use Laradocs\Support\Locale;
 
@@ -142,6 +143,37 @@ it('honours a valid ?lang query parameter', function () {
     $request = Request::create('/docs?lang=fr');
 
     expect(Locale::determine($request))->toBe('fr');
+});
+
+it('splits a path into locale and remainder, leaving it untouched when URL locales are disabled', function () {
+    config()->set('laradocs.locale.available', ['en' => 'English', 'fr' => 'Français']);
+
+    // With URL locales on, a leading available-locale segment is peeled off.
+    config()->set('laradocs.locale.url', true);
+    expect(Locale::split('fr/guide/intro'))->toBe(['fr', 'guide/intro']);
+
+    // With URL locales off, split is a no-op — the path is returned verbatim so
+    // a real slug that happens to look like a locale keeps working.
+    config()->set('laradocs.locale.url', false);
+    expect(Locale::split('fr/guide/intro'))->toBe([null, 'fr/guide/intro']);
+});
+
+it('falls through to the query/cookie/browser chain when the request has no bound route', function () {
+    config()->set('laradocs.locale.available', ['en' => 'English', 'fr' => 'Français']);
+    config()->set('laradocs.locale.url', true);
+
+    // Invoked directly with a route-less request (as a defensive guard for any
+    // catch-all that reaches the middleware before route binding): there is no
+    // path to strip, so resolution falls back to Locale::determine() — here the
+    // ?lang= query selects French.
+    $request = Request::create('/docs?lang=fr');
+
+    $response = (new SetDocsLocale)->handle(
+        $request,
+        fn () => response((string) app()->getLocale()),
+    );
+
+    expect($response->getContent())->toBe('fr');
 });
 
 it('ignores an unknown ?lang query parameter', function () {

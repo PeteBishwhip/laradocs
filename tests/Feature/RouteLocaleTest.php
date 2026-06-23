@@ -148,6 +148,18 @@ it('does not redirect ?lang= when URL-path locales are disabled', function () {
     }
 });
 
+it('writes the persistence cookie in place for a legacy ?lang= request', function () {
+    config()->set('laradocs.locale.url', false);
+    config()->set('laradocs.locale.cookie', true);
+
+    // With URL locales off the ?lang= choice is applied to the rendered page
+    // (no redirect), so the persistence cookie is written on that 200 response
+    // rather than riding along on a 301.
+    $this->get('/docs/guide/getting-started?lang=fr')
+        ->assertOk()
+        ->assertCookie('laradocs_locale', 'fr');
+});
+
 it('does not register locale routes for a single-locale site', function () {
     config()->set('laradocs.locale.available', ['en' => 'English']);
 
