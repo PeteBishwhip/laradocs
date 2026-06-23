@@ -54,12 +54,14 @@ export const BANNER_MESSAGE =
  * LARADOCS_DETECT_BROWSER is forced off on both servers so a CI runner's
  * Accept-Language header cannot interfere with assertions.
  *
- * Port 8002 — cookie persistence OFF (the default). Tests ?lang= forwarding and
- * how internal links carry ?lang= to preserve locale across navigation.
+ * Port 8002 — URL-path locales ON (the default), cookie persistence OFF. Tests
+ * that the locale lives in the path (/docs/de/...), that a legacy ?lang= query
+ * 301-redirects to the path form, and that internal links carry the segment.
  *
- * Port 8003 — cookie persistence ON. Tests that an explicit choice sets the
- * cookie, that subsequent navigation reads it, and that internal links are clean
- * (no ?lang=) because the cookie carries the state instead.
+ * Port 8003 — legacy mode: URL-path locales OFF, cookie persistence ON. Tests
+ * that an explicit ?lang= choice sets the cookie, that subsequent navigation
+ * reads it, and that internal links are clean (no ?lang=) because the cookie
+ * carries the state instead.
  */
 export const LOCALE_AVAILABLE = JSON.stringify({ en: 'English', de: 'Deutsch' });
 export const LOCALE_SERVER = 'http://127.0.0.1:8002';
@@ -119,6 +121,9 @@ export default defineConfig({
         LARADOCS_SEARCH_DRIVER,
         LARADOCS_LOCALE_AVAILABLE: LOCALE_AVAILABLE,
         LARADOCS_LOCALE_COOKIE: 'true',
+        // Legacy query/cookie mode: the cookie is only meaningful when the
+        // locale isn't already pinned in the URL path.
+        LARADOCS_LOCALE_URL: 'false',
         LARADOCS_DETECT_BROWSER: 'false',
       },
     },

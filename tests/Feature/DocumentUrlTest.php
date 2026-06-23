@@ -35,38 +35,67 @@ it('builds version-scoped tree and search urls carrying the version as a query p
 });
 
 // ---------------------------------------------------------------------------
-// Lang forwarding when cookie persistence is disabled
+// Locale in the URL path (locale.url, the default)
 // ---------------------------------------------------------------------------
 
-it('appends ?lang= to all internal links when cookie is off and locale is not the default', function () {
+it('prefixes every internal doc link with the active non-default locale segment', function () {
     config()->set('laradocs.locale.available', ['en' => 'English', 'fr' => 'Français']);
     config()->set('laradocs.locale.default', 'en');
-    config()->set('laradocs.locale.cookie', false);
     app()->setLocale('fr');
 
-    expect(DocumentUrl::toSlug('guide/intro'))->toBe(url('/docs/guide/intro') . '?lang=fr')
-        ->and(DocumentUrl::index())->toBe(url('/docs') . '?lang=fr')
-        ->and(DocumentUrl::tags())->toBe(url('/docs/tags') . '?lang=fr')
-        ->and(DocumentUrl::tag('getting-started'))->toBe(url('/docs/tag/getting-started') . '?lang=fr');
+    expect(DocumentUrl::toSlug('guide/intro'))->toBe(url('/docs/fr/guide/intro'))
+        ->and(DocumentUrl::index())->toBe(url('/docs/fr'));
 });
 
-it('omits ?lang= from links when the active locale matches the default', function () {
+it('leaves the default locale unprefixed for clean canonical URLs', function () {
     config()->set('laradocs.locale.available', ['en' => 'English', 'fr' => 'Français']);
     config()->set('laradocs.locale.default', 'en');
-    config()->set('laradocs.locale.cookie', false);
     app()->setLocale('en');
 
     expect(DocumentUrl::toSlug('guide/intro'))->toBe(url('/docs/guide/intro'))
         ->and(DocumentUrl::index())->toBe(url('/docs'));
 });
 
-it('omits ?lang= from links when locale.cookie is enabled', function () {
+it('keeps the locale segment regardless of the cookie setting', function () {
     config()->set('laradocs.locale.available', ['en' => 'English', 'fr' => 'Français']);
     config()->set('laradocs.locale.default', 'en');
     config()->set('laradocs.locale.cookie', true);
     app()->setLocale('fr');
 
-    // Cookie will carry the language; adding ?lang= would clutter every URL.
+    // The path carries the language now, so the cookie no longer changes URLs.
+    expect(DocumentUrl::toSlug('guide/intro'))->toBe(url('/docs/fr/guide/intro'))
+        ->and(DocumentUrl::index())->toBe(url('/docs/fr'));
+});
+
+it('builds a localized URL for any locale, default unprefixed', function () {
+    config()->set('laradocs.locale.available', ['en' => 'English', 'fr' => 'Français']);
+    config()->set('laradocs.locale.default', 'en');
+
+    expect(DocumentUrl::localized('guide/intro', 'fr'))->toBe(url('/docs/fr/guide/intro'))
+        ->and(DocumentUrl::localized('guide/intro', 'en'))->toBe(url('/docs/guide/intro'))
+        ->and(DocumentUrl::localized('', 'fr'))->toBe(url('/docs/fr'))
+        ->and(DocumentUrl::localized('', 'en'))->toBe(url('/docs'));
+});
+
+it('falls back to ?lang= forwarding when URL-path locales are disabled', function () {
+    config()->set('laradocs.locale.available', ['en' => 'English', 'fr' => 'Français']);
+    config()->set('laradocs.locale.default', 'en');
+    config()->set('laradocs.locale.url', false);
+    config()->set('laradocs.locale.cookie', false);
+    app()->setLocale('fr');
+
+    expect(DocumentUrl::toSlug('guide/intro'))->toBe(url('/docs/guide/intro') . '?lang=fr')
+        ->and(DocumentUrl::index())->toBe(url('/docs') . '?lang=fr')
+        ->and(DocumentUrl::tags())->toBe(url('/docs/tags') . '?lang=fr');
+});
+
+it('omits the ?lang= fallback when the cookie carries the choice', function () {
+    config()->set('laradocs.locale.available', ['en' => 'English', 'fr' => 'Français']);
+    config()->set('laradocs.locale.default', 'en');
+    config()->set('laradocs.locale.url', false);
+    config()->set('laradocs.locale.cookie', true);
+    app()->setLocale('fr');
+
     expect(DocumentUrl::toSlug('guide/intro'))->toBe(url('/docs/guide/intro'))
         ->and(DocumentUrl::index())->toBe(url('/docs'));
 });

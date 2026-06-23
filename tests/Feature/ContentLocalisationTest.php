@@ -27,7 +27,7 @@ it('serves a per-language page via the filename suffix convention', function () 
     ]);
 
     $this->get('/docs/guide')->assertOk()->assertSee('English body.');
-    $this->get('/docs/guide?lang=fr')
+    $this->get('/docs/fr/guide')
         ->assertOk()
         ->assertSee('Corps français.')
         ->assertDontSee('English body.');
@@ -40,7 +40,7 @@ it('serves a per-language page via the directory convention', function () {
     ]);
 
     $this->get('/docs/guide')->assertOk()->assertSee('English body.');
-    $this->get('/docs/guide?lang=de')
+    $this->get('/docs/de/guide')
         ->assertOk()
         ->assertSee('Deutscher Text.')
         ->assertDontSee('English body.');
@@ -55,7 +55,7 @@ it('falls back to the default-locale page when a translation is missing', functi
 
     // "about" has no French translation, so a French request still resolves to
     // the English source rather than 404ing.
-    $this->get('/docs/about?lang=fr')->assertOk()->assertSee('Untranslated.');
+    $this->get('/docs/fr/about')->assertOk()->assertSee('Untranslated.');
 });
 
 it('serves a translation that lives under the default-locale page on its shared slug', function () {
@@ -138,5 +138,5 @@ it('localises the navigation tree and home page for the active locale', function
     ]);
 
     $this->get('/docs')->assertOk()->assertSee('English home.');
-    $this->get('/docs?lang=fr')->assertOk()->assertSee('Accueil français.');
+    $this->get('/docs/fr')->assertOk()->assertSee('Accueil français.');
 });

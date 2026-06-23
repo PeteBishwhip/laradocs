@@ -23,6 +23,29 @@ it('emits a valid sitemaps.org urlset document', function () {
         ->and($body)->toContain('</urlset>');
 });
 
+it('emits per-locale xhtml alternates when URL-path locales are active', function () {
+    config()->set('laradocs.locale.available', ['en' => 'English', 'fr' => 'Français']);
+    config()->set('laradocs.locale.default', 'en');
+
+    $this->makeDocs(['a.md' => "---\ntitle: A\n---\nbody\n"]);
+
+    $body = $this->get('/docs/sitemap.xml')->assertOk()->getContent();
+
+    expect($body)->toContain('xmlns:xhtml="http://www.w3.org/1999/xhtml"')
+        ->and($body)->toContain('<xhtml:link rel="alternate" hreflang="en" href="' . url('/docs/a') . '"/>')
+        ->and($body)->toContain('<xhtml:link rel="alternate" hreflang="fr" href="' . url('/docs/fr/a') . '"/>')
+        ->and($body)->toContain('<xhtml:link rel="alternate" hreflang="x-default" href="' . url('/docs/a') . '"/>');
+});
+
+it('omits the xhtml namespace from a single-locale sitemap', function () {
+    $this->makeDocs(['a.md' => "---\ntitle: A\n---\nbody\n"]);
+
+    $body = $this->get('/docs/sitemap.xml')->assertOk()->getContent();
+
+    expect($body)->not->toContain('xmlns:xhtml')
+        ->and($body)->not->toContain('<xhtml:link');
+});
+
 it('lists every visible document with loc, lastmod and priority', function () {
     $this->makeDocs([
         'a.md' => "---\ntitle: A\n---\nbody\n",

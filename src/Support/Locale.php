@@ -6,6 +6,7 @@ namespace Laradocs\Support;
 
 use Closure;
 use Illuminate\Http\Request;
+use Laradocs\Routing\DocumentUrl;
 
 /**
  * Resolves which interface locales are available and which one a given request
@@ -92,6 +93,65 @@ final class Locale
         return cache()
             ->store(Config::nullableString('laradocs.cache.store'))
             ->remember($key, $ttl, self::scan(...));
+    }
+
+    /**
+     * Whether locales are reflected in the URL path (e.g. /docs/fr/guide) rather
+     * than via a `?lang=` query parameter.
+     *
+     * Gated on the `laradocs.locale.url` flag (default true) and only active once
+     * two or more locales are available — a single-locale site has nothing to
+     * disambiguate, so its URLs stay free of a redundant language segment.
+     */
+    public static function urlEnabled(): bool
+    {
+        return Config::bool('laradocs.locale.url', true) && count(self::available()) > 1;
+    }
+
+    /**
+     * The URL path segment for the active locale, or null when none should be
+     * emitted — i.e. URL locales are disabled, the active locale is the default
+     * (served unprefixed so canonical URLs stay clean) or it is not an available
+     * locale. Used by {@see DocumentUrl} to scope links.
+     */
+    public static function segment(): ?string
+    {
+        if (! self::urlEnabled()) {
+            return null;
+        }
+
+        $locale = (string) app()->getLocale();
+
+        return $locale !== self::fallback() && array_key_exists($locale, self::available())
+            ? $locale
+            : null;
+    }
+
+    /**
+     * Split a docs path into its leading locale segment and the remaining path.
+     *
+     * The first segment is treated as a locale only when it matches one of the
+     * available locales; otherwise the locale is null and the path is returned
+     * untouched. This keeps a real document slug that happens to look like a
+     * locale ("en/...") working unless that code is actually offered.
+     *
+     * @return array{0: ?string, 1: string} `[locale|null, remainingPath]`
+     */
+    public static function split(string $path): array
+    {
+        $path = ltrim($path, '/');
+
+        if (! self::urlEnabled()) {
+            return [null, $path];
+        }
+
+        $segment = explode('/', $path)[0];
+
+        if ($segment !== '' && array_key_exists($segment, self::available())) {
+            return [$segment, ltrim((string) substr($path, strlen($segment)), '/')];
+        }
+
+        return [null, $path];
     }
 
     /**

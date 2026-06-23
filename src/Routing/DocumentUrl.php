@@ -35,55 +35,86 @@ final class DocumentUrl
      * URL to a documentation page by slug. An empty slug is the docs root and
      * resolves to the index route; every other slug hits the show route.
      *
-     * When multi-version docs are active the current version handle is
-     * prepended to the slug automatically, e.g. "v2/getting-started".
-     *
-     * When cookie persistence is disabled (`locale.cookie = false`) and the
-     * active locale differs from the default, a `?lang=` query parameter is
-     * appended automatically so the language survives navigation without
-     * requiring a cookie.
+     * The active locale and version are prepended to the path automatically, in
+     * the order `{locale}/{version}/{slug}` (e.g. "fr/v2/getting-started"). The
+     * default locale is served unprefixed, so only non-default languages add a
+     * segment. When URL locales are disabled (`locale.url = false`) the language
+     * falls back to a `?lang=` query parameter instead.
      */
     public static function toSlug(string $slug): string
     {
         $slug = trim($slug, '/');
-        $version = Version::current();
-
-        if ($version !== null) {
-            $path = $slug !== '' ? "{$version}/{$slug}" : $version;
-
-            return route(self::prefix() . 'show', array_merge(['path' => $path], self::langParam()));
-        }
 
         if ($slug === '') {
             return self::index();
         }
 
-        return route(self::prefix() . 'show', array_merge(['path' => $slug], self::langParam()));
+        $prefix = self::pathPrefix();
+        $path = $prefix === '' ? $slug : "{$prefix}/{$slug}";
+
+        return route(self::prefix() . 'show', array_merge(['path' => $path], self::langQuery()));
     }
 
     public static function index(): string
     {
-        $version = Version::current();
+        $prefix = self::pathPrefix();
 
-        if ($version !== null) {
-            return route(self::prefix() . 'show', array_merge(['path' => $version], self::langParam()));
+        if ($prefix === '') {
+            return route(self::prefix() . 'index', self::langQuery());
         }
 
-        return route(self::prefix() . 'index', self::langParam());
+        return route(self::prefix() . 'show', array_merge(['path' => $prefix], self::langQuery()));
     }
 
     /**
      * URL to a documentation page in a specific version. Used by the version
-     * switcher to cross-link to the same page in a different version. Language
-     * is intentionally not forwarded here — the switcher constructs its own
-     * URLs with the explicit target locale.
+     * switcher to cross-link to the same page in a different version. The active
+     * locale is preserved so switching version keeps the visitor's language.
      */
     public static function forVersion(string $slug, string $version): string
     {
         $slug = trim($slug, '/');
-        $path = $slug !== '' ? "{$version}/{$slug}" : $version;
+        $path = self::joinPath(Locale::segment(), $version, $slug === '' ? null : $slug);
 
         return route(self::prefix() . 'show', ['path' => $path]);
+    }
+
+    /**
+     * URL to a documentation page in a specific locale, used to build the
+     * language switcher and per-locale `hreflang` alternates. The default locale
+     * is emitted unprefixed; every other locale carries its segment.
+     */
+    public static function localized(string $slug, string $locale): string
+    {
+        $slug = trim($slug, '/');
+        $segment = $locale === Locale::fallback() ? null : $locale;
+        $path = self::joinPath($segment, Version::current(), $slug === '' ? null : $slug);
+
+        if ($path === '') {
+            return route(self::prefix() . 'index');
+        }
+
+        return route(self::prefix() . 'show', ['path' => $path]);
+    }
+
+    /**
+     * The leading path segments — active locale then active version — that scope
+     * every generated docs URL, joined with slashes (empty when neither applies).
+     */
+    private static function pathPrefix(): string
+    {
+        return self::joinPath(Locale::segment(), Version::current());
+    }
+
+    /**
+     * Join the non-empty parts with single slashes, dropping nulls and blanks.
+     */
+    private static function joinPath(?string ...$parts): string
+    {
+        return implode('/', array_filter(
+            $parts,
+            static fn (?string $part): bool => $part !== null && $part !== '',
+        ));
     }
 
     public static function asset(string $file): string
@@ -113,8 +144,7 @@ final class DocumentUrl
             return route($name);
         }
 
-        $version = Version::current();
-        $path = $version !== null ? "{$version}/{$slug}" : $slug;
+        $path = self::joinPath(Locale::segment(), Version::current(), $slug);
 
         return route($name, ['path' => $path]);
     }
@@ -129,7 +159,7 @@ final class DocumentUrl
      */
     public static function tags(): string
     {
-        return route(self::prefix() . 'tags.index', self::langParam());
+        return route(self::prefix() . 'tags.index', self::langQuery());
     }
 
     /**
@@ -137,30 +167,29 @@ final class DocumentUrl
      */
     public static function tag(string $slug): string
     {
-        return route(self::prefix() . 'tags.show', array_merge(['tag' => $slug], self::langParam()));
+        return route(self::prefix() . 'tags.show', array_merge(['tag' => $slug], self::langQuery()));
     }
 
     /**
-     * A `['lang' => $code]` array to append to internal route parameters when
-     * cookie persistence is disabled and the active locale is not the default.
+     * The legacy `?lang=` query parameter to forward on internal links, used
+     * only when URL-path locales are disabled (`locale.url = false`).
      *
-     * Without a cookie to carry the choice, every internal link must forward
-     * `?lang=` in its query string so the visitor stays in the selected
-     * language as they navigate. When cookie persistence is enabled the cookie
-     * handles this and the parameter is omitted to keep URLs clean.
+     * In that mode, and when cookie persistence is also off, every internal link
+     * must carry `?lang=` so a non-default language survives navigation without a
+     * cookie. When URL locales are on the segment carries the language instead,
+     * and when the cookie is on it does — both leave the query string clean.
      *
      * @return array<string, string>
      */
-    private static function langParam(): array
+    private static function langQuery(): array
     {
-        if (Locale::cookieEnabled()) {
+        if (Locale::urlEnabled() || Locale::cookieEnabled()) {
             return [];
         }
 
         $locale = (string) app()->getLocale();
-        $default = Locale::fallback();
 
-        return $locale !== $default ? ['lang' => $locale] : [];
+        return $locale !== Locale::fallback() ? ['lang' => $locale] : [];
     }
 
     public static function sitemap(): string
