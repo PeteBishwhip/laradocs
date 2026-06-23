@@ -237,6 +237,74 @@ slug-style path you want (e.g. `guide/installation` or
 The output is produced from a Blade stub you can publish and edit — see
 [Customising stubs](/docs/customising-stubs).
 
+## `laradocs:lang`
+
+```bash
+php artisan laradocs:lang {locale} [--translate] [--force]
+php artisan laradocs:lang --list
+```
+
+Scaffolds a translation file for a new locale, or lists the locales that are
+available. A natural companion to `laradocs:install` and `make:doc`.
+
+### Scaffolding a locale
+
+```bash
+php artisan laradocs:lang fr
+```
+
+Creates `lang/vendor/laradocs/fr/laradocs.php` using the best available source:
+
+1. The package's own bundled translation for that locale (e.g. `de`, `es`,
+   `it`, `nl`, `sv`).
+2. Your published `lang/vendor/laradocs/en/laradocs.php` (if present), so
+   any customisations to the English strings carry over.
+3. The package's bundled English file as a fallback.
+
+Pass `--force` to overwrite a file that already exists.
+
+### Interactive translation
+
+Pass `--translate` to translate each string immediately after the file is
+created:
+
+```bash
+php artisan laradocs:lang fr --translate
+```
+
+The command walks through every key one at a time, showing the original value
+as the default. Press **Enter** to keep the original and move on; type a new
+value to replace it. Press **Backspace** on an empty prompt to step back and
+revise the previous string.
+
+When `--translate` is omitted and the command is run in an interactive terminal,
+it asks whether you'd like to translate now (default: no). In non-interactive
+contexts (CI, piped input) the question is silently skipped.
+
+### Listing locales
+
+```bash
+php artisan laradocs:lang --list
+```
+
+Prints a table showing which locales are bundled with the package and which
+have already been published to your application:
+
+```
++--------+---------+-----------+
+| locale | bundled | published |
++--------+---------+-----------+
+| de     | yes     | no        |
+| en     | yes     | yes       |
+| es     | yes     | no        |
+| fr     | no      | yes       |
++--------+---------+-----------+
+```
+
+> [!TIP]
+> Run `php artisan laradocs:lang --list` after a package update to see whether
+> any new bundled locales have been added that you haven't scaffolded yet.
+
 ## `laradocs:cache`
 
 ```bash

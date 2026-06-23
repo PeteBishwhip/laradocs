@@ -84,13 +84,26 @@ to translate or override them:
 php artisan vendor:publish --tag=laradocs-lang
 ```
 
-This copies the files to `lang/vendor/laradocs/en/laradocs.php`. Edit that file
-to reword the English interface, or copy the `en` directory to a new locale
-code to translate it:
+This copies `lang/vendor/laradocs/en/laradocs.php` (plus any other bundled
+locales) to your application. Edit that file to reword the English interface,
+or scaffold a new locale with the `laradocs:lang` command:
 
 ```bash
-cp -r lang/vendor/laradocs/en lang/vendor/laradocs/fr
+php artisan laradocs:lang fr
 ```
+
+That creates `lang/vendor/laradocs/fr/laradocs.php` pre-populated with the
+English strings as a starting point — no manual `cp -r` needed. Pass
+`--translate` to walk through each string interactively straight away:
+
+```bash
+php artisan laradocs:lang fr --translate
+```
+
+Run `php artisan laradocs:lang --list` at any time to see which locales are
+bundled with the package and which have been published to your app. See
+[`laradocs:lang`](/docs/guide/cli#laradocslang) in the CLI reference for the
+full set of options.
 
 Then translate the values in `lang/vendor/laradocs/fr/laradocs.php`:
 
@@ -259,8 +272,8 @@ header. No configuration is required — just publish the lang files, copy and
 translate a new directory, and the selector appears.
 
 ```bash
-# English is already published; add French:
-cp -r lang/vendor/laradocs/en lang/vendor/laradocs/fr
+# English is already published; scaffold French:
+php artisan laradocs:lang fr
 # Translate lang/vendor/laradocs/fr/laradocs.php …
 ```
 
