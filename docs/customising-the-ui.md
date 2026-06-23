@@ -229,3 +229,37 @@ The CSS lives in `resources/dist/laradocs.css` and the JS in
 under `/docs/_laradocs/asset/*`. The package does not set a
 `Cache-Control` header on this route — attach your own caching
 middleware if you want one.
+
+## Print and PDF output
+
+Laradocs ships a built-in `@media print` block that automatically:
+
+- Hides navigation chrome (header, sidebar, tabs, TOC, search palette, footer,
+  prev/next pager, edit link, and the reading progress bar).
+- Expands `.laradocs-content` to full page width — no sidebar or TOC gutters.
+- Forces light-mode colors so the output is ink-friendly regardless of the
+  active theme.
+- Appends `(URL)` after external links so printed copies remain useful.
+- Applies `break-inside: avoid` to code blocks, callouts, tables, figures, and
+  blockquotes, and `break-after: avoid` to headings to minimise awkward page
+  splits.
+- Sets `orphans: 3` / `widows: 3` on prose paragraphs.
+
+**Overriding print styles** — publish the assets and add your own rules at the
+bottom of `resources/dist/laradocs.css`:
+
+```css
+@media print {
+  /* Example: show the sidebar nav in the printed output. */
+  .laradocs-sidebar { display: block !important; }
+
+  /* Example: hide the page breadcrumbs. */
+  .laradocs-breadcrumbs { display: none !important; }
+
+  /* Example: set explicit page margins. */
+  @page { margin: 2cm; }
+}
+```
+
+Any rule you add wins over the defaults via cascade source-order, so you do
+not need to fork or replace the built-in block.
