@@ -100,10 +100,22 @@ final class SetDocsLocale
 
         $route = $request->route();
 
-        if (! $route instanceof Route) {
-            return null;
-        }
+        return $route instanceof Route
+            ? $this->resolveFromRoute($route)
+            : null;
+    }
 
+    /**
+     * Extract and act on the locale segment carried by an already-bound route.
+     *
+     * Strips the segment from the route's `{path}` parameter so downstream
+     * middleware and the controller receive a clean, language-free path.
+     * Returns a 301 Response when the default-locale prefix must be
+     * canonicalised, the locale string when a non-default segment is found, or
+     * null when no locale segment is present.
+     */
+    private function resolveFromRoute(Route $route): Response|string|null
+    {
         [$locale, $rest] = Locale::split($this->routePath($route));
 
         if ($locale === null) {
@@ -114,17 +126,17 @@ final class SetDocsLocale
         // segment removed — they already know how to handle the remainder.
         $route->setParameter('path', $rest);
 
-        if ($locale === Locale::fallback()) {
-            // The default locale is served unprefixed. On a user-facing page,
-            // redirect /docs/en/x to the canonical /docs/x so search engines see
-            // a single URL; on other catch-all routes (e.g. the og-image
-            // endpoint) just drop the redundant prefix and render in place.
-            return $this->isPageRoute($route)
-                ? redirect()->to($this->canonical($rest), 301)
-                : null;
+        if ($locale !== Locale::fallback()) {
+            return $locale;
         }
 
-        return $locale;
+        // The default locale is served unprefixed. On a user-facing page,
+        // redirect /docs/en/x to the canonical /docs/x so search engines see
+        // a single URL; on other catch-all routes (e.g. the og-image
+        // endpoint) just drop the redundant prefix and render in place.
+        return $this->isPageRoute($route)
+            ? redirect()->to($this->canonical($rest), 301)
+            : null;
     }
 
     /**
