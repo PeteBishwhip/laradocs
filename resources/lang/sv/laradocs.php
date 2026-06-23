@@ -76,6 +76,15 @@ return [
         'edit' => 'Redigera denna sida',
     ],
 
+    'callouts' => [
+        'note' => 'Note',
+        'tip' => 'Tip',
+        'important' => 'Important',
+        'warning' => 'Warning',
+        'danger' => 'Danger',
+        'caution' => 'Caution',
+    ],
+
     'macros' => [
         'read_more' => 'Läs mer',
     ],
