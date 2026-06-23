@@ -6,10 +6,8 @@ namespace Laradocs\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
-use Laravel\Prompts\FormBuilder;
 
 use function Laravel\Prompts\confirm;
-use function Laravel\Prompts\form;
 use function Laravel\Prompts\text;
 
 final class LangCommand extends Command
@@ -22,6 +20,11 @@ final class LangCommand extends Command
     protected $description = 'Scaffold a translation file for a new locale, or list available locales';
 
     private const PACKAGE_LANG = __DIR__ . '/../../resources/lang';
+
+    /**
+     * Sentinel a translator can enter to step back to the previous string.
+     */
+    private const BACK = '<';
 
     public function handle(Filesystem $files): int
     {
@@ -74,24 +77,15 @@ final class LangCommand extends Command
     /**
      * Whether the translation loop should run.
      *
-     * True when --translate is passed, or when the terminal is interactive
-     * and the user confirms the prompt. In non-interactive contexts (CI,
-     * piped input, test harness without --translate) the question is never
-     * asked and translation is skipped.
+     * True when --translate is passed, or when the user confirms the prompt.
+     * The confirmation defaults to "no". In a non-interactive context (CI,
+     * piped input) Laravel Prompts resolves confirm() to its default without
+     * rendering anything, so the question is never actually asked there.
      */
     private function shouldTranslate(): bool
     {
-        if ($this->option('translate')) {
-            return true;
-        }
-
-        // Only ask in a real interactive terminal. stream_isatty() is false
-        // when piped, in CI, or under the test harness — skip silently there.
-        if (! (defined('STDIN') && stream_isatty(STDIN))) {
-            return false;
-        }
-
-        return confirm('Would you like to translate the strings now?', default: false);
+        return (bool) $this->option('translate')
+            || confirm('Would you like to translate the strings now?', default: false);
     }
 
     private function translateStrings(string $target, string $source): void
@@ -105,27 +99,53 @@ final class LangCommand extends Command
             return;
         }
 
-        $builder = form();
-
-        foreach ($flat as $key => $original) {
-            $builder->add(
-                fn (array $responses, mixed $prev) => text(
-                    label: $key,
-                    default: is_string($prev) ? $prev : $original,
-                    hint: 'Original: ' . $original . '  (press Enter to keep)',
-                ),
-                name: $key,
-            );
-        }
-
-        /** @var array<string, string> $responses */
-        $responses = $builder->submit();
-
-        $translated = $this->unflatten($responses);
+        $translated = $this->unflatten($this->promptForTranslations($flat));
 
         $this->writePhpFile($target, $translated, (string) file_get_contents($source));
     }
 
+    /**
+     * Walk each string and collect the translator's input.
+     *
+     * The original value is pre-filled as the default, so pressing Enter keeps
+     * it (skip). Entering "<" steps back to revise the previous string.
+     *
+     * @param  array<string, string>  $flat
+     * @return array<string, string>
+     */
+    private function promptForTranslations(array $flat): array
+    {
+        $keys = array_keys($flat);
+        $total = count($keys);
+        $translations = [];
+        $index = 0;
+
+        while ($index < $total) {
+            $key = $keys[$index];
+            $original = $flat[$key];
+
+            $answer = text(
+                label: $key,
+                default: $translations[$key] ?? $original,
+                hint: ($index + 1) . '/' . $total . '  ·  Original: ' . $original . '  ·  Enter to keep, "' . self::BACK . '" to go back',
+            );
+
+            if ($answer === self::BACK) {
+                $index = max(0, $index - 1);
+
+                continue;
+            }
+
+            $translations[$key] = $answer;
+            $index++;
+        }
+
+        return $translations;
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $data
+     */
     private function writePhpFile(string $path, array $data, string $sourceContent): void
     {
         $commentEnd = strrpos($sourceContent, '*/');
@@ -137,6 +157,9 @@ final class LangCommand extends Command
         file_put_contents($path, $header . $this->formatArray($data) . "];\n");
     }
 
+    /**
+     * @param  array<array-key, mixed>  $data
+     */
     private function formatArray(array $data, int $depth = 1): string
     {
         $pad = str_repeat('    ', $depth);
@@ -150,7 +173,7 @@ final class LangCommand extends Command
                 $lines[] = $this->formatArray($value, $depth + 1);
                 $lines[] = $pad . '],';
             } else {
-                $v = "'" . addcslashes((string) $value, "'\\") . "'";
+                $v = "'" . addcslashes($this->stringify($value), "'\\") . "'";
                 $lines[] = $pad . $k . ' => ' . $v . ',';
             }
 
@@ -165,6 +188,7 @@ final class LangCommand extends Command
     /**
      * Flatten a nested array to dot-notation leaf paths.
      *
+     * @param  array<array-key, mixed>  $array
      * @return array<string, string>
      */
     private function flatten(array $array, string $prefix = ''): array
@@ -177,7 +201,7 @@ final class LangCommand extends Command
             if (is_array($value)) {
                 $result = array_merge($result, $this->flatten($value, $path));
             } else {
-                $result[$path] = (string) $value;
+                $result[$path] = $this->stringify($value);
             }
         }
 
@@ -188,7 +212,7 @@ final class LangCommand extends Command
      * Rebuild a nested array from dot-notation paths.
      *
      * @param  array<string, string>  $flat
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
     private function unflatten(array $flat): array
     {
@@ -202,8 +226,8 @@ final class LangCommand extends Command
     }
 
     /**
-     * @param  array<string, mixed>  $array
-     * @param  list<string>  $keys
+     * @param  array<array-key, mixed>  $array
+     * @param  non-empty-list<string>  $keys
      */
     private function setNested(array &$array, array $keys, string $value): void
     {
@@ -211,13 +235,24 @@ final class LangCommand extends Command
 
         if ($keys === []) {
             $array[$key] = $value;
-        } else {
-            if (! isset($array[$key]) || ! is_array($array[$key])) {
-                $array[$key] = [];
-            }
 
-            $this->setNested($array[$key], $keys, $value);
+            return;
         }
+
+        $child = $array[$key] ?? null;
+
+        if (! is_array($child)) {
+            $child = [];
+        }
+
+        $this->setNested($child, $keys, $value);
+
+        $array[$key] = $child;
+    }
+
+    private function stringify(mixed $value): string
+    {
+        return is_scalar($value) ? (string) $value : '';
     }
 
     /**
@@ -278,20 +313,7 @@ final class LangCommand extends Command
      */
     private function bundledLocales(): array
     {
-        $path = self::PACKAGE_LANG;
-        $locales = [];
-
-        foreach (array_diff((array) scandir($path), ['.', '..']) as $entry) {
-            $entry = (string) $entry;
-
-            if (is_dir($path . '/' . $entry)) {
-                $locales[] = $entry;
-            }
-        }
-
-        sort($locales);
-
-        return $locales;
+        return $this->localeDirsIn(self::PACKAGE_LANG);
     }
 
     /**
@@ -300,11 +322,22 @@ final class LangCommand extends Command
     private function publishedLocales(Filesystem $files): array
     {
         $path = lang_path('vendor/laradocs');
-        $locales = [];
 
         if (! $files->isDirectory($path)) {
             return [];
         }
+
+        return $this->localeDirsIn($path);
+    }
+
+    /**
+     * List the immediate sub-directory names within a path, sorted.
+     *
+     * @return array<int, string>
+     */
+    private function localeDirsIn(string $path): array
+    {
+        $locales = [];
 
         foreach (array_diff((array) scandir($path), ['.', '..']) as $entry) {
             $entry = (string) $entry;
