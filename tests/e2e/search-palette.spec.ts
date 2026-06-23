@@ -13,6 +13,7 @@ import { expect, test } from '@playwright/test';
 const palette = '[data-laradocs-palette]';
 const input = '[data-laradocs-palette-input]';
 const results = '[data-laradocs-palette-results]';
+const kbdTrigger = '[data-laradocs-kbd-trigger]';
 
 test('Meta+K opens the palette and a hit navigates to its page', async ({ page }) => {
   await page.goto('/docs');
@@ -45,6 +46,30 @@ test('Escape closes the palette', async ({ page }) => {
 
   await page.keyboard.press('Escape');
   await expect(page.locator(palette)).toBeHidden();
+});
+
+test('kbd trigger shows ⌘K on macOS', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'userAgentData', { get: () => ({ platform: 'macOS' }) });
+  });
+  await page.goto('/docs');
+  await expect(page.locator(kbdTrigger)).toHaveText('⌘K');
+});
+
+test('kbd trigger shows Ctrl+K on Windows', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'userAgentData', { get: () => ({ platform: 'Windows' }) });
+  });
+  await page.goto('/docs');
+  await expect(page.locator(kbdTrigger)).toHaveText('Ctrl+K');
+});
+
+test('kbd trigger shows Ctrl+K on Linux', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'userAgentData', { get: () => ({ platform: 'Linux' }) });
+  });
+  await page.goto('/docs');
+  await expect(page.locator(kbdTrigger)).toHaveText('Ctrl+K');
 });
 
 test('a single-character query triggers no search request (min_chars=2)', async ({ page }) => {

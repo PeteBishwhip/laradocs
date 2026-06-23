@@ -544,6 +544,15 @@
     });
   }
 
+  function initSearchKbdHint() {
+    var kbd = document.querySelector('[data-laradocs-kbd-trigger]');
+    if (!kbd) return;
+    try {
+      var p = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '';
+      if (!/mac/i.test(p)) kbd.textContent = 'Ctrl+K';
+    } catch (e) {}
+  }
+
   function boot() {
     initTheme();
     initCopy();
@@ -555,6 +564,7 @@
     initSidebarCollapse();
     initSearchShortcut();
     initPalette();
+    initSearchKbdHint();
     initVersionBlocks();
     initVersionBanner();
   }
