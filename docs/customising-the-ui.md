@@ -84,6 +84,25 @@ The CSS tokens you can override via `--dc-*` custom properties include
 `--dc-bg`, `--dc-fg`, `--dc-muted`, `--dc-rule`, `--dc-accent`,
 `--dc-code-bg`, `--dc-radius`, and more (see `resources/dist/laradocs.css`).
 
+## Content width
+
+The article body has a default max-width of `46rem`. Override it without touching
+the CSS by setting `content_width` in config or the env var:
+
+```dotenv
+LARADOCS_CONTENT_WIDTH=80rem
+```
+
+```php
+// config/laradocs.php
+'ui' => [
+    'content_width' => '80rem',
+],
+```
+
+Any valid CSS length works — `rem`, `px`, `ch`, `%`, etc. When unset the CSS
+default (`46rem`) applies unchanged.
+
 ## Presets
 
 ```dotenv
@@ -92,7 +111,7 @@ LARADOCS_UI_PRESET=classic   # classic | minimal | wide
 
 | Preset | Sidebar | TOC | Content width | Best for |
 |---|---|---|---|---|
-| `classic` | yes | yes | 46rem | full reference sites |
+| `classic` | yes | yes | 46rem (overridable) | full reference sites |
 | `minimal` | drawer | hidden | wide column | longform / handbook-style docs |
 | `wide` | yes | yes | app-style, fills viewport | dense API references |
 
