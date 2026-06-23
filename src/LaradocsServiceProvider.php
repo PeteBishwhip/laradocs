@@ -6,6 +6,7 @@ namespace Laradocs;
 
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Cache\Factory as CacheFactory;
+use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Routing\Registrar;
 use Illuminate\Filesystem\Filesystem;
@@ -102,6 +103,7 @@ final class LaradocsServiceProvider extends ServiceProvider
         $this->loadTranslationsFrom(self::LANG, 'laradocs');
         $this->registerRoutes();
         $this->bootRateLimiting();
+        $this->bootOctaneSafety();
         $this->registerDefaultMacros();
 
         if ($this->app->runningInConsole()) {
@@ -242,6 +244,31 @@ final class LaradocsServiceProvider extends ServiceProvider
     private function registerRateLimiting(): void
     {
         $this->app->singleton(RateLimiterConfig::class);
+    }
+
+    /**
+     * On long-lived workers (Octane / RoadRunner) singletons survive across
+     * requests. SeoFactory carries $lastXCard as per-request scratch state, so
+     * we drop its resolved singleton at the start of every new request: the
+     * next resolve rebuilds it fresh, with no value carried over from the
+     * previous render. Forgetting the instance also covers any future
+     * per-request state on the factory without a hand-maintained reset method.
+     *
+     * The listener is keyed by Octane's event class name as a string, so it
+     * registers cleanly whether or not Octane is installed: without Octane the
+     * event is never dispatched and the listener simply stays inert.
+     */
+    private function bootOctaneSafety(): void
+    {
+        /** @var Dispatcher $events */
+        $events = $this->app->make('events');
+
+        $events->listen(
+            'Laravel\Octane\Events\RequestReceived',
+            function (): void {
+                $this->app->forgetInstance(SeoFactory::class);
+            },
+        );
     }
 
     private function bootRateLimiting(): void

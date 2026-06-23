@@ -27,6 +27,11 @@ final class MacroRegistry
     /**
      * Register a macro by name. Handlers are either a closure returning HTML
      * or the name of a Blade view to render with the supplied arguments.
+     *
+     * **Boot-time only.** This mutates a singleton; call it exclusively from a
+     * service provider's `boot()` method. Registering macros during request
+     * processing causes them to accumulate across requests on long-lived
+     * workers such as Laravel Octane.
      */
     public function register(string $name, Closure|string $handler): self
     {
