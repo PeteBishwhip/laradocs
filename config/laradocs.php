@@ -374,13 +374,16 @@ return [
     | User Interface
     |--------------------------------------------------------------------------
     |
-    | "theme"   Colour mode: auto | light | dark.
-    | "preset"  Visual preset shipped with the package:
-    |             classic — sidebar + centered article + right TOC.
-    |             minimal — distraction-free single column, slimline header.
-    |             wide    — app-style, fills the viewport, denser nav.
-    | "accent"  Any CSS colour. Drives links, active nav, focus rings.
-    | "fonts"   Override the built-in stacks (leave null to keep defaults).
+    | "theme"         Colour mode: auto | light | dark.
+    | "preset"        Visual preset shipped with the package:
+    |                   classic — sidebar + centered article + right TOC.
+    |                   minimal — distraction-free single column, slimline header.
+    |                   wide    — app-style, fills the viewport, denser nav.
+    | "accent"        Any CSS colour. Drives links, active nav, focus rings.
+    | "content_width" Max width of the article body. Any valid CSS length,
+    |                   e.g. "56rem" (default), "80rem", "100%".
+    |                   Also settable via LARADOCS_CONTENT_WIDTH env var.
+    | "fonts"         Override the built-in stacks (leave null to keep defaults).
     |
     */
 
@@ -388,6 +391,7 @@ return [
         'theme' => env('LARADOCS_THEME', 'auto'),
         'preset' => env('LARADOCS_UI_PRESET', 'classic'),
         'accent' => env('LARADOCS_ACCENT', '#FF2D20'),
+        'content_width' => env('LARADOCS_CONTENT_WIDTH'),
         'fonts' => [
             'sans' => env('LARADOCS_FONT_SANS'),
             'mono' => env('LARADOCS_FONT_MONO'),

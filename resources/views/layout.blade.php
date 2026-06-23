@@ -11,6 +11,7 @@
     $defaultTheme = config('laradocs.ui.theme', 'auto');
     $preset = config('laradocs.ui.preset', 'classic');
     $accent = config('laradocs.ui.accent');
+    $contentWidth = config('laradocs.ui.content_width');
     $fontSans = $fonts['sans'] ?? null;
     $fontMono = $fonts['mono'] ?? null;
     $fontDisplay = $fonts['display'] ?? null;
@@ -60,10 +61,11 @@
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
     @endif
     <link rel="stylesheet" href="{{ DocumentUrl::asset('laradocs.css') }}">
-    @if($accent || $fontSans || $fontMono || $fontDisplay)
+    @if($accent || $contentWidth || $fontSans || $fontMono || $fontDisplay)
         <style>
             :root {
                 @if($accent) --dc-accent: {{ $accent }}; @endif
+                @if($contentWidth) --dc-content-w: {{ $contentWidth }}; @endif
                 @if($fontSans) --dc-font: {{ $fontSans }}; @endif
                 @if($fontMono) --dc-mono: {{ $fontMono }}; @endif
                 @if($fontDisplay) --dc-display: {{ $fontDisplay }}; @endif
