@@ -76,6 +76,15 @@ return [
         'edit' => 'Deze pagina bewerken',
     ],
 
+    'callouts' => [
+        'note' => 'Note',
+        'tip' => 'Tip',
+        'important' => 'Important',
+        'warning' => 'Warning',
+        'danger' => 'Danger',
+        'caution' => 'Caution',
+    ],
+
     'macros' => [
         'read_more' => 'Meer informatie',
     ],
