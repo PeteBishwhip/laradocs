@@ -51,7 +51,28 @@ it('converts github style callouts', function () {
     $html = render("> [!NOTE]\n> Remember this.");
 
     expect($html)->toContain('laradocs-callout laradocs-callout-note')
+        ->and($html)->toContain('Note')
         ->and($html)->toContain('Remember this.');
+});
+
+it('falls back to the english callout title for locales without a translation', function () {
+    app()->setLocale('fr');
+
+    $html = render("> [!NOTE]\n> Remember this.");
+
+    expect($html)->toContain('laradocs-callout laradocs-callout-note')
+        ->and($html)->toContain('Note');
+
+    app()->setLocale('en');
+});
+
+it('uses an inline custom title when provided after the callout marker', function () {
+    $html = render("> [!NOTE] Heads up\n> Something to remember.");
+
+    expect($html)->toContain('laradocs-callout laradocs-callout-note')
+        ->and($html)->toContain('Heads up')
+        ->and($html)->not->toContain('[!NOTE]')
+        ->and($html)->toContain('Something to remember.');
 });
 
 it('adds ids and anchors to headings', function () {

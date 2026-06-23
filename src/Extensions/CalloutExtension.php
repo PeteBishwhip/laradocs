@@ -11,20 +11,17 @@ use Laradocs\Support\Html;
 
 /**
  * Converts GitHub-style alert blockquotes — `> [!NOTE]` — into styled callouts.
+ *
+ * Titles are resolved via the laradocs translation files so they follow the
+ * active docs locale. An optional inline title placed immediately after the
+ * marker (`> [!NOTE] Custom title`) overrides the translated default.
  */
 final class CalloutExtension implements HtmlExtension
 {
     /**
-     * @var array<string, string>
+     * @var list<string>
      */
-    private const TITLES = [
-        'note' => 'Note',
-        'tip' => 'Tip',
-        'important' => 'Important',
-        'warning' => 'Warning',
-        'danger' => 'Danger',
-        'caution' => 'Caution',
-    ];
+    private const KNOWN_TYPES = ['note', 'tip', 'important', 'warning', 'danger', 'caution'];
 
     public function processHtml(string $html): string
     {
@@ -46,12 +43,27 @@ final class CalloutExtension implements HtmlExtension
 
         $type = strtolower($matches[1]);
 
-        if (! isset(self::TITLES[$type])) {
+        if (! in_array($type, self::KNOWN_TYPES, true)) {
             return;
         }
 
+        // An optional inline title may appear right after the marker, e.g. `> [!NOTE] Custom title`.
+        $title = null;
+        if (preg_match(
+            '/\[!' . preg_quote($matches[1], '/') . '\][ \t]+([^\n<\[]+?)[ \t]*(?=\n|<br|\s*<\/p>)/i',
+            $inner,
+            $titleMatches
+        )) {
+            $title = trim($titleMatches[1]);
+        }
+
+        if ($title === null || $title === '') {
+            $title = (string) __('laradocs::laradocs.callouts.' . $type);
+        }
+
+        // Remove the marker line, including any inline title text and trailing <br>.
         $body = preg_replace(
-            '/\[!' . preg_quote($matches[1], '/') . '\]\s*(<br\s*\/?>)?\s*/i',
+            '/\[!' . preg_quote($matches[1], '/') . '\][^\n<\[]*\s*(<br\s*\/?>)?\s*/i',
             '',
             $inner,
             1
@@ -62,7 +74,7 @@ final class CalloutExtension implements HtmlExtension
             . '<div class="laradocs-callout-title">%s</div>'
             . '<div class="laradocs-callout-body">%s</div></div>',
             $type,
-            self::TITLES[$type],
+            $title,
             trim($body)
         );
 
