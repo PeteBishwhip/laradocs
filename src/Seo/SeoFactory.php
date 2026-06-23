@@ -8,7 +8,6 @@ use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 use Laradocs\Documents\Document;
 use Laradocs\Documents\TreeNode;
-use Laradocs\LaradocsServiceProvider;
 use Laradocs\Metadata\Metadata;
 use Laradocs\Routing\DocumentUrl;
 use Laradocs\Support\Config;
@@ -46,19 +45,6 @@ final class SeoFactory
     public function xCard(): string
     {
         return $this->lastXCard;
-    }
-
-    /**
-     * Reset per-request state back to the hard-coded default.
-     *
-     * Called automatically by the Octane RequestReceived event listener
-     * registered in {@see LaradocsServiceProvider} so that a
-     * stale $lastXCard from a previous request is never visible to the
-     * next one on a long-lived worker.
-     */
-    public function resetForNextRequest(): void
-    {
-        $this->lastXCard = 'summary_large_image';
     }
 
     /**

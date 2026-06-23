@@ -248,9 +248,11 @@ final class LaradocsServiceProvider extends ServiceProvider
 
     /**
      * On long-lived workers (Octane / RoadRunner) singletons survive across
-     * requests. SeoFactory carries $lastXCard as per-request scratch state;
-     * reset it at the start of every new request so a stale value from a
-     * previous render is never visible to the next one.
+     * requests. SeoFactory carries $lastXCard as per-request scratch state, so
+     * we drop its resolved singleton at the start of every new request: the
+     * next resolve rebuilds it fresh, with no value carried over from the
+     * previous render. Forgetting the instance also covers any future
+     * per-request state on the factory without a hand-maintained reset method.
      *
      * The listener is keyed by Octane's event class name as a string, so it
      * registers cleanly whether or not Octane is installed: without Octane the
@@ -264,7 +266,7 @@ final class LaradocsServiceProvider extends ServiceProvider
         $events->listen(
             'Laravel\Octane\Events\RequestReceived',
             function (): void {
-                $this->app->make(SeoFactory::class)->resetForNextRequest();
+                $this->app->forgetInstance(SeoFactory::class);
             },
         );
     }

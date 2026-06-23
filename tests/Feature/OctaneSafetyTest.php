@@ -87,30 +87,6 @@ it('SeoFactory x-card type does not bleed from one request to the next (octane-s
     expect(app(SeoFactory::class)->xCard())->toBe('summary_large_image');
 });
 
-it('resetForNextRequest() clears SeoFactory state to the default (octane-safe)', function () {
-    $this->makeDocs([
-        'custom-card.md' => implode("\n", [
-            '---',
-            'seo:',
-            '  x_card: summary',
-            '---',
-            '# Custom Card',
-            '',
-            'Opening paragraph.',
-        ]),
-    ]);
-
-    // Simulate a request that sets lastXCard to a non-default value.
-    $this->get('/docs/custom-card')->assertOk();
-    expect(app(SeoFactory::class)->xCard())->toBe('summary');
-
-    // Simulate the Octane RequestReceived hook firing before the next request.
-    app(SeoFactory::class)->resetForNextRequest();
-
-    // The singleton is now clean regardless of what the previous request set.
-    expect(app(SeoFactory::class)->xCard())->toBe('summary_large_image');
-});
-
 it('the registered Octane RequestReceived listener flushes SeoFactory state', function () {
     $this->makeDocs([
         'custom-card.md' => implode("\n", [
@@ -124,13 +100,14 @@ it('the registered Octane RequestReceived listener flushes SeoFactory state', fu
         ]),
     ]);
 
-    // Put the singleton into a non-default state.
+    // Put the resolved singleton into a non-default state.
     $this->get('/docs/custom-card')->assertOk();
     expect(app(SeoFactory::class)->xCard())->toBe('summary');
 
     // The provider registers a listener keyed by Octane's event class name as
-    // a string; dispatching that event name drives the same flush Octane would
-    // perform at the start of the next request — without Octane installed.
+    // a string; dispatching that event name forgets the resolved SeoFactory
+    // singleton exactly as Octane would at the start of the next request, so
+    // the next resolve rebuilds it fresh — all without Octane installed.
     Event::dispatch('Laravel\Octane\Events\RequestReceived');
 
     expect(app(SeoFactory::class)->xCard())->toBe('summary_large_image');

@@ -29,7 +29,7 @@ Laradocs registers the following classes as singletons:
 | `SlugResolver` | No | Config-derived, immutable after construction |
 | `MetadataResolver` | No | Stateless YAML parser |
 | `DocumentParser` | No | Stateless; all constructor properties are `readonly` |
-| `SeoFactory` | Yes | `$lastXCard` is per-request scratch; reset automatically — see below |
+| `SeoFactory` | Yes | `$lastXCard` is per-request scratch; the instance is forgotten per request — see below |
 | `SearchManager` | No | Lazily resolves the configured engine once; config-derived |
 | `VersionRegistry` | No | Delegates to the external cache store; no in-memory state |
 | `IconRegistry` | No | Immutable after construction |
@@ -83,10 +83,11 @@ during the most recent `forDocument()` / `forPage()` call in the
 reading `xCard()`, so the value is always fresh within a request.
 
 As a defensive measure, Laradocs registers a listener for Octane's
-`RequestReceived` event that resets `$lastXCard` to the safe default
-(`summary_large_image`) at the start of every new request. The listener is
-only registered when `laravel/octane` is installed, so the package runs
-unchanged in standard FPM environments.
+`RequestReceived` event that forgets the resolved `SeoFactory` singleton at
+the start of every new request, so the next resolve rebuilds it fresh with
+the default `$lastXCard` (`summary_large_image`). The listener is keyed by
+Octane's event class name, so it is inert — and the package runs unchanged —
+in standard FPM environments where the event is never dispatched.
 
 ## Locale restoration
 
