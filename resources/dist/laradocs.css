@@ -1375,7 +1375,9 @@ body.laradocs {
   [data-laradocs-version] { display: none !important; }
 
   /* ── Layout: content fills the full page width ──────────────── */
-  .laradocs-shell   { display: block; max-width: 100%; }
+  /* The desktop rule pads the shell left by the sidebar width to clear the
+     fixed sidebar; that sidebar is hidden in print, so drop the gutter too. */
+  .laradocs-shell   { display: block; max-width: 100%; padding-left: 0; }
   .laradocs-main    { display: block; }
   .laradocs-content { max-width: 100%; width: 100%; padding: 0; }
 
