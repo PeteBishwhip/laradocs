@@ -77,12 +77,12 @@ return [
     ],
 
     'callouts' => [
-        'note' => 'Note',
+        'note' => 'Notitie',
         'tip' => 'Tip',
-        'important' => 'Important',
-        'warning' => 'Warning',
-        'danger' => 'Danger',
-        'caution' => 'Caution',
+        'important' => 'Belangrijke',
+        'warning' => 'Waarschuwing',
+        'danger' => 'Gevaarlijk',
+        'caution' => 'Voorzichtigheid',
     ],
 
     'macros' => [

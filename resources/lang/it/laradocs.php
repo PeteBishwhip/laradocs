@@ -77,12 +77,12 @@ return [
     ],
 
     'callouts' => [
-        'note' => 'Note',
+        'note' => 'Nota',
         'tip' => 'Tip',
-        'important' => 'Important',
-        'warning' => 'Warning',
-        'danger' => 'Danger',
-        'caution' => 'Caution',
+        'important' => 'Importante',
+        'warning' => 'Attenzione',
+        'danger' => 'Pericolo',
+        'caution' => 'Attenzione',
     ],
 
     'macros' => [
@@ -90,9 +90,9 @@ return [
     ],
 
     'tags' => [
-        'eyebrow' => 'Tag',
-        'label' => 'Tag',
-        'index_title' => 'Tag',
+        'eyebrow' => 'Etichetta',
+        'label' => 'Etichetta',
+        'index_title' => 'Etichetta',
         'index_intro' => 'Esplora la documentazione per argomento.',
         'show_title' => 'Pagine con il tag «:tag»',
         'count' => '{0} Nessuna pagina|{1} :count pagina|[2,*] :count pagine',
