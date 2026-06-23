@@ -23,6 +23,7 @@ use Laradocs\Console\ConfigCommand;
 use Laradocs\Console\DeployCommand;
 use Laradocs\Console\IndexCommand;
 use Laradocs\Console\InstallCommand;
+use Laradocs\Console\LangCommand;
 use Laradocs\Console\LintCommand;
 use Laradocs\Console\LoginCommand;
 use Laradocs\Console\MakeDocCommand;
@@ -550,6 +551,7 @@ final class LaradocsServiceProvider extends ServiceProvider
     {
         $this->commands([
             InstallCommand::class,
+            LangCommand::class,
             MakeDocCommand::class,
             CheckCommand::class,
             LintCommand::class,

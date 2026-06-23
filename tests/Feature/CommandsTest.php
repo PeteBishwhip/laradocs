@@ -626,3 +626,159 @@ it('docs:lint names the missing icon when the set is available', function () {
         ->assertFailed()
         ->expectsOutputToContain('not found in icon set');
 });
+
+// laradocs:lang — locale scaffolding
+
+it('laradocs:lang scaffolds a locale file from the bundled English source', function () {
+    $dir = sys_get_temp_dir() . '/laradocs-lang-' . bin2hex(random_bytes(4));
+    app()->useLangPath($dir);
+    $this->tempDocs[] = $dir;
+
+    $this->artisan('laradocs:lang', ['locale' => 'fr'])->assertSuccessful();
+
+    $target = $dir . '/vendor/laradocs/fr/laradocs.php';
+    expect(File::exists($target))->toBeTrue();
+    $strings = require $target;
+    expect($strings)->toBeArray()->toHaveKey('nav');
+});
+
+it('laradocs:lang scaffolds using a bundled locale translation when one exists', function () {
+    $dir = sys_get_temp_dir() . '/laradocs-lang-' . bin2hex(random_bytes(4));
+    app()->useLangPath($dir);
+    $this->tempDocs[] = $dir;
+
+    // 'de' is bundled in the package resources
+    $this->artisan('laradocs:lang', ['locale' => 'de'])->assertSuccessful();
+
+    $target = $dir . '/vendor/laradocs/de/laradocs.php';
+    expect(File::exists($target))->toBeTrue();
+});
+
+it('laradocs:lang prefers the published English file over the bundled one', function () {
+    $dir = sys_get_temp_dir() . '/laradocs-lang-' . bin2hex(random_bytes(4));
+    app()->useLangPath($dir);
+    $this->tempDocs[] = $dir;
+
+    // Publish a custom English file with a sentinel value
+    File::ensureDirectoryExists($dir . '/vendor/laradocs/en');
+    File::put($dir . '/vendor/laradocs/en/laradocs.php', "<?php\n\nreturn ['nav' => ['home' => 'Startseite']];\n");
+
+    $this->artisan('laradocs:lang', ['locale' => 'fr'])->assertSuccessful();
+
+    $strings = require $dir . '/vendor/laradocs/fr/laradocs.php';
+    expect($strings['nav']['home'])->toBe('Startseite');
+});
+
+it('laradocs:lang refuses to overwrite without --force', function () {
+    $dir = sys_get_temp_dir() . '/laradocs-lang-' . bin2hex(random_bytes(4));
+    app()->useLangPath($dir);
+    $this->tempDocs[] = $dir;
+
+    File::ensureDirectoryExists($dir . '/vendor/laradocs/fr');
+    File::put($dir . '/vendor/laradocs/fr/laradocs.php', "<?php\n\nreturn ['keep' => true];\n");
+
+    $this->artisan('laradocs:lang', ['locale' => 'fr'])->assertFailed();
+
+    $strings = require $dir . '/vendor/laradocs/fr/laradocs.php';
+    expect($strings)->toBe(['keep' => true]);
+});
+
+it('laradocs:lang overwrites with --force', function () {
+    $dir = sys_get_temp_dir() . '/laradocs-lang-' . bin2hex(random_bytes(4));
+    app()->useLangPath($dir);
+    $this->tempDocs[] = $dir;
+
+    File::ensureDirectoryExists($dir . '/vendor/laradocs/fr');
+    File::put($dir . '/vendor/laradocs/fr/laradocs.php', "<?php\n\nreturn ['keep' => true];\n");
+
+    $this->artisan('laradocs:lang', ['locale' => 'fr', '--force' => true])->assertSuccessful();
+
+    $strings = require $dir . '/vendor/laradocs/fr/laradocs.php';
+    expect($strings)->toHaveKey('nav');
+});
+
+it('laradocs:lang fails when no locale is given without --list', function () {
+    $this->artisan('laradocs:lang')->assertFailed();
+});
+
+it('laradocs:lang --list shows bundled and published columns', function () {
+    $dir = sys_get_temp_dir() . '/laradocs-lang-' . bin2hex(random_bytes(4));
+    app()->useLangPath($dir);
+    $this->tempDocs[] = $dir;
+
+    File::ensureDirectoryExists($dir . '/vendor/laradocs/en');
+
+    $exit = Artisan::call('laradocs:lang', ['--list' => true]);
+    $output = Artisan::output();
+
+    expect($exit)->toBe(0)
+        ->and($output)->toContain('locale')
+        ->and($output)->toContain('bundled')
+        ->and($output)->toContain('published')
+        ->and($output)->toContain('en');
+});
+
+it('laradocs:lang is registered and appears in the command list', function () {
+    expect(Artisan::all())->toHaveKey('laradocs:lang');
+});
+
+it('laradocs:lang --translate prompts for each string and writes translations to the file', function () {
+    $dir = sys_get_temp_dir() . '/laradocs-lang-' . bin2hex(random_bytes(4));
+    app()->useLangPath($dir);
+    $this->tempDocs[] = $dir;
+
+    File::ensureDirectoryExists($dir . '/vendor/laradocs/en');
+    File::put($dir . '/vendor/laradocs/en/laradocs.php', "<?php\n\nreturn ['nav' => ['home' => 'Home', 'next' => 'Next']];\n");
+
+    $this->artisan('laradocs:lang', ['locale' => 'fr', '--translate' => true])
+        ->expectsQuestion('nav.home', 'Accueil')
+        ->expectsQuestion('nav.next', 'Suivant')
+        ->assertSuccessful();
+
+    $strings = require $dir . '/vendor/laradocs/fr/laradocs.php';
+    expect($strings['nav']['home'])->toBe('Accueil')
+        ->and($strings['nav']['next'])->toBe('Suivant');
+});
+
+it('laradocs:lang --translate keeps the original when the user presses Enter', function () {
+    $dir = sys_get_temp_dir() . '/laradocs-lang-' . bin2hex(random_bytes(4));
+    app()->useLangPath($dir);
+    $this->tempDocs[] = $dir;
+
+    File::ensureDirectoryExists($dir . '/vendor/laradocs/en');
+    File::put($dir . '/vendor/laradocs/en/laradocs.php', "<?php\n\nreturn ['nav' => ['home' => 'Home']];\n");
+
+    // Answering with the default value simulates pressing Enter (skip)
+    $this->artisan('laradocs:lang', ['locale' => 'fr', '--translate' => true])
+        ->expectsQuestion('nav.home', 'Home')
+        ->assertSuccessful();
+
+    $strings = require $dir . '/vendor/laradocs/fr/laradocs.php';
+    expect($strings['nav']['home'])->toBe('Home');
+});
+
+it('laradocs:lang --translate outputs the file location', function () {
+    $dir = sys_get_temp_dir() . '/laradocs-lang-' . bin2hex(random_bytes(4));
+    app()->useLangPath($dir);
+    $this->tempDocs[] = $dir;
+
+    File::ensureDirectoryExists($dir . '/vendor/laradocs/en');
+    File::put($dir . '/vendor/laradocs/en/laradocs.php', "<?php\n\nreturn ['nav' => ['home' => 'Home']];\n");
+
+    $this->artisan('laradocs:lang', ['locale' => 'fr', '--translate' => true])
+        ->expectsQuestion('nav.home', 'Home')
+        ->expectsOutputToContain($dir . '/vendor/laradocs/fr/laradocs.php')
+        ->assertSuccessful();
+});
+
+it('laradocs:lang outputs the file location without --translate', function () {
+    $dir = sys_get_temp_dir() . '/laradocs-lang-' . bin2hex(random_bytes(4));
+    app()->useLangPath($dir);
+    $this->tempDocs[] = $dir;
+
+    $exit = Artisan::call('laradocs:lang', ['locale' => 'fr']);
+    $output = Artisan::output();
+
+    expect($exit)->toBe(0)
+        ->and($output)->toContain($dir . '/vendor/laradocs/fr/laradocs.php');
+});
