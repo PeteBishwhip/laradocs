@@ -172,15 +172,19 @@ return [
     | Routing
     |--------------------------------------------------------------------------
     |
-    | "register"   When false, the package skips registering its own routes so
-    |              the consumer app can wire the render action into a route it
-    |              owns (e.g. behind tenant-resolving middleware). The package's
-    |              controllers are still available; see DocumentRouter for the
-    |              canonical action references.
-    | "prefix"     The URL segment your docs live under (e.g. /docs).
-    | "domain"     Optionally serve docs on a dedicated subdomain.
-    | "middleware" Middleware applied to every docs route.
-    | "name"       Route name prefix, used by route('laradocs.show', ...).
+    | "register"          When false, the package skips registering its own routes so
+    |                     the consumer app can wire the render action into a route it
+    |                     owns (e.g. behind tenant-resolving middleware). The package's
+    |                     controllers are still available; see DocumentRouter for the
+    |                     canonical action references.
+    | "prefix"            The URL segment your docs live under (e.g. /docs).
+    | "domain"            Optionally serve docs on a dedicated subdomain.
+    | "middleware"        Middleware applied to every docs route (user-supplied stack,
+    |                     e.g. ['web', 'auth']).
+    | "package_middleware" Package-owned middleware merged after "middleware". You can
+    |                     reorder, replace, or extend this list to control exactly which
+    |                     built-in middleware run on docs routes.
+    | "name"              Route name prefix, used by route('laradocs.show', ...).
     |
     */
 
@@ -189,6 +193,11 @@ return [
         'prefix' => env('LARADOCS_ROUTE_PREFIX', 'docs'),
         'domain' => env('LARADOCS_ROUTE_DOMAIN'),
         'middleware' => ['web'],
+        'package_middleware' => [
+            \Laradocs\Http\Middleware\EnsureDocsEnabled::class,
+            \Laradocs\Http\Middleware\SetDocsLocale::class,
+            \Laradocs\Http\Middleware\SetDocsVersion::class,
+        ],
         'name' => env('LARADOCS_ROUTE_NAME', 'laradocs.'),
     ],
 

@@ -38,7 +38,8 @@ final class DocumentRouter
     public function register(Registrar $router, array $config): void
     {
         $baseMiddleware = (array) ($config['middleware'] ?? ['web']);
-        $middleware = array_merge($baseMiddleware, [EnsureDocsEnabled::class, SetDocsLocale::class, SetDocsVersion::class]);
+        $packageMiddleware = (array) ($config['package_middleware'] ?? [EnsureDocsEnabled::class, SetDocsLocale::class, SetDocsVersion::class]);
+        $middleware = array_merge($baseMiddleware, $packageMiddleware);
 
         $attributes = [
             'prefix' => $config['prefix'] ?? 'docs',
