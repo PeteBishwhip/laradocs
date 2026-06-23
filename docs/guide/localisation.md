@@ -28,11 +28,12 @@ conventions are recognised — use whichever you prefer (you can even mix them):
 | **Filename suffix**   | `guide/intro.md`          | `guide/intro.fr.md`             |
 | **Locale directory**  | `guide/intro.md`          | `fr/guide/intro.md`             |
 
-Both forms resolve to the **same slug** (`guide/intro`), so the public URL
-(`/docs/guide/intro`) is identical in every language — switching locale swaps
-the content under a stable address rather than sending the reader to a
-different path. Section index files work too: `_index.fr.md` or
-`fr/_index.md` translates the landing page.
+Both forms resolve to the **same slug** (`guide/intro`), so a page keeps one
+stable address across languages — the only thing that changes is the locale
+prefix the URL carries (`/docs/guide/intro` for the default language,
+`/docs/fr/guide/intro` for French; see [Locale in the URL path](#locale-in-the-url-path)).
+Section index files work too: `_index.fr.md` or `fr/_index.md` translates the
+landing page.
 
 ### Which locales are recognised
 
@@ -115,13 +116,36 @@ the first match:
 
 | Priority | Source | When it applies |
 | -------- | ------ | --------------- |
-| 1 | `?lang=<code>` query parameter | Visitor clicked the language selector or constructed the URL manually |
-| 2 | `laradocs_locale` cookie | Visitor made an explicit choice on a previous visit |
-| 3 | `Accept-Language` header | First-time visitor — browser declares a preferred language |
-| 4 | Configured default (`locale.default`) | Fallback when nothing else matches |
+| 1 | Locale URL segment (`/docs/fr/…`) | Visitor is on a locale-prefixed path (the default mechanism) |
+| 2 | `?lang=<code>` query parameter | Legacy link; 301-redirected to the path form when URL locales are on |
+| 3 | `laradocs_locale` cookie | Visitor made an explicit choice on a previous visit (cookie enabled) |
+| 4 | `Accept-Language` header | First-time visitor — browser declares a preferred language |
+| 5 | Configured default (`locale.default`) | Fallback when nothing else matches |
 
 Unknown locale codes are silently ignored at every step so neither a crafted
 URL nor an unusual browser header can force the UI into an untranslated locale.
+
+### Locale in the URL path
+
+By default the active locale lives in the **URL path** — `/docs/fr/guide/intro`
+rather than `/docs/guide/intro?lang=fr`. This gives each language a canonical,
+shareable, crawlable URL, lets `<link rel="alternate" hreflang>` and per-locale
+canonicals work correctly for SEO, and keeps full-page/CDN caching clean (no
+`Vary: Cookie`).
+
+- The **default** locale is served **unprefixed** (`/docs/guide/intro`), so only
+  non-default languages carry a segment. A request for the default locale's
+  prefix (`/docs/en/guide`) 301-redirects to the clean canonical.
+- A configured version segment composes after the locale:
+  `/docs/{locale}/{version}/{slug}`, e.g. `/docs/fr/v2/guide`.
+- A legacy `?lang=<code>` query 301-redirects to the equivalent path form, so old
+  bookmarks and links keep working.
+- An unknown locale code is treated as an ordinary slug (and 404s if no such page
+  exists), never as a language.
+
+Set `locale.url` to `false` (or `LARADOCS_LOCALE_URL=false`) to fall back to the
+legacy `?lang=` query / cookie form described below. URL locales only take effect
+once two or more locales are available — a single-locale site stays unprefixed.
 
 ### Cookie persistence
 
@@ -182,21 +206,25 @@ selecting a language never writes the cookie.
 > Until that ships, use your application's own consent library with Option B
 > above to gate the cookie on an affirmative visitor choice.
 
-### Navigation without a cookie
+### Navigation across pages
 
-When cookie persistence is off (the default), every internal link Laradocs
-renders — sidebar, breadcrumbs, pagination — automatically carries `?lang=` in
-its query string whenever the active locale differs from the default. This means
-a visitor who arrives at `/docs/guide/intro?lang=fr` can follow every link on
-the page and stay in French without needing a cookie at all:
+With URL locales on (the default), every internal link Laradocs renders —
+sidebar, breadcrumbs, pagination, the command palette, the sitemap — carries the
+active locale's path segment, so a visitor who arrives at `/docs/fr/guide/intro`
+stays in French as they navigate, no cookie required:
 
 ```
-/docs/guide/intro?lang=fr   →  prev/next/sidebar all link with ?lang=fr
+/docs/fr/guide/intro   →  prev/next/sidebar all link under /docs/fr/…
 ```
 
-The `?lang=` parameter is omitted from links when the visitor is on the default
-locale (no visual noise for the majority of readers), and dropped entirely from
-all links the moment `locale.cookie` is enabled (the cookie takes over).
+The segment is omitted for the default locale (clean URLs for the majority of
+readers). The language selector and the `hreflang` alternates point at the same
+page in each locale, so switching language keeps the visitor on the same page.
+
+When URL locales are disabled (`locale.url = false`) and cookie persistence is
+also off, links fall back to carrying `?lang=` in their query string whenever the
+active locale differs from the default; that parameter is dropped entirely once
+`locale.cookie` is enabled (the cookie takes over).
 
 ### Browser language detection
 

@@ -51,10 +51,21 @@ return [
     | "selector"  Show the language selector in the header. It is hidden
     |             automatically when fewer than two locales are available.
     |
-    | A visitor can switch language with a `?lang=<code>` query parameter. If
-    | the visitor has made no explicit choice, the browser's Accept-Language
-    | header is consulted (when detect_browser is true) before falling back to
-    | the default locale. See the "Localisation" guide.
+    | "url"       Put the locale in the URL path instead of a query parameter:
+    |             /docs/fr/guide rather than /docs/guide?lang=fr. The default
+    |             locale is served unprefixed (/docs/guide), so only non-default
+    |             languages carry a segment, and every internal link, canonical
+    |             and hreflang tag is generated per locale for clean SEO and
+    |             URL-keyed caching. A legacy `?lang=<code>` is 301-redirected to
+    |             the path form for back-compat. Enabled by default; only takes
+    |             effect once two or more locales are available. Set
+    |             LARADOCS_LOCALE_URL=false to fall back to the query/cookie form.
+    |
+    | A visitor can switch language with a `?lang=<code>` query parameter (which,
+    | when "url" is on, redirects to the path form). If the visitor has made no
+    | explicit choice, the browser's Accept-Language header is consulted (when
+    | detect_browser is true) before falling back to the default locale. See the
+    | "Localisation" guide.
     |
     | "cookie"          Persist the visitor's language choice in a one-year
     |                   `laradocs_locale` cookie so it survives navigation
@@ -78,6 +89,7 @@ return [
             ? (array) json_decode((string) env('LARADOCS_LOCALE_AVAILABLE'), true)
             : null,
         'selector' => (bool) env('LARADOCS_LOCALE_SELECTOR', true),
+        'url' => (bool) env('LARADOCS_LOCALE_URL', true),
         'cookie' => (bool) env('LARADOCS_LOCALE_COOKIE', false),
         'detect_browser' => (bool) env('LARADOCS_DETECT_BROWSER', true),
     ],

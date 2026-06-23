@@ -46,6 +46,7 @@
             <link rel="icon" href="{{ $brand['favicon'] }}">
         @endif
     @endif
+    @include('laradocs::partials.hreflang')
     <script>
         (function () {
             try {
@@ -118,9 +119,20 @@
 
     {{-- Variant: command palette dialog. --}}
     @php $searchEnabled = (bool) config('laradocs.ui.search.enabled', true); @endphp
+    @php
+        // Scope the search endpoint to the active locale: a non-default language
+        // segment can't ride a fixed _laradocs/search route, so the locale is
+        // forwarded as ?lang= (which SetDocsLocale honours on API routes without
+        // redirecting) to keep results and their URLs within the language.
+        $searchUrl = DocumentUrl::search();
+        $searchLocale = \Laradocs\Support\Locale::segment();
+        if ($searchLocale !== null) {
+            $searchUrl .= '?lang=' . $searchLocale;
+        }
+    @endphp
     <div class="laradocs-palette" data-laradocs-palette
          @if($searchEnabled)
-             data-laradocs-search-url="{{ DocumentUrl::search() }}"
+             data-laradocs-search-url="{{ $searchUrl }}"
              data-laradocs-search-min="{{ (int) config('laradocs.search.min_chars', 2) }}"
          @endif
          hidden role="dialog" aria-label="{{ __('laradocs::laradocs.search.label') }}" aria-modal="true">

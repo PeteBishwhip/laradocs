@@ -8,6 +8,7 @@ use Laradocs\Documents\Document;
 use Laradocs\Documents\DocumentTree;
 use Laradocs\Documents\TreeNode;
 use Laradocs\Support\Config;
+use Laradocs\Support\Locale;
 use Laradocs\Support\Version;
 
 /**
@@ -86,7 +87,8 @@ final class SitemapBuilder
         $priority = $this->priority($document, $depth);
 
         $xml = '  <url>' . "\n";
-        $xml .= '    <loc>' . htmlspecialchars($loc, ENT_XML1 | ENT_QUOTES, 'UTF-8') . '</loc>' . "\n";
+        $xml .= '    <loc>' . $this->escape($loc) . '</loc>' . "\n";
+        $xml .= $this->alternates($document->slug);
 
         if ($lastmod !== null) {
             $xml .= '    <lastmod>' . $lastmod . '</lastmod>' . "\n";
@@ -96,6 +98,37 @@ final class SitemapBuilder
         $xml .= '  </url>' . "\n";
 
         return $xml;
+    }
+
+    /**
+     * Emit an `xhtml:link rel="alternate"` for every available locale (plus an
+     * `x-default` pointing at the unprefixed default) so crawlers discover and
+     * correctly attribute each language. Empty when URL-path locales are off.
+     */
+    private function alternates(string $slug): string
+    {
+        if (! Locale::urlEnabled()) {
+            return '';
+        }
+
+        $xml = '';
+
+        foreach (array_keys(Locale::available()) as $code) {
+            $xml .= $this->alternate($code, DocumentUrl::localized($slug, $code));
+        }
+
+        return $xml . $this->alternate('x-default', DocumentUrl::localized($slug, Locale::fallback()));
+    }
+
+    private function alternate(string $hreflang, string $href): string
+    {
+        return '    <xhtml:link rel="alternate" hreflang="' . $this->escape($hreflang)
+            . '" href="' . $this->escape($href) . '"/>' . "\n";
+    }
+
+    private function escape(string $value): string
+    {
+        return htmlspecialchars($value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
     }
 
     private function lastmod(Document $document): ?string
@@ -138,8 +171,12 @@ final class SitemapBuilder
      */
     private function render(array $urls): string
     {
+        // The xhtml namespace is only declared when per-locale alternates are
+        // actually emitted, so a single-locale sitemap stays free of clutter.
+        $xhtml = Locale::urlEnabled() ? ' xmlns:xhtml="http://www.w3.org/1999/xhtml"' : '';
+
         $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-        $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+        $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"' . $xhtml . '>' . "\n";
         $xml .= implode('', $urls);
         $xml .= '</urlset>' . "\n";
 

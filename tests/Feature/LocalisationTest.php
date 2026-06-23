@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\ServiceProvider;
+use Laradocs\Http\Middleware\SetDocsLocale;
 use Laradocs\Laradocs;
 use Laradocs\Support\Locale;
 
@@ -144,6 +145,37 @@ it('honours a valid ?lang query parameter', function () {
     expect(Locale::determine($request))->toBe('fr');
 });
 
+it('splits a path into locale and remainder, leaving it untouched when URL locales are disabled', function () {
+    config()->set('laradocs.locale.available', ['en' => 'English', 'fr' => 'Français']);
+
+    // With URL locales on, a leading available-locale segment is peeled off.
+    config()->set('laradocs.locale.url', true);
+    expect(Locale::split('fr/guide/intro'))->toBe(['fr', 'guide/intro']);
+
+    // With URL locales off, split is a no-op — the path is returned verbatim so
+    // a real slug that happens to look like a locale keeps working.
+    config()->set('laradocs.locale.url', false);
+    expect(Locale::split('fr/guide/intro'))->toBe([null, 'fr/guide/intro']);
+});
+
+it('falls through to the query/cookie/browser chain when the request has no bound route', function () {
+    config()->set('laradocs.locale.available', ['en' => 'English', 'fr' => 'Français']);
+    config()->set('laradocs.locale.url', true);
+
+    // Invoked directly with a route-less request (as a defensive guard for any
+    // catch-all that reaches the middleware before route binding): there is no
+    // path to strip, so resolution falls back to Locale::determine() — here the
+    // ?lang= query selects French.
+    $request = Request::create('/docs?lang=fr');
+
+    $response = (new SetDocsLocale)->handle(
+        $request,
+        fn () => response((string) app()->getLocale()),
+    );
+
+    expect($response->getContent())->toBe('fr');
+});
+
 it('ignores an unknown ?lang query parameter', function () {
     config()->set('laradocs.locale.available', ['en' => 'English']);
     config()->set('laradocs.locale.default', 'en');
@@ -205,10 +237,12 @@ it('applies the requested locale to the rendered docs page', function () {
 
         config()->set('laradocs.locale.available', ['en' => 'English', 'fr' => 'Français']);
 
-        // The header search trigger renders on every page. Without a choice it
-        // stays English; ?lang=fr resolves through the middleware to French.
+        // The header search trigger renders on every page. Without a prefix it
+        // stays English; the /fr/ path segment resolves through the middleware
+        // to French, and the legacy ?lang=fr 301-redirects to that path form.
         $this->get('/docs/guide')->assertOk()->assertSee('Search the docs...');
-        $this->get('/docs/guide?lang=fr')->assertOk()->assertSee('Rechercher dans la doc...');
+        $this->get('/docs/fr/guide')->assertOk()->assertSee('Rechercher dans la doc...');
+        $this->get('/docs/guide?lang=fr')->assertRedirect('/docs/fr/guide');
     } finally {
         File::deleteDirectory(lang_path('vendor/laradocs/fr'));
     }
@@ -348,10 +382,11 @@ it('sets the laradocs_locale cookie in the response when locale.cookie is enable
     config()->set('laradocs.locale.available', ['en' => 'English', 'fr' => 'Français']);
     config()->set('laradocs.locale.cookie', true);
 
-    $response = $this->get('/docs?lang=fr')->assertOk();
+    // The legacy ?lang= now 301s to the path form, and the persistence cookie
+    // rides along on the redirect so the choice survives even for clients that
+    // strip the query before following.
+    $response = $this->get('/docs?lang=fr')->assertRedirect('/docs/fr');
 
-    // The middleware must set the persistence cookie so follow-up requests
-    // don't need to keep appending ?lang=fr.
     $response->assertCookie('laradocs_locale', 'fr');
 });
 
@@ -365,7 +400,8 @@ it('does not set a cookie at all when locale.cookie is disabled (default)', func
 
     // Even an explicit ?lang= choice must not write a cookie when the flag is
     // off, so EU deployments don't need a consent banner just for the switcher.
-    $this->get('/docs?lang=fr')->assertOk()->assertCookieMissing('laradocs_locale');
+    // The query still 301s to the path form; it simply carries no cookie.
+    $this->get('/docs?lang=fr')->assertRedirect('/docs/fr')->assertCookieMissing('laradocs_locale');
 });
 
 it('uses the cookie to serve the chosen language on a follow-up request without ?lang= when locale.cookie is enabled', function () {
@@ -587,7 +623,7 @@ it('restores the application locale after a docs request so workers do not leak 
 
         // The page renders in French, but the worker's global locale is reset
         // afterwards so the next request starts from a clean slate.
-        $this->get('/docs?lang=fr')->assertOk()->assertSee('Rechercher dans la doc...');
+        $this->get('/docs/fr')->assertOk()->assertSee('Rechercher dans la doc...');
 
         expect(app()->getLocale())->toBe('en');
     } finally {

@@ -1,5 +1,8 @@
-@php($languages = \Laradocs\Support\Locale::available())
+@use('Laradocs\Routing\DocumentUrl')
+@use('Laradocs\Support\Locale')
+@php($languages = Locale::available())
 @php($current = app()->getLocale())
+@php($urlLocales = Locale::urlEnabled())
 
 {{-- Only render once there is a genuine choice to make. --}}
 @if((bool) config('laradocs.locale.selector', true) && count($languages) > 1)
@@ -16,7 +19,7 @@
                 <li role="none">
                     <a role="menuitem"
                        hreflang="{{ $code }}"
-                       href="{{ request()->fullUrlWithQuery(['lang' => $code]) }}"
+                       href="{{ $urlLocales ? DocumentUrl::localized($activeSlug ?? '', $code) : request()->fullUrlWithQuery(['lang' => $code]) }}"
                        @if($code === $current) aria-current="true" class="is-active" @endif>
                         {{ $label }}
                     </a>
