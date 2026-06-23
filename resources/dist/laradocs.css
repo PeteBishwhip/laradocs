@@ -1323,3 +1323,137 @@ body.laradocs {
   }
   html { scroll-behavior: auto; }
 }
+
+/* ─────────────────────── print ─────────────────────── */
+/*
+ * Override hook: add @media print rules in your own stylesheet (published via
+ * `php artisan vendor:publish --tag=laradocs-assets`) to fine-tune print
+ * output for your project, e.g. show the sidebar nav or tweak page margins.
+ */
+@media print {
+  /* Force light-mode tokens so output is always ink-safe, regardless of the
+     active theme. We match every selector used by the dark-mode blocks so
+     source-order wins over specificity for CSS custom properties. */
+  :root,
+  [data-theme="dark"],
+  :root:not([data-theme="light"]),
+  :root[data-theme="auto"] {
+    --dc-bg:          #ffffff;
+    --dc-bg-elev:     #f5f5f5;
+    --dc-paper:       #ffffff;
+    --dc-fg:          #0a0a0a;
+    --dc-muted:       #525252;
+    --dc-subtle:      #737373;
+    --dc-rule:        rgba(10, 10, 10, .2);
+    --dc-rule-strong: rgba(10, 10, 10, .3);
+    --dc-code-bg:     #f5f5f5;
+    --dc-code-fg:     #0a0a0a;
+    --dc-shadow:      none;
+    --dc-shadow-pop:  none;
+    /* Zero out sticky offsets — chrome is hidden so these no longer apply. */
+    --dc-header-h:    0px;
+    --dc-tabs-h:      0px;
+  }
+
+  /* ── Hide non-content chrome ────────────────────────────────── */
+  .laradocs-progress,
+  .laradocs-banner,
+  .laradocs-version-outdated,
+  .laradocs-header,
+  .laradocs-tabs,
+  .laradocs-sidebar,
+  .laradocs-backdrop,
+  .laradocs-toc,
+  .laradocs-toc-mobile,
+  .laradocs-palette,
+  .laradocs-anchor,
+  .laradocs-pager,
+  .laradocs-page-meta,
+  .laradocs-footer,
+  .laradocs-code-copy,
+  [data-laradocs-theme-toggle],
+  [data-laradocs-version] { display: none !important; }
+
+  /* ── Layout: content fills the full page width ──────────────── */
+  .laradocs-shell   { display: block; max-width: 100%; }
+  .laradocs-main    { display: block; }
+  .laradocs-content { max-width: 100%; width: 100%; padding: 0; }
+
+  /* ── Links: append URL so printed copies stay useful ────────── */
+  .laradocs-prose a[href^="http"]::after,
+  .laradocs-prose a[href^="https"]::after {
+    content: " (" attr(href) ")";
+    font-size: .8em;
+    color: var(--dc-muted);
+    word-break: break-all;
+  }
+  /* Don't annotate links that are just hash fragments on the same page. */
+  .laradocs-prose a[href^="#"]::after { content: none; }
+
+  /* ── Page-break control for headings ────────────────────────── */
+  .laradocs-prose h1,
+  .laradocs-prose h2,
+  .laradocs-prose h3,
+  .laradocs-prose h4 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  /* ── Keep compound blocks together ─────────────────────────── */
+  .laradocs-code,
+  .laradocs-callout,
+  .laradocs-mermaid,
+  .laradocs-katex-block,
+  .laradocs-prose table,
+  .laradocs-prose figure,
+  .laradocs-prose blockquote {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Avoid a lonely heading at the foot of a page before a block element. */
+  .laradocs-prose h2 + .laradocs-code,
+  .laradocs-prose h3 + .laradocs-code,
+  .laradocs-prose h2 + .laradocs-callout,
+  .laradocs-prose h3 + .laradocs-callout {
+    break-before: avoid;
+    page-break-before: avoid;
+  }
+
+  /* Paragraph orphan/widow control. */
+  .laradocs-prose p { orphans: 3; widows: 3; }
+
+  /* ── Code blocks ────────────────────────────────────────────── */
+  .laradocs-code { background: #f5f5f5 !important; border-color: #d4d4d4; }
+  .laradocs-code-header { background: #ebebeb !important; border-bottom-color: #d4d4d4; }
+  .laradocs-code pre code { color: #0a0a0a !important; }
+  .laradocs-prose code { background: #f0f0f0; border-color: #d4d4d4; }
+
+  /* ── Callouts: keep the accent left-border; lighten the fill ── */
+  .laradocs-callout {
+    background: #f9f9f9 !important;
+    border-top-color: #d4d4d4;
+    border-right-color: #d4d4d4;
+    border-bottom-color: #d4d4d4;
+  }
+
+  /* ── Tables: reinforce borders that printers may suppress ───── */
+  .laradocs-prose table { border-color: #d4d4d4 !important; }
+  .laradocs-prose th { background: #f5f5f5 !important; border-color: #d4d4d4 !important; }
+  .laradocs-prose td { border-color: #d4d4d4 !important; }
+
+  /* ── Images: constrain width; undo zoom overlay if active ───── */
+  .laradocs-prose img { max-width: 100% !important; height: auto !important; }
+  .laradocs-prose img.is-zoomed {
+    position: static !important;
+    inset: auto !important;
+    width: auto !important;
+    height: auto !important;
+    max-width: 100% !important;
+    object-fit: initial !important;
+    background: none !important;
+    z-index: auto !important;
+    cursor: default !important;
+    box-shadow: none !important;
+  }
+}
