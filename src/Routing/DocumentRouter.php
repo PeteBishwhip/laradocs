@@ -30,6 +30,19 @@ use Laradocs\Support\Config;
 final class DocumentRouter
 {
     /**
+     * Package-owned middleware applied to every docs route when the
+     * `route.package_middleware` config key is absent. Mirrors the default
+     * shipped in config/laradocs.php.
+     *
+     * @var list<class-string>
+     */
+    private const DEFAULT_PACKAGE_MIDDLEWARE = [
+        EnsureDocsEnabled::class,
+        SetDocsLocale::class,
+        SetDocsVersion::class,
+    ];
+
+    /**
      * Register the docs index and catch-all show routes using the package's
      * configured prefix, domain, middleware and route-name prefix.
      *
@@ -38,7 +51,8 @@ final class DocumentRouter
     public function register(Registrar $router, array $config): void
     {
         $baseMiddleware = (array) ($config['middleware'] ?? ['web']);
-        $middleware = array_merge($baseMiddleware, [EnsureDocsEnabled::class, SetDocsLocale::class, SetDocsVersion::class]);
+        $packageMiddleware = (array) ($config['package_middleware'] ?? self::DEFAULT_PACKAGE_MIDDLEWARE);
+        $middleware = array_merge($baseMiddleware, $packageMiddleware);
 
         $attributes = [
             'prefix' => $config['prefix'] ?? 'docs',

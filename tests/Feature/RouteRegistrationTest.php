@@ -7,7 +7,11 @@ use Illuminate\Events\Dispatcher;
 use Illuminate\Routing\Route;
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
+use Laradocs\Http\Middleware\EnsureDocsEnabled;
+use Laradocs\Http\Middleware\SetDocsLocale;
+use Laradocs\Http\Middleware\SetDocsVersion;
 use Laradocs\LaradocsServiceProvider;
+use Laradocs\Routing\DocumentRouter;
 
 it('defaults laradocs.route.register to true and registers the docs routes', function () {
     expect(config('laradocs.route.register'))->toBeTrue();
@@ -51,6 +55,67 @@ it('still registers routes when laradocs.route.register is explicitly true', fun
         ->all();
 
     expect($names)->toContain('laradocs.index', 'laradocs.show');
+});
+
+it('docs index route carries the default package middleware', function () {
+    $route = collect(app(Registrar::class)->getRoutes())
+        ->first(fn (Route $route): bool => $route->getName() === 'laradocs.index');
+
+    expect($route)->not->toBeNull();
+
+    $middleware = $route->gatherMiddleware();
+
+    expect($middleware)
+        ->toContain(EnsureDocsEnabled::class)
+        ->toContain(SetDocsLocale::class)
+        ->toContain(SetDocsVersion::class);
+});
+
+it('uses a custom package_middleware list when set in config', function () {
+    $router = new Router(new Dispatcher);
+
+    (new DocumentRouter)->register($router, [
+        'middleware' => ['web'],
+        'package_middleware' => ['App\\Http\\Middleware\\Custom'],
+        'prefix' => 'docs',
+        'name' => 'laradocs.',
+    ]);
+
+    $route = collect($router->getRoutes())
+        ->first(fn (Route $route): bool => $route->getName() === 'laradocs.index');
+
+    expect($route)->not->toBeNull();
+
+    $middleware = $route->gatherMiddleware();
+
+    expect($middleware)
+        ->toContain('web')
+        ->toContain('App\\Http\\Middleware\\Custom')
+        ->not->toContain(EnsureDocsEnabled::class)
+        ->not->toContain(SetDocsLocale::class)
+        ->not->toContain(SetDocsVersion::class);
+});
+
+it('falls back to the default package middleware when package_middleware key is absent', function () {
+    $router = new Router(new Dispatcher);
+
+    (new DocumentRouter)->register($router, [
+        'middleware' => ['web'],
+        'prefix' => 'docs',
+        'name' => 'laradocs.',
+    ]);
+
+    $route = collect($router->getRoutes())
+        ->first(fn (Route $route): bool => $route->getName() === 'laradocs.index');
+
+    expect($route)->not->toBeNull();
+
+    $middleware = $route->gatherMiddleware();
+
+    expect($middleware)
+        ->toContain(EnsureDocsEnabled::class)
+        ->toContain(SetDocsLocale::class)
+        ->toContain(SetDocsVersion::class);
 });
 
 it('hooks laradocs:cache and laradocs:clear into optimize by default', function () {

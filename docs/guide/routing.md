@@ -87,6 +87,53 @@ them.
 Any middleware alias or FQCN works. Use this to gate internal docs
 behind an authenticated guard.
 
+### Package middleware
+
+The package appends its own middleware after your `middleware` list. By
+default that stack is:
+
+```php
+'package_middleware' => [
+    \Laradocs\Http\Middleware\EnsureDocsEnabled::class,
+    \Laradocs\Http\Middleware\SetDocsLocale::class,
+    \Laradocs\Http\Middleware\SetDocsVersion::class,
+],
+```
+
+| Middleware | Purpose |
+|---|---|
+| `EnsureDocsEnabled` | Returns `404` when `laradocs.enabled` is `false`. |
+| `SetDocsLocale` | Resolves the active locale from the URL, cookie, or `Accept-Language` header. |
+| `SetDocsVersion` | Resolves the active version and, when `unversioned` is `redirect`, redirects bare prefix requests. |
+
+You can override `package_middleware` to reorder, replace, or extend the
+built-in stack. For example, to drop locale resolution on a site that only
+has one language:
+
+```php
+'package_middleware' => [
+    \Laradocs\Http\Middleware\EnsureDocsEnabled::class,
+    \Laradocs\Http\Middleware\SetDocsVersion::class,
+],
+```
+
+Or to insert a custom middleware between the package ones:
+
+```php
+'package_middleware' => [
+    \Laradocs\Http\Middleware\EnsureDocsEnabled::class,
+    \App\Http\Middleware\SetDocsTheme::class,
+    \Laradocs\Http\Middleware\SetDocsLocale::class,
+    \Laradocs\Http\Middleware\SetDocsVersion::class,
+],
+```
+
+> [!WARNING]
+> Removing `EnsureDocsEnabled` means the `laradocs.enabled = false` switch no
+> longer gates the docs routes. Removing `SetDocsLocale` or `SetDocsVersion`
+> disables those features globally rather than just hiding the UI controls — only
+> do so if you know you don't need them.
+
 ## Disabling docs
 
 ```dotenv
