@@ -337,3 +337,123 @@ the relevant key. The keys are grouped by area — `nav`, `search`, `toc`,
 ```
 
 To reword the link label, publish the language files and update `page.edit`.
+
+## Custom macros
+
+When you register your own macros and need their output to vary by locale, use
+Laravel's `__()` helper the same way you would anywhere in the application. The
+key question is which namespace to use — and that depends on how you want to
+manage the strings.
+
+### Using your application's own lang files
+
+The simplest option is to add strings to your own application lang files and
+call `__()` without a package namespace prefix. This is the recommended
+starting point:
+
+```php
+// lang/en/docs.php  (create per locale — lang/fr/docs.php, etc.)
+return [
+    'cta' => [
+        'buy_now' => 'Buy now',
+    ],
+];
+```
+
+```php
+// App\Providers\AppServiceProvider::boot()
+use Laradocs\Facades\Laradocs;
+
+Laradocs::macro('cta', fn (array $arguments) => sprintf(
+    '<a class="cta" href="%s">%s</a>',
+    e($arguments['href'] ?? '#'),
+    e($arguments['label'] ?? __('docs.cta.buy_now')),
+));
+```
+
+For a Blade-view macro the same `__()` call works inside the template:
+
+```blade
+{{-- resources/views/macros/cta.blade.php --}}
+<a class="cta" href="{{ \Laradocs\Support\Url::safe($href ?? '#') }}">
+    {{ $label ?? __('docs.cta.buy_now') }}
+</a>
+```
+
+Laradocs sets the application locale before rendering each page, so `__()` will
+always resolve to the locale the reader has selected.
+
+### Registering your own translation namespace
+
+If you are distributing your macros as a package, or just prefer to keep the
+strings isolated from the rest of the application, register your own translation
+namespace in a service provider:
+
+```php
+// App\Providers\AppServiceProvider::boot()
+$this->loadTranslationsFrom(base_path('lang'), 'my-docs');
+```
+
+Then place your lang files under that path (e.g. `lang/en/macros.php`,
+`lang/fr/macros.php`) and use the `namespace::file.key` form in `__()`:
+
+```php
+Laradocs::macro('cta', fn (array $arguments) => sprintf(
+    '<a class="cta" href="%s">%s</a>',
+    e($arguments['href'] ?? '#'),
+    e($arguments['label'] ?? __('my-docs::macros.cta.buy_now')),
+));
+```
+
+> Do not add custom keys directly to `lang/vendor/laradocs/*/laradocs.php`.
+> Those files are owned by the package — running `vendor:publish --force`
+> will overwrite any additions you make there.
+
+### Multi-locale macro content
+
+For macros whose output varies more substantially across locales — for instance
+when the content itself, not just a label, differs — prefer one of these patterns:
+
+**Conditional inside the macro handler**
+
+```php
+Laradocs::macro('legal-notice', function (array $arguments): string {
+    $locale = app()->getLocale();
+
+    return view("macros.legal-notice.{$locale}")->render();
+});
+```
+
+Place a view at `resources/views/macros/legal-notice/en.blade.php`,
+`resources/views/macros/legal-notice/fr.blade.php`, and so on. Unknown locales
+will throw a `ViewNotFoundException`, so either provide a fallback or guard with
+`view()->exists(...)`:
+
+```php
+Laradocs::macro('legal-notice', function (): string {
+    $locale = app()->getLocale();
+    $view = "macros.legal-notice.{$locale}";
+
+    return view(view()->exists($view) ? $view : 'macros.legal-notice.en')->render();
+});
+```
+
+**Per-locale macro registration**
+
+For macros that are simply different views per language, you can register a
+separate macro name for each locale and call the appropriate one from your
+markdown:
+
+```markdown
+@docs('legal-notice-fr')
+```
+
+This can become verbose, so the per-view-file pattern above is usually cleaner.
+
+**Translated markdown pages**
+
+The most idiomatic approach for long-form locale-specific content is to put
+the content in the markdown page itself and use Laradocs' page-translation
+mechanism — add a `page.fr.md` alongside `page.md` and translate the call site
+directly rather than going through a macro. Reserve custom macros for
+structural, reusable components and keep locale-specific prose in the page files.
