@@ -1,7 +1,6 @@
 ---
 title: Laravel Octane
 description: Running Laradocs on a long-lived worker process with Laravel Octane or RoadRunner.
-order: 90
 ---
 
 # Laravel Octane

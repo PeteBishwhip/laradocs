@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Laradocs\Facades\Laradocs;
+use Illuminate\Support\Facades\Event;
 use Laradocs\Macros\MacroRegistry;
 use Laradocs\Seo\SeoFactory;
 use Laradocs\Variables\VariableRegistry;
@@ -108,5 +108,30 @@ it('resetForNextRequest() clears SeoFactory state to the default (octane-safe)',
     app(SeoFactory::class)->resetForNextRequest();
 
     // The singleton is now clean regardless of what the previous request set.
+    expect(app(SeoFactory::class)->xCard())->toBe('summary_large_image');
+});
+
+it('the registered Octane RequestReceived listener flushes SeoFactory state', function () {
+    $this->makeDocs([
+        'custom-card.md' => implode("\n", [
+            '---',
+            'seo:',
+            '  x_card: summary',
+            '---',
+            '# Custom Card',
+            '',
+            'Opening paragraph.',
+        ]),
+    ]);
+
+    // Put the singleton into a non-default state.
+    $this->get('/docs/custom-card')->assertOk();
+    expect(app(SeoFactory::class)->xCard())->toBe('summary');
+
+    // The provider registers a listener keyed by Octane's event class name as
+    // a string; dispatching that event name drives the same flush Octane would
+    // perform at the start of the next request — without Octane installed.
+    Event::dispatch('Laravel\Octane\Events\RequestReceived');
+
     expect(app(SeoFactory::class)->xCard())->toBe('summary_large_image');
 });
