@@ -59,6 +59,16 @@ return [
     'version' => [
         'label' => 'Versione',
         'select' => 'Seleziona la versione',
+        'badge' => [
+            'latest' => 'più recente',
+            'deprecated' => 'obsoleta',
+            'pre_release' => 'anteprima',
+        ],
+        'outdated' => [
+            'viewing' => 'Stai visualizzando :version.',
+            'link' => 'Vai alla versione attuale.',
+            'dismiss' => 'Chiudi',
+        ],
     ],
 
     'page' => [
