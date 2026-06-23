@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use Laradocs\Http\Middleware\EnsureDocsEnabled;
+use Laradocs\Http\Middleware\SetDocsLocale;
+use Laradocs\Http\Middleware\SetDocsVersion;
+
 return [
 
     /*
@@ -194,9 +198,9 @@ return [
         'domain' => env('LARADOCS_ROUTE_DOMAIN'),
         'middleware' => ['web'],
         'package_middleware' => [
-            \Laradocs\Http\Middleware\EnsureDocsEnabled::class,
-            \Laradocs\Http\Middleware\SetDocsLocale::class,
-            \Laradocs\Http\Middleware\SetDocsVersion::class,
+            EnsureDocsEnabled::class,
+            SetDocsLocale::class,
+            SetDocsVersion::class,
         ],
         'name' => env('LARADOCS_ROUTE_NAME', 'laradocs.'),
     ],
