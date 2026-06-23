@@ -49,6 +49,12 @@ final class Laradocs
     /**
      * Register variables for interpolation, as an array or a closure.
      *
+     * **Boot-time only** for eager arrays — call from a service provider's
+     * `boot()` method. Eager values mutate a singleton and persist into every
+     * subsequent request on long-lived workers (Octane / RoadRunner).
+     * Closure providers are re-invoked per read and may safely reference
+     * per-request state such as the authenticated user or active locale.
+     *
      * @param  array<string, mixed>|Closure  $values
      */
     public function variables(array|Closure $values): self
@@ -60,6 +66,12 @@ final class Laradocs
 
     /**
      * Share a single named value with docs content and views.
+     *
+     * **Boot-time only.** Mutations to the underlying {@see VariableRegistry}
+     * singleton persist into every subsequent request on long-lived workers
+     * (Octane / RoadRunner). Call this exclusively from a service provider's
+     * `boot()` method; use a closure via {@see variables()} for per-request
+     * values instead.
      */
     public function share(string $key, mixed $value): self
     {
@@ -115,6 +127,11 @@ final class Laradocs
 
     /**
      * Register a reusable macro (closure or Blade view name).
+     *
+     * **Boot-time only.** Mutations to the underlying {@see MacroRegistry}
+     * singleton persist into every subsequent request on long-lived workers
+     * (Octane / RoadRunner). Call this exclusively from a service provider's
+     * `boot()` method.
      */
     public function macro(string $name, Closure|string $handler): self
     {

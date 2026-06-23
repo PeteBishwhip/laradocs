@@ -102,6 +102,7 @@ final class LaradocsServiceProvider extends ServiceProvider
         $this->loadTranslationsFrom(self::LANG, 'laradocs');
         $this->registerRoutes();
         $this->bootRateLimiting();
+        $this->bootOctaneSafety();
         $this->registerDefaultMacros();
 
         if ($this->app->runningInConsole()) {
@@ -242,6 +243,30 @@ final class LaradocsServiceProvider extends ServiceProvider
     private function registerRateLimiting(): void
     {
         $this->app->singleton(RateLimiterConfig::class);
+    }
+
+    /**
+     * On long-lived workers (Octane / RoadRunner) singletons survive across
+     * requests. SeoFactory carries $lastXCard as per-request scratch state;
+     * reset it at the start of every new request so a stale value from a
+     * previous render is never visible to the next one.
+     *
+     * The listener is only registered when Laravel Octane is installed, so the
+     * package works normally in classic FPM/Swoole environments without it.
+     */
+    private function bootOctaneSafety(): void
+    {
+        if (! class_exists(\Laravel\Octane\Events\RequestReceived::class)) {
+            return;
+        }
+
+        /** @var \Illuminate\Contracts\Events\Dispatcher $events */
+        $events = $this->app->make('events');
+
+        $events->listen(
+            \Laravel\Octane\Events\RequestReceived::class,
+            fn () => $this->app->make(SeoFactory::class)->resetForNextRequest(),
+        );
     }
 
     private function bootRateLimiting(): void

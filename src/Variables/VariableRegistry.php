@@ -34,6 +34,13 @@ final class VariableRegistry
 
     /**
      * Set a single value (scalar, array, or closure).
+     *
+     * **Boot-time only.** This mutates a singleton; call it exclusively from a
+     * service provider's `boot()` method. Calling it during request processing
+     * (controllers, middleware, jobs) causes the mutation to persist into
+     * subsequent requests on long-lived workers such as Laravel Octane.
+     * Use a deferred closure via {@see register()} when you need per-request
+     * values evaluated at read time instead.
      */
     public function set(string $key, mixed $value): self
     {
@@ -44,6 +51,12 @@ final class VariableRegistry
 
     /**
      * Register more variables, either as an array or a closure returning one.
+     *
+     * **Boot-time only.** Eager arrays mutate the singleton and persist across
+     * requests on long-lived workers — register them from a service provider's
+     * `boot()` method only. Closure providers are re-invoked on every
+     * {@see all()} call and may therefore safely read per-request state (the
+     * active locale, authenticated user, etc.).
      *
      * @param  array<string, mixed>|Closure  $values
      */

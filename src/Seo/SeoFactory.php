@@ -48,6 +48,19 @@ final class SeoFactory
     }
 
     /**
+     * Reset per-request state back to the hard-coded default.
+     *
+     * Called automatically by the Octane RequestReceived event listener
+     * registered in {@see \Laradocs\LaradocsServiceProvider} so that a
+     * stale $lastXCard from a previous request is never visible to the
+     * next one on a long-lived worker.
+     */
+    public function resetForNextRequest(): void
+    {
+        $this->lastXCard = 'summary_large_image';
+    }
+
+    /**
      * Build the SEO payload for a rendered document.
      *
      * @param  array<int, TreeNode>  $breadcrumbs  Navigation trail, current page last.
