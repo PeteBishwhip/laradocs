@@ -100,6 +100,34 @@ The rest are available via
 `$document->metadata->author`, `$document->metadata->image`, and
 `$document->metadata->tags` — wire them into custom views as needed.
 
+The source Laradocs uses for the footer date is configurable. By default
+it reads `updated_at` front-matter only. Set `ui.last_updated_source` in
+`config/laradocs.php` (or the `LARADOCS_LAST_UPDATED_SOURCE` env var) to
+one of:
+
+| Value | Behaviour |
+|---|---|
+| `front_matter` | `updated_at` front-matter only (default). Nothing shown if the key is absent. |
+| `mtime` | File system modification time, formatted with `locale.date_format`. |
+| `front_matter_or_mtime` | `updated_at` when present, otherwise the file's mtime. Both formatted with `locale.date_format`. |
+
+For complete control, register a closure in your service provider. It
+receives the `Document` and returns a display string (or `null` to hide
+the date):
+
+```php
+use Laradocs\Documents\Document;
+use Laradocs\Support\LastUpdatedConfig;
+
+LastUpdatedConfig::setResolver(function (Document $document): ?string {
+    return $document->metadata->updatedAt
+        ?? date('d M Y', $document->modifiedAt);
+});
+```
+
+A registered closure always takes precedence over the config value. Pass
+`null` to `setResolver()` to clear it and revert to the config.
+
 `tags` also drive the auto-generated [tag index pages](/docs/guide/tags):
 each page's tags link out to a listing of everything sharing that topic.
 
