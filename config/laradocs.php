@@ -483,6 +483,20 @@ return [
             'url' => env('LARADOCS_EDIT_URL'),
         ],
 
+        /*
+        | Source for the "Last updated" date shown at the bottom of each page.
+        |
+        | Available values:
+        |   front_matter          — front-matter `updated_at` only (default).
+        |   mtime                 — file system modification time only.
+        |   front_matter_or_mtime — front-matter with mtime as fallback.
+        |
+        | For complete control, register a closure via the facade:
+        |   Laradocs::getLastUpdatedUsing(fn (\Laradocs\Documents\Document $doc) => ...);
+        | A registered closure always takes precedence over this setting.
+        */
+        'last_updated_source' => env('LARADOCS_LAST_UPDATED_SOURCE', 'front_matter'),
+
         'search' => [
             'enabled' => (bool) env('LARADOCS_SEARCH', true),
         ],
