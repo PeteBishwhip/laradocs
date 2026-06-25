@@ -133,7 +133,7 @@ final class FeedBuilder
         $carbon = $document->metadata->updatedAtCarbon();
 
         if ($carbon !== null) {
-            return $carbon->timestamp;
+            return (int) $carbon->timestamp;
         }
 
         return $document->modifiedAt;
