@@ -176,8 +176,9 @@ To restrict which layouts documents may use, set an explicit allowlist:
 > [!NOTE]
 > YAML 1.1 (used by the underlying parser) silently converts bare date scalars such as
 > `updated_at: 2026-01-15` to Unix timestamps before Laradocs sees them. The linter
-> recognises this and does not flag such values. To write a date string that bypasses
-> YAML's conversion, quote it: `updated_at: '2026-01-15'`.
+> recognises this and does not flag such values, and the page footer displays the date
+> correctly either way. If you need to store a specific time component, use a quoted
+> string: `updated_at: '2026-01-15 10:30:00'`.
 
 > [!TIP]
 > Add `php artisan docs:lint` as a CI step alongside `docs:check` to enforce

@@ -133,14 +133,10 @@ final class SitemapBuilder
 
     private function lastmod(Document $document): ?string
     {
-        $declared = $document->metadata->updatedAt;
+        $carbon = $document->metadata->updatedAtCarbon();
 
-        if ($declared !== null && $declared !== '') {
-            $timestamp = strtotime($declared);
-
-            if ($timestamp !== false) {
-                return date('c', $timestamp);
-            }
+        if ($carbon !== null) {
+            return $carbon->toAtomString();
         }
 
         return $document->modifiedAt > 0 ? date('c', $document->modifiedAt) : null;

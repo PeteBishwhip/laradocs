@@ -130,14 +130,10 @@ final class FeedBuilder
 
     private function timestamp(Document $document): int
     {
-        $declared = $document->metadata->updatedAt;
+        $carbon = $document->metadata->updatedAtCarbon();
 
-        if ($declared !== null && $declared !== '') {
-            $ts = strtotime($declared);
-
-            if ($ts !== false) {
-                return $ts;
-            }
+        if ($carbon !== null) {
+            return (int) $carbon->timestamp;
         }
 
         return $document->modifiedAt;
