@@ -13,10 +13,15 @@ it('loads the package\'s own documentation', function () {
 });
 
 it('renders every page without error', function () {
-    app(Laradocs::class)->all()->each(function ($document) {
-        $html = app(Laradocs::class)->render($document);
-        expect($html)->toBeString()->not->toBe('');
-    });
+    // Redirect stubs (e.g. the old paths kept for backwards compatibility)
+    // carry only front-matter and no body — the controller 301s them before
+    // rendering, so there is nothing to render. Skip them here.
+    app(Laradocs::class)->all()
+        ->reject(fn ($document) => $document->redirect() !== null)
+        ->each(function ($document) {
+            $html = app(Laradocs::class)->render($document);
+            expect($html)->toBeString()->not->toBe('');
+        });
 });
 
 it('has no broken internal documentation links', function () {
