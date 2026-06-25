@@ -117,16 +117,16 @@ the date):
 
 ```php
 use Laradocs\Documents\Document;
-use Laradocs\Facades\Laradocs;
+use Laradocs\Support\LastUpdatedConfig;
 
-Laradocs::getLastUpdatedUsing(function (Document $document): ?string {
+LastUpdatedConfig::setResolver(function (Document $document): ?string {
     return $document->metadata->updatedAt
         ?? date('d M Y', $document->modifiedAt);
 });
 ```
 
 A registered closure always takes precedence over the config value. Pass
-`null` to `getLastUpdatedUsing()` to clear it and revert to the config.
+`null` to `setResolver()` to clear it and revert to the config.
 
 `tags` also drive the auto-generated [tag index pages](/docs/guide/tags):
 each page's tags link out to a listing of everything sharing that topic.

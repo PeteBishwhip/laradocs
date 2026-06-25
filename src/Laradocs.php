@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Laradocs;
 
-use Carbon\CarbonImmutable;
 use Closure;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -19,8 +18,6 @@ use Laradocs\Macros\MacroRegistry;
 use Laradocs\Routing\FeedBuilder;
 use Laradocs\Routing\SitemapBuilder;
 use Laradocs\Search\SearchIndexBuilder;
-use Laradocs\Support\Config;
-use Laradocs\Support\LastUpdatedConfig;
 use Laradocs\Support\Locale;
 use Laradocs\Support\RateLimiterConfig;
 use Laradocs\Variables\VariableRegistry;
@@ -42,7 +39,6 @@ final class Laradocs
         private readonly VariableRegistry $variables,
         private readonly MacroRegistry $macros,
         private readonly RateLimiterConfig $rateLimiterConfig,
-        private readonly LastUpdatedConfig $lastUpdatedConfig,
         private readonly string $indexName = '_index',
         private readonly int $searchMaxChars = 10000,
         private readonly array $searchExclude = [],
@@ -127,66 +123,6 @@ final class Laradocs
         Locale::setCookieResolver($resolver);
 
         return $this;
-    }
-
-    /**
-     * Register a custom "last updated" date resolver.
-     *
-     * The closure receives the {@see Document} and must return a display string
-     * or null (no date shown). Use this when the three built-in modes
-     * (`front_matter`, `mtime`, `front_matter_or_mtime`) are not flexible
-     * enough:
-     *
-     *   Laradocs::getLastUpdatedUsing(fn (Document $doc) => $doc->metadata->updatedAt ?? 'Unknown');
-     *   Laradocs::getLastUpdatedUsing(fn (Document $doc) => date('d M Y', $doc->modifiedAt));
-     *
-     * When no resolver is registered, the `laradocs.ui.last_updated_source`
-     * config value controls which source is used.
-     *
-     * Pass `null` to clear a previously registered resolver and revert to the
-     * config value.
-     */
-    public function getLastUpdatedUsing(?Closure $resolver): self
-    {
-        $this->lastUpdatedConfig->set($resolver);
-
-        return $this;
-    }
-
-    /**
-     * Resolve the "last updated" display string for a document.
-     *
-     * Resolution order:
-     *   1. A custom closure registered via {@see getLastUpdatedUsing()}.
-     *   2. The `laradocs.ui.last_updated_source` config value:
-     *      - `front_matter`          — front-matter `updated_at` only.
-     *      - `mtime`                 — filesystem modification time only.
-     *      - `front_matter_or_mtime` — front-matter with mtime as fallback.
-     *
-     * Returns null when no date is available so the caller can skip rendering.
-     */
-    public function resolveLastUpdated(Document $document): ?string
-    {
-        $resolver = $this->lastUpdatedConfig->get();
-
-        if ($resolver !== null) {
-            $result = $resolver($document);
-
-            return is_string($result) && $result !== '' ? $result : null;
-        }
-
-        $source = Config::string('laradocs.ui.last_updated_source', 'front_matter');
-        $format = Config::string('laradocs.locale.date_format', 'jS F Y');
-
-        $mtimeCarbon = $document->modifiedAt > 0
-            ? CarbonImmutable::createFromTimestamp($document->modifiedAt)
-            : null;
-
-        return match ($source) {
-            'mtime' => $mtimeCarbon?->format($format),
-            'front_matter_or_mtime' => ($document->metadata->updatedAtCarbon() ?? $mtimeCarbon)?->format($format),
-            default => $document->metadata->updatedAtCarbon()?->format($format),
-        };
     }
 
     /**

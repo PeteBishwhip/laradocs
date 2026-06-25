@@ -78,7 +78,7 @@
 
     @php
         $editTemplate = config('laradocs.ui.edit.url');
-        $updatedAt = app(\Laradocs\Laradocs::class)->resolveLastUpdated($document);
+        $updatedAt = \Laradocs\Support\LastUpdatedConfig::resolve($document);
     @endphp
     @if($editTemplate || $updatedAt)
         <div class="laradocs-page-meta">

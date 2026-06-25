@@ -61,7 +61,6 @@ use Laradocs\Search\SearchManager;
 use Laradocs\Seo\SeoFactory;
 use Laradocs\Seo\TheOgImageGenerator;
 use Laradocs\Support\Config;
-use Laradocs\Support\LastUpdatedConfig;
 use Laradocs\Support\Locale;
 use Laradocs\Support\RateLimiterConfig;
 use Laradocs\Support\Version;
@@ -97,7 +96,6 @@ final class LaradocsServiceProvider extends ServiceProvider
         $this->registerCore();
         $this->registerSearch();
         $this->registerRateLimiting();
-        $this->registerLastUpdated();
     }
 
     public function boot(): void
@@ -235,7 +233,6 @@ final class LaradocsServiceProvider extends ServiceProvider
                 $app->make(VariableRegistry::class),
                 $app->make(MacroRegistry::class),
                 $app->make(RateLimiterConfig::class),
-                $app->make(LastUpdatedConfig::class),
                 Config::string('laradocs.docs.index', '_index'),
                 Config::int('laradocs.search.max_chars', 10000),
                 $searchExclude,
@@ -248,11 +245,6 @@ final class LaradocsServiceProvider extends ServiceProvider
     private function registerRateLimiting(): void
     {
         $this->app->singleton(RateLimiterConfig::class);
-    }
-
-    private function registerLastUpdated(): void
-    {
-        $this->app->singleton(LastUpdatedConfig::class);
     }
 
     /**

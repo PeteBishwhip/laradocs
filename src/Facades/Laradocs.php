@@ -15,8 +15,6 @@ use Laradocs\Documents\DocumentTree;
  * @method static \Laradocs\Laradocs share(string $key, mixed $value)
  * @method static \Laradocs\Laradocs macro(string $name, Closure|string $handler)
  * @method static \Laradocs\Laradocs rateLimit(Closure|int|false $resolver)
- * @method static \Laradocs\Laradocs getLastUpdatedUsing(Closure|null $resolver)
- * @method static string|null resolveLastUpdated(Document $document)
  * @method static DocumentCollection<int, Document> all()
  * @method static DocumentTree tree()
  * @method static Document|null find(string $slug)
