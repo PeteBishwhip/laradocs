@@ -34,8 +34,8 @@ test('Meta+K opens the palette and a hit navigates to its page', async ({ page }
   await expect(page.locator(`${results} .laradocs-palette-section`).first()).toBeVisible();
 
   // Clicking a hit navigates to that page.
-  await page.locator(`${results} a[href$="/docs/guide/search"]`).click();
-  await expect(page).toHaveURL(/\/docs\/guide\/search$/);
+  await page.locator(`${results} a[href$="/docs/navigation/search"]`).click();
+  await expect(page).toHaveURL(/\/docs\/navigation\/search$/);
 });
 
 test('Escape closes the palette', async ({ page }) => {

@@ -104,7 +104,7 @@ These supply values when a page omits them.
 nothing, `raw` keeps the literal braces. The TOC only renders when a page has
 at least `min_headings` headings inside the level range.
 
-See [Rich Content](/docs/features/rich-content) for what each extension enables.
+See [Rich Content](/docs/content/rich-content) for what each extension enables.
 
 ## Icons
 
@@ -121,7 +121,7 @@ disable automatic rendering entirely. The `heroicons` set requires
 `node_modules/heroicons/`. Set `heroicons.path` to an absolute path when it
 lives elsewhere.
 
-See [Icons](/docs/features/icons) for the full guide including custom sets.
+See [Icons](/docs/content/icons) for the full guide including custom sets.
 
 ## UI
 
@@ -150,7 +150,7 @@ See [Icons](/docs/features/icons) for the full guide including custom sets.
 | `ui.last_updated_source` | `LARADOCS_LAST_UPDATED_SOURCE` | `front_matter` |
 | `ui.search.enabled` | `LARADOCS_SEARCH` | `true` |
 
-See [Customising the UI](/docs/customising-the-ui) for what each value does
+See [Customising the UI](/docs/customisation/ui) for what each value does
 visually.
 
 ## Localisation
@@ -163,7 +163,7 @@ visually.
 | `locale.date_format` | `LARADOCS_DATE_FORMAT` | `jS F Y` |
 
 The bundled views are fully translatable. See
-[Localisation](/docs/guide/localisation) for the workflow — publishing the
+[Localisation](/docs/advanced/localisation) for the workflow — publishing the
 language files, adding locales and the in-page language selector.
 
 ## Analytics
@@ -177,7 +177,7 @@ language files, adding locales and the in-page language selector.
 | `analytics.google.anonymize_ip` | `LARADOCS_GA_ANONYMIZE_IP` | `false` |
 
 Set the identifier to enable a provider — leave it `null` to opt out.
-See [Analytics](/docs/guide/analytics) for details.
+See [Analytics](/docs/advanced/analytics) for details.
 
 ## SEO
 
@@ -197,7 +197,7 @@ See [Analytics](/docs/guide/analytics) for details.
 | `seo.schema.breadcrumbs` | `LARADOCS_SEO_SCHEMA_BREADCRUMBS` | `true` |
 
 Rich meta tags, Open Graph / Twitter cards and JSON-LD are generated for every
-page automatically; these tune the site-wide defaults. See [SEO](/docs/guide/seo).
+page automatically; these tune the site-wide defaults. See [SEO](/docs/seo).
 
 ## Cache
 
@@ -208,7 +208,7 @@ page automatically; these tune the site-wide defaults. See [SEO](/docs/guide/seo
 | `cache.ttl` | `LARADOCS_CACHE_TTL` | `86400` |
 | `cache.key_prefix` | — | `laradocs` |
 
-See [Caching](/docs/guide/caching).
+See [Caching](/docs/advanced/caching).
 
 ## Variables and macros
 
@@ -222,7 +222,7 @@ See [Caching](/docs/guide/caching).
 ],
 ```
 
-See [Variables](/docs/features/variables) and [Macros](/docs/features/macros).
+See [Variables](/docs/content/variables) and [Macros](/docs/content/macros).
 
 ## Disabling docs in production
 

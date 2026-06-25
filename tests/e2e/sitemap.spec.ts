@@ -38,7 +38,7 @@ function parseSitemap(xml: string): SitemapEntry[] {
 }
 
 // Known fixture slugs that must appear in the sitemap (relative to /docs).
-const EXPECTED_SLUGS = ['getting-started', 'configuration', 'guide/routing', 'guide/search'];
+const EXPECTED_SLUGS = ['getting-started', 'configuration', 'navigation/routing', 'navigation/search'];
 
 test('sitemap.xml lists the fixture pages and excludes the hidden fixture', async ({ request }) => {
     const response = await request.get('/docs/sitemap.xml');
