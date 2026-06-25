@@ -147,6 +147,7 @@ See [Icons](/docs/content/icons) for the full guide including custom sets.
 | `ui.banner.type` | `LARADOCS_BANNER_TYPE` | `info` |
 | `ui.banner.message` | `LARADOCS_BANNER_MESSAGE` | `null` |
 | `ui.edit.url` | `LARADOCS_EDIT_URL` | `null` |
+| `ui.last_updated_source` | `LARADOCS_LAST_UPDATED_SOURCE` | `front_matter` |
 | `ui.search.enabled` | `LARADOCS_SEARCH` | `true` |
 
 See [Customising the UI](/docs/customisation/ui) for what each value does
