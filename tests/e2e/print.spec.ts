@@ -7,7 +7,7 @@ import { expect, test } from '@playwright/test';
  * we can assert against computed styles and element visibility without opening
  * a real browser print dialog.
  *
- * `guide/routing` is a rich page: sticky header, sidebar, right-rail TOC
+ * `navigation/routing` is a rich page: sticky header, sidebar, right-rail TOC
  * (8+ headings so it renders at ≥ 1180 px wide), breadcrumbs, prose body,
  * page-meta, pager, and footer — a good proxy for what a user would print.
  */
@@ -19,7 +19,7 @@ test.describe('print styles', () => {
     test.use({ viewport: { width: 1280, height: 900 } });
 
     test.beforeEach(async ({ page }) => {
-        await page.goto('/docs/guide/routing');
+        await page.goto('/docs/navigation/routing');
         await page.emulateMedia({ media: 'print' });
     });
 

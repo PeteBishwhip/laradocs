@@ -4,7 +4,7 @@ import { expect, test } from '@playwright/test';
  * On-page table of contents: the desktop right-rail TOC + scroll-spy, and the
  * mobile <details> collapse.
  *
- * `guide/routing` has eight headings (well over the `min_headings` threshold),
+ * `navigation/routing` has eight headings (well over the `min_headings` threshold),
  * so both the right-rail `.laradocs-toc` and the `<details>.laradocs-toc-mobile`
  * render. The active-link tracking is driven by `initScrollSpy` in
  * resources/dist/laradocs.js, which toggles `is-active` on `.laradocs-toc a`.
@@ -17,7 +17,7 @@ test.describe('desktop right-rail TOC', () => {
     test.use({ viewport: { width: 1280, height: 900 } });
 
     test('renders TOC links and moves the scroll-spy active class on scroll', async ({ page }) => {
-        await page.goto('/docs/guide/routing');
+        await page.goto('/docs/navigation/routing');
 
         const tocLinks = page.locator('.laradocs-toc a');
         await expect(tocLinks.first()).toBeVisible();
@@ -55,7 +55,7 @@ test.describe('mobile TOC', () => {
     test.use({ viewport: { width: 390, height: 844 } });
 
     test('the <details> collapse toggles open and shut', async ({ page }) => {
-        await page.goto('/docs/guide/routing');
+        await page.goto('/docs/navigation/routing');
 
         const details = page.locator('details.laradocs-toc-mobile');
         await expect(details).toBeVisible();
