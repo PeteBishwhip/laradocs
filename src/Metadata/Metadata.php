@@ -101,12 +101,10 @@ final class Metadata implements Arrayable
             return null;
         }
 
-        if (is_numeric($this->updatedAt)) {
-            return CarbonImmutable::createFromTimestamp((int) $this->updatedAt);
-        }
-
         try {
-            return CarbonImmutable::parse($this->updatedAt);
+            return is_numeric($this->updatedAt)
+                ? CarbonImmutable::createFromTimestamp((int) $this->updatedAt)
+                : CarbonImmutable::parse($this->updatedAt);
         } catch (\Throwable) {
             return null;
         }
