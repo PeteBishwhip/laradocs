@@ -36,7 +36,7 @@ php artisan make:doc guide/installation --title="Installation" --order=1
 > becomes that section's landing page.
 
 The front-matter and body that `make:doc` writes come from a Blade stub you
-can publish and edit — see [Customising stubs](/docs/customising-stubs).
+can publish and edit — see [Customising stubs](/docs/customisation/stubs).
 
 ## Finding pages
 
@@ -50,9 +50,9 @@ right-hand TOC to jump between headings on the current page.
 
 - Configure routes, caching and the UI in
   [Configuration](/docs/configuration).
-- Learn how URLs are generated in [Routing](/docs/guide/routing).
-- Tune titles, social cards and structured data in [SEO](/docs/guide/seo).
-- Discover every Artisan command in [CLI](/docs/guide/cli).
-- Inject dynamic values with [Variables](/docs/features/variables).
+- Learn how URLs are generated in [Routing](/docs/navigation/routing).
+- Tune titles, social cards and structured data in [SEO](/docs/seo).
+- Discover every Artisan command in [CLI](/docs/cli).
+- Inject dynamic values with [Variables](/docs/content/variables).
 - Restyle the bundled views in
-  [Customising the UI](/docs/customising-the-ui).
+  [Customising the UI](/docs/customisation/ui).
