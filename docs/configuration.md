@@ -159,6 +159,7 @@ visually.
 | `locale.default` | `LARADOCS_LOCALE` | `en` |
 | `locale.available` | — | `['en' => 'English']` |
 | `locale.selector` | `LARADOCS_LOCALE_SELECTOR` | `true` |
+| `locale.date_format` | `LARADOCS_DATE_FORMAT` | `jS F Y` |
 
 The bundled views are fully translatable. See
 [Localisation](/docs/guide/localisation) for the workflow — publishing the

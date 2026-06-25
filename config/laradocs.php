@@ -92,6 +92,13 @@ return [
         'url' => (bool) env('LARADOCS_LOCALE_URL', true),
         'cookie' => (bool) env('LARADOCS_LOCALE_COOKIE', false),
         'detect_browser' => (bool) env('LARADOCS_DETECT_BROWSER', true),
+
+        // PHP date format string used when rendering the "Last updated" date on
+        // each page. Defaults to "21st June 2026" style. Override per deployment
+        // with LARADOCS_DATE_FORMAT, or publish the config and set it directly.
+        // Any format accepted by Carbon::format() / PHP date() is valid,
+        // e.g. 'Y-m-d', 'd/m/Y', 'F j, Y'.
+        'date_format' => env('LARADOCS_DATE_FORMAT', 'jS F Y'),
     ],
 
     /*

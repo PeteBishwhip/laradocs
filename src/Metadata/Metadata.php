@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Laradocs\Metadata;
 
 use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Support\CarbonImmutable;
 
 /**
  * Typed, immutable representation of a document's front-matter.
@@ -81,6 +82,34 @@ final class Metadata implements Arrayable
             unchangedSince: self::nullableString($data, 'unchanged_since'),
             extra: $extra,
         );
+    }
+
+    /**
+     * Parse the raw updatedAt string into a CarbonImmutable instance.
+     *
+     * Returns CarbonImmutable (not Carbon) so callers cannot mutate the value
+     * through arithmetic methods — consistent with this class being an immutable
+     * value object.
+     *
+     * Handles YAML 1.1's silent conversion of bare date scalars (e.g. `2026-06-21`)
+     * to Unix timestamps — when Symfony YAML gives us an integer, `nullableString()`
+     * stores it as a numeric string such as "1782000000", which we convert back here.
+     */
+    public function updatedAtCarbon(): ?CarbonImmutable
+    {
+        if ($this->updatedAt === null) {
+            return null;
+        }
+
+        if (is_numeric($this->updatedAt)) {
+            return CarbonImmutable::createFromTimestamp((int) $this->updatedAt);
+        }
+
+        try {
+            return CarbonImmutable::parse($this->updatedAt);
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     /**

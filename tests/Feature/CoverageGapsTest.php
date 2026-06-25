@@ -177,3 +177,41 @@ it('reports a TreeNode as a section when it has any children', function () {
     expect($section->isSection())->toBeTrue()
         ->and($leaf->isSection())->toBeFalse();
 });
+
+it('renders updated_at as a formatted date, not a raw number', function () {
+    // Quoted dates come through as strings; verify the human-readable format.
+    $this->makeDocs([
+        'page.md' => "---\ntitle: My Page\nupdated_at: \"2026-06-21\"\n---\nBody\n",
+    ]);
+
+    $this->get('/docs/page')
+        ->assertOk()
+        ->assertSee('Last updated')
+        ->assertDontSee('1782000000');
+});
+
+it('renders unquoted updated_at (YAML integer timestamp) as a formatted date', function () {
+    // Symfony YAML converts a bare `2026-06-21` to a Unix timestamp integer.
+    // Simulate what that looks like after nullableString() casts it to string.
+    $timestamp = mktime(0, 0, 0, 6, 21, 2026);
+    $this->makeDocs([
+        'page.md' => "---\ntitle: My Page\nupdated_at: {$timestamp}\n---\nBody\n",
+    ]);
+
+    $this->get('/docs/page')
+        ->assertOk()
+        ->assertSee('Last updated')
+        ->assertDontSee((string) $timestamp);
+});
+
+it('respects the laradocs.locale.date_format config when rendering updated_at', function () {
+    $this->makeDocs([
+        'page.md' => "---\ntitle: My Page\nupdated_at: \"2026-06-21\"\n---\nBody\n",
+    ]);
+
+    config()->set('laradocs.locale.date_format', 'Y-m-d');
+
+    $this->get('/docs/page')
+        ->assertOk()
+        ->assertSee('2026-06-21');
+});

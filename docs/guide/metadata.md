@@ -40,7 +40,7 @@ redirect: null
 | `badge` | string | Tiny pill rendered next to the sidebar link (e.g. `New`, `Beta`). |
 | `icon` | string | Free-form icon name available to custom views/macros. |
 | `tags` | string\|array | Free-form labels exposed via `$document->metadata->tags`. |
-| `updated_at` | string | Last-update timestamp; rendered in the page footer. |
+| `updated_at` | string | Last-update date; rendered in the page footer (e.g. "21st June 2026"). |
 | `author` | string | Author name; exposed to custom views. |
 | `layout` | string | Override the Blade layout used to render this page. |
 | `image` | string | Social / OG image URL — see [SEO](/docs/guide/seo). |
@@ -91,7 +91,12 @@ badge: Updated
 ### `updated_at`, `author`, `image`, `tags`
 
 Surface metadata exposed to your templates. `updated_at` is rendered in
-the page footer (`Last updated 2026-06-01`). The rest are available via
+the page footer as a human-readable date — e.g. "Last updated 21st June
+2026". The display format is controlled by `locale.date_format` in the
+config (PHP `date()` format string, default `jS F Y`; override with
+`LARADOCS_DATE_FORMAT`). Bare YAML dates (`updated_at: 2026-06-21`) and
+quoted strings (`updated_at: "2026-06-21"`) are both handled correctly.
+The rest are available via
 `$document->metadata->author`, `$document->metadata->image`, and
 `$document->metadata->tags` — wire them into custom views as needed.
 

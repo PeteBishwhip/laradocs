@@ -81,3 +81,28 @@ it('is searchable by default and honours search: false', function () {
         ->and(Metadata::fromArray(['search' => false])->toArray()['search'])->toBeFalse()
         ->and(Metadata::fromArray(['search' => false])->extra)->toBe([]);
 });
+
+it('updatedAtCarbon returns null when updated_at is absent', function () {
+    expect(Metadata::fromArray([])->updatedAtCarbon())->toBeNull();
+});
+
+it('updatedAtCarbon parses a date string', function () {
+    $carbon = Metadata::fromArray(['updated_at' => '2026-06-21'])->updatedAtCarbon();
+
+    expect($carbon)->not->toBeNull()
+        ->and($carbon->format('Y-m-d'))->toBe('2026-06-21');
+});
+
+it('updatedAtCarbon parses a unix timestamp string (YAML bare date conversion)', function () {
+    // YAML 1.1 converts bare dates like 2026-06-21 to Unix timestamps.
+    // nullableString() stores that integer as e.g. "1782000000".
+    $timestamp = mktime(0, 0, 0, 6, 21, 2026);
+    $carbon = Metadata::fromArray(['updated_at' => (string) $timestamp])->updatedAtCarbon();
+
+    expect($carbon)->not->toBeNull()
+        ->and($carbon->timestamp)->toBe($timestamp);
+});
+
+it('updatedAtCarbon returns null for unparseable values', function () {
+    expect(Metadata::fromArray(['updated_at' => 'not-a-date'])->updatedAtCarbon())->toBeNull();
+});

@@ -78,7 +78,8 @@
 
     @php
         $editTemplate = config('laradocs.ui.edit.url');
-        $updatedAt = $document->metadata->updatedAt;
+        $updatedAtCarbon = $document->metadata->updatedAtCarbon();
+        $updatedAt = $updatedAtCarbon?->format(config('laradocs.locale.date_format', 'jS F Y'));
     @endphp
     @if($editTemplate || $updatedAt)
         <div class="laradocs-page-meta">
