@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Laradocs\Metadata;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Support\CarbonImmutable;
 
 /**
  * Typed, immutable representation of a document's front-matter.
