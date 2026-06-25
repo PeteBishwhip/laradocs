@@ -265,6 +265,16 @@ body.laradocs {
 }
 .laradocs-palette-trigger svg { width: 14px; height: 14px; flex-shrink: 0; }
 .laradocs-palette-trigger > span { flex: 1; }
+/* Narrow viewports: collapse to icon-only so the trigger doesn't overflow
+   the header flex row (min-width: 14rem would exceed the viewport width). */
+@media (max-width: 767px) {
+  .laradocs-palette-trigger {
+    min-width: 0;
+    padding: .45rem .55rem;
+  }
+  .laradocs-palette-trigger > span,
+  .laradocs-palette-trigger kbd { display: none; }
+}
 .laradocs-palette-trigger kbd {
   font-family: var(--dc-mono);
   font-size: .65rem;
