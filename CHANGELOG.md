@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-06-25
+
+### Added
+- `laradocs:lang` Artisan command that scaffolds locale translation files for a
+  target language, copying the published source strings and preserving header
+  comments. Supports `--list` and interactive back-navigation.
+- Configurable source for the per-page "Last updated" date via the
+  `last_updated` config block: resolve it from front-matter `updated_at`, the
+  file mtime, or Git, with a per-page front-matter override.
+
+### Changed
+- Audited and hardened container singletons for Laravel Octane safety. The SEO
+  factory resets its per-request state on the Octane `RequestReceived` event,
+  and the variable/macro registries now document their boot-time-only mutation
+  contract. See the new "Octane" guide.
+
+### Fixed
+- Render the `updated_at` front-matter value as a formatted date instead of a
+  raw Unix timestamp.
+- Collapse the search trigger to an icon-only button below 768px so the header
+  no longer overflows the viewport on mobile doc pages.
+
+## [0.6.0] - 2026-06-23
+
 ### Added
 - MCP server endpoint (`POST /docs/mcp`) over Streamable-HTTP transport.
   Opt-in via `LARADOCS_MCP=true`. Exposes three tools: `search_docs`, `list_pages`, `fetch_page`.
@@ -15,6 +39,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - MCP authentication support via any Laravel auth guard (`LARADOCS_MCP_AUTH_GUARD`).
   Open by default; set to a guard name (e.g. `api`) to require a Bearer token.
   Full Laravel Passport and Sanctum setup guide in `docs/guide/mcp.md`.
+- Locale in the URL path: the active language now lives in the path
+  (`/docs/fr/guide`) instead of a `?lang=` query, giving each translation a
+  canonical, crawlable URL. The default locale is served unprefixed and legacy
+  `?lang=` URLs 301-redirect to the new form.
+- Semantic documentation versioning, building on multi-version support: versions
+  are ordered semantically and exposed through a `laradocs:versions` command and
+  a versions JSON API, with an "outdated version" banner, alias handles
+  (`latest`, `stable`), pages shared across every version, and inline content
+  directives (`:::version-since`, `:::version-until`, `:::version-only`) that
+  show or hide blocks per version. New `versions` config keys: `strategy`,
+  `unversioned`, `aliases`, `outdated_banner`, `shared`.
+- Icon support in front-matter titles and body content via `@icon(...)`, backed
+  by a Heroicons-based registry, with `docs:lint` validation of `icon:`
+  front-matter and inline calls (`lint.icons`).
+- Localised callout type labels (Note, Tip, Warning, …) that follow the active
+  docs locale, plus optional inline callout titles (`> [!NOTE] Custom title`).
+- Built-in `@media print` styles: hides navigation chrome, expands content to
+  full width, forces light-mode colours, and applies sensible page-break rules.
+- Configurable article content width via `ui.content_width`
+  (`LARADOCS_CONTENT_WIDTH`).
+- Configurable package middleware stack via `package_middleware`, so the
+  built-in `EnsureDocsEnabled` / `SetDocsLocale` / `SetDocsVersion` stack can be
+  reordered, replaced, or extended without patching the router.
+- Platform-appropriate keyboard shortcut in the search trigger (⌘K on macOS,
+  Ctrl+K elsewhere).
+- Updated translations via Crowdin.
+
+## [0.5.3] - 2026-06-19
+
+### Added
+- `og:image` social meta tag wired into the SEO payload, verified end-to-end to
+  resolve to a PNG.
+- Laravel Boost AI guidelines for downstream consumers.
+
+## [0.5.2] - 2026-06-18
+
+### Changed
+- Improved generated card social meta tags: advertise `og:image:width`/`height`
+  (1200×630) and the Twitter image size, and stop emitting a duplicate
+  `twitter:card` (now added only when a page overrides the card type).
+
+## [0.5.1] - 2026-06-18
+
+### Added
+- Open Graph image generation for pages.
 
 ## [0.5.0] - 2026-06-17
 
@@ -173,7 +242,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Artisan commands: `laradocs:install`, `make:doc`, `laradocs:cache`, `laradocs:clear`.
 - Publishable config, views and assets; `php artisan about` integration.
 
-[Unreleased]: https://github.com/petebishwhip/laradocs/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/petebishwhip/laradocs/compare/v0.6.1...HEAD
+[0.6.1]: https://github.com/petebishwhip/laradocs/compare/v0.6.0...v0.6.1
+[0.6.0]: https://github.com/petebishwhip/laradocs/compare/v0.5.3...v0.6.0
+[0.5.3]: https://github.com/petebishwhip/laradocs/compare/v0.5.2...v0.5.3
+[0.5.2]: https://github.com/petebishwhip/laradocs/compare/v0.5.1...v0.5.2
+[0.5.1]: https://github.com/petebishwhip/laradocs/compare/v0.5.0...v0.5.1
+[0.5.0]: https://github.com/petebishwhip/laradocs/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/petebishwhip/laradocs/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/petebishwhip/laradocs/compare/v0.2.0.1...v0.3.0
 [0.2.0]: https://github.com/petebishwhip/laradocs/compare/v0.1.4...v0.2.0
