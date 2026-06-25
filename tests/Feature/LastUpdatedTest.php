@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
+use Carbon\CarbonImmutable;
 use Laradocs\Documents\Document;
 use Laradocs\Facades\Laradocs;
+use Laradocs\Metadata\Metadata;
 
 // ── front_matter (default) ─────────────────────────────────────────────────────
 
@@ -27,7 +29,7 @@ it('returns a formatted mtime when source is mtime', function () {
     $doc = makeDocument('intro');
 
     // makeDocument sets modifiedAt = 1700000000 → formatted with the default locale.date_format
-    $expected = \Carbon\CarbonImmutable::createFromTimestamp(1700000000)->format(
+    $expected = CarbonImmutable::createFromTimestamp(1700000000)->format(
         config('laradocs.locale.date_format', 'jS F Y')
     );
     expect(Laradocs::resolveLastUpdated($doc))->toBe($expected);
@@ -37,7 +39,7 @@ it('ignores front-matter updated_at when source is mtime', function () {
     config()->set('laradocs.ui.last_updated_source', 'mtime');
     $doc = makeDocument('intro', ['updated_at' => '2026-03-01']);
 
-    $expected = \Carbon\CarbonImmutable::createFromTimestamp(1700000000)->format(
+    $expected = CarbonImmutable::createFromTimestamp(1700000000)->format(
         config('laradocs.locale.date_format', 'jS F Y')
     );
     expect(Laradocs::resolveLastUpdated($doc))->toBe($expected);
@@ -49,7 +51,7 @@ it('returns null from mtime when modifiedAt is zero', function () {
         path: '/virtual/intro.md',
         relativePath: 'intro.md',
         slug: 'intro',
-        metadata: \Laradocs\Metadata\Metadata::fromArray([]),
+        metadata: Metadata::fromArray([]),
         markdown: '',
         modifiedAt: 0,
     );
@@ -70,7 +72,7 @@ it('falls back to mtime when front-matter is absent and source is front_matter_o
     config()->set('laradocs.ui.last_updated_source', 'front_matter_or_mtime');
     $doc = makeDocument('intro');
 
-    $expected = \Carbon\CarbonImmutable::createFromTimestamp(1700000000)->format(
+    $expected = CarbonImmutable::createFromTimestamp(1700000000)->format(
         config('laradocs.locale.date_format', 'jS F Y')
     );
     expect(Laradocs::resolveLastUpdated($doc))->toBe($expected);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Laradocs;
 
+use Carbon\CarbonImmutable;
 use Closure;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -18,7 +19,7 @@ use Laradocs\Macros\MacroRegistry;
 use Laradocs\Routing\FeedBuilder;
 use Laradocs\Routing\SitemapBuilder;
 use Laradocs\Search\SearchIndexBuilder;
-use Carbon\CarbonImmutable;
+use Laradocs\Support\Config;
 use Laradocs\Support\LastUpdatedConfig;
 use Laradocs\Support\Locale;
 use Laradocs\Support\RateLimiterConfig;
@@ -174,8 +175,8 @@ final class Laradocs
             return is_string($result) && $result !== '' ? $result : null;
         }
 
-        $source = config('laradocs.ui.last_updated_source', 'front_matter');
-        $format = config('laradocs.locale.date_format', 'jS F Y');
+        $source = Config::string('laradocs.ui.last_updated_source', 'front_matter');
+        $format = Config::string('laradocs.locale.date_format', 'jS F Y');
 
         $mtimeCarbon = $document->modifiedAt > 0
             ? CarbonImmutable::createFromTimestamp($document->modifiedAt)
