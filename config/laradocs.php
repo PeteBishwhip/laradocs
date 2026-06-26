@@ -423,9 +423,9 @@ return [
     */
 
     'tabs' => [
-        'default_tab'   => env('LARADOCS_TABS_DEFAULT'),
-        'persist'       => (bool) env('LARADOCS_TABS_PERSIST', true),
-        'sync'          => (bool) env('LARADOCS_TABS_SYNC', true),
+        'default_tab' => env('LARADOCS_TABS_DEFAULT'),
+        'persist' => (bool) env('LARADOCS_TABS_PERSIST', true),
+        'sync' => (bool) env('LARADOCS_TABS_SYNC', true),
         'default_group' => env('LARADOCS_TABS_GROUP', 'language'),
     ],
 

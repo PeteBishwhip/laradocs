@@ -444,6 +444,27 @@ it('degrades a single-tab content block to a plain labelled block', function () 
         ->toContain('Some text.');
 });
 
+it('groups a code-tab run that is followed by trailing content', function () {
+    $html = render(
+        "```php tab:PHP\n\$x = 1;\n```\n\n```js tab:JS\nconst x = 1;\n```\n\nTrailing paragraph."
+    );
+
+    // The run of two tab fences terminates at the trailing paragraph, which must
+    // still survive intact alongside the formed tab group.
+    expect($html)
+        ->toContain('laradocs-tab-group')
+        ->toContain('role="tabpanel"')
+        ->toContain('Trailing paragraph.');
+});
+
+it('drops an empty content tabs block', function () {
+    $html = render("::: tabs\n\n:::");
+
+    expect($html)
+        ->not->toContain('laradocs-tab-group')
+        ->not->toContain(':::');
+});
+
 it('falls back gracefully when tabs extension is disabled', function () {
     config()->set('laradocs.parser.extensions.tabs', false);
     app()->forgetInstance(DocumentParser::class);

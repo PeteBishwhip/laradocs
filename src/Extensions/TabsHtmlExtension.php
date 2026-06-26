@@ -11,12 +11,14 @@ use Laradocs\Contracts\HtmlExtension;
 use Laradocs\Support\Html;
 
 /**
- * Groups consecutive `.laradocs-code[data-tab]` divs (from code-tab shorthand)
- * and transforms `.laradocs-tab-group-raw` wrapper divs (from content tabs)
- * into fully accessible `<div class="laradocs-tab-group">` tab blocks.
+ * Groups consecutive `.laradocs-code-tab-pending[data-tab]` divs (from the
+ * code-tab shorthand) and transforms `.laradocs-tab-group-raw` wrapper divs
+ * (from content tabs) into fully accessible `<div class="laradocs-tab-group">`
+ * tab blocks.
  *
- * This extension must run AFTER CodeBlockExtension so the `.laradocs-code`
- * wrappers with `data-tab` are already in the DOM when grouping starts.
+ * This extension must run AFTER CodeBlockExtension so the inner `<pre>` blocks
+ * inside each pending wrapper are already decorated with their language label
+ * and copy button when grouping starts.
  */
 final class TabsHtmlExtension implements HtmlExtension
 {
@@ -41,10 +43,11 @@ final class TabsHtmlExtension implements HtmlExtension
             // Pass 2 — code tabs: collect unique parent elements that contain
             // .laradocs-code-tab-pending[data-tab] children and group consecutive
             // siblings into tab blocks.
-            $parents = new \SplObjectStorage;
+            $parents = [];
             foreach (iterator_to_array($body->getElementsByTagName('div')) as $div) {
-                if ($this->isCodeTabPending($div) && $div->parentNode instanceof DOMElement) {
-                    $parents->attach($div->parentNode);
+                $parent = $div->parentNode;
+                if ($this->isCodeTabPending($div) && $parent instanceof DOMElement) {
+                    $parents[spl_object_id($parent)] = $parent;
                 }
             }
             foreach ($parents as $parent) {
@@ -64,15 +67,9 @@ final class TabsHtmlExtension implements HtmlExtension
             if ($child instanceof DOMElement && str_contains($child->getAttribute('class'), 'laradocs-tab-raw')) {
                 $sections[] = [
                     'label' => $child->getAttribute('data-tab'),
-                    'html'  => Html::innerHtml($child),
+                    'html' => Html::innerHtml($child),
                 ];
             }
-        }
-
-        if (empty($sections)) {
-            Html::replaceWithHtml($rawGroup, Html::innerHtml($rawGroup));
-
-            return;
         }
 
         if (count($sections) === 1) {
@@ -96,17 +93,17 @@ final class TabsHtmlExtension implements HtmlExtension
     private function groupCodeTabsIn(DOMDocument $dom, DOMElement $parent): void
     {
         $children = iterator_to_array($parent->childNodes);
-        $runs     = [];
+        $runs = [];
 
         $runNodes = [];
-        $runDivs  = [];
-        $inRun    = false;
+        $runDivs = [];
+        $inRun = false;
 
         foreach ($children as $child) {
             if ($child instanceof DOMElement && $this->isCodeTabPending($child)) {
                 $runNodes[] = $child;
-                $runDivs[]  = $child;
-                $inRun      = true;
+                $runDivs[] = $child;
+                $inRun = true;
             } elseif ($inRun && $child instanceof DOMText && trim($child->textContent) === '') {
                 // Whitespace between consecutive code-tab blocks — keep in run.
                 $runNodes[] = $child;
@@ -115,8 +112,8 @@ final class TabsHtmlExtension implements HtmlExtension
                     $runs[] = ['nodes' => $runNodes, 'divs' => $runDivs];
                 }
                 $runNodes = [];
-                $runDivs  = [];
-                $inRun    = false;
+                $runDivs = [];
+                $inRun = false;
             }
         }
 
@@ -132,7 +129,7 @@ final class TabsHtmlExtension implements HtmlExtension
 
     /**
      * @param  array<int, DOMElement>  $tabDivs
-     * @param  array<int, \DOMNode>    $allNodes
+     * @param  array<int, \DOMNode>  $allNodes
      */
     private function wrapCodeTabRun(
         DOMDocument $dom,
@@ -143,7 +140,7 @@ final class TabsHtmlExtension implements HtmlExtension
         $sections = array_map(
             fn (DOMElement $el): array => [
                 'label' => $el->getAttribute('data-tab'),
-                'html'  => Html::innerHtml($el),
+                'html' => Html::innerHtml($el),
             ],
             $tabDivs,
         );
@@ -181,18 +178,18 @@ final class TabsHtmlExtension implements HtmlExtension
 
         $escapedGroup = htmlspecialchars($group, ENT_QUOTES, 'UTF-8');
 
-        $html  = '<div class="laradocs-tab-group" ';
+        $html = '<div class="laradocs-tab-group" ';
         $html .= 'data-tabs-group="' . $escapedGroup . '" ';
         $html .= 'data-tabs-id="' . $id . '">';
 
         // Tab list
         $html .= '<div class="laradocs-tab-group-list" role="tablist">';
         foreach ($sections as $i => $section) {
-            $tabId    = $id . '-' . $i;
+            $tabId = $id . '-' . $i;
             $selected = $i === 0 ? 'true' : 'false';
-            $cls      = 'laradocs-tab' . ($i === 0 ? ' is-active' : '');
+            $cls = 'laradocs-tab' . ($i === 0 ? ' is-active' : '');
             $tabindex = $i === 0 ? '' : ' tabindex="-1"';
-            $label    = htmlspecialchars($section['label'], ENT_QUOTES, 'UTF-8');
+            $label = htmlspecialchars($section['label'], ENT_QUOTES, 'UTF-8');
 
             $html .= '<button role="tab"'
                 . ' id="' . $tabId . '"'
@@ -207,7 +204,7 @@ final class TabsHtmlExtension implements HtmlExtension
 
         // Tab panels
         foreach ($sections as $i => $section) {
-            $tabId  = $id . '-' . $i;
+            $tabId = $id . '-' . $i;
             $hidden = $i === 0 ? '' : ' hidden';
 
             $html .= '<div role="tabpanel"'

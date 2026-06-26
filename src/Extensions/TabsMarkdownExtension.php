@@ -10,8 +10,8 @@ use Laradocs\Contracts\MarkdownExtension;
  * Pre-processes two tab syntaxes before CommonMark runs:
  *
  * 1. Code-tab shorthand — strips `tab:Label` from a fenced code block's info
- *    string and injects `{data-tab="Label"}` so the AttributesExtension
- *    forwards the label to the rendered `<code>` element.
+ *    string and wraps the block in a `.laradocs-code-tab-pending` div carrying
+ *    the label, for TabsHtmlExtension to group later.
  *
  * 2. Content tabs — rewrites `:::tabs … :::` / `--- Label` container blocks
  *    into Type-6 HTML blocks.  Blank lines around the inner markdown content
@@ -20,8 +20,6 @@ use Laradocs\Contracts\MarkdownExtension;
  */
 final class TabsMarkdownExtension implements MarkdownExtension
 {
-    private int $counter = 0;
-
     public function processMarkdown(string $markdown): string
     {
         $markdown = $this->transformCodeTabBlocks($markdown);
@@ -53,17 +51,12 @@ final class TabsMarkdownExtension implements MarkdownExtension
     private function transformCodeTabBlocks(string $markdown): string
     {
         return (string) preg_replace_callback(
-            '/^(`{3,}|~{3,})([^\n]*\btab:\S+[^\n]*)\n(.*?)^\1[ \t]*$/ms',
+            '/^(`{3,}|~{3,})([^\n]*\btab:(\S+)[^\n]*)\n(.*?)^\1[ \t]*$/ms',
             function (array $m): string {
-                $fence   = $m[1];
-                $info    = $m[2];
-                $content = $m[3];
-
-                if (! preg_match('/\btab:(\S+)/', $info, $tm)) {
-                    return $m[0];
-                }
-
-                $label = $tm[1];
+                $fence = $m[1];
+                $info = $m[2];
+                $label = $m[3];
+                $content = $m[4];
 
                 // Strip the tab:Label token, preserving the rest of the info string.
                 $info = trim((string) preg_replace('/\s*\btab:\S+/', '', $info));
@@ -109,7 +102,7 @@ final class TabsMarkdownExtension implements MarkdownExtension
                 // Split by `--- Label` separators at line start. Filter whitespace-only
                 // parts: the content after the opening fence starts with a newline,
                 // creating a phantom empty first element before the first --- separator.
-                $parts = preg_split('/^---[ \t]+/m', $inner, -1, PREG_SPLIT_NO_EMPTY);
+                $parts = preg_split('/^---[ \t]+/m', $inner, -1, PREG_SPLIT_NO_EMPTY) ?: [];
                 $parts = array_values(array_filter($parts, fn (string $p): bool => trim($p) !== ''));
 
                 if (empty($parts)) {
@@ -119,9 +112,9 @@ final class TabsMarkdownExtension implements MarkdownExtension
                 $out = "\n<div class=\"laradocs-tab-group-raw\" data-group=\"{$escapedGroup}\">\n";
 
                 foreach ($parts as $part) {
-                    $eol   = strpos($part, "\n");
+                    $eol = strpos($part, "\n");
                     $label = $eol !== false ? trim(substr($part, 0, $eol)) : trim($part);
-                    $body  = $eol !== false ? rtrim(substr($part, $eol + 1)) : '';
+                    $body = $eol !== false ? rtrim(substr($part, $eol + 1)) : '';
 
                     $escapedLabel = htmlspecialchars($label, ENT_QUOTES, 'UTF-8');
 
