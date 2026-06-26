@@ -43,6 +43,8 @@ use Laradocs\Extensions\ImageExtension;
 use Laradocs\Extensions\KatexExtension;
 use Laradocs\Extensions\MacroExtension;
 use Laradocs\Extensions\MermaidExtension;
+use Laradocs\Extensions\TabsHtmlExtension;
+use Laradocs\Extensions\TabsMarkdownExtension;
 use Laradocs\Extensions\VariableExtension;
 use Laradocs\Extensions\VersionBlockExtension;
 use Laradocs\Extensions\VideoExtension;
@@ -414,6 +416,10 @@ final class LaradocsServiceProvider extends ServiceProvider
             );
         }
 
+        if ($config['tabs'] ?? true) {
+            $extensions[] = new TabsMarkdownExtension;
+        }
+
         return $extensions;
     }
 
@@ -462,6 +468,14 @@ final class LaradocsServiceProvider extends ServiceProvider
         }
 
         $extensions[] = new CodeBlockExtension;
+
+        // TabsHtmlExtension must run after CodeBlockExtension so it can
+        // find .laradocs-code[data-tab] wrappers when grouping code tabs.
+        if ($config['tabs'] ?? true) {
+            $extensions[] = new TabsHtmlExtension(
+                Config::string('laradocs.tabs.default_group', 'language'),
+            );
+        }
 
         return $extensions;
     }

@@ -354,6 +354,7 @@ return [
             'icons' => true,
             'macros' => true,
             'components' => true,
+            'tabs' => true,
         ],
         'highlighter' => env('LARADOCS_HIGHLIGHTER', 'shiki-css'),
 
@@ -399,6 +400,33 @@ return [
             'max_level' => 3,
             'min_headings' => 2,
         ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Tabs
+    |--------------------------------------------------------------------------
+    |
+    | Controls the code-tab shorthand (```lang tab:Label) and content tabs
+    | (:::tabs / --- Label).  Both are enabled via parser.extensions.tabs.
+    |
+    | "default_tab"   Tab label to activate on fresh page loads when no
+    |                 persisted preference exists.  Matched case-insensitively.
+    |                 null = first tab in each block.
+    | "persist"       Store the reader's tab selection in localStorage so it
+    |                 survives navigation.
+    | "sync"          Switch every same-group tabs block on the page when the
+    |                 reader picks a tab.
+    | "default_group" Group name applied to code-tab blocks.  Content-tab blocks
+    |                 default to "content" unless the author sets group="…".
+    |
+    */
+
+    'tabs' => [
+        'default_tab' => env('LARADOCS_TABS_DEFAULT'),
+        'persist' => (bool) env('LARADOCS_TABS_PERSIST', true),
+        'sync' => (bool) env('LARADOCS_TABS_SYNC', true),
+        'default_group' => env('LARADOCS_TABS_GROUP', 'language'),
     ],
 
     /*

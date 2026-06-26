@@ -102,6 +102,100 @@ become responsive embeds:
 Only the YouTube and Vimeo hosts are embedded — other video links are
 left as plain hyperlinks.
 
+## Tabs
+
+Laradocs provides two complementary tab syntaxes. Both produce accessible tab UIs
+(`tablist` / `tab` / `tabpanel` ARIA roles, full keyboard navigation) that
+synchronise across the page and persist the reader's last choice in `localStorage`.
+
+### Code-tab shorthand
+
+Add `tab:Label` to a fenced code block's info string. Consecutive tab-tagged blocks
+automatically group into a single tabbed code block:
+
+`````markdown
+```php tab:PHP
+$response = Http::get('/api/users');
+```
+
+```javascript tab:JavaScript
+const response = await fetch('/api/users');
+```
+
+```bash tab:cURL
+curl https://example.com/api/users
+```
+`````
+
+The language label and copy button are preserved inside each panel. An untagged code
+block between two tagged ones breaks the group — each run of consecutive tagged blocks
+forms its own tab group.
+
+### Content tabs
+
+Use `:::tabs` / `--- Label` for arbitrary content — prose, callouts, images, or nested
+code blocks:
+
+````markdown
+::: tabs
+--- Composer
+
+Run `composer require` to add the package:
+
+```bash
+composer require example/package
+```
+
+--- Manual
+
+Download the ZIP from the [releases page](https://example.com/releases) and extract it
+into your project's `vendor/` directory.
+
+:::
+````
+
+Content inside each panel is full Markdown — callouts, images, nested code blocks and
+all other Laradocs extensions work as normal.
+
+### Synchronisation and groups
+
+Every tab group belongs to a *group name*. When the reader activates a tab in one
+group, all other groups with the same name switch to the matching label automatically
+(if present). This lets a single click switch from "PHP" to "PHP" everywhere on the
+page.
+
+The code-tab shorthand uses the group `language` by default. Content tabs use `content`
+by default. Override the group for content tabs with the `group` attribute:
+
+```markdown
+::: tabs group="sdk"
+--- PHP
+
+PHP SDK content.
+
+--- Python
+
+Python SDK content.
+
+:::
+```
+
+Change the default group for code tabs via config:
+
+```php
+// config/laradocs.php
+'tabs' => [
+    'default_group' => env('LARADOCS_TABS_GROUP', 'language'),
+    'persist'       => (bool) env('LARADOCS_TABS_PERSIST', true),
+    'sync'          => (bool) env('LARADOCS_TABS_SYNC', true),
+],
+```
+
+Set `persist => false` to disable `localStorage` and `sync => false` to disable
+cross-group synchronisation.
+
+Disable the feature entirely with `parser.extensions.tabs => false`.
+
 ## Diagrams
 
 A fenced block tagged `mermaid` renders as an SVG diagram:

@@ -334,3 +334,148 @@ it('does not register the version block extension when inline is disabled', func
 
     expect($html)->not->toContain('version-block');
 });
+
+// ── Tabs ─────────────────────────────────────────────────────────────────────
+
+it('groups consecutive tab-tagged code fences into a tab block', function () {
+    $html = render(
+        "```php tab:PHP\n\$x = 1;\n```\n\n```js tab:JavaScript\nconst x = 1;\n```"
+    );
+
+    expect($html)
+        ->toContain('laradocs-tab-group')
+        ->toContain('data-tabs-group="language"')
+        ->toContain('role="tablist"')
+        ->toContain('role="tab"')
+        ->toContain('role="tabpanel"')
+        ->toContain('>PHP<')
+        ->toContain('>JavaScript<')
+        ->toContain('aria-selected="true"')
+        ->toContain('aria-selected="false"')
+        ->toContain('hidden');
+});
+
+it('activates the first tab and hides the rest', function () {
+    $html = render(
+        "```php tab:PHP\n\$x = 1;\n```\n\n```js tab:JS\nconst x = 1;\n```\n\n```bash tab:cURL\ncurl /api\n```"
+    );
+
+    // Only the first panel is visible; others carry hidden attribute.
+    $panels = substr_count($html, 'role="tabpanel"');
+    $hidden = substr_count($html, ' hidden');
+
+    expect($panels)->toBe(3)
+        ->and($hidden)->toBe(2);
+});
+
+it('keeps the language label and copy button on code blocks inside tabs', function () {
+    $html = render("```php tab:PHP\necho 1;\n```\n\n```js tab:JS\nconsole.log(1);\n```");
+
+    expect($html)
+        ->toContain('data-language="php"')
+        ->toContain('data-language="js"')
+        ->toContain('laradocs-code-copy');
+});
+
+it('does not group a solitary tab-tagged code fence', function () {
+    $html = render("```php tab:PHP\necho 1;\n```");
+
+    expect($html)
+        ->not->toContain('laradocs-tab-group')
+        ->toContain('laradocs-code');
+});
+
+it('stops a code-tab group at an untagged code fence', function () {
+    $html = render(
+        "```php tab:PHP\n\$x = 1;\n```\n\n```js\n// no tab label\n```\n\n```bash tab:cURL\ncurl /\n```"
+    );
+
+    // Two separate groups cannot form — the untagged block breaks the run.
+    expect($html)->not->toContain('laradocs-tab-group');
+});
+
+it('renders content tabs into accessible tab blocks', function () {
+    $md = "::: tabs\n--- Composer\n\nRun `composer install`.\n\n--- Manual\n\nDownload the ZIP.\n\n:::";
+
+    $html = render($md);
+
+    expect($html)
+        ->toContain('laradocs-tab-group')
+        ->toContain('role="tablist"')
+        ->toContain('>Composer<')
+        ->toContain('>Manual<')
+        ->toContain('role="tabpanel"');
+});
+
+it('processes markdown inside content tab panels', function () {
+    $md = "::: tabs\n--- PHP\n\n```php\necho 1;\n```\n\n--- JS\n\n```js\nconsole.log(1);\n```\n\n:::";
+
+    $html = render($md);
+
+    expect($html)
+        ->toContain('data-language="php"')
+        ->toContain('data-language="js"')
+        ->toContain('laradocs-code-copy');
+});
+
+it('processes callouts inside content tab panels', function () {
+    $md = "::: tabs\n--- Info\n\n> [!NOTE]\n> Remember this.\n\n--- Other\n\nJust text.\n\n:::";
+
+    $html = render($md);
+
+    expect($html)
+        ->toContain('laradocs-callout laradocs-callout-note')
+        ->toContain('Remember this.');
+});
+
+it('respects a custom group attribute on content tabs', function () {
+    $html = render("::: tabs group=\"sdk\"\n--- PHP\n\nPHP content.\n\n--- JS\n\nJS content.\n\n:::");
+
+    expect($html)->toContain('data-tabs-group="sdk"');
+});
+
+it('degrades a single-tab content block to a plain labelled block', function () {
+    $html = render("::: tabs\n--- OnlyOne\n\nSome text.\n\n:::");
+
+    expect($html)
+        ->not->toContain('role="tablist"')
+        ->toContain('laradocs-tab-group--single')
+        ->toContain('OnlyOne')
+        ->toContain('Some text.');
+});
+
+it('groups a code-tab run that is followed by trailing content', function () {
+    $html = render(
+        "```php tab:PHP\n\$x = 1;\n```\n\n```js tab:JS\nconst x = 1;\n```\n\nTrailing paragraph."
+    );
+
+    // The run of two tab fences terminates at the trailing paragraph, which must
+    // still survive intact alongside the formed tab group.
+    expect($html)
+        ->toContain('laradocs-tab-group')
+        ->toContain('role="tabpanel"')
+        ->toContain('Trailing paragraph.');
+});
+
+it('drops an empty content tabs block', function () {
+    $html = render("::: tabs\n\n:::");
+
+    expect($html)
+        ->not->toContain('laradocs-tab-group')
+        ->not->toContain(':::');
+});
+
+it('falls back gracefully when tabs extension is disabled', function () {
+    config()->set('laradocs.parser.extensions.tabs', false);
+    app()->forgetInstance(DocumentParser::class);
+
+    $html = render("```php tab:PHP\necho 1;\n```\n\n```js tab:JS\nconsole.log();\n```");
+
+    expect($html)
+        ->not->toContain('laradocs-tab-group')
+        ->toContain('laradocs-code');
+
+    // Restore for subsequent tests.
+    config()->set('laradocs.parser.extensions.tabs', true);
+    app()->forgetInstance(DocumentParser::class);
+});

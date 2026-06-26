@@ -322,6 +322,71 @@ body.laradocs {
   border-bottom-color: var(--dc-accent);
 }
 
+/* ─────────────────────── inline tab groups ─────────────────────── */
+/* These are in-content tab blocks (.laradocs-tab-group), distinct from
+   the page-level sticky section tabs (.laradocs-tabs / nav). */
+.laradocs-tab-group {
+  margin: 1.5rem 0;
+  border: 1px solid var(--dc-rule);
+  border-radius: var(--dc-radius-lg);
+  overflow: hidden;
+}
+.laradocs-tab-group-list {
+  display: flex; gap: .15rem;
+  padding: 0 .35rem;
+  background: color-mix(in srgb, var(--dc-bg-elev) 70%, transparent);
+  border-bottom: 1px solid var(--dc-rule);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.laradocs-tab-group-list::-webkit-scrollbar { display: none; }
+
+/* Panels */
+.laradocs-tab-group [role="tabpanel"] { outline: none; }
+.laradocs-tab-group [role="tabpanel"]:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--dc-accent);
+}
+
+/* Code blocks inside panels: strip their individual border/radius/margin
+   so the outer tab group provides the single container. */
+.laradocs-tab-group [role="tabpanel"] > .laradocs-code {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+}
+/* If the panel has content above a code block, draw a separator. */
+.laradocs-tab-group [role="tabpanel"] > * + .laradocs-code {
+  border-top: 1px solid var(--dc-rule);
+}
+
+/* Prose padding for content-tab panels with mixed content. */
+.laradocs-tab-group [role="tabpanel"] > p,
+.laradocs-tab-group [role="tabpanel"] > ul,
+.laradocs-tab-group [role="tabpanel"] > ol,
+.laradocs-tab-group [role="tabpanel"] > blockquote,
+.laradocs-tab-group [role="tabpanel"] > h1,
+.laradocs-tab-group [role="tabpanel"] > h2,
+.laradocs-tab-group [role="tabpanel"] > h3,
+.laradocs-tab-group [role="tabpanel"] > h4,
+.laradocs-tab-group [role="tabpanel"] > h5,
+.laradocs-tab-group [role="tabpanel"] > h6 {
+  padding-left: 1.15rem;
+  padding-right: 1.15rem;
+}
+.laradocs-tab-group [role="tabpanel"] > :first-child { margin-top: .75rem; }
+.laradocs-tab-group [role="tabpanel"] > :last-child:not(.laradocs-code) { margin-bottom: .75rem; }
+
+/* Single-tab degrade — show a plain label bar with no tab interaction. */
+.laradocs-tab-group--single .laradocs-tab-group-label {
+  padding: .45rem 1rem;
+  font-size: .75rem;
+  font-weight: 500;
+  font-family: var(--dc-mono);
+  color: var(--dc-muted);
+  background: color-mix(in srgb, var(--dc-bg-elev) 70%, transparent);
+  border-bottom: 1px solid var(--dc-rule);
+}
+
 /* ─────────────────────── shell layout ─────────────────────── */
 .laradocs-shell {
   display: flex; align-items: stretch;
@@ -1434,6 +1499,15 @@ body.laradocs {
 
   /* Paragraph orphan/widow control. */
   .laradocs-prose p { orphans: 3; widows: 3; }
+
+  /* ── Tab groups: reveal all panels, hide the interactive tab bar ── */
+  .laradocs-tab-group-list { display: none !important; }
+  .laradocs-tab-group [role="tabpanel"] { display: block !important; }
+  .laradocs-tab-group [role="tabpanel"] + [role="tabpanel"] {
+    border-top: 1px dashed #d4d4d4;
+    margin-top: .5rem;
+    padding-top: .5rem;
+  }
 
   /* ── Code blocks ────────────────────────────────────────────── */
   .laradocs-code { background: #f5f5f5 !important; border-color: #d4d4d4; }
