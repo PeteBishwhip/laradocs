@@ -10,6 +10,7 @@ use Illuminate\Routing\Router;
 use Laradocs\OpenApi\Generator\RequestInspector;
 use Laradocs\OpenApi\Generator\ResponseInspector;
 use Laradocs\OpenApi\Generator\RouteCollector;
+use Laradocs\OpenApi\Generator\SpecBuilder;
 use Laradocs\OpenApi\Generator\SpecGenerator;
 use Laradocs\Support\Config;
 use Symfony\Component\Yaml\Yaml;
@@ -52,7 +53,8 @@ final class OpenApiCommand extends Command
             serverUrl: $this->serverUrl(),
         );
 
-        $spec = $generator->generate();
+        $builder = new SpecBuilder($generator, $files);
+        $spec = $builder->build();
 
         /** @var array<string, mixed> $paths */
         $paths = $spec['paths'] ?? [];
@@ -69,8 +71,7 @@ final class OpenApiCommand extends Command
             return self::FAILURE;
         }
 
-        $files->ensureDirectoryExists(dirname($output));
-        $files->put($output, Yaml::dump($spec, 8, 2, Yaml::DUMP_OBJECT_AS_MAP));
+        $builder->dump($output, $spec);
 
         $this->components->info(sprintf('Wrote %d path(s) to %s', count($paths), $output));
 

@@ -24,6 +24,7 @@ final class SpecGenerator
         private readonly string $title = 'API',
         private readonly string $version = '1.0.0',
         private readonly ?string $serverUrl = null,
+        private readonly AttributeReader $attributes = new AttributeReader,
     ) {}
 
     /**
@@ -74,11 +75,20 @@ final class SpecGenerator
      */
     private function operation(CollectedRoute $route): array
     {
-        $operation = [
-            'summary' => $this->summary($route),
-            'operationId' => $this->operationId($route),
-            'tags' => [$this->tag($route)],
-        ];
+        $overrides = $this->attributes->read($route);
+
+        $operation = ['summary' => $overrides['summary'] ?? $this->summary($route)];
+
+        if (isset($overrides['description']) && $overrides['description'] !== '') {
+            $operation['description'] = $overrides['description'];
+        }
+
+        $operation['operationId'] = $overrides['operationId'] ?? $this->operationId($route);
+        $operation['tags'] = $overrides['tags'] ?? [$this->tag($route)];
+
+        if ($overrides['deprecated'] ?? false) {
+            $operation['deprecated'] = true;
+        }
 
         $parameters = $this->pathParameters($route);
         $request = $this->requests->inspect($route);
