@@ -788,6 +788,40 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | OpenAPI
+    |--------------------------------------------------------------------------
+    |
+    | Render interactive API reference pages from an OpenAPI 3.0/3.1 spec that
+    | lives alongside your docs. Disabled by default; requires the optional
+    | devizzent/cebe-php-openapi package (the spec is parsed once and cached by
+    | path + mtime, so edits are picked up automatically).
+    |
+    | "enabled"   Master switch for the OpenAPI integration.
+    | "files"     Candidate spec filenames searched for inside each docs source.
+    |             The first match wins (YAML and JSON are both supported).
+    | "base_slug" URL segment the generated reference pages are mounted under
+    |             (e.g. /docs/api).
+    | "title"     Heading / nav label for the reference section.
+    | "group"     Sidebar group the reference pages are filed under.
+    | "order"     Sort weight of the reference section relative to other groups.
+    | "render_markdown_descriptions"
+    |             Render CommonMark in spec `description` fields rather than
+    |             treating them as plain text.
+    |
+    */
+
+    'openapi' => [
+        'enabled' => (bool) env('LARADOCS_OPENAPI', false),
+        'files' => ['openapi.yaml', 'openapi.yml', 'openapi.json'],
+        'base_slug' => 'api',
+        'title' => 'API Reference',
+        'group' => 'API Reference',
+        'order' => 100,
+        'render_markdown_descriptions' => true,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Variables
     |--------------------------------------------------------------------------
     |
