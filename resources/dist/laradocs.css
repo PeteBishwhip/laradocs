@@ -1389,6 +1389,345 @@ body.laradocs {
   margin: 2rem 0 0;
 }
 
+/* ─────────────────────── OpenAPI reference pages ─────────────────────── */
+/*
+ * Styling for the generated OpenAPI operation / overview pages emitted by the
+ * partials under resources/views/partials/openapi/*. Every colour is derived
+ * from the existing theme tokens (--dc-accent, --dc-fg, --dc-muted, …) so the
+ * whole block follows light/dark mode for free.
+ *
+ * NOTE: these classes ship in the package stylesheet. Installs that published
+ * the assets with `php artisan vendor:publish --tag=laradocs-assets` must
+ * re-run that command (it overwrites resources/dist/laradocs.css in the host
+ * app) to pick up the OpenAPI styles below.
+ */
+.laradocs-openapi { font-size: .95rem; }
+.laradocs-openapi > * + * { margin-top: 1.25rem; }
+
+.laradocs-openapi-description > * { margin: 0; }
+.laradocs-openapi-description > * + * { margin-top: .6rem; }
+
+/* The endpoint line: METHOD + path, optional deprecated marker. */
+.laradocs-openapi-endpoint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .6rem;
+  margin: 0 0 1.25rem;
+}
+
+/* ── method badges (GET / POST / PUT / PATCH / DELETE) ── */
+.laradocs-openapi-method {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  padding: .2rem .55rem;
+  font-family: var(--dc-mono);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  border-radius: var(--dc-radius);
+  /* Default (and any unrecognised verb) falls back to the accent. */
+  --dc-method: var(--dc-accent);
+  color: var(--dc-method);
+  background: color-mix(in srgb, var(--dc-method) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dc-method) 35%, transparent);
+}
+.laradocs-openapi-method.method-get    { --dc-method: #2563eb; }
+.laradocs-openapi-method.method-post    { --dc-method: #10b981; }
+.laradocs-openapi-method.method-put     { --dc-method: #f59e0b; }
+.laradocs-openapi-method.method-patch   { --dc-method: #8b5cf6; }
+.laradocs-openapi-method.method-delete  { --dc-method: #ef4444; }
+.laradocs-openapi-method.method-head,
+.laradocs-openapi-method.method-options { --dc-method: var(--dc-muted); }
+
+.laradocs-openapi-path {
+  font-family: var(--dc-mono);
+  font-size: .9rem;
+  color: var(--dc-fg);
+  background: var(--dc-code-bg);
+  border: 1px solid var(--dc-rule);
+  border-radius: 4px;
+  padding: .15rem .45rem;
+  word-break: break-all;
+}
+
+/* Deprecated / required flag pills. */
+.laradocs-openapi-deprecated {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  padding: .1rem .45rem;
+  font-size: .68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  color: #b91c1c;
+  background: color-mix(in srgb, #ef4444 12%, transparent);
+  border: 1px solid color-mix(in srgb, #ef4444 35%, transparent);
+  border-radius: 999px;
+}
+.laradocs-openapi-required {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  padding: .1rem .45rem;
+  font-size: .68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  color: var(--dc-accent);
+  background: var(--dc-accent-soft);
+  border: 1px solid var(--dc-accent-line);
+  border-radius: 999px;
+}
+[data-theme="dark"] .laradocs-openapi-deprecated { color: #fca5a5; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .laradocs-openapi-deprecated { color: #fca5a5; }
+}
+
+/* ── parameter "tables" (rendered as a list of rows) ── */
+.laradocs-openapi-parameter-list {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  border: 1px solid var(--dc-rule);
+  border-radius: var(--dc-radius-lg);
+  overflow: hidden;
+}
+.laradocs-openapi-parameter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem;
+  margin: 0;
+  padding: .75rem 1rem;
+  background: var(--dc-paper);
+}
+.laradocs-openapi-parameter + .laradocs-openapi-parameter {
+  border-top: 1px solid var(--dc-rule);
+}
+.laradocs-openapi-parameter:nth-child(even) { background: var(--dc-bg-elev); }
+.laradocs-openapi-param-name {
+  font-family: var(--dc-mono);
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--dc-fg);
+}
+.laradocs-openapi-param-in {
+  font-size: .68rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  color: var(--dc-muted);
+  background: var(--dc-bg);
+  border: 1px solid var(--dc-rule);
+  border-radius: 3px;
+  padding: .08rem .4rem;
+}
+.laradocs-openapi-param-description {
+  flex: 0 0 100%;
+  margin-top: .35rem;
+  font-size: .88rem;
+  color: var(--dc-muted);
+}
+.laradocs-openapi-param-description > * { margin: 0; }
+
+/* ── media-type blocks (request body / response payloads) ── */
+.laradocs-openapi-media {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--dc-rule);
+  border-radius: var(--dc-radius-lg);
+  background: var(--dc-bg-elev);
+}
+.laradocs-openapi-media-type {
+  display: inline-block;
+  margin-bottom: .65rem;
+  font-family: var(--dc-mono);
+  font-size: .75rem;
+  color: var(--dc-muted);
+  background: var(--dc-code-bg);
+  border: 1px solid var(--dc-rule);
+  border-radius: 3px;
+  padding: .1rem .4rem;
+}
+
+/* ── response blocks ── */
+.laradocs-openapi-response + .laradocs-openapi-response {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--dc-rule);
+}
+.laradocs-openapi-response > h3 {
+  display: inline-block;
+  font-family: var(--dc-mono);
+  font-size: .95rem;
+  padding: .15rem .55rem;
+  border-radius: var(--dc-radius);
+  color: var(--dc-fg);
+  background: var(--dc-code-bg);
+  border: 1px solid var(--dc-rule);
+}
+/* Tint the status pill green for 2xx, red for 4xx/5xx (first digit). */
+.laradocs-openapi-response > h3[id^="response-2"] {
+  color: #10b981;
+  background: color-mix(in srgb, #10b981 12%, transparent);
+  border-color: color-mix(in srgb, #10b981 35%, transparent);
+}
+.laradocs-openapi-response > h3[id^="response-4"],
+.laradocs-openapi-response > h3[id^="response-5"] {
+  color: #ef4444;
+  background: color-mix(in srgb, #ef4444 12%, transparent);
+  border-color: color-mix(in srgb, #ef4444 35%, transparent);
+}
+.laradocs-openapi-response-description {
+  margin-top: .65rem;
+  color: var(--dc-muted);
+}
+.laradocs-openapi-response-description > * { margin: 0; }
+
+/* ── schema tree ── */
+.laradocs-openapi-schema {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .5rem;
+}
+.laradocs-openapi-type {
+  font-family: var(--dc-mono);
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--dc-accent);
+  background: var(--dc-accent-soft);
+  border-radius: 3px;
+  padding: .05rem .4rem;
+}
+.laradocs-openapi-format,
+.laradocs-openapi-nullable,
+.laradocs-openapi-ref {
+  font-family: var(--dc-mono);
+  font-size: .72rem;
+  color: var(--dc-muted);
+  background: var(--dc-code-bg);
+  border: 1px solid var(--dc-rule);
+  border-radius: 3px;
+  padding: .05rem .35rem;
+}
+.laradocs-openapi-nullable { font-style: italic; }
+.laradocs-openapi-circular,
+.laradocs-openapi-unresolved {
+  font-size: .72rem;
+  font-weight: 600;
+  color: #b45309;
+  background: color-mix(in srgb, #f59e0b 14%, transparent);
+  border: 1px solid color-mix(in srgb, #f59e0b 35%, transparent);
+  border-radius: 3px;
+  padding: .05rem .35rem;
+}
+[data-theme="dark"] .laradocs-openapi-circular,
+[data-theme="dark"] .laradocs-openapi-unresolved { color: #fcd34d; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .laradocs-openapi-circular,
+  :root:not([data-theme="light"]) .laradocs-openapi-unresolved { color: #fcd34d; }
+}
+.laradocs-openapi-schema-description {
+  flex: 0 0 100%;
+  font-size: .88rem;
+  color: var(--dc-muted);
+}
+.laradocs-openapi-schema-description > * { margin: 0; }
+
+/* Nested property / items / oneOf / anyOf groups: a left-rule guide line so
+   the tree's depth reads visually, like the sidebar's child nesting. */
+.laradocs-openapi-properties {
+  flex: 0 0 100%;
+  list-style: none;
+  margin: .4rem 0 0;
+  padding-left: 1rem;
+  border-left: 1px solid var(--dc-rule);
+}
+.laradocs-openapi-property { margin: 0; padding: .35rem 0; }
+.laradocs-openapi-property + .laradocs-openapi-property {
+  border-top: 1px solid var(--dc-rule);
+}
+.laradocs-openapi-prop-name {
+  font-family: var(--dc-mono);
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--dc-fg);
+  margin-right: .4rem;
+}
+.laradocs-openapi-items,
+.laradocs-openapi-one-of,
+.laradocs-openapi-any-of {
+  flex: 0 0 100%;
+  margin-top: .4rem;
+  padding-left: 1rem;
+  border-left: 1px solid var(--dc-rule);
+}
+.laradocs-openapi-items-label,
+.laradocs-openapi-composite-label,
+.laradocs-openapi-enum-label {
+  display: inline-block;
+  margin-bottom: .35rem;
+  font-size: .68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--dc-muted);
+}
+.laradocs-openapi-enum {
+  flex: 0 0 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem;
+}
+.laradocs-openapi-enum-value {
+  font-family: var(--dc-mono);
+  font-size: .78rem;
+  color: var(--dc-code-fg);
+  background: var(--dc-code-bg);
+  border: 1px solid var(--dc-rule);
+  border-radius: 3px;
+  padding: .05rem .35rem;
+}
+
+/* ── overview: servers + operations index ── */
+.laradocs-openapi-server-list,
+.laradocs-openapi-operation-list {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+}
+.laradocs-openapi-server {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .6rem;
+  padding: .5rem 0;
+}
+.laradocs-openapi-server + .laradocs-openapi-server {
+  border-top: 1px solid var(--dc-rule);
+}
+.laradocs-openapi-server-description { color: var(--dc-muted); font-size: .88rem; }
+
+.laradocs-openapi-operation-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .6rem;
+  padding: .6rem .85rem;
+  border: 1px solid var(--dc-rule);
+  border-radius: var(--dc-radius);
+  background: var(--dc-bg-elev);
+}
+.laradocs-openapi-operation-item + .laradocs-openapi-operation-item { margin-top: .5rem; }
+.laradocs-openapi-summary { color: var(--dc-muted); font-size: .9rem; }
+
 /* ─────────────────────── reduced motion ─────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

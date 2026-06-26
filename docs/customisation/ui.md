@@ -248,6 +248,17 @@ under `/docs/_laradocs/asset/*`. The package does not set a
 `Cache-Control` header on this route — attach your own caching
 middleware if you want one.
 
+> **Heads up:** publishing assets takes a *snapshot* of the package CSS.
+> If you previously ran `--tag=laradocs-assets` and then upgrade Laradocs,
+> your published `resources/dist/laradocs.css` will **not** include newer
+> styles (such as the OpenAPI method badges, parameter tables, schema tree,
+> and response blocks). Re-run the command after upgrading to refresh the
+> snapshot:
+>
+> ```bash
+> php artisan vendor:publish --tag=laradocs-assets --force
+> ```
+
 ## Print and PDF output
 
 Laradocs ships a built-in `@media print` block that automatically:
