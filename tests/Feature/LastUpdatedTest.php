@@ -114,3 +114,23 @@ it('reverts to config-driven resolution when closure is cleared', function () {
 
     expect(LastUpdatedConfig::resolve($doc))->toBe('1st March 2026');
 });
+
+// ── locale-aware formatting ────────────────────────────────────────────────────
+
+it('translates the month name when a non-English docs locale is active', function () {
+    app()->setLocale('de');
+
+    $doc = makeDocument('intro', ['updated_at' => '2026-03-01']);
+
+    // German month name — Carbon translates 'F' via translatedFormat().
+    expect(LastUpdatedConfig::resolve($doc))->toContain('März');
+})->after(fn () => app()->setLocale('en'));
+
+it('formats mtime dates using the active locale', function () {
+    app()->setLocale('de');
+
+    config()->set('laradocs.ui.last_updated_source', 'mtime');
+    $doc = makeDocument('intro'); // modifiedAt = 1700000000 → 15 Nov 2023
+
+    expect(LastUpdatedConfig::resolve($doc))->toContain('November');
+})->after(fn () => app()->setLocale('en'));

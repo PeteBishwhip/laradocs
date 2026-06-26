@@ -69,15 +69,18 @@ final class LastUpdatedConfig
 
         $source = Config::string('laradocs.ui.last_updated_source', 'front_matter');
         $format = Config::string('laradocs.locale.date_format', 'jS F Y');
+        $locale = (string) app()->getLocale();
 
         $mtimeCarbon = $document->modifiedAt > 0
             ? CarbonImmutable::createFromTimestamp($document->modifiedAt)
             : null;
 
+        $render = static fn (?CarbonImmutable $carbon) => $carbon?->locale($locale)->translatedFormat($format);
+
         return match ($source) {
-            'mtime' => $mtimeCarbon?->format($format),
-            'front_matter_or_mtime' => ($document->metadata->updatedAtCarbon() ?? $mtimeCarbon)?->format($format),
-            default => $document->metadata->updatedAtCarbon()?->format($format),
+            'mtime' => $render($mtimeCarbon),
+            'front_matter_or_mtime' => $render($document->metadata->updatedAtCarbon() ?? $mtimeCarbon),
+            default => $render($document->metadata->updatedAtCarbon()),
         };
     }
 }
