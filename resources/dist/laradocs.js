@@ -528,6 +528,99 @@
 
   // Keep the outdated-version banner dismissed for the session. Dismissal is
   // stored per active version so switching versions re-shows the banner.
+  function initTabs() {
+    var groups = document.querySelectorAll('.laradocs-tab-group');
+    if (!groups.length) return;
+
+    var STORAGE_PREFIX = 'laradocs:tabs:';
+
+    function stored(group) {
+      try { return localStorage.getItem(STORAGE_PREFIX + group) || ''; } catch (e) { return ''; }
+    }
+    function store(group, label) {
+      try { localStorage.setItem(STORAGE_PREFIX + group, label); } catch (e) {}
+    }
+
+    // Activate `tabEl` within its own group without syncing siblings (used by sync).
+    function activateInGroup(tabEl, group) {
+      var controls = tabEl.getAttribute('aria-controls');
+      group.querySelectorAll('[role="tab"]').forEach(function (t) {
+        var active = t === tabEl;
+        t.setAttribute('aria-selected', active ? 'true' : 'false');
+        t.classList.toggle('is-active', active);
+        t.tabIndex = active ? 0 : -1;
+      });
+      group.querySelectorAll('[role="tabpanel"]').forEach(function (panel) {
+        panel.toggleAttribute('hidden', panel.id !== controls);
+      });
+    }
+
+    // Activate `tabEl`, sync same-group blocks on the page, and persist.
+    function activateTab(tabEl) {
+      var group = tabEl.closest('.laradocs-tab-group');
+      if (!group) return;
+      activateInGroup(tabEl, group);
+
+      var label = tabEl.textContent.trim();
+      var dataGroup = group.getAttribute('data-tabs-group');
+      if (dataGroup) {
+        store(dataGroup, label);
+        // Sync other blocks that share the same group name.
+        document.querySelectorAll('.laradocs-tab-group[data-tabs-group="' + dataGroup + '"]').forEach(function (other) {
+          if (other === group) return;
+          var match = null;
+          other.querySelectorAll('[role="tab"]').forEach(function (t) {
+            if (t.textContent.trim() === label) match = t;
+          });
+          if (match) activateInGroup(match, other);
+        });
+      }
+    }
+
+    // Restore persisted selection for each group on page load.
+    groups.forEach(function (group) {
+      var dataGroup = group.getAttribute('data-tabs-group');
+      if (!dataGroup) return;
+      var label = stored(dataGroup);
+      if (!label) return;
+      var match = null;
+      group.querySelectorAll('[role="tab"]').forEach(function (t) {
+        if (t.textContent.trim() === label) match = t;
+      });
+      if (match) activateInGroup(match, group);
+    });
+
+    // Event listeners.
+    groups.forEach(function (group) {
+      var tablist = group.querySelector('[role="tablist"]');
+      if (!tablist) return;
+
+      tablist.addEventListener('click', function (e) {
+        var tab = e.target.closest('[role="tab"]');
+        if (tab) activateTab(tab);
+      });
+
+      tablist.addEventListener('keydown', function (e) {
+        var tabs = Array.prototype.slice.call(tablist.querySelectorAll('[role="tab"]'));
+        var idx = tabs.indexOf(document.activeElement);
+        if (idx === -1) return;
+        var next = null;
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+          e.preventDefault(); next = tabs[(idx + 1) % tabs.length];
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+          e.preventDefault(); next = tabs[(idx - 1 + tabs.length) % tabs.length];
+        } else if (e.key === 'Home') {
+          e.preventDefault(); next = tabs[0];
+        } else if (e.key === 'End') {
+          e.preventDefault(); next = tabs[tabs.length - 1];
+        } else if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault(); activateTab(document.activeElement); return;
+        }
+        if (next) next.focus();
+      });
+    });
+  }
+
   function initVersionBanner() {
     var banner = document.querySelector('[data-laradocs-outdated-banner]');
     if (!banner) return;
@@ -567,6 +660,7 @@
     initSearchKbdHint();
     initVersionBlocks();
     initVersionBanner();
+    initTabs();
   }
 
   if (document.readyState !== 'loading') {
