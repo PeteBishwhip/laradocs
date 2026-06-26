@@ -8,6 +8,7 @@ use Closure;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Laradocs\Cache\DocumentCache;
+use Laradocs\Contracts\DocumentContentRenderer;
 use Laradocs\Contracts\DocumentLoader;
 use Laradocs\Contracts\DocumentParser;
 use Laradocs\Documents\Document;
@@ -31,6 +32,7 @@ final class Laradocs
      * @param  array<int, string>  $searchExclude
      * @param  array<int, string>  $searchInclude
      * @param  array<string, float>  $searchRank
+     * @param  array<int, DocumentContentRenderer>  $contentRenderers
      */
     public function __construct(
         private readonly DocumentLoader $loader,
@@ -44,6 +46,7 @@ final class Laradocs
         private readonly array $searchExclude = [],
         private readonly array $searchInclude = [],
         private readonly array $searchRank = [],
+        private readonly array $contentRenderers = [],
     ) {}
 
     /**
@@ -295,7 +298,15 @@ final class Laradocs
     {
         return $this->cache->rememberHtml(
             $document,
-            fn (): string => $this->parser->parse($document->markdown)
+            function () use ($document): string {
+                foreach ($this->contentRenderers as $renderer) {
+                    if ($renderer->supports($document)) {
+                        return $renderer->render($document);
+                    }
+                }
+
+                return $this->parser->parse($document->markdown);
+            }
         );
     }
 

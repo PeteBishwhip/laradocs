@@ -240,6 +240,7 @@ final class LaradocsServiceProvider extends ServiceProvider
                 $searchExclude,
                 $searchInclude,
                 $searchRank,
+                [],
             );
         });
     }
