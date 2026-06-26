@@ -90,11 +90,7 @@ final class RouteCollector
     {
         $methods = [];
 
-        foreach ($route->methods() as $method) {
-            if (! is_string($method)) {
-                continue; // @codeCoverageIgnore
-            }
-
+        foreach (array_filter($route->methods(), 'is_string') as $method) {
             $method = strtoupper($method);
 
             if ($method === 'HEAD' || $method === 'OPTIONS') {

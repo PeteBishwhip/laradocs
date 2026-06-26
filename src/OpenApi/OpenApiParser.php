@@ -20,9 +20,6 @@ use RuntimeException;
  * so nothing downstream depends on the library. The normalized array is cached
  * by spec path + mtime, so an unchanged spec parses once and a changed file
  * busts the entry automatically.
- *
- * Construction does not require the cebe library, but {@see parse()} does; gate
- * calls behind `class_exists(\cebe\openapi\Reader::class)`.
  */
 final class OpenApiParser
 {
@@ -37,19 +34,10 @@ final class OpenApiParser
      * object. Cached by path + mtime; pass a spec whose mtime has changed to
      * force a fresh parse.
      *
-     * @throws RuntimeException when the cebe library is unavailable, the file
-     *                          cannot be read, or the spec fails validation.
+     * @throws RuntimeException when the file cannot be read or the spec fails validation.
      */
     public function parse(string $path): NormalizedSpec
     {
-        // @codeCoverageIgnoreStart
-        if (! class_exists(Reader::class)) {
-            throw new RuntimeException(
-                'Parsing OpenAPI specs requires the devizzent/cebe-php-openapi package.',
-            );
-        }
-        // @codeCoverageIgnoreEnd
-
         if (! is_file($path)) {
             throw new RuntimeException("OpenAPI spec not found at: {$path}");
         }

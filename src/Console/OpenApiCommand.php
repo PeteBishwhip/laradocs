@@ -13,7 +13,6 @@ use Laradocs\OpenApi\Generator\RouteCollector;
 use Laradocs\OpenApi\Generator\SpecBuilder;
 use Laradocs\OpenApi\Generator\SpecGenerator;
 use Laradocs\Support\Config;
-use Symfony\Component\Yaml\Yaml;
 
 /**
  * Discovers the application's API routes and writes a scaffold OpenAPI spec by
@@ -35,14 +34,6 @@ final class OpenApiCommand extends Command
 
     public function handle(Router $router, Filesystem $files): int
     {
-        // @codeCoverageIgnoreStart
-        if (! class_exists(Yaml::class)) {
-            $this->components->error('symfony/yaml is required to generate an OpenAPI spec.');
-
-            return self::FAILURE;
-        }
-        // @codeCoverageIgnoreEnd
-
         $prefix = $this->resolve('prefix', 'laradocs.openapi.generator.prefix', 'api');
         $middleware = $this->resolve('middleware', 'laradocs.openapi.generator.middleware', 'api');
 

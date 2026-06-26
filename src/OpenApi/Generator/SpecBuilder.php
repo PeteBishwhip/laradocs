@@ -6,7 +6,6 @@ namespace Laradocs\OpenApi\Generator;
 
 use Illuminate\Filesystem\Filesystem;
 use Laradocs\OpenApi\OpenApiParser;
-use RuntimeException;
 use Symfony\Component\Yaml\Yaml;
 
 /**
@@ -18,9 +17,6 @@ use Symfony\Component\Yaml\Yaml;
  * The emitted YAML is designed to round-trip: it parses cleanly back through
  * {@see OpenApiParser} and renders through the Pillar A
  * reference pages, so the generated spec is immediately usable, not just a dump.
- *
- * Serialising requires symfony/yaml; gate calls behind
- * `class_exists(\Symfony\Component\Yaml\Yaml::class)`.
  */
 final class SpecBuilder
 {
@@ -46,14 +42,6 @@ final class SpecBuilder
      */
     public function toYaml(?array $spec = null): string
     {
-        // @codeCoverageIgnoreStart
-        if (! class_exists(Yaml::class)) {
-            throw new RuntimeException(
-                'Dumping an OpenAPI spec to YAML requires the symfony/yaml package.',
-            );
-        }
-        // @codeCoverageIgnoreEnd
-
         return Yaml::dump($spec ?? $this->build(), 8, 2, Yaml::DUMP_OBJECT_AS_MAP);
     }
 
