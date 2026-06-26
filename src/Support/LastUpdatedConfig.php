@@ -75,7 +75,9 @@ final class LastUpdatedConfig
             ? CarbonImmutable::createFromTimestamp($document->modifiedAt)
             : null;
 
-        $render = static fn (?CarbonImmutable $carbon) => $carbon?->locale($locale)->translatedFormat($format);
+        $render = static fn (?CarbonImmutable $carbon) => $carbon
+            ?->settings(['locale' => $locale])
+            ->translatedFormat($format);
 
         return match ($source) {
             'mtime' => $render($mtimeCarbon),
