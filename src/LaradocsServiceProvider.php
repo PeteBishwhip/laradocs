@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Laradocs;
 
+use cebe\openapi\Reader;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Cache\Factory as CacheFactory;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -50,9 +51,12 @@ use Laradocs\Extensions\VersionBlockExtension;
 use Laradocs\Extensions\VideoExtension;
 use Laradocs\Icons\HeroiconProvider;
 use Laradocs\Icons\IconRegistry;
+use Laradocs\Loaders\CompositeDocumentLoader;
 use Laradocs\Loaders\FilesystemLoader;
+use Laradocs\Loaders\OpenApiLoader;
 use Laradocs\Macros\MacroRegistry;
 use Laradocs\Metadata\FrontMatterMetadataResolver;
+use Laradocs\OpenApi\OpenApiParser;
 use Laradocs\Parsers\MarkdownParser;
 use Laradocs\Routing\DocumentRouter;
 use Laradocs\Routing\SlugResolver;
@@ -169,30 +173,20 @@ final class LaradocsServiceProvider extends ServiceProvider
             );
         });
 
-        $this->app->bind(DocumentLoader::class, function (Application $app): FilesystemLoader {
-            /** @var array<int, string> $extensions */
-            $extensions = Config::array('laradocs.docs.extensions', ['md']);
-            /** @var array<int, string> $ignored */
-            $ignored = Config::array('laradocs.docs.ignored_patterns');
-            /** @var array<string, mixed> $defaults */
-            $defaults = Config::array('laradocs.metadata.default');
+        $this->app->bind(DocumentLoader::class, function (Application $app): DocumentLoader {
+            $filesystem = $this->makeFilesystemLoader($app);
 
-            return new FilesystemLoader(
-                new Filesystem,
-                $app->make(MetadataResolver::class),
-                $app->make(SlugResolver::class),
-                fn (): string => Version::docsPath(),
-                $extensions,
-                $ignored,
-                $defaults,
-                // Content localisation recognises the same locales offered in
-                // the in-page switcher. Per-language pages (page.fr.md or
-                // fr/page.md) are served for the request's locale, falling back
-                // to the default-locale file when a translation is missing.
-                fn (): array => array_keys(Locale::available()),
-                fn (): string => (string) $app->getLocale(),
-                fn (): string => Locale::fallback(),
-            );
+            // The OpenAPI integration only participates when it is switched on
+            // *and* the optional cebe library is installed; otherwise the
+            // behaviour is byte-for-byte the original filesystem loader.
+            if (Config::bool('laradocs.openapi.enabled', false) && class_exists(Reader::class)) {
+                return new CompositeDocumentLoader([
+                    $filesystem,
+                    $this->makeOpenApiLoader($app),
+                ]);
+            }
+
+            return $filesystem;
         });
 
         $this->app->bind(DocumentCache::class, function (Application $app): DocumentCache {
@@ -205,6 +199,68 @@ final class LaradocsServiceProvider extends ServiceProvider
                 Config::nullableInt('laradocs.cache.ttl'),
             );
         });
+    }
+
+    /**
+     * The filesystem-backed document loader: the package's original source of
+     * documents, reading markdown files from the active docs path.
+     */
+    private function makeFilesystemLoader(Application $app): FilesystemLoader
+    {
+        /** @var array<int, string> $extensions */
+        $extensions = Config::array('laradocs.docs.extensions', ['md']);
+        /** @var array<int, string> $ignored */
+        $ignored = Config::array('laradocs.docs.ignored_patterns');
+        /** @var array<string, mixed> $defaults */
+        $defaults = Config::array('laradocs.metadata.default');
+
+        return new FilesystemLoader(
+            new Filesystem,
+            $app->make(MetadataResolver::class),
+            $app->make(SlugResolver::class),
+            fn (): string => Version::docsPath(),
+            $extensions,
+            $ignored,
+            $defaults,
+            // Content localisation recognises the same locales offered in
+            // the in-page switcher. Per-language pages (page.fr.md or
+            // fr/page.md) are served for the request's locale, falling back
+            // to the default-locale file when a translation is missing.
+            fn (): array => array_keys(Locale::available()),
+            fn (): string => (string) $app->getLocale(),
+            fn (): string => Locale::fallback(),
+        );
+    }
+
+    /**
+     * The OpenAPI loader, surfacing each spec operation as a synthetic document.
+     * Shares the document cache store/ttl so parsed specs cache alongside
+     * everything else.
+     */
+    private function makeOpenApiLoader(Application $app): OpenApiLoader
+    {
+        /** @var CacheFactory $factory */
+        $factory = $app->make(CacheFactory::class);
+
+        $parser = new OpenApiParser(
+            $factory->store(Config::nullableString('laradocs.cache.store')),
+            Config::bool('laradocs.cache.enabled', true),
+            Config::nullableInt('laradocs.cache.ttl'),
+        );
+
+        /** @var array<int, string> $files */
+        $files = Config::array('laradocs.openapi.files', ['openapi.yaml', 'openapi.yml', 'openapi.json']);
+
+        return new OpenApiLoader(
+            $parser,
+            fn (): string => Version::docsPath(),
+            $files,
+            Config::string('laradocs.openapi.base_slug', 'api'),
+            Config::nullableString('laradocs.openapi.title'),
+            Config::nullableString('laradocs.openapi.group'),
+            Config::int('laradocs.openapi.order'),
+            fn (): string => (string) $app->getLocale(),
+        );
     }
 
     private function registerCore(): void
