@@ -29,6 +29,7 @@ use Laradocs\Console\LintCommand;
 use Laradocs\Console\LoginCommand;
 use Laradocs\Console\MakeDocCommand;
 use Laradocs\Console\VersionsCommand;
+use Laradocs\Contracts\DocumentContentRenderer;
 use Laradocs\Contracts\DocumentLoader;
 use Laradocs\Contracts\DocumentParser;
 use Laradocs\Contracts\HtmlExtension;
@@ -56,6 +57,7 @@ use Laradocs\Loaders\FilesystemLoader;
 use Laradocs\Loaders\OpenApiLoader;
 use Laradocs\Macros\MacroRegistry;
 use Laradocs\Metadata\FrontMatterMetadataResolver;
+use Laradocs\OpenApi\OpenApiContentRenderer;
 use Laradocs\OpenApi\OpenApiParser;
 use Laradocs\Parsers\MarkdownParser;
 use Laradocs\Routing\DocumentRouter;
@@ -239,20 +241,11 @@ final class LaradocsServiceProvider extends ServiceProvider
      */
     private function makeOpenApiLoader(Application $app): OpenApiLoader
     {
-        /** @var CacheFactory $factory */
-        $factory = $app->make(CacheFactory::class);
-
-        $parser = new OpenApiParser(
-            $factory->store(Config::nullableString('laradocs.cache.store')),
-            Config::bool('laradocs.cache.enabled', true),
-            Config::nullableInt('laradocs.cache.ttl'),
-        );
-
         /** @var array<int, string> $files */
         $files = Config::array('laradocs.openapi.files', ['openapi.yaml', 'openapi.yml', 'openapi.json']);
 
         return new OpenApiLoader(
-            $parser,
+            $this->makeOpenApiParser($app),
             fn (): string => Version::docsPath(),
             $files,
             Config::string('laradocs.openapi.base_slug', 'api'),
@@ -260,6 +253,23 @@ final class LaradocsServiceProvider extends ServiceProvider
             Config::nullableString('laradocs.openapi.group'),
             Config::int('laradocs.openapi.order'),
             fn (): string => (string) $app->getLocale(),
+        );
+    }
+
+    /**
+     * Build an OpenAPI parser sharing the document cache store/ttl so parsed
+     * specs cache alongside everything else. Used by both the loader and the
+     * content renderer.
+     */
+    private function makeOpenApiParser(Application $app): OpenApiParser
+    {
+        /** @var CacheFactory $factory */
+        $factory = $app->make(CacheFactory::class);
+
+        return new OpenApiParser(
+            $factory->store(Config::nullableString('laradocs.cache.store')),
+            Config::bool('laradocs.cache.enabled', true),
+            Config::nullableInt('laradocs.cache.ttl'),
         );
     }
 
@@ -296,9 +306,32 @@ final class LaradocsServiceProvider extends ServiceProvider
                 $searchExclude,
                 $searchInclude,
                 $searchRank,
-                [],
+                $this->makeContentRenderers($app),
             );
         });
+    }
+
+    /**
+     * The native document content renderers consulted at the HTML choke-point
+     * (US-002). The OpenAPI renderer only participates when the integration is
+     * switched on *and* the optional cebe library is installed — mirroring the
+     * loader binding — so markdown rendering is otherwise untouched.
+     *
+     * @return array<int, DocumentContentRenderer>
+     */
+    private function makeContentRenderers(Application $app): array
+    {
+        $renderers = [];
+
+        if (Config::bool('laradocs.openapi.enabled', false) && class_exists(Reader::class)) {
+            $renderers[] = new OpenApiContentRenderer(
+                $this->makeOpenApiParser($app),
+                $app->make(DocumentParser::class),
+                Config::bool('laradocs.openapi.render_markdown_descriptions', true),
+            );
+        }
+
+        return $renderers;
     }
 
     private function registerRateLimiting(): void
