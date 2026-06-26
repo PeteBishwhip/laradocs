@@ -93,11 +93,15 @@ return [
         'cookie' => (bool) env('LARADOCS_LOCALE_COOKIE', false),
         'detect_browser' => (bool) env('LARADOCS_DETECT_BROWSER', true),
 
-        // PHP date format string used when rendering the "Last updated" date on
-        // each page. Defaults to "21st June 2026" style. Override per deployment
-        // with LARADOCS_DATE_FORMAT, or publish the config and set it directly.
-        // Any format accepted by Carbon::format() / PHP date() is valid,
-        // e.g. 'Y-m-d', 'd/m/Y', 'F j, Y'.
+        // Format string for the "Last updated" date rendered on each page.
+        // Tokens follow PHP date() conventions (e.g. 'Y-m-d', 'd/m/Y', 'F j, Y'),
+        // but the date is formatted via Carbon::translatedFormat() so locale-aware
+        // tokens — month names (F, M), day names (l, D) — are automatically
+        // translated into the active docs locale. The English ordinal suffix (S,
+        // e.g. "1st") is not meaningful in every language; for multi-locale sites
+        // consider a neutral default such as 'j F Y' or 'Y-m-d'. Override per
+        // deployment with LARADOCS_DATE_FORMAT, or publish the config and set it
+        // directly.
         'date_format' => env('LARADOCS_DATE_FORMAT', 'jS F Y'),
     ],
 
