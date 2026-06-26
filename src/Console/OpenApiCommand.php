@@ -35,11 +35,13 @@ final class OpenApiCommand extends Command
 
     public function handle(Router $router, Filesystem $files): int
     {
+        // @codeCoverageIgnoreStart
         if (! class_exists(Yaml::class)) {
             $this->components->error('symfony/yaml is required to generate an OpenAPI spec.');
 
             return self::FAILURE;
         }
+        // @codeCoverageIgnoreEnd
 
         $prefix = $this->resolve('prefix', 'laradocs.openapi.generator.prefix', 'api');
         $middleware = $this->resolve('middleware', 'laradocs.openapi.generator.middleware', 'api');

@@ -148,3 +148,11 @@ it('reparses when the spec mtime changes', function () use ($fixtures) {
         @unlink($path);
     }
 });
+
+it('throws when the spec file does not exist', function () {
+    makeParser(false)->parse('/no/such/openapi.yaml');
+})->throws(RuntimeException::class);
+
+it('throws when the spec fails validation', function () use ($fixtures) {
+    makeParser(false)->parse($fixtures . '/invalid.yaml');
+})->throws(RuntimeException::class);

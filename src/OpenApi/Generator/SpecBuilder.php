@@ -46,11 +46,13 @@ final class SpecBuilder
      */
     public function toYaml(?array $spec = null): string
     {
+        // @codeCoverageIgnoreStart
         if (! class_exists(Yaml::class)) {
             throw new RuntimeException(
                 'Dumping an OpenAPI spec to YAML requires the symfony/yaml package.',
             );
         }
+        // @codeCoverageIgnoreEnd
 
         return Yaml::dump($spec ?? $this->build(), 8, 2, Yaml::DUMP_OBJECT_AS_MAP);
     }

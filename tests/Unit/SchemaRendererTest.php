@@ -257,3 +257,34 @@ it('renders the cyclic fixture spec finitely end-to-end', function () use ($fixt
         ->and($node['properties']['children']['schema']['type'])->toBe('array')
         ->and($node['properties']['children']['schema']['items']['circular'])->toBeTrue();
 });
+
+it('infers object/array type from properties/items and carries descriptions', function () {
+    $renderer = new SchemaRenderer(specWithSchemas([]));
+
+    // No explicit type, but properties present -> inferred object.
+    $object = $renderer->render(['properties' => ['a' => ['type' => 'string']]]);
+    expect($object['type'])->toBe('object');
+
+    // No explicit type, but items present -> inferred array.
+    $array = $renderer->render(['items' => ['type' => 'string']]);
+    expect($array['type'])->toBe('array');
+
+    // A node-level description is surfaced.
+    $described = $renderer->render(['type' => 'string', 'description' => 'A field.']);
+    expect($described['description'])->toBe('A field.');
+});
+
+it('carries a description up from an allOf member into the merged node', function () {
+    $node = (new SchemaRenderer(specWithSchemas([])))->render([
+        'allOf' => [
+            [
+                'type' => 'object',
+                'description' => 'Merged in.',
+                'properties' => ['a' => ['type' => 'string']],
+            ],
+        ],
+    ]);
+
+    expect($node['type'])->toBe('object')
+        ->and($node['description'])->toBe('Merged in.');
+});

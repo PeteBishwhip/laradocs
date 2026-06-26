@@ -67,3 +67,18 @@ it('honours the prefix filter option', function (): void {
 
     expect($spec['paths'] ?? [])->toBe([]);
 });
+
+it('uses the configured server url and output path when no options are given', function (): void {
+    config()->set('laradocs.openapi.generator.server_url', 'https://api.example.test');
+    config()->set('laradocs.openapi.generator.output', $this->output);
+
+    $exit = Artisan::call('laradocs:openapi');
+
+    expect($exit)->toBe(0)
+        ->and(is_file($this->output))->toBeTrue();
+
+    /** @var array<string, mixed> $spec */
+    $spec = Yaml::parseFile($this->output);
+
+    expect($spec['servers'])->toBe([['url' => 'https://api.example.test']]);
+});

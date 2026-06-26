@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Route;
+use Laradocs\OpenApi\Generator\AttributeReader;
+use Laradocs\OpenApi\Generator\CollectedRoute;
+use Laradocs\OpenApi\Generator\MethodSource;
 use Laradocs\OpenApi\Generator\RequestInspector;
 use Laradocs\OpenApi\Generator\ResponseInspector;
 use Laradocs\OpenApi\Generator\RouteCollector;
 use Laradocs\OpenApi\Generator\RuleMapper;
 use Laradocs\OpenApi\Generator\SpecGenerator;
+use Laradocs\Tests\Fixtures\Api\CoverageController;
 use Laradocs\Tests\Fixtures\Api\OrderController;
 use Symfony\Component\Yaml\Yaml;
 
@@ -187,4 +191,146 @@ it('assembles a complete OpenAPI document', function (): void {
     $yaml = Yaml::dump($spec, 8, 2);
 
     expect(Yaml::parse($yaml))->toBe($spec);
+});
+
+it('maps the remaining scalar rule types to JSON Schema', function (): void {
+    $mapper = new RuleMapper;
+
+    expect($mapper->map('numeric')['schema'])->toMatchArray(['type' => 'number'])
+        ->and($mapper->map('url')['schema'])->toMatchArray(['type' => 'string', 'format' => 'uri'])
+        ->and($mapper->map('uuid')['schema'])->toMatchArray(['type' => 'string', 'format' => 'uuid'])
+        ->and($mapper->map('ulid')['schema'])->toMatchArray(['type' => 'string'])
+        ->and($mapper->map('date')['schema'])->toMatchArray(['type' => 'string', 'format' => 'date-time']);
+});
+
+it('maps numeric, array and non-numeric bound rules', function (): void {
+    $mapper = new RuleMapper;
+
+    // Float bound on a numeric type.
+    expect($mapper->map('numeric|min:1.5')['schema'])->toMatchArray(['type' => 'number', 'minimum' => 1.5])
+        // Item-count bounds on an array type.
+        ->and($mapper->map('array|min:2|max:5')['schema'])->toMatchArray(['type' => 'array', 'minItems' => 2, 'maxItems' => 5])
+        // A non-numeric bound argument is ignored entirely.
+        ->and($mapper->map('string|min:abc')['schema'])->toBe(['type' => 'string']);
+});
+
+it('reads a method source and returns null for sourceless methods', function (): void {
+    $source = MethodSource::read(new ReflectionMethod(OrderController::class, 'search'));
+
+    expect($source)->toContain('validate');
+
+    // An internal method has no source file, so its getFileName() is false.
+    expect(MethodSource::read(new ReflectionMethod(ArrayObject::class, 'count')))->toBeNull();
+});
+
+/**
+ * Build a CollectedRoute pointing at a fixture controller action.
+ */
+function coverageRoute(string $action, string $method = 'GET'): CollectedRoute
+{
+    return new CollectedRoute(
+        methods: [$method],
+        uri: '/api/x',
+        pathParameters: [],
+        controller: CoverageController::class,
+        action: $action,
+    );
+}
+
+it('applies docblock and attribute overrides and ignores unresolvable routes', function (): void {
+    $reader = new AttributeReader;
+
+    // No controller/action -> nothing to read.
+    expect($reader->read(new CollectedRoute(methods: ['GET'], uri: '/x', pathParameters: [])))->toBe([]);
+
+    // Controller present but the action does not exist.
+    expect($reader->read(coverageRoute('missing')))->toBe([]);
+
+    // A docblock with a @deprecated tag, summary and description.
+    expect($reader->read(coverageRoute('deprecatedDocblock')))->toMatchArray([
+        'summary' => 'Legacy lookup.',
+        'description' => 'Kept only for backwards compatibility.',
+        'deprecated' => true,
+    ]);
+
+    // An attribute that overrides the description and operationId.
+    expect($reader->read(coverageRoute('fullyAttributed')))->toMatchArray([
+        'description' => 'Detailed.',
+        'operationId' => 'customOpId',
+    ]);
+});
+
+it('degrades gracefully for unresolvable or unusual request inputs', function (): void {
+    $inspect = fn (string $action): array => (new RequestInspector)->inspect(coverageRoute($action, 'POST'));
+
+    // Null controller/action.
+    expect((new RequestInspector)->inspect(new CollectedRoute(methods: ['POST'], uri: '/x', pathParameters: [])))
+        ->toBe(['properties' => [], 'required' => []])
+        // Missing action method.
+        ->and($inspect('missing'))->toBe(['properties' => [], 'required' => []])
+        // FormRequest without a rules() method.
+        ->and($inspect('noRules'))->toBe(['properties' => [], 'required' => []])
+        // FormRequest whose rules() throws.
+        ->and($inspect('throwing'))->toBe(['properties' => [], 'required' => []]);
+
+    // A ruleset value that is neither a string nor an array is skipped.
+    $weird = $inspect('weird');
+    expect($weird['properties'])->toHaveKey('name')->not->toHaveKey('count');
+});
+
+it('degrades gracefully for unresolvable or non-resource responses', function (): void {
+    $inspect = fn (string $action): array => (new ResponseInspector)->inspect(coverageRoute($action));
+
+    expect((new ResponseInspector)->inspect(new CollectedRoute(methods: ['GET'], uri: '/x', pathParameters: []))['schema'])->toBeNull()
+        ->and($inspect('missing')['schema'])->toBeNull()
+        // A builtin (array) return type.
+        ->and($inspect('returnsArray')['schema'])->toBeNull()
+        // No return type at all.
+        ->and($inspect('noReturn')['schema'])->toBeNull()
+        // A class that is not a JsonResource.
+        ->and($inspect('returnsJson')['schema'])->toBeNull();
+
+    // A ResourceCollection without $collects yields an array of empty objects.
+    $bare = $inspect('returnsBareCollection');
+    expect($bare['schema']['type'])->toBe('array')
+        ->and($bare['schema']['items'])->toBe(['type' => 'object']);
+});
+
+it('handles closure routes and empty request bodies in the assembled document', function (): void {
+    Route::middleware('api')->prefix('api')->group(function (): void {
+        Route::get('ping', fn () => 'pong');
+        Route::post('empty', [CoverageController::class, 'emptyPost']);
+    });
+
+    /** @var Router $router */
+    $router = app('router');
+
+    $spec = (new SpecGenerator(
+        routes: new RouteCollector($router, 'api', 'api'),
+        requests: new RequestInspector,
+        responses: new ResponseInspector,
+    ))->generate();
+
+    // A closure route has no action/controller, so summary and tag fall back.
+    $ping = $spec['paths']['/api/ping']['get'];
+    expect($ping['summary'])->toBe('GET /api/ping')
+        ->and($ping['tags'])->toBe(['Default']);
+
+    // A POST with no inferable input emits no requestBody.
+    expect($spec['paths']['/api/empty']['post'])->not->toHaveKey('requestBody');
+});
+
+it('excludes routes failing the middleware filter and verb-only routes', function (): void {
+    // Prefix matches but the api middleware is absent.
+    Route::prefix('api')->get('plain', fn () => 'x');
+    // Only OPTIONS, which is stripped, leaving no documentable verb.
+    Route::middleware('api')->prefix('api')->match(['OPTIONS'], 'opts', fn () => 'x');
+
+    /** @var Router $router */
+    $router = app('router');
+
+    $uris = array_map(fn ($route) => $route->uri, (new RouteCollector($router, 'api', 'api'))->collect());
+
+    expect($uris)->not->toContain('/api/plain')
+        ->and($uris)->not->toContain('/api/opts');
 });

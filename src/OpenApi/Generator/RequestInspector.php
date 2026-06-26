@@ -51,15 +51,11 @@ final class RequestInspector
             return null;
         }
 
-        try {
-            if (! method_exists($route->controller, $route->action)) {
-                return null;
-            }
-
-            return new ReflectionMethod($route->controller, $route->action);
-        } catch (Throwable) {
+        if (! method_exists($route->controller, $route->action)) {
             return null;
         }
+
+        return new ReflectionMethod($route->controller, $route->action);
     }
 
     /**
@@ -110,9 +106,9 @@ final class RequestInspector
      */
     private function inlineRules(ReflectionMethod $method): array
     {
-        $source = $this->methodSource($method);
+        $source = MethodSource::read($method) ?? '';
 
-        if ($source === null || ! preg_match('/validate\s*\(\s*\[/', $source)) {
+        if (! preg_match('/validate\s*\(\s*\[/', $source)) {
             return [];
         }
 
@@ -131,25 +127,6 @@ final class RequestInspector
         }
 
         return $rules;
-    }
-
-    private function methodSource(ReflectionMethod $method): ?string
-    {
-        $file = $method->getFileName();
-        $start = $method->getStartLine();
-        $end = $method->getEndLine();
-
-        if ($file === false || $start === false || $end === false || ! is_file($file)) {
-            return null;
-        }
-
-        $lines = file($file);
-
-        if ($lines === false) {
-            return null;
-        }
-
-        return implode('', array_slice($lines, $start - 1, $end - $start + 1));
     }
 
     /**

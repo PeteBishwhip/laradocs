@@ -157,3 +157,39 @@ it('resolves filesystem documents before OpenApi documents on a slug collision',
     // all() merges both loaders' documents.
     expect($composite->all()->count())->toBe(1 + 3);
 });
+
+it('yields no documents when the docs directory does not exist', function () {
+    expect(makeOpenApiLoader('/no/such/laradocs/dir')->all())->toHaveCount(0);
+});
+
+it('falls back to method and path when an operation has no operationId', function () {
+    $dir = sys_get_temp_dir() . '/laradocs-noopid-' . bin2hex(random_bytes(6));
+    mkdir($dir, 0777, true);
+
+    // JSON is valid YAML, so this is parsed by the .yaml reader.
+    file_put_contents($dir . '/petstore-3.0.yaml', (string) json_encode([
+        'openapi' => '3.0.3',
+        'info' => ['title' => 'T', 'version' => '1.0.0'],
+        'paths' => [
+            '/things' => [
+                'get' => [
+                    'summary' => 'List things',
+                    'responses' => ['200' => ['description' => 'ok']],
+                ],
+            ],
+        ],
+    ]));
+
+    $documents = makeOpenApiLoader($dir)->all();
+
+    expect($documents->findBySlug('api/default/get-things'))->not->toBeNull();
+
+    unlink($dir . '/petstore-3.0.yaml');
+    rmdir($dir);
+});
+
+it('returns null from composite find when no loader resolves the slug', function () use ($fixtures) {
+    $composite = new CompositeDocumentLoader([makeOpenApiLoader($fixtures)]);
+
+    expect($composite->find('does/not/exist'))->toBeNull();
+});

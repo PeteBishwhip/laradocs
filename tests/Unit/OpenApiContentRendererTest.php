@@ -166,3 +166,15 @@ it('returns empty string for a marker pointing at a missing spec', function () {
 
     expect(makeOpenApiRenderer()->render($document))->toBe('');
 });
+
+it('renders an empty string when the openapi marker is not an array', function () {
+    $document = makeDocument('api/x', ['openapi' => 'not-an-array']);
+
+    expect(makeOpenApiRenderer()->render($document))->toBe('');
+});
+
+it('renders an empty string when the operation cannot be located in the spec', function () use ($fixtures) {
+    $document = makeOperationDocument($fixtures . '/petstore-3.0.yaml', 'GET', '/no-such-path');
+
+    expect(makeOpenApiRenderer()->render($document))->toBe('');
+});

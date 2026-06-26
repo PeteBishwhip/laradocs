@@ -42,11 +42,13 @@ final class OpenApiParser
      */
     public function parse(string $path): NormalizedSpec
     {
+        // @codeCoverageIgnoreStart
         if (! class_exists(Reader::class)) {
             throw new RuntimeException(
                 'Parsing OpenAPI specs requires the devizzent/cebe-php-openapi package.',
             );
         }
+        // @codeCoverageIgnoreEnd
 
         if (! is_file($path)) {
             throw new RuntimeException("OpenAPI spec not found at: {$path}");

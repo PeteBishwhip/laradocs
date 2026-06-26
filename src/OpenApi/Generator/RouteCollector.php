@@ -92,7 +92,7 @@ final class RouteCollector
 
         foreach ($route->methods() as $method) {
             if (! is_string($method)) {
-                continue;
+                continue; // @codeCoverageIgnore
             }
 
             $method = strtoupper($method);

@@ -6,7 +6,6 @@ namespace Laradocs\OpenApi\Generator;
 
 use Laradocs\OpenApi\Generator\Attributes\ApiOperation;
 use ReflectionMethod;
-use Throwable;
 
 /**
  * Reads explicit operation overrides off a {@see CollectedRoute}'s controller
@@ -49,15 +48,11 @@ final class AttributeReader
             return null;
         }
 
-        try {
-            if (! method_exists($route->controller, $route->action)) {
-                return null;
-            }
-
-            return new ReflectionMethod($route->controller, $route->action);
-        } catch (Throwable) {
+        if (! method_exists($route->controller, $route->action)) {
             return null;
         }
+
+        return new ReflectionMethod($route->controller, $route->action);
     }
 
     /**
@@ -124,11 +119,7 @@ final class AttributeReader
             return [];
         }
 
-        try {
-            $operation = $attributes[0]->newInstance();
-        } catch (Throwable) {
-            return [];
-        }
+        $operation = $attributes[0]->newInstance();
 
         $overrides = [];
 

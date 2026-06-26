@@ -9,7 +9,6 @@ use Illuminate\Http\Resources\Json\ResourceCollection;
 use ReflectionClass;
 use ReflectionMethod;
 use ReflectionNamedType;
-use Throwable;
 
 /**
  * Infers a route's success-response schema from its controller action's return
@@ -55,15 +54,11 @@ final class ResponseInspector
             return null;
         }
 
-        try {
-            if (! method_exists($route->controller, $route->action)) {
-                return null;
-            }
-
-            $type = (new ReflectionMethod($route->controller, $route->action))->getReturnType();
-        } catch (Throwable) {
+        if (! method_exists($route->controller, $route->action)) {
             return null;
         }
+
+        $type = (new ReflectionMethod($route->controller, $route->action))->getReturnType();
 
         if (! $type instanceof ReflectionNamedType || $type->isBuiltin()) {
             return null;
@@ -103,12 +98,8 @@ final class ResponseInspector
      */
     private function collectedResource(string $collection): ?string
     {
-        try {
-            $property = (new ReflectionClass($collection))->getProperty('collects');
-            $default = $property->getDefaultValue();
-        } catch (Throwable) {
-            return null;
-        }
+        $property = (new ReflectionClass($collection))->getProperty('collects');
+        $default = $property->getDefaultValue();
 
         if (is_string($default) && class_exists($default)) {
             /** @var class-string $default */
@@ -151,27 +142,7 @@ final class ResponseInspector
             return [];
         }
 
-        try {
-            $method = new ReflectionMethod($resource, 'toArray');
-        } catch (Throwable) {
-            return [];
-        }
-
-        $file = $method->getFileName();
-        $start = $method->getStartLine();
-        $end = $method->getEndLine();
-
-        if ($file === false || $start === false || $end === false || ! is_file($file)) {
-            return [];
-        }
-
-        $lines = file($file);
-
-        if ($lines === false) {
-            return [];
-        }
-
-        $source = implode('', array_slice($lines, $start - 1, $end - $start + 1));
+        $source = MethodSource::read(new ReflectionMethod($resource, 'toArray')) ?? '';
 
         $keys = [];
 
