@@ -28,6 +28,7 @@ use Laradocs\Console\LangCommand;
 use Laradocs\Console\LintCommand;
 use Laradocs\Console\LoginCommand;
 use Laradocs\Console\MakeDocCommand;
+use Laradocs\Console\OpenApiCommand;
 use Laradocs\Console\VersionsCommand;
 use Laradocs\Contracts\DocumentContentRenderer;
 use Laradocs\Contracts\DocumentLoader;
@@ -667,6 +668,7 @@ final class LaradocsServiceProvider extends ServiceProvider
             CloneProjectCommand::class,
             ConfigCommand::class,
             VersionsCommand::class,
+            OpenApiCommand::class,
         ]);
 
         // `laradocs:cache` builds a sitemap whose URLs come from

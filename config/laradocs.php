@@ -808,6 +808,17 @@ return [
     |             Render CommonMark in spec `description` fields rather than
     |             treating them as plain text.
     |
+    | "generator" Settings for the `laradocs:openapi` command, which scaffolds a
+    |             spec from your routes / FormRequests / Resources:
+    |   "prefix"      Only include routes whose URI starts with this prefix.
+    |   "middleware"  Only include routes carrying this middleware name.
+    |   "output"      Where the generated spec is written (relative paths are
+    |                 resolved from the project root).
+    |   "server_url"  The base server URL recorded in the spec (defaults to
+    |                 app.url when null).
+    |   "title"       The spec's info.title (falls back to "title" above).
+    |   "version"     The spec's info.version.
+    |
     */
 
     'openapi' => [
@@ -818,6 +829,15 @@ return [
         'group' => 'API Reference',
         'order' => 100,
         'render_markdown_descriptions' => true,
+
+        'generator' => [
+            'prefix' => 'api',
+            'middleware' => 'api',
+            'output' => 'docs/api/openapi.yaml',
+            'server_url' => env('LARADOCS_OPENAPI_SERVER_URL'),
+            'title' => null,
+            'version' => '1.0.0',
+        ],
     ],
 
     /*

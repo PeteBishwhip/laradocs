@@ -1,0 +1,186 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Laradocs\OpenApi\Generator;
+
+use Illuminate\Foundation\Http\FormRequest;
+use ReflectionMethod;
+use ReflectionNamedType;
+use Throwable;
+
+/**
+ * Infers a request's input schema for a {@see CollectedRoute} by reflecting the
+ * controller action.
+ *
+ * Two sources are consulted, in order of reliability:
+ *   1. A type-hinted {@see FormRequest} parameter — its `rules()` array is the
+ *      authoritative input contract.
+ *   2. A detectable inline `$request->validate([...])` / `$this->validate(...)`
+ *      call in the action body — scraped from the method source as a fallback.
+ *
+ * Each field's ruleset is run through {@see RuleMapper} to produce a JSON
+ * Schema object (`properties` + `required`). An empty result means "no
+ * inferable input".
+ */
+final class RequestInspector
+{
+    public function __construct(
+        private readonly RuleMapper $mapper = new RuleMapper,
+    ) {}
+
+    /**
+     * @return array{properties: array<string, array<string, mixed>>, required: array<int, string>}
+     */
+    public function inspect(CollectedRoute $route): array
+    {
+        $method = $this->reflect($route);
+
+        if ($method === null) {
+            return ['properties' => [], 'required' => []];
+        }
+
+        $rules = $this->formRequestRules($method) ?? $this->inlineRules($method);
+
+        return $this->toSchema($rules);
+    }
+
+    private function reflect(CollectedRoute $route): ?ReflectionMethod
+    {
+        if ($route->controller === null || $route->action === null) {
+            return null;
+        }
+
+        try {
+            if (! method_exists($route->controller, $route->action)) {
+                return null;
+            }
+
+            return new ReflectionMethod($route->controller, $route->action);
+        } catch (Throwable) {
+            return null;
+        }
+    }
+
+    /**
+     * @return array<string, mixed>|null rules() keyed by field, or null when the action has no FormRequest.
+     */
+    private function formRequestRules(ReflectionMethod $method): ?array
+    {
+        foreach ($method->getParameters() as $parameter) {
+            $type = $parameter->getType();
+
+            if (! $type instanceof ReflectionNamedType || $type->isBuiltin()) {
+                continue;
+            }
+
+            $class = $type->getName();
+
+            if (! is_subclass_of($class, FormRequest::class)) {
+                continue;
+            }
+
+            try {
+                /** @var FormRequest $request */
+                $request = new $class;
+
+                if (! method_exists($request, 'rules')) {
+                    return [];
+                }
+
+                /** @var array<string, mixed> $rules */
+                $rules = $request->rules();
+
+                return $rules;
+            } catch (Throwable) {
+                // rules() may depend on the route/container; treat as empty.
+                return [];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Best-effort scrape of an inline `validate([...])` array literal from the
+     * action source. Only simple `'field' => 'rule|rule'` string pairs are
+     * recovered; anything more dynamic is silently skipped.
+     *
+     * @return array<string, mixed>
+     */
+    private function inlineRules(ReflectionMethod $method): array
+    {
+        $source = $this->methodSource($method);
+
+        if ($source === null || ! preg_match('/validate\s*\(\s*\[/', $source)) {
+            return [];
+        }
+
+        $rules = [];
+
+        // Capture 'field' => 'rules' / "field" => "rules" pairs.
+        if (preg_match_all(
+            '/([\'"])([^\'"]+)\1\s*=>\s*([\'"])([^\'"]*)\3/',
+            $source,
+            $matches,
+            PREG_SET_ORDER,
+        )) {
+            foreach ($matches as $match) {
+                $rules[$match[2]] = $match[4];
+            }
+        }
+
+        return $rules;
+    }
+
+    private function methodSource(ReflectionMethod $method): ?string
+    {
+        $file = $method->getFileName();
+        $start = $method->getStartLine();
+        $end = $method->getEndLine();
+
+        if ($file === false || $start === false || $end === false || ! is_file($file)) {
+            return null;
+        }
+
+        $lines = file($file);
+
+        if ($lines === false) {
+            return null;
+        }
+
+        return implode('', array_slice($lines, $start - 1, $end - $start + 1));
+    }
+
+    /**
+     * @param  array<string, mixed>  $rules
+     * @return array{properties: array<string, array<string, mixed>>, required: array<int, string>}
+     */
+    private function toSchema(array $rules): array
+    {
+        $properties = [];
+        $required = [];
+
+        foreach ($rules as $field => $ruleset) {
+            if (! is_string($ruleset) && ! is_array($ruleset)) {
+                continue;
+            }
+
+            $name = $this->mapper->propertyName((string) $field);
+
+            if ($name === '' || isset($properties[$name])) {
+                continue;
+            }
+
+            $mapped = $this->mapper->map($ruleset);
+
+            $properties[$name] = $mapped['schema'];
+
+            if ($mapped['required']) {
+                $required[] = $name;
+            }
+        }
+
+        return ['properties' => $properties, 'required' => array_values(array_unique($required))];
+    }
+}

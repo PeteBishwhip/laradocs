@@ -71,6 +71,44 @@ All options live under the `openapi` key of `config/laradocs.php`:
 Your own Markdown always wins a slug collision, so you can override any
 generated page by adding a Markdown file at the same slug.
 
+## Generating a spec from your routes
+
+Don't have a spec yet? The `laradocs:openapi` command scaffolds one by walking
+your registered routes and reflecting your `FormRequest`s and API `Resource`s:
+
+```bash
+php artisan laradocs:openapi
+```
+
+By default it includes routes under the `api` prefix carrying the `api`
+middleware, infers query/body parameters from each action's `FormRequest`
+`rules()` (or a detectable inline `$request->validate([...])`), derives response
+schemas from `JsonResource` / `ResourceCollection` return type-hints, and writes
+the result to `docs/api/openapi.yaml`.
+
+The output is a starting point, not a finished spec — descriptions and any
+schema the inspectors could not infer are left for you to fill in. Useful
+options:
+
+```bash
+# Overwrite an existing spec
+php artisan laradocs:openapi --force
+
+# Narrow the route surface and choose where to write
+php artisan laradocs:openapi --prefix=api/v1 --middleware=auth:api --output=docs/api/v1.yaml
+```
+
+The defaults live under the `openapi.generator` config block:
+
+| Key | Default | Purpose |
+|---|---|---|
+| `generator.prefix` | `api` | Only include routes whose URI starts with this prefix. |
+| `generator.middleware` | `api` | Only include routes carrying this middleware name. |
+| `generator.output` | `docs/api/openapi.yaml` | Where the generated spec is written (relative paths resolve from the project root). |
+| `generator.server_url` | `null` | Base server URL recorded in the spec (falls back to `app.url`). |
+| `generator.title` | `null` | The spec's `info.title` (falls back to `openapi.title`). |
+| `generator.version` | `1.0.0` | The spec's `info.version`. |
+
 ## Re-publishing assets after an upgrade
 
 The OpenAPI pages ship with dedicated styling (method badges, parameter tables,
