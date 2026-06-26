@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Tabbed code blocks and content tabs. Two complementary syntaxes: a code-tab
+  shorthand (`tab:Label` in the fenced code info string) that groups consecutive
+  code blocks into a tabbed block, and a `:::tabs` / `--- Label` container for
+  arbitrary content (prose, callouts, images, nested code blocks) under named tabs.
+  Both produce WCAG 2.1 AA-compliant tab UIs with keyboard navigation, cross-page
+  synchronisation by group name, and `localStorage` persistence. Disable with
+  `parser.extensions.tabs => false`; configure via the `tabs` config block.
+
 ## [0.6.1] - 2026-06-25
 
 ### Added
