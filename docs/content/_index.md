@@ -13,3 +13,4 @@ Laradocs ships with content features that go beyond plain Markdown:
 - [Macros](/docs/content/macros) — reusable content snippets.
 - [Components](/docs/content/components) — Blade-style `<x-...>` tags in Markdown.
 - [Icons](/docs/content/icons) — inline icons and navigation icons using Heroicons or a custom set.
+- [OpenAPI](/docs/content/openapi) — generate interactive API reference pages from an OpenAPI 3.0/3.1 spec.
