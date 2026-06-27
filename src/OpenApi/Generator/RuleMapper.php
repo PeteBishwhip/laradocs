@@ -87,6 +87,8 @@ final class RuleMapper
                 case 'max':
                     $this->applyBound($schema, $argument, 'max');
                     break;
+                default:
+                    break;
             }
         }
 

@@ -45,10 +45,7 @@ final class ResponseInspector
         return $route->methods === ['POST'] ? '201' : '200';
     }
 
-    /**
-     * @return class-string|null The returned resource class, or null when the action returns something else.
-     */
-    private function resourceReturnType(CollectedRoute $route): ?string
+    private function reflect(CollectedRoute $route): ?ReflectionMethod
     {
         if ($route->controller === null || $route->action === null) {
             return null;
@@ -58,7 +55,21 @@ final class ResponseInspector
             return null;
         }
 
-        $type = (new ReflectionMethod($route->controller, $route->action))->getReturnType();
+        return new ReflectionMethod($route->controller, $route->action);
+    }
+
+    /**
+     * @return class-string|null The returned resource class, or null when the action returns something else.
+     */
+    private function resourceReturnType(CollectedRoute $route): ?string
+    {
+        $method = $this->reflect($route);
+
+        if ($method === null) {
+            return null;
+        }
+
+        $type = $method->getReturnType();
 
         if (! $type instanceof ReflectionNamedType || $type->isBuiltin()) {
             return null;
@@ -66,11 +77,9 @@ final class ResponseInspector
 
         $class = $type->getName();
 
-        if (! is_subclass_of($class, JsonResource::class) && $class !== JsonResource::class) {
-            return null;
-        }
-
-        return $class;
+        return is_subclass_of($class, JsonResource::class) || $class === JsonResource::class
+            ? $class
+            : null;
     }
 
     /**
@@ -146,7 +155,7 @@ final class ResponseInspector
 
         $keys = [];
 
-        if (preg_match_all('/([\'"])([A-Za-z_][A-Za-z0-9_]*)\1\s*=>/', $source, $matches)) {
+        if (preg_match_all('/([\'"])([A-Za-z_]\w*)\1\s*=>/', $source, $matches)) {
             foreach ($matches[2] as $key) {
                 if (! in_array($key, $keys, true)) {
                     $keys[] = $key;

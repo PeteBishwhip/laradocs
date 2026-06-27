@@ -74,10 +74,8 @@ final class RouteCollector
             }
         }
 
-        if ($this->middleware !== null && $this->middleware !== '') {
-            if (! in_array($this->middleware, $route->gatherMiddleware(), true)) {
-                return false;
-            }
+        if ($this->middleware !== null && $this->middleware !== '' && ! in_array($this->middleware, $route->gatherMiddleware(), true)) {
+            return false;
         }
 
         return true;

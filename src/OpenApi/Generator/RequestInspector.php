@@ -76,25 +76,31 @@ final class RequestInspector
                 continue;
             }
 
-            try {
-                /** @var FormRequest $request */
-                $request = new $class;
-
-                if (! method_exists($request, 'rules')) {
-                    return [];
-                }
-
-                /** @var array<string, mixed> $rules */
-                $rules = $request->rules();
-
-                return $rules;
-            } catch (Throwable) {
-                // rules() may depend on the route/container; treat as empty.
-                return [];
-            }
+            return $this->resolveRules($class);
         }
 
         return null;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function resolveRules(string $class): array
+    {
+        try {
+            /** @var FormRequest $request */
+            $request = new $class;
+
+            if (! method_exists($request, 'rules')) {
+                return [];
+            }
+
+            /** @var array<string, mixed> */
+            return $request->rules();
+        } catch (Throwable) {
+            // rules() may depend on the route/container; treat as empty.
+            return [];
+        }
     }
 
     /**

@@ -48,6 +48,14 @@ final class OpenApiContentRenderer implements DocumentContentRenderer
             return '';
         }
 
+        return $this->renderMarker(Coerce::assoc($marker));
+    }
+
+    /**
+     * @param  array<string, mixed>  $marker
+     */
+    private function renderMarker(array $marker): string
+    {
         $specPath = Coerce::string($marker['spec'] ?? '');
 
         if ($specPath === '' || ! is_file($specPath)) {

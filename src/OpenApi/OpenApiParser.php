@@ -9,7 +9,6 @@ use cebe\openapi\ReferenceContext;
 use cebe\openapi\spec\OpenApi;
 use Illuminate\Contracts\Cache\Repository;
 use Laradocs\Support\CacheKey;
-use RuntimeException;
 
 /**
  * Parses an OpenAPI 3.0/3.1 spec file into a {@see NormalizedSpec}.
@@ -34,12 +33,12 @@ final class OpenApiParser
      * object. Cached by path + mtime; pass a spec whose mtime has changed to
      * force a fresh parse.
      *
-     * @throws RuntimeException when the file cannot be read or the spec fails validation.
+     * @throws OpenApiException when the file cannot be read or the spec fails validation.
      */
     public function parse(string $path): NormalizedSpec
     {
         if (! is_file($path)) {
-            throw new RuntimeException("OpenAPI spec not found at: {$path}");
+            throw new OpenApiException("OpenAPI spec not found at: {$path}");
         }
 
         $key = CacheKey::openApi($path, (int) filemtime($path));
@@ -77,7 +76,7 @@ final class OpenApiParser
             : Reader::readFromJsonFile($path, OpenApi::class, ReferenceContext::RESOLVE_MODE_ALL);
 
         if (! $spec->validate()) {
-            throw new RuntimeException(
+            throw new OpenApiException(
                 'Invalid OpenAPI spec: ' . implode('; ', $spec->getErrors()),
             );
         }

@@ -69,13 +69,25 @@ final class SchemaRenderer
             return $this->resolveRef((string) $schema['$ref'], $depth, $visited);
         }
 
+        $keyword = $this->compositionKeyword($schema);
+
+        return $keyword !== null
+            ? $this->compose($keyword, $schema, $depth, $visited)
+            : $this->walkPlain($schema, $depth, $visited);
+    }
+
+    /**
+     * @param  array<string, mixed>  $schema
+     */
+    private function compositionKeyword(array $schema): ?string
+    {
         foreach (['allOf', 'oneOf', 'anyOf'] as $keyword) {
             if (isset($schema[$keyword]) && is_array($schema[$keyword])) {
-                return $this->compose($keyword, $schema, $depth, $visited);
+                return $keyword;
             }
         }
 
-        return $this->walkPlain($schema, $depth, $visited);
+        return null;
     }
 
     /**
