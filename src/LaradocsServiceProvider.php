@@ -151,7 +151,7 @@ final class LaradocsServiceProvider extends ServiceProvider
             return new MarkdownParser(
                 MarkdownPipelineFactory::buildConverter(),
                 MarkdownPipelineFactory::markdownExtensions($app),
-                MarkdownPipelineFactory::htmlExtensions($app),
+                MarkdownPipelineFactory::htmlExtensions(),
             );
         });
 

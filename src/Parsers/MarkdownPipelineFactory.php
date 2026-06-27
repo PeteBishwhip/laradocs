@@ -117,7 +117,7 @@ final class MarkdownPipelineFactory
     /**
      * @return array<int, HtmlExtension>
      */
-    public static function htmlExtensions(Application $app): array
+    public static function htmlExtensions(): array
     {
         $config = Config::array('laradocs.parser.extensions');
         $extensions = [];
