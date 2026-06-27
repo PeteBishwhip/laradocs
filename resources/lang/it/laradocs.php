@@ -89,6 +89,24 @@ return [
         'read_more' => 'Leggi di più',
     ],
 
+    'openapi' => [
+        'deprecated' => 'Deprecated',
+        'parameters' => 'Parameters',
+        'request_body' => 'Request Body',
+        'responses' => 'Responses',
+        'required' => 'Required',
+        'nullable' => 'nullable',
+        'enum' => 'Allowed values',
+        'items' => 'Items',
+        'servers' => 'Servers',
+        'operations' => 'Operations',
+        'one_of' => 'One of',
+        'any_of' => 'Any of',
+        'circular' => 'Circular reference',
+        'unresolved' => 'Unresolved reference',
+        'default_tag' => 'Other',
+    ],
+
     'tags' => [
         'eyebrow' => 'Etichetta',
         'label' => 'Etichetta',
