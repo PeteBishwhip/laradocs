@@ -18,6 +18,7 @@
     ],
     "require": {
         "php": "^8.2",
+        "devizzent/cebe-php-openapi": "^1.1",
         "illuminate/contracts": "^11.14 || ^12.0 || ^13.0",
         "illuminate/support": "^11.14 || ^12.0 || ^13.0",
         "league/commonmark": "^2.4",

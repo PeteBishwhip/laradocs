@@ -57,4 +57,13 @@ final class CacheKey
     {
         return self::make('index');
     }
+
+    /**
+     * Cache key for a parsed OpenAPI spec, folding in the file's modification
+     * time so a changed spec produces a fresh parse.
+     */
+    public static function openApi(string $path, int $modifiedAt): string
+    {
+        return self::make('openapi', hash('sha256', $path), (string) $modifiedAt);
+    }
 }

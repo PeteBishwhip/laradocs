@@ -1,0 +1,29 @@
+openapi: 3.0.3
+info:
+  title: Cyclic Refs
+  version: 1.0.0
+paths:
+  /nodes:
+    get:
+      operationId: listNodes
+      summary: List nodes
+      responses:
+        '200':
+          description: A tree of nodes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Node'
+components:
+  schemas:
+    Node:
+      type: object
+      properties:
+        name:
+          type: string
+        parent:
+          $ref: '#/components/schemas/Node'
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/Node'

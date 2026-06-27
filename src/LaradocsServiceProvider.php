@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Laradocs;
 
+use cebe\openapi\Reader;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Cache\Factory as CacheFactory;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -27,33 +28,24 @@ use Laradocs\Console\LangCommand;
 use Laradocs\Console\LintCommand;
 use Laradocs\Console\LoginCommand;
 use Laradocs\Console\MakeDocCommand;
+use Laradocs\Console\OpenApiCommand;
 use Laradocs\Console\VersionsCommand;
+use Laradocs\Contracts\DocumentContentRenderer;
 use Laradocs\Contracts\DocumentLoader;
 use Laradocs\Contracts\DocumentParser;
-use Laradocs\Contracts\HtmlExtension;
-use Laradocs\Contracts\MarkdownExtension;
 use Laradocs\Contracts\MetadataResolver;
 use Laradocs\Contracts\OgImageGenerator;
-use Laradocs\Extensions\BladeComponentExtension;
-use Laradocs\Extensions\CalloutExtension;
-use Laradocs\Extensions\CodeBlockExtension;
-use Laradocs\Extensions\HeadingAnchorExtension;
-use Laradocs\Extensions\IconExtension;
-use Laradocs\Extensions\ImageExtension;
-use Laradocs\Extensions\KatexExtension;
-use Laradocs\Extensions\MacroExtension;
-use Laradocs\Extensions\MermaidExtension;
-use Laradocs\Extensions\TabsHtmlExtension;
-use Laradocs\Extensions\TabsMarkdownExtension;
-use Laradocs\Extensions\VariableExtension;
-use Laradocs\Extensions\VersionBlockExtension;
-use Laradocs\Extensions\VideoExtension;
 use Laradocs\Icons\HeroiconProvider;
 use Laradocs\Icons\IconRegistry;
+use Laradocs\Loaders\CompositeDocumentLoader;
 use Laradocs\Loaders\FilesystemLoader;
+use Laradocs\Loaders\OpenApiLoader;
 use Laradocs\Macros\MacroRegistry;
 use Laradocs\Metadata\FrontMatterMetadataResolver;
+use Laradocs\OpenApi\OpenApiContentRenderer;
+use Laradocs\OpenApi\OpenApiParser;
 use Laradocs\Parsers\MarkdownParser;
+use Laradocs\Parsers\MarkdownPipelineFactory;
 use Laradocs\Routing\DocumentRouter;
 use Laradocs\Routing\SlugResolver;
 use Laradocs\Search\Contracts\SearchEngine;
@@ -69,12 +61,6 @@ use Laradocs\Support\Version;
 use Laradocs\Support\VersionRegistry;
 use Laradocs\Variables\VariableRegistry;
 use Laravel\Scout\EngineManager;
-use League\CommonMark\Environment\Environment;
-use League\CommonMark\Extension\Attributes\AttributesExtension;
-use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
-use League\CommonMark\Extension\Footnote\FootnoteExtension;
-use League\CommonMark\Extension\GithubFlavoredMarkdownExtension;
-use League\CommonMark\MarkdownConverter;
 use SimonHamp\TheOg\Image;
 
 final class LaradocsServiceProvider extends ServiceProvider
@@ -163,36 +149,26 @@ final class LaradocsServiceProvider extends ServiceProvider
     {
         $this->app->singleton(DocumentParser::class, function (Application $app): MarkdownParser {
             return new MarkdownParser(
-                $this->buildConverter($app),
-                $this->markdownExtensions($app),
-                $this->htmlExtensions($app),
+                MarkdownPipelineFactory::buildConverter(),
+                MarkdownPipelineFactory::markdownExtensions($app),
+                MarkdownPipelineFactory::htmlExtensions(),
             );
         });
 
-        $this->app->bind(DocumentLoader::class, function (Application $app): FilesystemLoader {
-            /** @var array<int, string> $extensions */
-            $extensions = Config::array('laradocs.docs.extensions', ['md']);
-            /** @var array<int, string> $ignored */
-            $ignored = Config::array('laradocs.docs.ignored_patterns');
-            /** @var array<string, mixed> $defaults */
-            $defaults = Config::array('laradocs.metadata.default');
+        $this->app->bind(DocumentLoader::class, function (Application $app): DocumentLoader {
+            $filesystem = $this->makeFilesystemLoader($app);
 
-            return new FilesystemLoader(
-                new Filesystem,
-                $app->make(MetadataResolver::class),
-                $app->make(SlugResolver::class),
-                fn (): string => Version::docsPath(),
-                $extensions,
-                $ignored,
-                $defaults,
-                // Content localisation recognises the same locales offered in
-                // the in-page switcher. Per-language pages (page.fr.md or
-                // fr/page.md) are served for the request's locale, falling back
-                // to the default-locale file when a translation is missing.
-                fn (): array => array_keys(Locale::available()),
-                fn (): string => (string) $app->getLocale(),
-                fn (): string => Locale::fallback(),
-            );
+            // The OpenAPI integration only participates when it is switched on
+            // *and* the optional cebe library is installed; otherwise the
+            // behaviour is byte-for-byte the original filesystem loader.
+            if (Config::bool('laradocs.openapi.enabled', false) && class_exists(Reader::class)) {
+                return new CompositeDocumentLoader([
+                    $filesystem,
+                    $this->makeOpenApiLoader($app),
+                ]);
+            }
+
+            return $filesystem;
         });
 
         $this->app->bind(DocumentCache::class, function (Application $app): DocumentCache {
@@ -205,6 +181,76 @@ final class LaradocsServiceProvider extends ServiceProvider
                 Config::nullableInt('laradocs.cache.ttl'),
             );
         });
+    }
+
+    /**
+     * The filesystem-backed document loader: the package's original source of
+     * documents, reading markdown files from the active docs path.
+     */
+    private function makeFilesystemLoader(Application $app): FilesystemLoader
+    {
+        /** @var array<int, string> $extensions */
+        $extensions = Config::array('laradocs.docs.extensions', ['md']);
+        /** @var array<int, string> $ignored */
+        $ignored = Config::array('laradocs.docs.ignored_patterns');
+        /** @var array<string, mixed> $defaults */
+        $defaults = Config::array('laradocs.metadata.default');
+
+        return new FilesystemLoader(
+            new Filesystem,
+            $app->make(MetadataResolver::class),
+            $app->make(SlugResolver::class),
+            fn (): string => Version::docsPath(),
+            $extensions,
+            $ignored,
+            $defaults,
+            // Content localisation recognises the same locales offered in
+            // the in-page switcher. Per-language pages (page.fr.md or
+            // fr/page.md) are served for the request's locale, falling back
+            // to the default-locale file when a translation is missing.
+            fn (): array => array_keys(Locale::available()),
+            fn (): string => (string) $app->getLocale(),
+            fn (): string => Locale::fallback(),
+        );
+    }
+
+    /**
+     * The OpenAPI loader, surfacing each spec operation as a synthetic document.
+     * Shares the document cache store/ttl so parsed specs cache alongside
+     * everything else.
+     */
+    private function makeOpenApiLoader(Application $app): OpenApiLoader
+    {
+        /** @var array<int, string> $files */
+        $files = Config::array('laradocs.openapi.files', ['openapi.yaml', 'openapi.yml', 'openapi.json']);
+
+        return new OpenApiLoader(
+            $this->makeOpenApiParser($app),
+            fn (): string => Version::docsPath(),
+            $files,
+            Config::string('laradocs.openapi.base_slug', 'api'),
+            Config::nullableString('laradocs.openapi.title'),
+            Config::nullableString('laradocs.openapi.group'),
+            Config::int('laradocs.openapi.order'),
+            fn (): string => (string) $app->getLocale(),
+        );
+    }
+
+    /**
+     * Build an OpenAPI parser sharing the document cache store/ttl so parsed
+     * specs cache alongside everything else. Used by both the loader and the
+     * content renderer.
+     */
+    private function makeOpenApiParser(Application $app): OpenApiParser
+    {
+        /** @var CacheFactory $factory */
+        $factory = $app->make(CacheFactory::class);
+
+        return new OpenApiParser(
+            $factory->store(Config::nullableString('laradocs.cache.store')),
+            Config::bool('laradocs.cache.enabled', true),
+            Config::nullableInt('laradocs.cache.ttl'),
+        );
     }
 
     private function registerCore(): void
@@ -240,8 +286,32 @@ final class LaradocsServiceProvider extends ServiceProvider
                 $searchExclude,
                 $searchInclude,
                 $searchRank,
+                $this->makeContentRenderers($app),
             );
         });
+    }
+
+    /**
+     * The native document content renderers consulted at the HTML choke-point
+     * (US-002). The OpenAPI renderer only participates when the integration is
+     * switched on *and* the optional cebe library is installed — mirroring the
+     * loader binding — so markdown rendering is otherwise untouched.
+     *
+     * @return array<int, DocumentContentRenderer>
+     */
+    private function makeContentRenderers(Application $app): array
+    {
+        $renderers = [];
+
+        if (Config::bool('laradocs.openapi.enabled', false) && class_exists(Reader::class)) {
+            $renderers[] = new OpenApiContentRenderer(
+                $this->makeOpenApiParser($app),
+                $app->make(DocumentParser::class),
+                Config::bool('laradocs.openapi.render_markdown_descriptions', true),
+            );
+        }
+
+        return $renderers;
     }
 
     private function registerRateLimiting(): void
@@ -343,143 +413,6 @@ final class LaradocsServiceProvider extends ServiceProvider
         return true;
     }
 
-    private function buildConverter(Application $app): MarkdownConverter
-    {
-        $extensions = Config::array('laradocs.parser.extensions');
-
-        $environment = new Environment([
-            'html_input' => 'allow',
-            'allow_unsafe_links' => false,
-        ]);
-
-        $environment->addExtension(new CommonMarkCoreExtension);
-
-        if ($extensions['gfm'] ?? true) {
-            $environment->addExtension(new GithubFlavoredMarkdownExtension);
-        }
-
-        if ($extensions['attributes'] ?? true) {
-            $environment->addExtension(new AttributesExtension);
-        }
-
-        if ($extensions['footnotes'] ?? true) {
-            $environment->addExtension(new FootnoteExtension);
-        }
-
-        return new MarkdownConverter($environment);
-    }
-
-    /**
-     * @return array<int, MarkdownExtension>
-     */
-    private function markdownExtensions(Application $app): array
-    {
-        $config = Config::array('laradocs.parser.extensions');
-        $extensions = [];
-
-        // Must run first so the `:::version-*` directives are rewritten into
-        // HTML blocks before the variable/macro/component extensions process
-        // their inner content.
-        if (Config::bool('laradocs.versions.inline.enabled', false)) {
-            $extensions[] = new VersionBlockExtension(
-                Config::string('laradocs.versions.inline.behaviour', 'client') === 'server',
-            );
-        }
-
-        if ($config['variables'] ?? true) {
-            $extensions[] = new VariableExtension(
-                $app->make(VariableRegistry::class),
-                Config::string('laradocs.parser.unknown_variable', 'blank'),
-            );
-        }
-
-        if ($config['icons'] ?? true) {
-            $extensions[] = new IconExtension($app->make(IconRegistry::class));
-        }
-
-        if ($config['macros'] ?? true) {
-            $extensions[] = new MacroExtension($app->make(MacroRegistry::class));
-        }
-
-        // Runs after macros so `@docs()` calls and `{{ variables }}` nested in a
-        // component's slot are expanded before the slot is captured.
-        if ($config['components'] ?? true) {
-            $extensions[] = new BladeComponentExtension($app->make(MacroRegistry::class));
-        }
-
-        if ($config['katex'] ?? true) {
-            $extensions[] = new KatexExtension(
-                Config::string('laradocs.parser.katex.js', 'https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.js'),
-                Config::string('laradocs.parser.katex.css', 'https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.css'),
-                Config::bool('laradocs.parser.katex.ssr'),
-                Config::nullableString('laradocs.parser.katex.node_bin'),
-            );
-        }
-
-        if ($config['tabs'] ?? true) {
-            $extensions[] = new TabsMarkdownExtension;
-        }
-
-        return $extensions;
-    }
-
-    /**
-     * @return array<int, HtmlExtension>
-     */
-    private function htmlExtensions(Application $app): array
-    {
-        $config = Config::array('laradocs.parser.extensions');
-        $extensions = [];
-
-        if ($config['heading_anchors'] ?? true) {
-            $extensions[] = new HeadingAnchorExtension;
-        }
-
-        if ($config['callouts'] ?? true) {
-            $extensions[] = new CalloutExtension;
-        }
-
-        if ($config['video'] ?? true) {
-            $extensions[] = new VideoExtension;
-        }
-
-        if ($config['images'] ?? true) {
-            $extensions[] = new ImageExtension;
-        }
-
-        // Runs before CodeBlockExtension so mermaid fences are claimed before
-        // they would otherwise pick up a language label and copy button.
-        if ($config['mermaid'] ?? true) {
-            $extensions[] = new MermaidExtension(
-                Config::string(
-                    'laradocs.parser.mermaid.src',
-                    'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs',
-                ),
-            );
-        }
-
-        if ($config['katex'] ?? true) {
-            $extensions[] = new KatexExtension(
-                Config::string('laradocs.parser.katex.js', 'https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.js'),
-                Config::string('laradocs.parser.katex.css', 'https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.css'),
-                Config::bool('laradocs.parser.katex.ssr'),
-                Config::nullableString('laradocs.parser.katex.node_bin'),
-            );
-        }
-
-        $extensions[] = new CodeBlockExtension;
-
-        // TabsHtmlExtension must run after CodeBlockExtension so it can
-        // find .laradocs-code[data-tab] wrappers when grouping code tabs.
-        if ($config['tabs'] ?? true) {
-            $extensions[] = new TabsHtmlExtension(
-                Config::string('laradocs.tabs.default_group', 'language'),
-            );
-        }
-
-        return $extensions;
-    }
-
     private function registerRoutes(): void
     {
         // Routes are always registered so that route:cache captures them
@@ -577,6 +510,7 @@ final class LaradocsServiceProvider extends ServiceProvider
             CloneProjectCommand::class,
             ConfigCommand::class,
             VersionsCommand::class,
+            OpenApiCommand::class,
         ]);
 
         // `laradocs:cache` builds a sitemap whose URLs come from
