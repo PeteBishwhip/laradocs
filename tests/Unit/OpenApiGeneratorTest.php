@@ -214,6 +214,14 @@ it('maps numeric, array and non-numeric bound rules', function (): void {
         ->and($mapper->map('string|min:abc')['schema'])->toBe(['type' => 'string']);
 });
 
+it('ignores unrecognised rule tokens and defaults to a string schema', function (): void {
+    $mapper = new RuleMapper;
+
+    // A rule with no schema meaning (e.g. `sometimes`, `confirmed`) hits the
+    // switch's default branch and leaves the schema at its string fallback.
+    expect($mapper->map('sometimes|confirmed')['schema'])->toBe(['type' => 'string']);
+});
+
 it('reads a method source and returns null for sourceless methods', function (): void {
     $source = MethodSource::read(new ReflectionMethod(OrderController::class, 'search'));
 
