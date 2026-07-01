@@ -1401,143 +1401,318 @@ body.laradocs {
  * re-run that command (it overwrites resources/dist/laradocs.css in the host
  * app) to pick up the OpenAPI styles below.
  */
-.laradocs-openapi { font-size: .95rem; }
-.laradocs-openapi > * + * { margin-top: 1.25rem; }
+.laradocs-openapi {
+  --dc-oa-get:    #2563eb;
+  --dc-oa-post:   #059669;
+  --dc-oa-put:    #d97706;
+  --dc-oa-patch:  #7c3aed;
+  --dc-oa-delete: #dc2626;
+  --dc-oa-ok:     #059669;
+  --dc-oa-warn:   #d97706;
+  --dc-oa-err:    #dc2626;
+  font-size: .95rem;
+}
+[data-theme="dark"] .laradocs-openapi {
+  --dc-oa-get:    #60a5fa;
+  --dc-oa-post:   #34d399;
+  --dc-oa-put:    #fbbf24;
+  --dc-oa-patch:  #a78bfa;
+  --dc-oa-delete: #f87171;
+  --dc-oa-ok:     #34d399;
+  --dc-oa-warn:   #fbbf24;
+  --dc-oa-err:    #f87171;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .laradocs-openapi {
+    --dc-oa-get:    #60a5fa;
+    --dc-oa-post:   #34d399;
+    --dc-oa-put:    #fbbf24;
+    --dc-oa-patch:  #a78bfa;
+    --dc-oa-delete: #f87171;
+    --dc-oa-ok:     #34d399;
+    --dc-oa-warn:   #fbbf24;
+    --dc-oa-err:    #f87171;
+  }
+}
+.laradocs-openapi > * + * { margin-top: 1.5rem; }
 
 .laradocs-openapi-description > * { margin: 0; }
-.laradocs-openapi-description > * + * { margin-top: .6rem; }
+.laradocs-openapi-description > * + * { margin-top: .7rem; }
+.laradocs-openapi-lede { font-size: 1.02rem; color: var(--dc-muted); }
+.laradocs-openapi-lede > * { color: var(--dc-muted); }
 
-/* The endpoint line: METHOD + path, optional deprecated marker. */
-.laradocs-openapi-endpoint {
+/* ── section headings shared by operation / overview partials ── */
+.laradocs-openapi h2 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  margin: 0 0 .9rem;
+  padding-bottom: .55rem;
+  border-bottom: 1px solid var(--dc-rule);
+}
+.laradocs-openapi section + section { margin-top: 2rem; }
+
+/* A heading row that pairs the section title with an expand/collapse toolbar.
+   The rule moves from the <h2> onto the row so both sit above one border. */
+.laradocs-openapi-section-head {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
+  gap: .5rem .9rem;
+  margin: 0 0 .9rem;
+  padding-bottom: .55rem;
+  border-bottom: 1px solid var(--dc-rule);
+}
+.laradocs-openapi-section-head h2 {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+/* Toolbar only makes sense when the section actually has a collapsible branch. */
+.laradocs-openapi-toolbar { display: none; }
+.laradocs-openapi-request-body:has(details) .laradocs-openapi-toolbar,
+.laradocs-openapi-responses:has(details) .laradocs-openapi-toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+}
+.laradocs-openapi-tool {
+  padding: .2rem .4rem;
+  font-family: var(--dc-font);
+  font-size: .78rem;
+  font-weight: 500;
+  color: var(--dc-muted);
+  background: none;
+  border: 0;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.laradocs-openapi-tool:hover { color: var(--dc-accent); }
+.laradocs-openapi-tool:focus-visible {
+  outline: 2px solid var(--dc-accent);
+  outline-offset: 1px;
+}
+.laradocs-openapi-tool-sep {
+  width: 1px;
+  height: .9rem;
+  background: var(--dc-rule-strong);
+}
+
+/* ── the endpoint request bar (operation hero) ── */
+.laradocs-openapi-endpoint {
+  display: flex;
+  align-items: center;
   gap: .6rem;
-  margin: 0 0 1.25rem;
+  margin: 0 0 1.5rem;
+  padding: .55rem .6rem .55rem .7rem;
+  background: var(--dc-bg-elev);
+  border: 1px solid var(--dc-rule-strong);
+  border-radius: var(--dc-radius-lg);
+}
+/* The path stays on a single line and scrolls horizontally rather than
+   wrapping, so the method badge and copy button never get pushed off-row. */
+.laradocs-openapi-endpoint .laradocs-openapi-path {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: none;
+  padding: .1rem 0;
+  font-size: .98rem;
+  white-space: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--dc-rule-strong) transparent;
+}
+.laradocs-openapi-endpoint .laradocs-openapi-path::-webkit-scrollbar { height: 6px; }
+.laradocs-openapi-endpoint .laradocs-openapi-path::-webkit-scrollbar-thumb {
+  background: var(--dc-rule-strong);
+  border-radius: 999px;
 }
 
 /* ── method badges (GET / POST / PUT / PATCH / DELETE) ── */
 .laradocs-openapi-method {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   flex: none;
-  padding: .2rem .55rem;
+  min-width: 3.7rem;
+  padding: .28rem .5rem;
   font-family: var(--dc-mono);
-  font-size: .72rem;
+  font-size: .7rem;
   font-weight: 700;
-  letter-spacing: .03em;
+  letter-spacing: .04em;
   text-transform: uppercase;
-  line-height: 1.2;
-  border-radius: var(--dc-radius);
-  /* Default (and any unrecognised verb) falls back to the accent. */
+  line-height: 1;
+  border-radius: 5px;
   --dc-method: var(--dc-accent);
-  color: var(--dc-method);
-  background: color-mix(in srgb, var(--dc-method) 14%, transparent);
-  border: 1px solid color-mix(in srgb, var(--dc-method) 35%, transparent);
+  color: #fff;
+  background: var(--dc-method);
+  border: 1px solid color-mix(in srgb, #000 12%, var(--dc-method));
 }
-.laradocs-openapi-method.method-get    { --dc-method: #2563eb; }
-.laradocs-openapi-method.method-post    { --dc-method: #10b981; }
-.laradocs-openapi-method.method-put     { --dc-method: #f59e0b; }
-.laradocs-openapi-method.method-patch   { --dc-method: #8b5cf6; }
-.laradocs-openapi-method.method-delete  { --dc-method: #ef4444; }
+.laradocs-openapi-method.method-get     { --dc-method: var(--dc-oa-get); }
+.laradocs-openapi-method.method-post     { --dc-method: var(--dc-oa-post); }
+.laradocs-openapi-method.method-put      { --dc-method: var(--dc-oa-put); }
+.laradocs-openapi-method.method-patch    { --dc-method: var(--dc-oa-patch); }
+.laradocs-openapi-method.method-delete   { --dc-method: var(--dc-oa-delete); }
 .laradocs-openapi-method.method-head,
-.laradocs-openapi-method.method-options { --dc-method: var(--dc-muted); }
+.laradocs-openapi-method.method-options  { --dc-method: var(--dc-subtle); }
+[data-theme="dark"] .laradocs-openapi-method { color: #0a0a0a; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .laradocs-openapi-method { color: #0a0a0a; }
+}
 
+/* ── endpoint path (mono, with tinted {params}) ── */
 .laradocs-openapi-path {
   font-family: var(--dc-mono);
   font-size: .9rem;
   color: var(--dc-fg);
   background: var(--dc-code-bg);
   border: 1px solid var(--dc-rule);
-  border-radius: 4px;
-  padding: .15rem .45rem;
-  word-break: break-all;
+  border-radius: 5px;
+  padding: .2rem .5rem;
+  overflow-wrap: anywhere;
+}
+.laradocs-openapi-path-static { color: var(--dc-fg); }
+.laradocs-openapi-path-param {
+  color: var(--dc-accent);
+  font-weight: 600;
 }
 
-/* Deprecated / required flag pills. */
-.laradocs-openapi-deprecated {
+/* ── copy button ── */
+.laradocs-openapi-copy {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  margin-left: auto;
+  padding: 0;
+  color: var(--dc-muted);
+  background: var(--dc-paper);
+  border: 1px solid var(--dc-rule-strong);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.laradocs-openapi-copy:hover { color: var(--dc-fg); border-color: var(--dc-accent-line); }
+.laradocs-openapi-copy:focus-visible {
+  outline: 2px solid var(--dc-accent);
+  outline-offset: 2px;
+}
+.laradocs-openapi-copy svg { width: 1rem; height: 1rem; }
+.laradocs-openapi-copy-done { display: none; color: var(--dc-oa-ok); }
+.laradocs-openapi-copy.is-copied .laradocs-openapi-copy-idle { display: none; }
+.laradocs-openapi-copy.is-copied .laradocs-openapi-copy-done { display: inline-flex; }
+.laradocs-openapi-copy.is-copied { border-color: color-mix(in srgb, var(--dc-oa-ok) 45%, transparent); }
+
+/* ── flag pills (deprecated / required / optional) ── */
+.laradocs-openapi-deprecated,
+.laradocs-openapi-required,
+.laradocs-openapi-optional {
   display: inline-flex;
   align-items: center;
   flex: none;
-  padding: .1rem .45rem;
-  font-size: .68rem;
+  padding: .12rem .45rem;
+  font-size: .65rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: .03em;
-  color: #b91c1c;
-  background: color-mix(in srgb, #ef4444 12%, transparent);
-  border: 1px solid color-mix(in srgb, #ef4444 35%, transparent);
+  letter-spacing: .04em;
   border-radius: 999px;
+  border: 1px solid transparent;
+}
+.laradocs-openapi-deprecated {
+  color: var(--dc-oa-err);
+  background: color-mix(in srgb, var(--dc-oa-err) 12%, transparent);
+  border-color: color-mix(in srgb, var(--dc-oa-err) 30%, transparent);
 }
 .laradocs-openapi-required {
-  display: inline-flex;
-  align-items: center;
-  flex: none;
-  padding: .1rem .45rem;
-  font-size: .68rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: .03em;
   color: var(--dc-accent);
   background: var(--dc-accent-soft);
-  border: 1px solid var(--dc-accent-line);
-  border-radius: 999px;
+  border-color: var(--dc-accent-line);
 }
-[data-theme="dark"] .laradocs-openapi-deprecated { color: #fca5a5; }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .laradocs-openapi-deprecated { color: #fca5a5; }
+.laradocs-openapi-optional {
+  color: var(--dc-subtle);
+  background: transparent;
+  border-color: var(--dc-rule-strong);
 }
 
-/* ── parameter "tables" (rendered as a list of rows) ── */
-.laradocs-openapi-parameter-list {
-  list-style: none;
-  margin: 1rem 0 0;
-  padding: 0;
-  border: 1px solid var(--dc-rule);
-  border-radius: var(--dc-radius-lg);
-  overflow: hidden;
+/* ── parameters ── */
+.laradocs-openapi-param-group + .laradocs-openapi-param-group { margin-top: 1.75rem; }
+.laradocs-openapi-param-group-label {
+  display: inline-block;
+  margin-bottom: .55rem;
+  font-family: var(--dc-mono);
+  font-size: .82rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--dc-fg);
 }
-.laradocs-openapi-parameter {
+.laradocs-openapi-param-list {
+  margin: 0;
+  border-top: 1px solid var(--dc-rule);
+}
+.laradocs-openapi-param {
+  margin: 0;
+  padding: .95rem 0;
+  border-bottom: 1px solid var(--dc-rule);
+}
+.laradocs-openapi-param-term {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: .5rem;
   margin: 0;
-  padding: .75rem 1rem;
-  background: var(--dc-paper);
 }
-.laradocs-openapi-parameter + .laradocs-openapi-parameter {
-  border-top: 1px solid var(--dc-rule);
-}
-.laradocs-openapi-parameter:nth-child(even) { background: var(--dc-bg-elev); }
 .laradocs-openapi-param-name {
   font-family: var(--dc-mono);
-  font-size: .85rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--dc-fg);
 }
-.laradocs-openapi-param-in {
-  font-size: .68rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: .03em;
+.laradocs-openapi-param .laradocs-openapi-type { font-size: .82rem; }
+.laradocs-openapi-param-detail { margin: 0; }
+.laradocs-openapi-param-detail:not(:empty) { margin-top: .45rem; }
+.laradocs-openapi-param-description { font-size: .95rem; color: var(--dc-muted); }
+.laradocs-openapi-param-description > * { margin: 0; }
+.laradocs-openapi-param-description > * + * { margin-top: .4rem; }
+
+/* ── type / format / modifier tokens ── */
+.laradocs-openapi-type {
+  font-family: var(--dc-mono);
+  font-size: .76rem;
+  font-weight: 600;
   color: var(--dc-muted);
-  background: var(--dc-bg);
+  background: var(--dc-code-bg);
   border: 1px solid var(--dc-rule);
-  border-radius: 3px;
+  border-radius: 4px;
   padding: .08rem .4rem;
 }
-.laradocs-openapi-param-description {
-  flex: 0 0 100%;
-  margin-top: .35rem;
-  font-size: .88rem;
-  color: var(--dc-muted);
+.laradocs-openapi-format,
+.laradocs-openapi-nullable,
+.laradocs-openapi-ref {
+  font-family: var(--dc-mono);
+  font-size: .72rem;
+  color: var(--dc-subtle);
 }
-.laradocs-openapi-param-description > * { margin: 0; }
+.laradocs-openapi-nullable { font-style: italic; }
+.laradocs-openapi-ref { color: var(--dc-accent); }
+.laradocs-openapi-circular,
+.laradocs-openapi-unresolved {
+  font-size: .7rem;
+  font-weight: 600;
+  color: var(--dc-oa-warn);
+  background: color-mix(in srgb, var(--dc-oa-warn) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dc-oa-warn) 32%, transparent);
+  border-radius: 4px;
+  padding: .05rem .35rem;
+}
 
 /* ── media-type blocks (request body / response payloads) ── */
 .laradocs-openapi-media {
-  margin-top: 1rem;
+  margin-top: .85rem;
   padding: 1rem;
   border: 1px solid var(--dc-rule);
   border-radius: var(--dc-radius-lg);
@@ -1545,188 +1720,380 @@ body.laradocs {
 }
 .laradocs-openapi-media-type {
   display: inline-block;
-  margin-bottom: .65rem;
+  margin-bottom: .75rem;
   font-family: var(--dc-mono);
-  font-size: .75rem;
+  font-size: .72rem;
   color: var(--dc-muted);
-  background: var(--dc-code-bg);
+  background: var(--dc-paper);
   border: 1px solid var(--dc-rule);
-  border-radius: 3px;
-  padding: .1rem .4rem;
+  border-radius: 4px;
+  padding: .12rem .45rem;
 }
 
-/* ── response blocks ── */
-.laradocs-openapi-response + .laradocs-openapi-response {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--dc-rule);
+/* ── responses ── */
+.laradocs-openapi-response { margin-top: 1rem; }
+.laradocs-openapi-response-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: .3rem .85rem;
 }
-.laradocs-openapi-response > h3 {
-  display: inline-block;
+.laradocs-openapi-status {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  margin: 0;
+  padding: .2rem .6rem .2rem .5rem;
   font-family: var(--dc-mono);
-  font-size: .95rem;
-  padding: .15rem .55rem;
-  border-radius: var(--dc-radius);
-  color: var(--dc-fg);
-  background: var(--dc-code-bg);
-  border: 1px solid var(--dc-rule);
-}
-/* Tint the status pill green for 2xx, red for 4xx/5xx (first digit). */
-.laradocs-openapi-response > h3[id^="response-2"] {
-  color: #10b981;
-  background: color-mix(in srgb, #10b981 12%, transparent);
-  border-color: color-mix(in srgb, #10b981 35%, transparent);
-}
-.laradocs-openapi-response > h3[id^="response-4"],
-.laradocs-openapi-response > h3[id^="response-5"] {
-  color: #ef4444;
-  background: color-mix(in srgb, #ef4444 12%, transparent);
-  border-color: color-mix(in srgb, #ef4444 35%, transparent);
-}
-.laradocs-openapi-response-description {
-  margin-top: .65rem;
+  font-size: .9rem;
+  font-weight: 600;
+  border: 0;
+  border-radius: 999px;
   color: var(--dc-muted);
+  background: var(--dc-code-bg);
 }
+.laradocs-openapi-status-dot {
+  width: .5rem;
+  height: .5rem;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: .9;
+}
+.laradocs-openapi-response.is-success .laradocs-openapi-status {
+  color: var(--dc-oa-ok);
+  background: color-mix(in srgb, var(--dc-oa-ok) 13%, transparent);
+}
+.laradocs-openapi-response.is-redirect .laradocs-openapi-status {
+  color: var(--dc-oa-warn);
+  background: color-mix(in srgb, var(--dc-oa-warn) 13%, transparent);
+}
+.laradocs-openapi-response.is-error .laradocs-openapi-status {
+  color: var(--dc-oa-err);
+  background: color-mix(in srgb, var(--dc-oa-err) 13%, transparent);
+}
+.laradocs-openapi-response-description { color: var(--dc-muted); font-size: .9rem; }
 .laradocs-openapi-response-description > * { margin: 0; }
 
 /* ── schema tree ── */
 .laradocs-openapi-schema {
   display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+.laradocs-openapi-schema:empty { display: none; }
+.laradocs-openapi-schema-meta {
+  display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: .4rem .5rem;
-}
-.laradocs-openapi-type {
-  font-family: var(--dc-mono);
-  font-size: .8rem;
-  font-weight: 600;
-  color: var(--dc-accent);
-  background: var(--dc-accent-soft);
-  border-radius: 3px;
-  padding: .05rem .4rem;
-}
-.laradocs-openapi-format,
-.laradocs-openapi-nullable,
-.laradocs-openapi-ref {
-  font-family: var(--dc-mono);
-  font-size: .72rem;
-  color: var(--dc-muted);
-  background: var(--dc-code-bg);
-  border: 1px solid var(--dc-rule);
-  border-radius: 3px;
-  padding: .05rem .35rem;
-}
-.laradocs-openapi-nullable { font-style: italic; }
-.laradocs-openapi-circular,
-.laradocs-openapi-unresolved {
-  font-size: .72rem;
-  font-weight: 600;
-  color: #b45309;
-  background: color-mix(in srgb, #f59e0b 14%, transparent);
-  border: 1px solid color-mix(in srgb, #f59e0b 35%, transparent);
-  border-radius: 3px;
-  padding: .05rem .35rem;
-}
-[data-theme="dark"] .laradocs-openapi-circular,
-[data-theme="dark"] .laradocs-openapi-unresolved { color: #fcd34d; }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .laradocs-openapi-circular,
-  :root:not([data-theme="light"]) .laradocs-openapi-unresolved { color: #fcd34d; }
+  gap: .35rem .45rem;
 }
 .laradocs-openapi-schema-description {
-  flex: 0 0 100%;
-  font-size: .88rem;
+  font-size: .9rem;
   color: var(--dc-muted);
 }
 .laradocs-openapi-schema-description > * { margin: 0; }
 
-/* Nested property / items / oneOf / anyOf groups: a left-rule guide line so
-   the tree's depth reads visually, like the sidebar's child nesting. */
+/* Nested property list with a left guide line so depth reads visually. */
 .laradocs-openapi-properties {
-  flex: 0 0 100%;
   list-style: none;
-  margin: .4rem 0 0;
-  padding-left: 1rem;
-  border-left: 1px solid var(--dc-rule);
-}
-.laradocs-openapi-property { margin: 0; padding: .35rem 0; }
-.laradocs-openapi-property + .laradocs-openapi-property {
+  margin: 0;
+  padding: 0;
   border-top: 1px solid var(--dc-rule);
+}
+.laradocs-openapi-properties > li { margin: 0; }
+.laradocs-openapi-property {
+  margin: 0;
+  padding: .75rem 0 .75rem .9rem;
+  border-bottom: 1px solid var(--dc-rule);
+  border-left: 2px solid var(--dc-rule);
+}
+.laradocs-openapi-properties > li:last-child > .laradocs-openapi-property { border-bottom: 0; }
+.laradocs-openapi-property:hover { border-left-color: var(--dc-accent-line); }
+.laradocs-openapi-prop-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .55rem;
 }
 .laradocs-openapi-prop-name {
   font-family: var(--dc-mono);
-  font-size: .85rem;
+  font-size: .95rem;
   font-weight: 600;
   color: var(--dc-fg);
-  margin-right: .4rem;
 }
+.laradocs-openapi-property > .laradocs-openapi-schema { margin-top: .5rem; }
+/* A scalar property has no nested content — collapse the empty gap. */
+.laradocs-openapi-property > .laradocs-openapi-schema:empty { margin-top: 0; }
+
+/* Collapsible branches: <details>/<summary> for objects, arrays, composites. */
+.laradocs-openapi-property.is-expandable > summary,
+.laradocs-openapi-branch > summary {
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.laradocs-openapi-property.is-expandable > summary::-webkit-details-marker,
+.laradocs-openapi-branch > summary::-webkit-details-marker { display: none; }
+.laradocs-openapi-property.is-expandable > summary:focus-visible,
+.laradocs-openapi-branch > summary:focus-visible {
+  outline: 2px solid var(--dc-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.laradocs-openapi-chevron {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  color: var(--dc-subtle);
+  transition: transform .15s ease;
+}
+.laradocs-openapi-chevron svg { width: .85rem; height: .85rem; }
+[open] > summary > .laradocs-openapi-chevron,
+[open] > summary .laradocs-openapi-chevron { transform: rotate(90deg); }
+.laradocs-openapi-property.is-expandable > summary:hover .laradocs-openapi-chevron,
+.laradocs-openapi-branch > summary:hover .laradocs-openapi-chevron { color: var(--dc-fg); }
+
+.laradocs-openapi-branch {
+  padding-left: .9rem;
+  border-left: 2px solid var(--dc-rule);
+}
+.laradocs-openapi-branch > .laradocs-openapi-schema { margin-top: .5rem; }
+.laradocs-openapi-branch-label {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  font-size: .68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--dc-subtle);
+}
+
 .laradocs-openapi-items,
 .laradocs-openapi-one-of,
 .laradocs-openapi-any-of {
-  flex: 0 0 100%;
-  margin-top: .4rem;
-  padding-left: 1rem;
-  border-left: 1px solid var(--dc-rule);
+  padding-left: .9rem;
+  border-left: 2px solid var(--dc-rule);
 }
 .laradocs-openapi-items-label,
 .laradocs-openapi-composite-label,
 .laradocs-openapi-enum-label {
   display: inline-block;
-  margin-bottom: .35rem;
-  font-size: .68rem;
+  margin-bottom: .4rem;
+  font-size: .66rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: .04em;
-  color: var(--dc-muted);
+  letter-spacing: .05em;
+  color: var(--dc-subtle);
 }
 .laradocs-openapi-enum {
-  flex: 0 0 100%;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: .4rem;
 }
+.laradocs-openapi-enum-label { margin-bottom: 0; margin-right: .1rem; }
 .laradocs-openapi-enum-value {
   font-family: var(--dc-mono);
   font-size: .78rem;
   color: var(--dc-code-fg);
   background: var(--dc-code-bg);
   border: 1px solid var(--dc-rule);
-  border-radius: 3px;
-  padding: .05rem .35rem;
+  border-radius: 4px;
+  padding: .05rem .4rem;
 }
 
-/* ── overview: servers + operations index ── */
-.laradocs-openapi-server-list,
-.laradocs-openapi-operation-list {
-  list-style: none;
-  margin: 1rem 0 0;
-  padding: 0;
+/* ─────────────── overview: meta, jump nav, endpoint index ─────────────── */
+
+/* At-a-glance meta panel (base URL + version). */
+.laradocs-openapi-meta {
+  margin: 0;
+  padding: .35rem 1.1rem;
+  border: 1px solid var(--dc-rule);
+  border-radius: var(--dc-radius-lg);
+  background: var(--dc-bg-elev);
 }
-.laradocs-openapi-server {
+.laradocs-openapi-meta-item {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: .6rem;
-  padding: .5rem 0;
+  gap: .35rem .9rem;
+  padding: .7rem 0;
 }
-.laradocs-openapi-server + .laradocs-openapi-server {
-  border-top: 1px solid var(--dc-rule);
+.laradocs-openapi-meta-item + .laradocs-openapi-meta-item { border-top: 1px solid var(--dc-rule); }
+.laradocs-openapi-meta-label {
+  flex: none;
+  width: 5rem;
+  margin: 0;
+  font-size: .68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--dc-subtle);
 }
-.laradocs-openapi-server-description { color: var(--dc-muted); font-size: .88rem; }
+.laradocs-openapi-meta-value {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem;
+  margin: 0;
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+.laradocs-openapi-base-url {
+  font-family: var(--dc-mono);
+  font-size: .875rem;
+  color: var(--dc-fg);
+  overflow-wrap: anywhere;
+}
+.laradocs-openapi-meta-value .laradocs-openapi-copy { margin-left: 0; width: 1.75rem; height: 1.75rem; }
+.laradocs-openapi-meta-value .laradocs-openapi-copy svg { width: .85rem; height: .85rem; }
+.laradocs-openapi-server-description { color: var(--dc-muted); font-size: .85rem; }
+.laradocs-openapi-version-badge {
+  font-family: var(--dc-mono);
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--dc-accent);
+  background: var(--dc-accent-soft);
+  border: 1px solid var(--dc-accent-line);
+  border-radius: 999px;
+  padding: .1rem .55rem;
+}
 
+/* Resource index: a bar (label + expand/collapse toolbar) above one collapsible
+   <details> per resource (tag), so a large spec stays compact and scannable. */
+.laradocs-openapi-index-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem .9rem;
+  padding-bottom: .6rem;
+  border-bottom: 1px solid var(--dc-rule-strong);
+}
+.laradocs-openapi-index-label {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: .72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--dc-muted);
+}
+.laradocs-openapi-index-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding: 0 .4rem;
+  font-family: var(--dc-mono);
+  font-size: .7rem;
+  color: var(--dc-subtle);
+  background: var(--dc-bg-elev);
+  border: 1px solid var(--dc-rule);
+  border-radius: 999px;
+}
+/* Enable the toolbar within the index (mirrors the request-body / responses rule). */
+.laradocs-openapi-index:has(details) .laradocs-openapi-toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+}
+
+/* One collapsible section per resource (tag). */
+.laradocs-openapi-tag-section { border-bottom: 1px solid var(--dc-rule); }
+.laradocs-openapi-tag-summary {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .95rem .3rem;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.laradocs-openapi-tag-summary::-webkit-details-marker { display: none; }
+.laradocs-openapi-tag-summary:hover { background: var(--dc-bg-elev); }
+.laradocs-openapi-tag-summary:focus-visible {
+  outline: 2px solid var(--dc-accent);
+  outline-offset: -2px;
+  border-radius: 6px;
+}
+.laradocs-openapi-tag-summary .laradocs-openapi-chevron { color: var(--dc-subtle); }
+.laradocs-openapi-tag-section[open] > summary .laradocs-openapi-chevron { transform: rotate(90deg); }
+.laradocs-openapi-tag-section[open] > summary { border-bottom: 1px solid var(--dc-rule); }
+.laradocs-openapi-tag-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: .65rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  scroll-margin-top: calc(var(--dc-header-h) + var(--dc-tabs-h) + 1rem);
+}
+.laradocs-openapi-tag-count {
+  font-family: var(--dc-mono);
+  font-size: .72rem;
+  font-weight: 500;
+  color: var(--dc-subtle);
+}
+.laradocs-openapi-operation-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--dc-rule);
+  border-radius: var(--dc-radius-lg);
+  overflow: hidden;
+}
+/* Inside a collapsible section the outer border/radius is redundant. */
+.laradocs-openapi-tag-section .laradocs-openapi-operation-list {
+  border: 0;
+  border-radius: 0;
+  padding: .3rem 0 .8rem;
+}
+.laradocs-openapi-operation-list > li + li { border-top: 1px solid var(--dc-rule); }
 .laradocs-openapi-operation-item {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: .6rem;
-  padding: .6rem .85rem;
-  border: 1px solid var(--dc-rule);
-  border-radius: var(--dc-radius);
-  background: var(--dc-bg-elev);
+  gap: .65rem;
+  padding: .7rem .85rem;
+  text-decoration: none;
+  color: var(--dc-fg);
+  background: var(--dc-paper);
 }
-.laradocs-openapi-operation-item + .laradocs-openapi-operation-item { margin-top: .5rem; }
-.laradocs-openapi-summary { color: var(--dc-muted); font-size: .9rem; }
+.laradocs-openapi-operation-item:hover { background: var(--dc-bg-elev); }
+.laradocs-openapi-operation-item:focus-visible {
+  outline: 2px solid var(--dc-accent);
+  outline-offset: -2px;
+}
+.laradocs-openapi-operation-item .laradocs-openapi-path {
+  font-size: .82rem;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--dc-muted);
+}
+.laradocs-openapi-operation-item .laradocs-openapi-path-static { color: var(--dc-muted); }
+.laradocs-openapi-operation-item:hover .laradocs-openapi-path-static { color: var(--dc-fg); }
+.laradocs-openapi-summary {
+  flex: 1 1 100%;
+  color: var(--dc-muted);
+  font-size: .9rem;
+}
+@media (min-width: 60rem) {
+  .laradocs-openapi-summary {
+    flex: 1 1 auto;
+    margin-left: auto;
+    text-align: right;
+  }
+}
 
 /* ─────────────────────── reduced motion ─────────────────────── */
 @media (prefers-reduced-motion: reduce) {

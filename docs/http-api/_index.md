@@ -1,10 +1,10 @@
 ---
-title: API Reference
+title: HTTP API
 description: HTTP endpoints for programmatic access to the navigation tree and search index.
 order: 12
 ---
 
-# API Reference
+# HTTP API
 
 Laradocs exposes two read-only HTTP endpoints for external consumers — indexers,
 MCP servers, and headless frontends. Both live under `{prefix}/_laradocs/api/`

@@ -108,8 +108,14 @@ final class OpenApiContentRenderer implements DocumentContentRenderer
             return '';
         }
 
+        $servers = $spec->servers();
+        $baseUrl = isset($servers[0]['url']) && is_scalar($servers[0]['url'])
+            ? rtrim((string) $servers[0]['url'], '/')
+            : '';
+
         return (string) view('laradocs::partials.openapi.operation', [
             'operation' => $operation,
+            'baseUrl' => $baseUrl,
             'parameters' => $this->expandParameters($operation->parameters, $schema),
             'requestBody' => $this->expandRequestBody($operation->requestBody, $schema),
             'responses' => $this->expandResponses($operation->responses, $schema),
