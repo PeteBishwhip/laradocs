@@ -14,8 +14,8 @@ and comply with [JSON:API 1.0](https://jsonapi.org/).
 
 | Endpoint | Description |
 |---|---|
-| [`GET …/api/tree`](/docs/api/tree) | Full navigation tree as a compound document. |
-| [`GET …/api/search`](/docs/api/search) | Full-text search over indexed pages. |
+| [`GET …/api/tree`](/docs/http-api/tree) | Full navigation tree as a compound document. |
+| [`GET …/api/search`](/docs/http-api/search) | Full-text search over indexed pages. |
 
 ## Common behaviour
 

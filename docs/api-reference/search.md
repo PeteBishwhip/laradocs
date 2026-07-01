@@ -1,5 +1,5 @@
 ---
-redirect: api/search
+redirect: http-api/search
 hidden: true
 search: false
 ---
