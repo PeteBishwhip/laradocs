@@ -76,7 +76,13 @@
     @include('laradocs::partials.analytics')
     @stack('head')
 </head>
-<body class="laradocs" data-preset="{{ $preset }}">
+@php
+    // Operation reference pages dock a request/response code panel where the TOC
+    // would sit, and want a wider right rail than prose pages.
+    $isApiOperation = isset($document)
+        && ($document->metadata->get('openapi')['type'] ?? null) === 'operation';
+@endphp
+<body class="laradocs" data-preset="{{ $preset }}"{{ $isApiOperation ? ' data-laradocs-openapi-op' : '' }}>
     <div class="laradocs-progress" aria-hidden="true"><span></span></div>
 
     @include('laradocs::partials.banner')

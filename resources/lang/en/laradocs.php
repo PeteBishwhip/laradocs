@@ -113,6 +113,9 @@ return [
         'base_url' => 'Base URL',
         'version' => 'Version',
         'resources' => 'Resources',
+        'request' => 'Request',
+        'response' => 'Response',
+        'code_samples' => 'Request and response samples',
         'expand_all' => 'Expand all',
         'collapse_all' => 'Collapse all',
         'in' => [

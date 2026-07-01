@@ -31,6 +31,29 @@
         <div class="laradocs-openapi-description">{!! $description !!}</div>
     @endif
 
+    @isset($samples)
+        <aside class="laradocs-openapi laradocs-openapi-samples" data-laradocs-openapi-aside hidden aria-label="{{ __('laradocs::laradocs.openapi.code_samples') }}">
+            <div class="laradocs-openapi-sample">
+                <div class="laradocs-openapi-sample-head">
+                    <span class="laradocs-openapi-method method-{{ strtolower($samples['method']) }}">{{ $samples['method'] }}</span>
+                    <span class="laradocs-openapi-sample-title">{{ __('laradocs::laradocs.openapi.request') }}</span>
+                </div>
+                {!! $samples['request'] !!}
+            </div>
+            @if($samples['response'] !== null)
+                <div class="laradocs-openapi-sample">
+                    <div class="laradocs-openapi-sample-head">
+                        @if($samples['status'])
+                            <span class="laradocs-openapi-sample-status">{{ $samples['status'] }}</span>
+                        @endif
+                        <span class="laradocs-openapi-sample-title">{{ __('laradocs::laradocs.openapi.response') }}</span>
+                    </div>
+                    {!! $samples['response'] !!}
+                </div>
+            @endif
+        </aside>
+    @endisset
+
     @if($parameters !== [])
         @include('laradocs::partials.openapi.parameters', ['parameters' => $parameters, 'describe' => $describe])
     @endif

@@ -101,6 +101,38 @@
     fromHash();
   }
 
+  // OpenAPI operation pages render a request/response code panel inline in the
+  // body. On wide screens, dock it into the right rail (in place of the TOC);
+  // on narrow screens leave it inline near the top of the content.
+  function initOpenApiAside() {
+    var aside = document.querySelector('[data-laradocs-openapi-aside]');
+    if (!aside) return;
+    var main = document.querySelector('.laradocs-main');
+    if (!main) return;
+
+    var home = document.createComment('laradocs-openapi-aside');
+    aside.parentNode.insertBefore(home, aside);
+    var toc = main.querySelector('.laradocs-toc');
+    var wide = window.matchMedia('(min-width: 1181px)');
+
+    function place() {
+      if (wide.matches) {
+        if (toc) toc.setAttribute('hidden', '');
+        if (aside.parentNode !== main) main.appendChild(aside);
+        aside.classList.add('is-docked');
+      } else {
+        if (toc) toc.removeAttribute('hidden');
+        if (home.parentNode && aside.previousSibling !== home) home.parentNode.insertBefore(aside, home);
+        aside.classList.remove('is-docked');
+      }
+      aside.hidden = false;
+    }
+
+    place();
+    if (wide.addEventListener) wide.addEventListener('change', place);
+    else if (wide.addListener) wide.addListener(place);
+  }
+
   function initMobileNav() {
     var shell = document.querySelector('.laradocs-shell');
     var button = document.querySelector('[data-laradocs-menu]');
@@ -703,6 +735,7 @@
 
   function boot() {
     initTheme();
+    initOpenApiAside();
     initCopy();
     initCopyText();
     initSchemaToggle();

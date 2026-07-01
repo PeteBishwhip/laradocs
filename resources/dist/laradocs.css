@@ -2095,6 +2095,68 @@ body.laradocs {
   }
 }
 
+/* ─────────── request / response code-sample panel (operation rail) ─────────── */
+
+/* Operation pages dock the sample panel where the TOC sits and want a wider
+   right rail so code stays readable. The wider rail feeds the shell's centering
+   math through --dc-toc-w, and collapses to zero once the rail is hidden. */
+body[data-laradocs-openapi-op] { --dc-toc-w: 22rem; }
+@media (max-width: 1180px) {
+  body[data-laradocs-openapi-op] { --dc-toc-w: 0px; }
+}
+
+/* Inline (mobile / narrow): the panel flows in the content near the top. */
+.laradocs-openapi-samples { margin: 1.75rem 0; }
+
+/* Docked (wide): a sticky right column mirroring the TOC's position. */
+.laradocs-openapi-samples.is-docked {
+  width: var(--dc-toc-w);
+  flex-shrink: 0;
+  /* Without this a flex item's min-width defaults to min-content, so the
+     longest code line would stretch the rail instead of scrolling. */
+  min-width: 0;
+  align-self: flex-start;
+  position: sticky;
+  top: calc(var(--dc-header-h) + var(--dc-tabs-h));
+  max-height: calc(100vh - var(--dc-header-h) - var(--dc-tabs-h));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin: 0;
+  padding: 2.25rem 0 2rem 1.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--dc-rule-strong) transparent;
+}
+/* Keep long code lines scrolling inside the panel rather than overflowing it. */
+.laradocs-openapi-samples .laradocs-openapi-sample,
+.laradocs-openapi-samples .laradocs-tab-group,
+.laradocs-openapi-samples .laradocs-tab-group [role="tabpanel"] { min-width: 0; max-width: 100%; }
+
+.laradocs-openapi-sample-head {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin-bottom: .7rem;
+}
+.laradocs-openapi-sample-title {
+  font-size: .72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--dc-muted);
+}
+.laradocs-openapi-sample-status {
+  font-family: var(--dc-mono);
+  font-size: .75rem;
+  font-weight: 600;
+  padding: .1rem .5rem;
+  border-radius: 999px;
+  color: var(--dc-oa-ok);
+  background: color-mix(in srgb, var(--dc-oa-ok) 14%, transparent);
+}
+/* The sample's code group provides its own container; drop the stacking margin. */
+.laradocs-openapi-sample .laradocs-tab-group,
+.laradocs-openapi-sample .laradocs-code { margin: 0; }
+
 /* ─────────────────────── reduced motion ─────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
