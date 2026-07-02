@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Laradocs\OpenApi\Generator;
 
 use Illuminate\Filesystem\Filesystem;
+use Laradocs\Contracts\OpenApiSpecGenerator;
 use Laradocs\OpenApi\OpenApiParser;
 use Symfony\Component\Yaml\Yaml;
 
@@ -21,7 +22,7 @@ use Symfony\Component\Yaml\Yaml;
 final class SpecBuilder
 {
     public function __construct(
-        private readonly SpecGenerator $generator,
+        private readonly OpenApiSpecGenerator $generator,
         private readonly Filesystem $files = new Filesystem,
     ) {}
 
