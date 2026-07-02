@@ -100,6 +100,13 @@ final class ScrambleSpecGenerator implements OpenApiSpecGenerator
      */
     public function generate(): array
     {
+        // @codeCoverageIgnoreStart
+        // Everything from here on delegates to dedoc/scramble, an optional
+        // dependency that is absent from CI, so these lines cannot be executed
+        // (nor meaningfully asserted) without installing the package. The
+        // equivalent Scramble-missing behaviour is covered at the factory level
+        // by OpenApiGeneratorFactoryTest; this adapter's constructor is covered
+        // when the factory builds it with Scramble marked available.
         if (! class_exists('\Dedoc\Scramble\Generator')) {
             throw new OpenApiException(SpecGeneratorFactory::MISSING_MESSAGE);
         }
@@ -206,5 +213,6 @@ final class ScrambleSpecGenerator implements OpenApiSpecGenerator
         }
 
         return $spec;
+        // @codeCoverageIgnoreEnd
     }
 }
