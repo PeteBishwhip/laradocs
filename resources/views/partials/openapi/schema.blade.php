@@ -95,12 +95,12 @@
                 <summary class="laradocs-openapi-branch-label">
                     <span class="laradocs-openapi-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span>{{ __('laradocs::laradocs.openapi.items') }}
                 </summary>
-                @include('laradocs::partials.openapi.schema', ['node' => $node['items'], 'open' => $open, 'describe' => $describe])
+                @include('laradocs::partials.openapi.schema', ['node' => $node['items'], 'head' => true, 'open' => $open, 'describe' => $describe])
             </details>
         @else
             <div class="laradocs-openapi-items">
                 <span class="laradocs-openapi-items-label">{{ __('laradocs::laradocs.openapi.items') }}</span>
-                @include('laradocs::partials.openapi.schema', ['node' => $node['items'], 'open' => $open, 'describe' => $describe])
+                @include('laradocs::partials.openapi.schema', ['node' => $node['items'], 'head' => true, 'open' => $open, 'describe' => $describe])
             </div>
         @endif
     @endif
@@ -111,7 +111,7 @@
                 <span class="laradocs-openapi-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span>{{ __('laradocs::laradocs.openapi.one_of') }}
             </summary>
             @foreach($node['oneOf'] as $variant)
-                @include('laradocs::partials.openapi.schema', ['node' => $variant, 'open' => $open, 'describe' => $describe])
+                @include('laradocs::partials.openapi.schema', ['node' => $variant, 'head' => true, 'open' => $open, 'describe' => $describe])
             @endforeach
         </details>
     @endif
@@ -122,7 +122,7 @@
                 <span class="laradocs-openapi-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span>{{ __('laradocs::laradocs.openapi.any_of') }}
             </summary>
             @foreach($node['anyOf'] as $variant)
-                @include('laradocs::partials.openapi.schema', ['node' => $variant, 'open' => $open, 'describe' => $describe])
+                @include('laradocs::partials.openapi.schema', ['node' => $variant, 'head' => true, 'open' => $open, 'describe' => $describe])
             @endforeach
         </details>
     @endif

@@ -279,27 +279,64 @@ final class CodeSampleBuilder
             'php' => [
                 'open' => '[', 'close' => ']', 'arrow' => ' => ',
                 'true' => 'true', 'false' => 'false', 'null' => 'null',
-                'key' => fn (string $k): string => "'" . str_replace("'", "\\'", $k) . "'",
-                'str' => fn (string $v): string => "'" . str_replace("'", "\\'", $v) . "'",
+                'key' => fn (string $k): string => $this->phpString($k),
+                'str' => fn (string $v): string => $this->phpString($v),
             ],
             'python' => [
                 'open' => '{', 'close' => '}', 'arrow' => ': ',
                 'true' => 'True', 'false' => 'False', 'null' => 'None',
-                'key' => fn (string $k): string => '"' . $k . '"',
-                'str' => fn (string $v): string => '"' . str_replace('"', '\\"', $v) . '"',
+                'key' => fn (string $k): string => $this->doubleQuoted($k),
+                'str' => fn (string $v): string => $this->doubleQuoted($v),
             ],
             'ruby' => [
                 'open' => '{', 'close' => '}', 'arrow' => ' => ',
                 'true' => 'true', 'false' => 'false', 'null' => 'nil',
-                'key' => fn (string $k): string => '"' . $k . '"',
-                'str' => fn (string $v): string => '"' . str_replace('"', '\\"', $v) . '"',
+                // Ruby interpolates "#{...}" in double-quoted strings, so neutralise it too.
+                'key' => fn (string $k): string => $this->doubleQuoted($k, ['#{' => '\\#{']),
+                'str' => fn (string $v): string => $this->doubleQuoted($v, ['#{' => '\\#{']),
             ],
             default => [ // json (also valid JavaScript object-literal syntax)
                 'open' => '{', 'close' => '}', 'arrow' => ': ',
                 'true' => 'true', 'false' => 'false', 'null' => 'null',
-                'key' => fn (string $k): string => '"' . $k . '"',
-                'str' => fn (string $v): string => '"' . str_replace('"', '\\"', $v) . '"',
+                'key' => fn (string $k): string => $this->jsonString($k),
+                'str' => fn (string $v): string => $this->jsonString($v),
             ],
         };
+    }
+
+    /**
+     * A PHP single-quoted string literal — only `\` and `'` are special inside
+     * one, and strtr's single pass escapes both without re-escaping its output.
+     */
+    private function phpString(string $value): string
+    {
+        return "'" . strtr($value, ['\\' => '\\\\', "'" => "\\'"]) . "'";
+    }
+
+    /**
+     * A double-quoted string literal for Python/Ruby: escape the backslash,
+     * the delimiter and the control characters that would otherwise terminate
+     * or corrupt the line. $extra adds language-specific sequences.
+     *
+     * @param  array<string, string>  $extra
+     */
+    private function doubleQuoted(string $value, array $extra = []): string
+    {
+        return '"' . strtr($value, [
+            '\\' => '\\\\', '"' => '\\"',
+            "\n" => '\\n', "\r" => '\\r', "\t" => '\\t',
+        ] + $extra) . '"';
+    }
+
+    /**
+     * A JSON string literal (also valid JavaScript). json_encode handles every
+     * escape — backslash, quote, control and unicode — so the value can never
+     * break out of the literal; fall back to an empty string on invalid UTF-8.
+     */
+    private function jsonString(string $value): string
+    {
+        $encoded = json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+        return $encoded === false ? '""' : $encoded;
     }
 }
