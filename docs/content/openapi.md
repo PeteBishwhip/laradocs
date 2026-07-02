@@ -180,8 +180,11 @@ and files them like this:
   `title` config (default `Overview`).
 - **Operations** → mounted at `base_slug/{tag}/{operation}`, where `{tag}` is a
   slug of the operation's **first** tag and `{operation}` is a slug of its
-  `operationId` (falling back to `method + path` when no `operationId` is set).
-  Operations with no tags are filed under a default `Other` group.
+  **summary** — so the URL matches the page title, e.g.
+  `/docs/api/background-processes/list-background-processes`. When an operation
+  has no summary the segment falls back to its `operationId`, then to
+  `method + path`. Collisions within a spec gain a stable numeric suffix
+  (`…-2`, `…-3`). Operations with no tags are filed under a default group.
 
 In the sidebar this becomes a single **API Reference** section (the `group`
 config) containing the **Overview** page followed by one collapsible entry per

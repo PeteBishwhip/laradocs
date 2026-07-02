@@ -8,6 +8,7 @@ use Closure;
 use Laradocs\Contracts\DocumentContentRenderer;
 use Laradocs\Contracts\DocumentParser;
 use Laradocs\Documents\Document;
+use Laradocs\Support\Config;
 
 /**
  * Renders an OpenAPI-backed synthetic {@see Document} to native, themed HTML.
@@ -205,6 +206,7 @@ final class OpenApiContentRenderer implements DocumentContentRenderer
     private function renderOverview(NormalizedSpec $spec, Closure $describe): string
     {
         $info = $spec->info();
+        $baseSlug = Config::string('laradocs.openapi.base_slug', 'api');
 
         return (string) view('laradocs::partials.openapi.overview', [
             'info' => $info,
@@ -212,6 +214,9 @@ final class OpenApiContentRenderer implements DocumentContentRenderer
             'servers' => $spec->servers(),
             'tags' => $spec->tags(),
             'operations' => $spec->operations(),
+            // Resolve slugs the same way the loader mounts the pages, so the
+            // index links always point at the real operation URLs.
+            'operationSlugs' => OperationSlugger::map($spec->operations(), $baseSlug),
             'describe' => $describe,
         ])->render();
     }

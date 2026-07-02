@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Laradocs\Loaders;
 
 use Closure;
-use Illuminate\Support\Str;
 use Laradocs\Contracts\DocumentContentRenderer;
 use Laradocs\Contracts\DocumentLoader;
 use Laradocs\Documents\Document;
@@ -15,6 +14,7 @@ use Laradocs\Metadata\Metadata;
 use Laradocs\OpenApi\NormalizedSpec;
 use Laradocs\OpenApi\OpenApiParser;
 use Laradocs\OpenApi\Operation;
+use Laradocs\OpenApi\OperationSlugger;
 use Laradocs\Support\CacheKey;
 
 /**
@@ -71,10 +71,11 @@ final class OpenApiLoader implements DocumentLoader
             $documents->push($this->overview($specPath, $spec, $mtime, $locale));
 
             $order = 0;
+            $slugs = OperationSlugger::map($spec->operations(), $this->baseSlug);
 
             foreach ($spec->operations() as $operation) {
                 $documents->push(
-                    $this->operation($specPath, $operation, $mtime, $locale, $order++),
+                    $this->operation($specPath, $operation, $mtime, $locale, $order++, $slugs[OperationSlugger::identity($operation)]),
                 );
             }
         }
@@ -138,14 +139,9 @@ final class OpenApiLoader implements DocumentLoader
         return $this->document($specPath, 'overview', $this->baseSlug, $metadata, $mtime, $locale);
     }
 
-    private function operation(string $specPath, Operation $operation, int $mtime, string $locale, int $order): Document
+    private function operation(string $specPath, Operation $operation, int $mtime, string $locale, int $order, string $slug): Document
     {
         $tag = $operation->tags[0] ?? 'default';
-        $opSegment = $operation->operationId !== null && $operation->operationId !== ''
-            ? $operation->operationId
-            : $operation->method . ' ' . $operation->path;
-
-        $slug = $this->baseSlug . '/' . Str::slug($tag) . '/' . Str::slug($opSegment);
 
         $opKey = $operation->operationId !== null && $operation->operationId !== ''
             ? $operation->operationId

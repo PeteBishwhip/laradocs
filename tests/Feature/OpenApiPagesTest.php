@@ -269,15 +269,15 @@ it('groups operations under their tag in the sidebar tree', function (string $ve
     $orderSlugs = array_map(fn (TreeNode $child): string => $child->slug, $orders->children);
 
     expect($widgetSlugs)
-        ->toContain('api/widgets/listwidgets')
-        ->toContain('api/widgets/createwidget')
-        ->and($orderSlugs)->toContain('api/orders/getorder');
+        ->toContain('api/widgets/list-all-widgets')
+        ->toContain('api/widgets/create-a-widget')
+        ->and($orderSlugs)->toContain('api/orders/fetch-an-order');
 })->with('openapi specs');
 
 it('renders an operation page with method, path, parameters and schemas', function (string $version) {
     $this->makeDocs(['openapi.json' => widgetsSpecJson($version)]);
 
-    $list = $this->get('/docs/api/widgets/listwidgets')->assertOk()->getContent();
+    $list = $this->get('/docs/api/widgets/list-all-widgets')->assertOk()->getContent();
 
     expect($list)
         ->toContain('GET')
@@ -288,7 +288,7 @@ it('renders an operation page with method, path, parameters and schemas', functi
         ->toContain('name')            // a Widget property in the response schema
         ->toContain('kind');
 
-    $create = $this->get('/docs/api/widgets/createwidget')->assertOk()->getContent();
+    $create = $this->get('/docs/api/widgets/create-a-widget')->assertOk()->getContent();
 
     expect($create)
         ->toContain('POST')
@@ -301,7 +301,7 @@ it('expands $ref, allOf, oneOf, anyOf and enum in rendered schemas', function (s
 
     // allOf merges the Identifiable $ref into Widget, so its `int64` format
     // surfaces alongside the inline members; enum and nullable are normalised.
-    $list = $this->get('/docs/api/widgets/listwidgets')->assertOk()->getContent();
+    $list = $this->get('/docs/api/widgets/list-all-widgets')->assertOk()->getContent();
 
     expect($list)
         ->toContain('int64')           // Identifiable.id (proves $ref + allOf expansion)
@@ -311,7 +311,7 @@ it('expands $ref, allOf, oneOf, anyOf and enum in rendered schemas', function (s
         ->toContain('nullable');       // notes field, normalised from 3.0/3.1
 
     // oneOf on the request body payment field.
-    $create = $this->get('/docs/api/widgets/createwidget')->assertOk()->getContent();
+    $create = $this->get('/docs/api/widgets/create-a-widget')->assertOk()->getContent();
 
     expect($create)
         ->toContain('One of')
@@ -319,7 +319,7 @@ it('expands $ref, allOf, oneOf, anyOf and enum in rendered schemas', function (s
         ->toContain('amount');
 
     // anyOf on the order's source field.
-    $order = $this->get('/docs/api/orders/getorder')->assertOk()->getContent();
+    $order = $this->get('/docs/api/orders/fetch-an-order')->assertOk()->getContent();
 
     expect($order)->toContain('Any of');
 })->with('openapi specs');
@@ -327,7 +327,7 @@ it('expands $ref, allOf, oneOf, anyOf and enum in rendered schemas', function (s
 it('emits heading anchors and a populated table of contents', function (string $version) {
     $this->makeDocs(['openapi.json' => widgetsSpecJson($version)]);
 
-    $html = $this->get('/docs/api/widgets/listwidgets')->assertOk()->getContent();
+    $html = $this->get('/docs/api/widgets/list-all-widgets')->assertOk()->getContent();
 
     expect($html)
         // Anchor targets emitted by the operation partial...
@@ -346,9 +346,9 @@ it('indexes operations so they are searchable by path, summary and description',
     )->pluck('slug')->all();
 
     // By description term, by summary term, and by a path/parameter token.
-    expect($slugs('paginated'))->toContain('api/widgets/listwidgets')
-        ->and($slugs('fetch'))->toContain('api/orders/getorder')
-        ->and($slugs('orderId'))->toContain('api/orders/getorder');
+    expect($slugs('paginated'))->toContain('api/widgets/list-all-widgets')
+        ->and($slugs('fetch'))->toContain('api/orders/fetch-an-order')
+        ->and($slugs('orderId'))->toContain('api/orders/fetch-an-order');
 })->with('openapi specs');
 
 it('lists operation pages in the sitemap', function (string $version) {
@@ -357,15 +357,15 @@ it('lists operation pages in the sitemap', function (string $version) {
     $body = $this->get('/docs/sitemap.xml')->assertOk()->getContent();
 
     expect($body)
-        ->toContain('<loc>' . url('/docs/api/widgets/listwidgets') . '</loc>')
-        ->toContain('<loc>' . url('/docs/api/widgets/createwidget') . '</loc>')
-        ->toContain('<loc>' . url('/docs/api/orders/getorder') . '</loc>');
+        ->toContain('<loc>' . url('/docs/api/widgets/list-all-widgets') . '</loc>')
+        ->toContain('<loc>' . url('/docs/api/widgets/create-a-widget') . '</loc>')
+        ->toContain('<loc>' . url('/docs/api/orders/fetch-an-order') . '</loc>');
 })->with('openapi specs');
 
 it('sets the SEO title and meta description from the operation', function (string $version) {
     $this->makeDocs(['openapi.json' => widgetsSpecJson($version)]);
 
-    $this->get('/docs/api/widgets/listwidgets')
+    $this->get('/docs/api/widgets/list-all-widgets')
         ->assertOk()
         ->assertSee('<title>List all widgets · Acme Docs</title>', false)
         ->assertSee('Returns a paginated list of widgets.', false)
@@ -378,8 +378,8 @@ it('renders distinct cached bodies for operations with different shapes', functi
 
     $this->makeDocs(['openapi.json' => widgetsSpecJson($version)]);
 
-    $list = $this->get('/docs/api/widgets/listwidgets')->assertOk()->getContent();
-    $create = $this->get('/docs/api/widgets/createwidget')->assertOk()->getContent();
+    $list = $this->get('/docs/api/widgets/list-all-widgets')->assertOk()->getContent();
+    $create = $this->get('/docs/api/widgets/create-a-widget')->assertOk()->getContent();
 
     // The HTML cache key folds in each operation's document path, so the two
     // never collapse onto a shared entry: list has parameters but no request
@@ -404,7 +404,7 @@ it('rebuilds tree, search and sitemap caches when the spec changes', function (s
 
     // The original spec has no "audits" operation anywhere yet.
     expect($this->get('/docs/sitemap.xml')->getContent())
-        ->not->toContain('/docs/api/audits/listaudits');
+        ->not->toContain('/docs/api/audits/list-audits');
 
     // Rewrite the spec with an extra operation and bump the mtime so the
     // mtime-folding cache keys bust.
@@ -414,12 +414,12 @@ it('rebuilds tree, search and sitemap caches when the spec changes', function (s
 
     // Sitemap rebuilt.
     expect($this->get('/docs/sitemap.xml')->getContent())
-        ->toContain('<loc>' . url('/docs/api/audits/listaudits') . '</loc>');
+        ->toContain('<loc>' . url('/docs/api/audits/list-audits') . '</loc>');
 
     // Search index rebuilt.
     $searchSlugs = collect($this->getJson('/docs/_laradocs/search?q=audits')->assertOk()->json('results'))
         ->pluck('slug')->all();
-    expect($searchSlugs)->toContain('api/audits/listaudits');
+    expect($searchSlugs)->toContain('api/audits/list-audits');
 
     // Navigation tree rebuilt (the new section appears in the sidebar).
     expect($this->get('/docs/api')->assertOk()->getContent())->toContain('List audits');
@@ -432,8 +432,8 @@ it('renders the same operation independently under two locales', function (strin
 
     $this->makeDocs(['openapi.json' => widgetsSpecJson($version)]);
 
-    $en = $this->get('/docs/api/widgets/listwidgets')->assertOk()->getContent();
-    $de = $this->get('/docs/de/api/widgets/listwidgets')->assertOk()->getContent();
+    $en = $this->get('/docs/api/widgets/list-all-widgets')->assertOk()->getContent();
+    $de = $this->get('/docs/de/api/widgets/list-all-widgets')->assertOk()->getContent();
 
     // Each renders the operation in its own interface language; the locale is
     // folded into the document path, so the cached body of one never bleeds
