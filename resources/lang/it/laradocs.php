@@ -95,6 +95,7 @@ return [
         'request_body' => 'Request Body',
         'responses' => 'Responses',
         'required' => 'Required',
+        'optional' => 'Optional',
         'nullable' => 'nullable',
         'enum' => 'Allowed values',
         'items' => 'Items',
@@ -105,6 +106,26 @@ return [
         'circular' => 'Circular reference',
         'unresolved' => 'Unresolved reference',
         'default_tag' => 'Other',
+
+        // Redesigned reference UI.
+        'copy' => 'Copy',
+        'copy_endpoint' => 'Copy endpoint',
+        'base_url' => 'Base URL',
+        'version' => 'Versione',
+        'resources' => 'Resources',
+        'request' => 'Request',
+        'response' => 'Response',
+        'code_samples' => 'Request and response samples',
+        'expand_all' => 'Expand all',
+        'collapse_all' => 'Collapse all',
+        'in' => [
+            'path' => 'Path',
+            'query' => 'Query',
+            'header' => 'Intestazione',
+            'cookie' => 'Cookie',
+        ],
+        // {1} = singular, [2,*] = plural — e.g. "1 endpoint" / "6 endpoints".
+        'endpoint_count' => '{1} :count endpoint|[2,*] :count endpoints',
     ],
 
     'tags' => [
