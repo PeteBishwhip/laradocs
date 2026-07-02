@@ -46,14 +46,14 @@ it('emits one overview document plus one document per operation', function () us
 
     $slugs = $documents->map(fn (Document $doc): string => $doc->slug)->all();
     expect($slugs)->toContain('api')
-        ->toContain('api/pets/listpets')
-        ->toContain('api/pets/createpet');
+        ->toContain('api/pets/list-all-pets')
+        ->toContain('api/pets/create-a-pet');
 });
 
 it('marks each operation document with its operation reference', function () use ($fixtures) {
     $documents = makeOpenApiLoader($fixtures)->all();
 
-    $list = $documents->findBySlug('api/pets/listpets');
+    $list = $documents->findBySlug('api/pets/list-all-pets');
     expect($list)->toBeInstanceOf(Document::class)
         ->and($list->title())->toBe('List all pets')
         ->and($list->group())->toBe('pets')
@@ -83,8 +83,8 @@ it('gives every synthetic document a distinct path and relativePath', function (
 });
 
 it('embeds the active locale in the document path so locale variants do not collide', function () use ($fixtures) {
-    $en = makeOpenApiLoader($fixtures, 'en')->all()->findBySlug('api/pets/listpets');
-    $fr = makeOpenApiLoader($fixtures, 'fr')->all()->findBySlug('api/pets/listpets');
+    $en = makeOpenApiLoader($fixtures, 'en')->all()->findBySlug('api/pets/list-all-pets');
+    $fr = makeOpenApiLoader($fixtures, 'fr')->all()->findBySlug('api/pets/list-all-pets');
 
     expect($en->path)->toContain('@en')
         ->and($fr->path)->toContain('@fr')
@@ -116,8 +116,8 @@ it('groups operations by first tag and nests them under the base slug in the tre
     expect($tag)->not->toBeNull();
 
     $opSlugs = collect($tag->children)->map(fn ($node): string => $node->slug)->all();
-    expect($opSlugs)->toContain('api/pets/listpets')
-        ->toContain('api/pets/createpet');
+    expect($opSlugs)->toContain('api/pets/list-all-pets')
+        ->toContain('api/pets/create-a-pet');
 });
 
 it('resolves filesystem documents before OpenApi documents on a slug collision', function () use ($fixtures) {
@@ -152,7 +152,7 @@ it('resolves filesystem documents before OpenApi documents on a slug collision',
         ->and($resolved->markdown)->toBe('# API');
 
     // ...while OpenApi-only slugs still resolve through the composite.
-    expect($composite->find('api/pets/listpets'))->toBeInstanceOf(Document::class);
+    expect($composite->find('api/pets/list-all-pets'))->toBeInstanceOf(Document::class);
 
     // all() merges both loaders' documents.
     expect($composite->all()->count())->toBe(1 + 3);
@@ -162,18 +162,18 @@ it('yields no documents when the docs directory does not exist', function () {
     expect(makeOpenApiLoader('/no/such/laradocs/dir')->all())->toHaveCount(0);
 });
 
-it('falls back to method and path when an operation has no operationId', function () {
+it('falls back to method and path when an operation has no summary or operationId', function () {
     $dir = sys_get_temp_dir() . '/laradocs-noopid-' . bin2hex(random_bytes(6));
     mkdir($dir, 0777, true);
 
-    // JSON is valid YAML, so this is parsed by the .yaml reader.
+    // JSON is valid YAML, so this is parsed by the .yaml reader. No summary and
+    // no operationId, so the slug segment falls through to the method + path.
     file_put_contents($dir . '/petstore-3.0.yaml', (string) json_encode([
         'openapi' => '3.0.3',
         'info' => ['title' => 'T', 'version' => '1.0.0'],
         'paths' => [
             '/things' => [
                 'get' => [
-                    'summary' => 'List things',
                     'responses' => ['200' => ['description' => 'ok']],
                 ],
             ],

@@ -233,6 +233,9 @@ final class LaradocsServiceProvider extends ServiceProvider
             Config::nullableString('laradocs.openapi.group'),
             Config::int('laradocs.openapi.order'),
             fn (): string => (string) $app->getLocale(),
+            // A localised spec (openapi.{locale}.json or {locale}/openapi.json) is
+            // preferred for a non-default locale, matching content-page localisation.
+            fn (): string => Locale::fallback(),
         );
     }
 

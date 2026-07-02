@@ -106,21 +106,21 @@ it('renders the emitted spec through the Pillar A reference pages', function ():
 
     // The attribute-tagged operation nests under its overridden tag and shows
     // the overridden summary plus the deprecated marker.
-    $index = $this->get('/docs/api/orders/ordersindex')->assertOk()->getContent();
+    $index = $this->get('/docs/api/orders/list-all-orders')->assertOk()->getContent();
     expect($index)
         ->toContain('GET')
         ->toContain('/api/orders')
         ->toContain('List all orders');
 
     // The docblock-described operation renders its summary and path parameter.
-    $show = $this->get('/docs/api/order/ordersshow')->assertOk()->getContent();
+    $show = $this->get('/docs/api/order/show-a-single-order')->assertOk()->getContent();
     expect($show)
         ->toContain('Show a single order')
         ->toContain('order')          // the {order} path parameter
         ->toContain('Responses');
 
     // The FormRequest-backed POST renders its request body.
-    $store = $this->get('/docs/api/order/ordersstore')->assertOk()->getContent();
+    $store = $this->get('/docs/api/order/store')->assertOk()->getContent();
     expect($store)
         ->toContain('POST')
         ->toContain('Request Body')

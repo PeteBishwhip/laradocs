@@ -7,9 +7,8 @@
     every operation at once.
 --}}
 @use('Laradocs\Routing\DocumentUrl')
-@use('Illuminate\Support\Str')
+@use('Laradocs\OpenApi\OperationSlugger')
 @php
-    $baseSlug = config('laradocs.openapi.base_slug', 'api');
     $version = isset($info['version']) && is_scalar($info['version']) ? (string) $info['version'] : null;
 
     // Group operations under their first tag, preserving first-seen order.
@@ -19,14 +18,11 @@
         $byTag[$tag][] = $operation;
     }
 
-    $operationUrl = static function ($operation) use ($baseSlug) {
-        $tag = $operation->tags[0] ?? 'default';
-        $segment = ($operation->operationId !== null && $operation->operationId !== '')
-            ? $operation->operationId
-            : $operation->method . ' ' . $operation->path;
-
-        return DocumentUrl::toSlug($baseSlug . '/' . Str::slug($tag) . '/' . Str::slug($segment));
-    };
+    // $operationSlugs maps each operation to the exact slug the loader mounted
+    // it at (see OperationSlugger), so index links never drift from real URLs.
+    $operationUrl = static fn ($operation): string => DocumentUrl::toSlug(
+        $operationSlugs[OperationSlugger::identity($operation)] ?? '',
+    );
 @endphp
 <div class="laradocs-openapi laradocs-openapi-overview">
     @if(($description = $describe($infoDescription)) !== '')

@@ -8,6 +8,7 @@ use Closure;
 use Laradocs\Contracts\DocumentContentRenderer;
 use Laradocs\Contracts\DocumentParser;
 use Laradocs\Documents\Document;
+use Laradocs\Support\Config;
 
 /**
  * Renders an OpenAPI-backed synthetic {@see Document} to native, themed HTML.
@@ -70,7 +71,15 @@ final class OpenApiContentRenderer implements DocumentContentRenderer
             return $this->renderOperation($spec, $schema, $describe, Coerce::assoc($marker['op'] ?? []));
         }
 
-        return $this->renderOverview($spec, $describe);
+        // Operation links resolve against the canonical (default-locale) spec so a
+        // translated overview never points at translated slugs the loader didn't
+        // mount. Fall back to the active spec when no distinct canonical exists.
+        $canonicalPath = Coerce::string($marker['canonicalSpec'] ?? '');
+        $canonicalSpec = $canonicalPath !== '' && $canonicalPath !== $specPath && is_file($canonicalPath)
+            ? $this->parser->parse($canonicalPath)
+            : $spec;
+
+        return $this->renderOverview($spec, $canonicalSpec, $describe);
     }
 
     /**
@@ -134,7 +143,7 @@ final class OpenApiContentRenderer implements DocumentContentRenderer
      *
      * @param  array<string, mixed>|null  $requestBody
      * @param  array<int, array<string, mixed>>  $responses
-     * @return array{request: string, response: ?string, method: string, status: ?string}
+     * @return array{request: array<string, string>, response: ?string, method: string, status: ?string}
      */
     private function samples(Operation $operation, string $baseUrl, ?array $requestBody, array $responses): array
     {
@@ -146,17 +155,20 @@ final class OpenApiContentRenderer implements DocumentContentRenderer
             : $this->firstSchema(Coerce::listOfAssoc($requestBody['content'] ?? []));
         $languages = $builder->forOperation($operation->method, $url, $requestSchema);
 
+        // One highlighted code block per language, keyed by label. The view wraps
+        // them in a dropdown-driven switcher rather than tabs (which overflow the
+        // narrow rail), and JS persists the chosen language across pages.
         $fences = ['cURL' => 'bash', 'PHP' => 'php', 'JavaScript' => 'javascript', 'Python' => 'python', 'Ruby' => 'ruby'];
-        $markdown = '';
+        $request = [];
         foreach ($languages as $label => $code) {
-            $markdown .= "```{$fences[$label]} tab:{$label}\n{$code}\n```\n\n";
+            $request[$label] = $this->markdown->parse("```{$fences[$label]}\n{$code}\n```");
         }
 
         [$responseSchema, $status] = $this->firstSuccessResponse($responses);
         $responseJson = $builder->responseJson($responseSchema);
 
         return [
-            'request' => $this->markdown->parse($markdown),
+            'request' => $request,
             'response' => $responseJson === null ? null : $this->markdown->parse("```json\n{$responseJson}\n```"),
             'method' => $operation->method,
             'status' => $status,
@@ -202,9 +214,10 @@ final class OpenApiContentRenderer implements DocumentContentRenderer
     /**
      * @param  Closure(?string): string  $describe
      */
-    private function renderOverview(NormalizedSpec $spec, Closure $describe): string
+    private function renderOverview(NormalizedSpec $spec, NormalizedSpec $canonicalSpec, Closure $describe): string
     {
         $info = $spec->info();
+        $baseSlug = Config::string('laradocs.openapi.base_slug', 'api');
 
         return (string) view('laradocs::partials.openapi.overview', [
             'info' => $info,
@@ -212,6 +225,10 @@ final class OpenApiContentRenderer implements DocumentContentRenderer
             'servers' => $spec->servers(),
             'tags' => $spec->tags(),
             'operations' => $spec->operations(),
+            // Resolve slugs the same way the loader mounts the pages — against the
+            // canonical spec — so the index links always point at the real
+            // operation URLs, even when this locale's summaries are translated.
+            'operationSlugs' => OperationSlugger::resolve($spec->operations(), $canonicalSpec->operations(), $baseSlug),
             'describe' => $describe,
         ])->render();
     }
