@@ -281,6 +281,35 @@ stay in sync with their own spec files.
 
 ---
 
+## Localised API reference
+
+Just like content pages, an OpenAPI spec can be **translated per locale**. Drop a
+localised spec alongside the default one using either the filename-suffix or the
+locale-directory form:
+
+```
+resources/docs/
+├── openapi.json          ← default locale
+├── openapi.de.json       ← German (filename-suffix form)
+└── fr/
+    └── openapi.json      ← French (locale-directory form)
+```
+
+For a non-default locale, Laradocs prefers `openapi.{locale}.{ext}`, then
+`{locale}/openapi.{ext}`, and falls back to the un-suffixed default spec when no
+translation exists — so a partially translated site never 404s. Translate the
+`summary` and `description` fields (and any other human-readable copy); keep the
+`operationId`s, methods and paths identical across languages.
+
+> [!IMPORTANT]
+> **Operation URLs are derived from the *default*-locale spec**, so they stay
+> identical across languages even when a summary is translated. A German
+> operation whose summary reads "Alle Widgets auflisten" is still served at the
+> English slug (`…/widgets/list-all-widgets`), which keeps deep links and the
+> language switcher working across the whole reference.
+
+---
+
 ## Generating a spec from your routes
 
 Don't have a spec yet? The `laradocs:openapi` command scaffolds one by walking

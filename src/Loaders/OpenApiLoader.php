@@ -47,6 +47,10 @@ final class OpenApiLoader implements DocumentLoader
      * @param  string|Closure(): string  $activeLocale  The locale the current
      *                                                  request renders in, appended to each document path so multi-locale
      *                                                  specs do not share an HTML cache key.
+     * @param  string|Closure(): string  $defaultLocale  The locale an un-suffixed
+     *                                                   spec belongs to. A non-default active locale prefers a localised
+     *                                                   spec (openapi.{locale}.json or {locale}/openapi.json), falling back
+     *                                                   to the un-suffixed file when no translation exists.
      */
     public function __construct(
         private readonly OpenApiParser $parser,
@@ -57,6 +61,7 @@ final class OpenApiLoader implements DocumentLoader
         private readonly ?string $group = null,
         private readonly int $order = 0,
         private readonly string|Closure $activeLocale = '',
+        private readonly string|Closure $defaultLocale = '',
     ) {}
 
     public function all(): DocumentCollection
@@ -64,18 +69,26 @@ final class OpenApiLoader implements DocumentLoader
         $documents = new DocumentCollection;
         $locale = $this->activeLocale();
 
-        foreach ($this->specFiles() as $specPath) {
+        foreach ($this->specSources() as [$specPath, $canonicalPath]) {
             $spec = $this->parser->parse($specPath);
             $mtime = (int) filemtime($specPath);
+
+            // Operation slugs come from the default-locale (canonical) spec, so a
+            // translated summary in openapi.{locale}.json never changes the URL —
+            // every language shares the same operation paths. The active spec's
+            // own slugs are only a fallback for operations it adds on its own.
+            $canonicalSpec = $canonicalPath === $specPath ? $spec : $this->parser->parse($canonicalPath);
+            $slugs = OperationSlugger::map($canonicalSpec->operations(), $this->baseSlug);
+            $ownSlugs = $canonicalPath === $specPath ? $slugs : OperationSlugger::map($spec->operations(), $this->baseSlug);
 
             $documents->push($this->overview($specPath, $spec, $mtime, $locale));
 
             $order = 0;
-            $slugs = OperationSlugger::map($spec->operations(), $this->baseSlug);
 
             foreach ($spec->operations() as $operation) {
+                $id = OperationSlugger::identity($operation);
                 $documents->push(
-                    $this->operation($specPath, $operation, $mtime, $locale, $order++, $slugs[OperationSlugger::identity($operation)]),
+                    $this->operation($specPath, $operation, $mtime, $locale, $order++, $slugs[$id] ?? $ownSlugs[$id]),
                 );
             }
         }
@@ -89,13 +102,15 @@ final class OpenApiLoader implements DocumentLoader
     }
 
     /**
-     * The absolute paths of every configured spec filename present in the docs
-     * source. The path is resolved lazily so a closure-backed path picks up the
-     * request's active version directory.
+     * Every configured spec present in the docs source, resolved for the active
+     * locale. Each entry is `[activePath, canonicalPath]`: the active path is the
+     * locale-appropriate file to render, the canonical path is the un-suffixed
+     * (default-locale) file the operation slugs are derived from. The docs path
+     * is resolved lazily so a closure-backed path tracks the active version.
      *
-     * @return array<int, string>
+     * @return array<int, array{0: string, 1: string}>
      */
-    private function specFiles(): array
+    private function specSources(): array
     {
         $dir = is_string($this->path) ? $this->path : ($this->path)();
 
@@ -103,17 +118,52 @@ final class OpenApiLoader implements DocumentLoader
             return [];
         }
 
-        $found = [];
+        $dir = rtrim($dir, '/\\') . DIRECTORY_SEPARATOR;
+        $locale = $this->activeLocale();
+        $default = is_string($this->defaultLocale) ? $this->defaultLocale : ($this->defaultLocale)();
+        $sources = [];
 
         foreach ($this->files as $name) {
-            $candidate = rtrim($dir, '/\\') . DIRECTORY_SEPARATOR . $name;
+            $active = $this->localisedSpec($dir, $name, $locale, $default);
 
-            if (is_file($candidate)) {
-                $found[] = $candidate;
+            if ($active === null) {
+                continue;
+            }
+
+            $base = $dir . $name;
+            $sources[] = [$active, is_file($base) ? $base : $active];
+        }
+
+        return $sources;
+    }
+
+    /**
+     * Resolve a spec filename for the active locale. A non-default locale prefers
+     * a filename-suffixed variant (openapi.fr.json) then a locale directory
+     * (fr/openapi.json), mirroring content-page localisation, and finally the
+     * un-suffixed file. Returns null when nothing exists.
+     */
+    private function localisedSpec(string $dir, string $name, string $locale, string $default): ?string
+    {
+        if ($locale !== '' && $locale !== $default) {
+            $ext = pathinfo($name, PATHINFO_EXTENSION);
+            $stem = $ext === '' ? $name : substr($name, 0, -(strlen($ext) + 1));
+            $suffixed = $dir . ($ext === '' ? "{$stem}.{$locale}" : "{$stem}.{$locale}.{$ext}");
+
+            if (is_file($suffixed)) {
+                return $suffixed;
+            }
+
+            $inDirectory = $dir . $locale . DIRECTORY_SEPARATOR . $name;
+
+            if (is_file($inDirectory)) {
+                return $inDirectory;
             }
         }
 
-        return $found;
+        $base = $dir . $name;
+
+        return is_file($base) ? $base : null;
     }
 
     private function overview(string $specPath, NormalizedSpec $spec, int $mtime, string $locale): Document

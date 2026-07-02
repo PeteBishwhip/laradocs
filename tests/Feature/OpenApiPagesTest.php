@@ -425,6 +425,38 @@ it('rebuilds tree, search and sitemap caches when the spec changes', function (s
     expect($this->get('/docs/api')->assertOk()->getContent())->toContain('List audits');
 })->with('openapi specs');
 
+it('serves a localised spec at the default locale slugs', function (string $version) {
+    config()->set('laradocs.locale.available', ['en' => 'English', 'de' => 'Deutsch', 'fr' => 'Français']);
+    config()->set('laradocs.locale.default', 'en');
+
+    // A German spec (filename-suffix form) translating a summary, and a French
+    // spec (locale-directory form) translating the overview description.
+    $de = widgetsSpec($version);
+    $de['paths']['/widgets']['get']['summary'] = 'Alle Widgets auflisten';
+    $fr = widgetsSpec($version);
+    $fr['info']['description'] = 'Documentation API en français.';
+
+    $this->makeDocs([
+        'openapi.json' => widgetsSpecJson($version),
+        'openapi.de.json' => (string) json_encode($de),
+        'fr/openapi.json' => (string) json_encode($fr),
+    ]);
+
+    // The German page renders its translated summary — but at the *same*
+    // (default-locale) slug as English, so URLs stay stable across languages.
+    $deOp = $this->get('/docs/de/api/widgets/list-all-widgets')->assertOk()->getContent();
+    expect($deOp)->toContain('Alle Widgets auflisten');
+
+    // The French overview (locale-directory form) renders its translated copy.
+    $frOverview = $this->get('/docs/fr/api')->assertOk()->getContent();
+    expect($frOverview)->toContain('Documentation API en français.');
+
+    // A locale with no localised spec falls back to the un-suffixed default.
+    config()->set('laradocs.locale.available', ['en' => 'English', 'es' => 'Español']);
+    $es = $this->get('/docs/es/api/widgets/list-all-widgets')->assertOk()->getContent();
+    expect($es)->toContain('List all widgets');
+})->with('openapi specs');
+
 it('renders the same operation independently under two locales', function (string $version) {
     config()->set('laradocs.locale.available', ['en' => 'English', 'de' => 'Deutsch']);
     config()->set('laradocs.locale.default', 'en');
