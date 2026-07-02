@@ -33,12 +33,22 @@
 
     @isset($samples)
         <aside class="laradocs-openapi laradocs-openapi-samples" data-laradocs-openapi-aside hidden aria-label="{{ __('laradocs::laradocs.openapi.code_samples') }}">
-            <div class="laradocs-openapi-sample">
+            <div class="laradocs-openapi-sample" data-laradocs-langs>
                 <div class="laradocs-openapi-sample-head">
                     <span class="laradocs-openapi-method method-{{ strtolower($samples['method']) }}">{{ $samples['method'] }}</span>
                     <span class="laradocs-openapi-sample-title">{{ __('laradocs::laradocs.openapi.request') }}</span>
+                    <div class="laradocs-openapi-lang-picker">
+                        <select class="laradocs-openapi-lang-select" data-laradocs-lang-select aria-label="{{ __('laradocs::laradocs.openapi.language') }}">
+                            @foreach($samples['request'] as $label => $html)
+                                <option value="{{ $label }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                        <svg class="laradocs-openapi-lang-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                    </div>
                 </div>
-                {!! $samples['request'] !!}
+                @foreach($samples['request'] as $label => $html)
+                    <div class="laradocs-openapi-lang-block" data-lang="{{ $label }}" @if(! $loop->first) hidden @endif>{!! $html !!}</div>
+                @endforeach
             </div>
             @if($samples['response'] !== null)
                 <div class="laradocs-openapi-sample">

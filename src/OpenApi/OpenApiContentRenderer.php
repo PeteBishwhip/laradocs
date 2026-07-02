@@ -135,7 +135,7 @@ final class OpenApiContentRenderer implements DocumentContentRenderer
      *
      * @param  array<string, mixed>|null  $requestBody
      * @param  array<int, array<string, mixed>>  $responses
-     * @return array{request: string, response: ?string, method: string, status: ?string}
+     * @return array{request: array<string, string>, response: ?string, method: string, status: ?string}
      */
     private function samples(Operation $operation, string $baseUrl, ?array $requestBody, array $responses): array
     {
@@ -147,17 +147,20 @@ final class OpenApiContentRenderer implements DocumentContentRenderer
             : $this->firstSchema(Coerce::listOfAssoc($requestBody['content'] ?? []));
         $languages = $builder->forOperation($operation->method, $url, $requestSchema);
 
+        // One highlighted code block per language, keyed by label. The view wraps
+        // them in a dropdown-driven switcher rather than tabs (which overflow the
+        // narrow rail), and JS persists the chosen language across pages.
         $fences = ['cURL' => 'bash', 'PHP' => 'php', 'JavaScript' => 'javascript', 'Python' => 'python', 'Ruby' => 'ruby'];
-        $markdown = '';
+        $request = [];
         foreach ($languages as $label => $code) {
-            $markdown .= "```{$fences[$label]} tab:{$label}\n{$code}\n```\n\n";
+            $request[$label] = $this->markdown->parse("```{$fences[$label]}\n{$code}\n```");
         }
 
         [$responseSchema, $status] = $this->firstSuccessResponse($responses);
         $responseJson = $builder->responseJson($responseSchema);
 
         return [
-            'request' => $this->markdown->parse($markdown),
+            'request' => $request,
             'response' => $responseJson === null ? null : $this->markdown->parse("```json\n{$responseJson}\n```"),
             'method' => $operation->method,
             'status' => $status,

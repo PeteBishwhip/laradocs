@@ -56,6 +56,7 @@
         })();
     </script>
     @if(Version::current() !== null)<script>window.__laradocsVersion = '{{ Version::current() }}';</script>@endif
+    @if(config('laradocs.locale.cookie'))<script>window.__laradocsCookies = true;</script>@endif
     @if($loadWebfonts)
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

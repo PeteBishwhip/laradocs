@@ -99,7 +99,7 @@ On wide screens, operation pages carry a **code-sample panel** in the right rail
 near the top of the page. The panel shows copy-pasteable **request** snippets and
 an example JSON **response** body.
 
-Request snippets are generated in five languages, tabbed:
+Request snippets are generated in five languages, chosen from a dropdown:
 
 | Language | Client shown |
 |---|---|
@@ -117,10 +117,12 @@ uses its first value). Authentication is shown as a `Bearer YOUR_TOKEN`
 placeholder for you to swap in.
 
 Because the snippets flow through the same Markdown pipeline as the rest of the
-site, they get **syntax highlighting** and **per-tab copy buttons** for free —
-and the selected language is a **shared tab group** whose choice persists as you
-move between operation pages. There is nothing to configure: the panel appears
-automatically whenever an operation has a request or response body to describe.
+site, they get **syntax highlighting** and **copy buttons** for free. The chosen
+language **persists as you move between operation pages** — in `sessionStorage`
+by default, or in a one-year cookie when cookie persistence is enabled (the same
+`locale.cookie` consent flag the language selector uses). There is nothing to
+configure: the panel appears automatically whenever an operation has a request or
+response body to describe.
 
 ---
 

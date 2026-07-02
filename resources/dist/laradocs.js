@@ -133,6 +133,56 @@
     else if (wide.addListener) wide.addListener(place);
   }
 
+  // OpenAPI code samples: a dropdown selects the request language, and the
+  // choice persists across pages — in a cookie when cookie persistence is
+  // enabled (window.__laradocsCookies), otherwise in sessionStorage.
+  function initOpenApiLangs() {
+    var panels = document.querySelectorAll('[data-laradocs-langs]');
+    if (!panels.length) return;
+
+    var STORE_KEY = 'laradocs-openapi-lang';
+    var COOKIE = 'laradocs_oapi_lang';
+    var cookiesOk = window.__laradocsCookies === true;
+
+    function readSaved() {
+      var m = document.cookie.match(new RegExp('(?:^|; )' + COOKIE + '=([^;]+)'));
+      if (m) return decodeURIComponent(m[1]);
+      try { return sessionStorage.getItem(STORE_KEY); } catch (e) { return null; }
+    }
+
+    function save(lang) {
+      if (cookiesOk) {
+        document.cookie = COOKIE + '=' + encodeURIComponent(lang) + '; path=/; max-age=31536000; SameSite=Lax';
+      } else {
+        try { sessionStorage.setItem(STORE_KEY, lang); } catch (e) {}
+      }
+    }
+
+    function apply(lang) {
+      panels.forEach(function (panel) {
+        var blocks = panel.querySelectorAll('.laradocs-openapi-lang-block');
+        var has = false;
+        blocks.forEach(function (b) { if (b.getAttribute('data-lang') === lang) has = true; });
+        if (!has) return;
+        var select = panel.querySelector('[data-laradocs-lang-select]');
+        if (select) select.value = lang;
+        blocks.forEach(function (b) { b.hidden = b.getAttribute('data-lang') !== lang; });
+      });
+    }
+
+    var saved = readSaved();
+    if (saved) apply(saved);
+
+    panels.forEach(function (panel) {
+      var select = panel.querySelector('[data-laradocs-lang-select]');
+      if (!select) return;
+      select.addEventListener('change', function () {
+        apply(select.value);
+        save(select.value);
+      });
+    });
+  }
+
   function initMobileNav() {
     var shell = document.querySelector('.laradocs-shell');
     var button = document.querySelector('[data-laradocs-menu]');
@@ -736,6 +786,7 @@
   function boot() {
     initTheme();
     initOpenApiAside();
+    initOpenApiLangs();
     initCopy();
     initCopyText();
     initSchemaToggle();
