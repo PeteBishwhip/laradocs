@@ -39,7 +39,10 @@
             @endif
             {{ $document->title() }}
         </h1>
-        @if($document->metadata->description)
+        {{-- OpenAPI pages render a richer, markdown-parsed description in the
+             body partial, so skip the plain-text header copy to avoid showing it
+             twice (and to avoid leaking raw HTML tags escaped into the header). --}}
+        @if($document->metadata->description && ! $document->metadata->get('openapi'))
             <p class="laradocs-page-description">{{ $document->metadata->description }}</p>
         @endif
     </header>

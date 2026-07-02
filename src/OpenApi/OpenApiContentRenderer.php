@@ -108,13 +108,95 @@ final class OpenApiContentRenderer implements DocumentContentRenderer
             return '';
         }
 
+        $servers = $spec->servers();
+        $baseUrl = isset($servers[0]['url']) && is_scalar($servers[0]['url'])
+            ? rtrim((string) $servers[0]['url'], '/')
+            : '';
+
+        $requestBody = $this->expandRequestBody($operation->requestBody, $schema);
+        $responses = $this->expandResponses($operation->responses, $schema);
+
         return (string) view('laradocs::partials.openapi.operation', [
             'operation' => $operation,
+            'baseUrl' => $baseUrl,
             'parameters' => $this->expandParameters($operation->parameters, $schema),
-            'requestBody' => $this->expandRequestBody($operation->requestBody, $schema),
-            'responses' => $this->expandResponses($operation->responses, $schema),
+            'requestBody' => $requestBody,
+            'responses' => $responses,
+            'samples' => $this->samples($operation, $baseUrl, $requestBody, $responses),
             'describe' => $describe,
         ])->render();
+    }
+
+    /**
+     * Build the request/response code-sample panel for the operation sidebar:
+     * cURL/PHP/JS/Python/Ruby request snippets (as a highlighted, tabbed code
+     * group via the site's own markdown pipeline) plus an example JSON response.
+     *
+     * @param  array<string, mixed>|null  $requestBody
+     * @param  array<int, array<string, mixed>>  $responses
+     * @return array{request: string, response: ?string, method: string, status: ?string}
+     */
+    private function samples(Operation $operation, string $baseUrl, ?array $requestBody, array $responses): array
+    {
+        $builder = new CodeSampleBuilder;
+        $url = ($baseUrl === '' ? '' : $baseUrl) . $operation->path;
+
+        $requestSchema = $requestBody === null
+            ? null
+            : $this->firstSchema(Coerce::listOfAssoc($requestBody['content'] ?? []));
+        $languages = $builder->forOperation($operation->method, $url, $requestSchema);
+
+        $fences = ['cURL' => 'bash', 'PHP' => 'php', 'JavaScript' => 'javascript', 'Python' => 'python', 'Ruby' => 'ruby'];
+        $markdown = '';
+        foreach ($languages as $label => $code) {
+            $markdown .= "```{$fences[$label]} tab:{$label}\n{$code}\n```\n\n";
+        }
+
+        [$responseSchema, $status] = $this->firstSuccessResponse($responses);
+        $responseJson = $builder->responseJson($responseSchema);
+
+        return [
+            'request' => $this->markdown->parse($markdown),
+            'response' => $responseJson === null ? null : $this->markdown->parse("```json\n{$responseJson}\n```"),
+            'method' => $operation->method,
+            'status' => $status,
+        ];
+    }
+
+    /**
+     * The first resolved schema node from a content map (media type => media).
+     *
+     * @param  array<int, array<string, mixed>>  $content
+     * @return array<string, mixed>|null
+     */
+    private function firstSchema(array $content): ?array
+    {
+        foreach ($content as $media) {
+            if (is_array($media['schema'] ?? null)) {
+                return Coerce::assoc($media['schema']);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * The schema and status code of the first 2xx response carrying a body,
+     * used to render an example response payload.
+     *
+     * @param  array<int, array<string, mixed>>  $responses
+     * @return array{0: array<string, mixed>|null, 1: ?string}
+     */
+    private function firstSuccessResponse(array $responses): array
+    {
+        foreach ($responses as $response) {
+            $status = Coerce::string($response['status'] ?? '');
+            if (str_starts_with($status, '2') && ($schema = $this->firstSchema(Coerce::listOfAssoc($response['content'] ?? []))) !== null) {
+                return [$schema, $status];
+            }
+        }
+
+        return [null, null];
     }
 
     /**

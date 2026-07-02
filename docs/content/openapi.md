@@ -13,6 +13,44 @@ response schemas (with `$ref`, `allOf`, `oneOf`, `anyOf` and `enum` expanded),
 and a populated table of contents. The pages flow through the same sidebar,
 search, sitemap, SEO and localisation pipeline as your hand-written Markdown.
 
+## What the pages look like
+
+The reference is rendered natively — no iframes, no client-side spec fetching —
+so every page is server-rendered, themeable and searchable.
+
+**Overview page.** A landing page with an at-a-glance meta panel (base URL with
+a copy button, version badge) above a compact, collapsible index. Each resource
+(spec tag) is a `<details>` block, collapsed by default, so large specs stay
+scannable instead of unrolling every operation at once. Following a table-of-
+contents or hash link auto-opens the resource section it points at.
+
+**Operation pages.** Each operation gets its own page built around:
+
+- A prominent endpoint bar — a solid method badge, tinted `{param}` segments, a
+  copy button and a single-line, horizontally scrollable path.
+- Parameters grouped by location (path / query / header) as description lists.
+- Request and response schemas rendered as a clean, nested property tree. Branches
+  are collapsible `<details>` with **Expand all** / **Collapse all** toolbars;
+  response trees start collapsed to keep long payloads compact.
+- Colored response-status pills.
+
+### Request &amp; response code samples
+
+On wide screens, operation pages carry a **code-sample panel** in the right rail
+(where the table of contents normally sits); on narrow screens it drops inline
+near the top of the page. The panel shows copy-pasteable request snippets in
+**cURL, PHP, JavaScript, Python and Ruby**, plus an example JSON response body.
+
+The snippets and example values are synthesised from the operation's method, URL
+and resolved request/response schemas (example values are derived from each
+field's type, format and `enum`). They flow through the same Markdown pipeline as
+the rest of the site, so they get syntax highlighting and per-tab copy buttons for
+free — and the selected language is a shared tab group whose choice persists as
+you move between operation pages.
+
+There is nothing to configure: the panel appears automatically whenever an
+operation has a request or response body to describe.
+
 ## Opting in
 
 The integration is **disabled by default**. Turn it on in two steps.
@@ -63,13 +101,31 @@ All options live under the `openapi` key of `config/laradocs.php`:
 | `enabled` | `false` | Master switch for the integration (env: `LARADOCS_OPENAPI`). |
 | `files` | `['openapi.yaml', 'openapi.yml', 'openapi.json']` | Candidate spec filenames searched for in each docs source. |
 | `base_slug` | `api` | URL segment the reference pages mount under (e.g. `/docs/api`). |
-| `title` | `API Reference` | Heading / nav label for the reference section. |
+| `title` | `Overview` | Heading / nav label for the reference *landing* page (the operations index). It reads as a child of `group` — e.g. `API Reference › Overview` — rather than repeating the section name. Set to `null` to fall back to the spec's own `info.title`. |
 | `group` | `API Reference` | Sidebar group the reference pages are filed under. |
 | `order` | `100` | Sort weight of the reference section relative to other groups. |
 | `render_markdown_descriptions` | `true` | Render CommonMark in spec `description` fields rather than treating them as plain text. |
 
 Your own Markdown always wins a slug collision, so you can override any
 generated page by adding a Markdown file at the same slug.
+
+> [!WARNING]
+> **Directory name conflicts with `base_slug`.** The Markdown loader runs
+> before the OpenAPI loader, so if your docs directory already contains a
+> folder named `api/` (the default `base_slug`), that folder's content takes
+> over the `/docs/api` URL and the OpenAPI overview is silently hidden — not an
+> error. The symptom is that `/docs/api` shows your Markdown pages regardless
+> of `LARADOCS_OPENAPI=true`.
+>
+> Fix it by either renaming the conflicting directory or changing `base_slug`
+> to something that doesn't clash:
+>
+> ```php
+> // config/laradocs.php
+> 'openapi' => [
+>     'base_slug' => 'api-reference',
+> ],
+> ```
 
 ## Generating a spec from your routes
 
