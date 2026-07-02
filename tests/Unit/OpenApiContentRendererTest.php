@@ -148,15 +148,29 @@ it('renders the overview page with info, servers and operations grouped by tag',
 
     expect($html)
         ->not->toContain('<h1')
-        ->toContain('Servers')
-        ->toContain('https://api.example.com/v1')
-        ->toContain('Operations')
+        ->toContain('https://api.example.com/v1') // base URL surfaced in the meta panel
         ->toContain('pets')           // the tag grouping the operations
         ->toContain('List all pets'); // an operation summary
 
+    // The overview groups operations into a section per tag, each heading
+    // anchored as tag-{slug} so the on-page TOC lists every resource.
     $toc = TableOfContents::fromHtml($html);
     $ids = array_map(fn ($heading): string => $heading->id, $toc->headings);
-    expect($ids)->toContain('servers')->toContain('operations');
+    expect($ids)->toContain('tag-pets');
+});
+
+it('renders an operation whose spec declares no servers', function () use ($fixtures) {
+    // cyclic.yaml has no `servers` block, so the base URL falls back to an
+    // empty string and the sample URL is just the operation path.
+    $spec = $fixtures . '/cyclic.yaml';
+    $document = makeOperationDocument($spec, 'GET', '/nodes', 'listNodes');
+
+    $html = makeOpenApiRenderer()->render($document);
+
+    expect($html)
+        ->toContain('GET')
+        ->toContain('/nodes')
+        ->toContain('Responses');
 });
 
 it('returns empty string for a marker pointing at a missing spec', function () {
