@@ -459,6 +459,20 @@ body.laradocs {
   color: var(--dc-fg);
 }
 .laradocs-sidebar .laradocs-nav-group > span { flex: 1; min-width: 0; }
+
+/* Items of a titled group (e.g. the OpenAPI "API Reference" section) are
+   indented under the heading with a guide line, so the Overview page and each
+   category read as belonging to it rather than as top-level groups. */
+.laradocs-sidebar .laradocs-nav-group-items {
+  margin: .1rem 0 1rem .7rem;
+  padding-left: .6rem;
+  border-left: 1px solid var(--dc-rule);
+}
+.laradocs-sidebar .laradocs-nav-group-items > li > .laradocs-nav-group {
+  margin-top: .6rem;
+  font-size: .68rem;
+  color: var(--dc-muted);
+}
 .laradocs-sidebar .laradocs-nav-group[role="button"] {
   cursor: pointer;
   user-select: none;

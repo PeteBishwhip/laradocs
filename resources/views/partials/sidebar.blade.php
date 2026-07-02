@@ -40,7 +40,7 @@
                 @if($group !== '')
                     <div class="laradocs-nav-group"><span>{{ $group }}</span></div>
                 @endif
-                <ul>
+                <ul @class(['laradocs-nav-group-items' => $group !== ''])>
                     @foreach($items as $node)
                         @include('laradocs::partials.sidebar-node', ['node' => $node, 'active' => $active])
                     @endforeach
