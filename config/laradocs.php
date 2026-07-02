@@ -819,8 +819,9 @@ return [
     |                              installed, otherwise fall back to the built-in
     |                              native generator.
     |                   native   — force the built-in, dependency-free generator.
-    |                   scramble — force Scramble (falls back to native if the
-    |                              package isn't installed).
+    |                   scramble — force Scramble. Errors out if the package
+    |                              isn't installed rather than silently falling
+    |                              back, so a misconfiguration is caught early.
     |                 Set LARADOCS_OPENAPI_DRIVER to override.
     |   "prefix"      Only include routes whose URI starts with this prefix.
     |   "middleware"  Only include routes carrying this middleware name.
