@@ -159,6 +159,20 @@ it('renders the overview page with info, servers and operations grouped by tag',
     expect($ids)->toContain('tag-pets');
 });
 
+it('renders an operation whose spec declares no servers', function () use ($fixtures) {
+    // cyclic.yaml has no `servers` block, so the base URL falls back to an
+    // empty string and the sample URL is just the operation path.
+    $spec = $fixtures . '/cyclic.yaml';
+    $document = makeOperationDocument($spec, 'GET', '/nodes', 'listNodes');
+
+    $html = makeOpenApiRenderer()->render($document);
+
+    expect($html)
+        ->toContain('GET')
+        ->toContain('/nodes')
+        ->toContain('Responses');
+});
+
 it('returns empty string for a marker pointing at a missing spec', function () {
     $document = makeDocument('api/pets/x', [
         'openapi' => ['type' => 'operation', 'spec' => '/does/not/exist.yaml', 'op' => []],
