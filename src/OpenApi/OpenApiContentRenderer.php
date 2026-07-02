@@ -71,7 +71,15 @@ final class OpenApiContentRenderer implements DocumentContentRenderer
             return $this->renderOperation($spec, $schema, $describe, Coerce::assoc($marker['op'] ?? []));
         }
 
-        return $this->renderOverview($spec, $describe);
+        // Operation links resolve against the canonical (default-locale) spec so a
+        // translated overview never points at translated slugs the loader didn't
+        // mount. Fall back to the active spec when no distinct canonical exists.
+        $canonicalPath = Coerce::string($marker['canonicalSpec'] ?? '');
+        $canonicalSpec = $canonicalPath !== '' && $canonicalPath !== $specPath && is_file($canonicalPath)
+            ? $this->parser->parse($canonicalPath)
+            : $spec;
+
+        return $this->renderOverview($spec, $canonicalSpec, $describe);
     }
 
     /**
@@ -206,7 +214,7 @@ final class OpenApiContentRenderer implements DocumentContentRenderer
     /**
      * @param  Closure(?string): string  $describe
      */
-    private function renderOverview(NormalizedSpec $spec, Closure $describe): string
+    private function renderOverview(NormalizedSpec $spec, NormalizedSpec $canonicalSpec, Closure $describe): string
     {
         $info = $spec->info();
         $baseSlug = Config::string('laradocs.openapi.base_slug', 'api');
@@ -217,9 +225,10 @@ final class OpenApiContentRenderer implements DocumentContentRenderer
             'servers' => $spec->servers(),
             'tags' => $spec->tags(),
             'operations' => $spec->operations(),
-            // Resolve slugs the same way the loader mounts the pages, so the
-            // index links always point at the real operation URLs.
-            'operationSlugs' => OperationSlugger::map($spec->operations(), $baseSlug),
+            // Resolve slugs the same way the loader mounts the pages — against the
+            // canonical spec — so the index links always point at the real
+            // operation URLs, even when this locale's summaries are translated.
+            'operationSlugs' => OperationSlugger::resolve($spec->operations(), $canonicalSpec->operations(), $baseSlug),
             'describe' => $describe,
         ])->render();
     }

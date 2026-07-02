@@ -70,3 +70,30 @@ it('honours a custom base slug', function () {
 
     expect($slugs['POST /x'])->toBe('reference/things/create-thing');
 });
+
+it('resolve prefers the canonical slug for a shared operation', function () {
+    // The same operation (GET /x) with a translated summary must keep the
+    // canonical (default-locale) slug, so a translation never moves the URL.
+    $translated = [op(['method' => 'GET', 'path' => '/x', 'summary' => 'Alle Widgets auflisten', 'tags' => ['Widgets']])];
+    $canonical = [op(['method' => 'GET', 'path' => '/x', 'summary' => 'List all widgets', 'tags' => ['Widgets']])];
+
+    $slugs = OperationSlugger::resolve($translated, $canonical, 'api');
+
+    expect($slugs['GET /x'])->toBe('api/widgets/list-all-widgets');
+});
+
+it('resolve falls back to a locale-only operation own slug', function () {
+    // An operation the canonical spec does not describe keeps its own slug.
+    $translated = [
+        op(['method' => 'GET', 'path' => '/x', 'summary' => 'List all widgets', 'tags' => ['Widgets']]),
+        op(['method' => 'GET', 'path' => '/y', 'summary' => 'Extra endpoint', 'tags' => ['Widgets']]),
+    ];
+    $canonical = [op(['method' => 'GET', 'path' => '/x', 'summary' => 'List all widgets', 'tags' => ['Widgets']])];
+
+    $slugs = OperationSlugger::resolve($translated, $canonical, 'api');
+
+    expect($slugs)->toBe([
+        'GET /x' => 'api/widgets/list-all-widgets',
+        'GET /y' => 'api/widgets/extra-endpoint',
+    ]);
+});

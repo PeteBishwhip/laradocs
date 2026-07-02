@@ -457,6 +457,62 @@ it('serves a localised spec at the default locale slugs', function (string $vers
     expect($es)->toContain('List all widgets');
 })->with('openapi specs');
 
+it('links operations at the canonical slug from a translated overview', function (string $version) {
+    config()->set('laradocs.locale.available', ['en' => 'English', 'de' => 'Deutsch']);
+    config()->set('laradocs.locale.default', 'en');
+
+    // The German spec translates the summary, which — left unchecked — would slug
+    // to "alle-widgets-auflisten" and drift from the page the loader actually
+    // mounts (the canonical, default-locale "list-all-widgets").
+    $de = widgetsSpec($version);
+    $de['paths']['/widgets']['get']['summary'] = 'Alle Widgets auflisten';
+
+    $this->makeDocs([
+        'openapi.json' => widgetsSpecJson($version),
+        'openapi.de.json' => (string) json_encode($de),
+    ]);
+
+    $overview = $this->get('/docs/de/api')->assertOk()->getContent();
+
+    // The overview shows the translated label but links to the canonical slug,
+    // so its links resolve to the pages the loader mounted rather than 404ing.
+    expect($overview)
+        ->toContain('Alle Widgets auflisten')          // translated link label
+        ->toContain('api/widgets/list-all-widgets')    // canonical href
+        ->not->toContain('alle-widgets-auflisten');    // never the translated slug
+
+    // And that canonical link is a real, resolvable page under this locale.
+    $this->get('/docs/de/api/widgets/list-all-widgets')->assertOk();
+})->with('openapi specs');
+
+it('treats the default locale spec as canonical when no un-suffixed spec exists', function (string $version) {
+    config()->set('laradocs.locale.available', ['en' => 'English', 'de' => 'Deutsch']);
+    config()->set('laradocs.locale.default', 'en');
+
+    // Only locale-specific specs ship (no openapi.json). The default locale (en)
+    // is canonical, so every language mounts and links the same en-derived slugs.
+    $de = widgetsSpec($version);
+    $de['paths']['/widgets']['get']['summary'] = 'Alle Widgets auflisten';
+
+    $this->makeDocs([
+        'openapi.en.json' => widgetsSpecJson($version),
+        'openapi.de.json' => (string) json_encode($de),
+    ]);
+
+    // The default locale renders from its own suffixed spec at the canonical slug.
+    $this->get('/docs/api/widgets/list-all-widgets')->assertOk()
+        ->assertSee('List all widgets');
+
+    // German mounts at — and its overview links to — the same canonical slug.
+    $this->get('/docs/de/api/widgets/list-all-widgets')->assertOk()
+        ->assertSee('Alle Widgets auflisten');
+
+    $overview = $this->get('/docs/de/api')->assertOk()->getContent();
+    expect($overview)
+        ->toContain('api/widgets/list-all-widgets')
+        ->not->toContain('alle-widgets-auflisten');
+})->with('openapi specs');
+
 it('renders the same operation independently under two locales', function (string $version) {
     config()->set('laradocs.locale.available', ['en' => 'English', 'de' => 'Deutsch']);
     config()->set('laradocs.locale.default', 'en');

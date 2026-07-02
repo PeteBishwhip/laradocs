@@ -78,17 +78,15 @@ final class OpenApiLoader implements DocumentLoader
             // every language shares the same operation paths. The active spec's
             // own slugs are only a fallback for operations it adds on its own.
             $canonicalSpec = $canonicalPath === $specPath ? $spec : $this->parser->parse($canonicalPath);
-            $slugs = OperationSlugger::map($canonicalSpec->operations(), $this->baseSlug);
-            $ownSlugs = $canonicalPath === $specPath ? $slugs : OperationSlugger::map($spec->operations(), $this->baseSlug);
+            $slugs = OperationSlugger::resolve($spec->operations(), $canonicalSpec->operations(), $this->baseSlug);
 
-            $documents->push($this->overview($specPath, $spec, $mtime, $locale));
+            $documents->push($this->overview($specPath, $canonicalPath, $spec, $mtime, $locale));
 
             $order = 0;
 
             foreach ($spec->operations() as $operation) {
-                $id = OperationSlugger::identity($operation);
                 $documents->push(
-                    $this->operation($specPath, $operation, $mtime, $locale, $order++, $slugs[$id] ?? $ownSlugs[$id]),
+                    $this->operation($specPath, $operation, $mtime, $locale, $order++, $slugs[OperationSlugger::identity($operation)]),
                 );
             }
         }
@@ -130,8 +128,11 @@ final class OpenApiLoader implements DocumentLoader
                 continue;
             }
 
-            $base = $dir . $name;
-            $sources[] = [$active, is_file($base) ? $base : $active];
+            // The un-suffixed openapi.json is canonical; when only locale-specific
+            // specs exist, the default locale's spec is canonical for every
+            // language. Slugs derive from it so URLs stay stable across locales.
+            $canonical = $this->canonicalSpec($dir, $name, $default) ?? $active;
+            $sources[] = [$active, $canonical];
         }
 
         return $sources;
@@ -141,32 +142,60 @@ final class OpenApiLoader implements DocumentLoader
      * Resolve a spec filename for the active locale. A non-default locale prefers
      * a filename-suffixed variant (openapi.fr.json) then a locale directory
      * (fr/openapi.json), mirroring content-page localisation, and finally the
-     * un-suffixed file. Returns null when nothing exists.
+     * canonical spec (un-suffixed, or the default locale's variant). Returns null
+     * when nothing exists.
      */
     private function localisedSpec(string $dir, string $name, string $locale, string $default): ?string
     {
         if ($locale !== '' && $locale !== $default) {
-            $ext = pathinfo($name, PATHINFO_EXTENSION);
-            $stem = $ext === '' ? $name : substr($name, 0, -(strlen($ext) + 1));
-            $suffixed = $dir . ($ext === '' ? "{$stem}.{$locale}" : "{$stem}.{$locale}.{$ext}");
+            $variant = $this->localeVariant($dir, $name, $locale);
 
-            if (is_file($suffixed)) {
-                return $suffixed;
-            }
-
-            $inDirectory = $dir . $locale . DIRECTORY_SEPARATOR . $name;
-
-            if (is_file($inDirectory)) {
-                return $inDirectory;
+            if ($variant !== null) {
+                return $variant;
             }
         }
 
-        $base = $dir . $name;
-
-        return is_file($base) ? $base : null;
+        return $this->canonicalSpec($dir, $name, $default);
     }
 
-    private function overview(string $specPath, NormalizedSpec $spec, int $mtime, string $locale): Document
+    /**
+     * The canonical spec every locale's slugs derive from: the un-suffixed
+     * openapi.json when present, otherwise the default locale's variant (so a
+     * spec set that ships only openapi.en.json / openapi.fr.json still shares one
+     * set of URLs). Returns null when neither exists.
+     */
+    private function canonicalSpec(string $dir, string $name, string $default): ?string
+    {
+        $base = $dir . $name;
+
+        if (is_file($base)) {
+            return $base;
+        }
+
+        return $default !== '' ? $this->localeVariant($dir, $name, $default) : null;
+    }
+
+    /**
+     * A locale-specific spec file for `$locale`: the filename-suffixed variant
+     * (openapi.fr.json) then the locale directory (fr/openapi.json), mirroring
+     * content-page localisation. Returns null when neither exists.
+     */
+    private function localeVariant(string $dir, string $name, string $locale): ?string
+    {
+        $ext = pathinfo($name, PATHINFO_EXTENSION);
+        $stem = $ext === '' ? $name : substr($name, 0, -(strlen($ext) + 1));
+        $suffixed = $dir . ($ext === '' ? "{$stem}.{$locale}" : "{$stem}.{$locale}.{$ext}");
+
+        if (is_file($suffixed)) {
+            return $suffixed;
+        }
+
+        $inDirectory = $dir . $locale . DIRECTORY_SEPARATOR . $name;
+
+        return is_file($inDirectory) ? $inDirectory : null;
+    }
+
+    private function overview(string $specPath, string $canonicalPath, NormalizedSpec $spec, int $mtime, string $locale): Document
     {
         $info = $spec->info();
         $title = $this->title
@@ -183,6 +212,9 @@ final class OpenApiLoader implements DocumentLoader
             'openapi' => [
                 'type' => 'overview',
                 'spec' => $specPath,
+                // The overview links to operations by their canonical slug, so it
+                // needs the canonical spec to resolve them (see OperationSlugger).
+                'canonicalSpec' => $canonicalPath,
             ],
         ]);
 

@@ -301,12 +301,18 @@ translation exists — so a partially translated site never 404s. Translate the
 `summary` and `description` fields (and any other human-readable copy); keep the
 `operationId`s, methods and paths identical across languages.
 
+The un-suffixed `openapi.json` is optional: if you ship only locale-specific
+specs (e.g. `openapi.en.json` and `openapi.de.json` with `locale.default` set to
+`en`), the **default locale's** spec becomes the canonical one every language
+mounts and links against.
+
 > [!IMPORTANT]
-> **Operation URLs are derived from the *default*-locale spec**, so they stay
-> identical across languages even when a summary is translated. A German
-> operation whose summary reads "Alle Widgets auflisten" is still served at the
-> English slug (`…/widgets/list-all-widgets`), which keeps deep links and the
-> language switcher working across the whole reference.
+> **Operation URLs are derived from the *default*-locale spec** — the un-suffixed
+> `openapi.json`, or the default locale's own spec when no un-suffixed file
+> exists. They stay identical across languages even when a summary is translated:
+> a German operation whose summary reads "Alle Widgets auflisten" is still served
+> at the English slug (`…/widgets/list-all-widgets`), which keeps deep links and
+> the language switcher working across the whole reference.
 
 ---
 

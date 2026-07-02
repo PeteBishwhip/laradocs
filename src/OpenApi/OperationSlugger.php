@@ -40,6 +40,34 @@ final class OperationSlugger
     }
 
     /**
+     * Slugs for `$operations`, preferring the canonical (default-locale) spec's
+     * slug for every operation it shares. A translated summary therefore never
+     * changes the URL — all locales resolve to the same paths — while operations
+     * unique to `$operations` fall back to their own derived slug.
+     *
+     * Both the loader (which mounts the pages) and the overview renderer (which
+     * links to them) resolve through this method, so their URLs cannot drift.
+     *
+     * @param  array<int, Operation>  $operations
+     * @param  array<int, Operation>  $canonicalOperations
+     * @return array<string, string>
+     */
+    public static function resolve(array $operations, array $canonicalOperations, string $baseSlug): array
+    {
+        $canonical = self::map($canonicalOperations, $baseSlug);
+        $own = self::map($operations, $baseSlug);
+
+        $resolved = [];
+
+        foreach ($operations as $operation) {
+            $id = self::identity($operation);
+            $resolved[$id] = $canonical[$id] ?? $own[$id];
+        }
+
+        return $resolved;
+    }
+
+    /**
      * A stable key identifying an operation within a spec (method + path is
      * unique per OpenAPI).
      */
