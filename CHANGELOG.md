@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.2] - 2026-07-02
+
 ### Added
 - Tabbed code blocks and content tabs. Two complementary syntaxes: a code-tab
   shorthand (`tab:Label` in the fenced code info string) that groups consecutive
@@ -15,6 +17,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Both produce WCAG 2.1 AA-compliant tab UIs with keyboard navigation, cross-page
   synchronisation by group name, and `localStorage` persistence. Disable with
   `parser.extensions.tabs => false`; configure via the `tabs` config block.
+- "Last updated" dates are now rendered using the active docs locale so month
+  names and locale-aware tokens appear in the visitor's language rather than always
+  in English. Carbon's `translatedFormat()` is used under the hood; update your
+  `date_format` config if you rely on English-only ordinal suffixes.
+- Native OpenAPI renderer (requires `devizzent/cebe-php-openapi` and
+  `symfony/yaml`). Point `openapi.spec` at an OpenAPI 3.x JSON/YAML file and
+  Laradocs mounts a full API reference: an overview page with a base-URL panel and
+  a collapsible per-tag index, plus a synthetic operation page per endpoint with
+  grouped parameters, coloured response status pills, and a collapsible nested
+  schema tree with Expand all / Collapse all controls. A `laradocs:openapi`
+  Artisan command scaffolds a spec from your Laravel routes, with support for
+  `#[ApiOperation]` attribute overrides and docblock / FormRequest introspection.
+- Redesigned OpenAPI operation pages with a prominent endpoint bar (method badge,
+  tinted `{param}` segments, copy button), and a request/response code-sample
+  sidebar in the right rail showing copy-pasteable snippets in cURL, PHP,
+  JavaScript, Python and Ruby, plus an example JSON response. Snippets are
+  highlighted by the site's own Shiki pipeline and share a persisted language
+  selection across operation pages.
+- Summary-based OpenAPI operation slugs: operation URLs are now derived from the
+  `summary` field (falling back to `operationId`, then method + path) so URLs
+  match page titles. Colliding summaries get a stable numeric suffix.
+- Localised OpenAPI specs: for a non-default locale the loader prefers
+  `openapi.{locale}.json` (or `{locale}/openapi.json`) and falls back to the
+  default spec. Operation slugs are always derived from the default-locale spec so
+  URLs stay stable across languages and the language switcher keeps working.
+- Language dropdown for OpenAPI code samples with persisted choice. The chosen
+  language persists in `sessionStorage` (or in a one-year cookie when cookie
+  persistence is enabled) so the selection carries across operation pages.
+- Updated translations via Crowdin (Spanish, German, Italian, Dutch, Swedish).
+
+### Fixed
+- OpenAPI tag sections are now lifted to sit as siblings of the Overview page
+  under the "API Reference" group rather than nesting inside it, so the sidebar
+  reads: Overview, then one collapsible section per resource.
 
 ## [0.6.1] - 2026-06-25
 
@@ -251,7 +287,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Artisan commands: `laradocs:install`, `make:doc`, `laradocs:cache`, `laradocs:clear`.
 - Publishable config, views and assets; `php artisan about` integration.
 
-[Unreleased]: https://github.com/petebishwhip/laradocs/compare/v0.6.1...HEAD
+[Unreleased]: https://github.com/petebishwhip/laradocs/compare/v0.6.2...HEAD
+[0.6.2]: https://github.com/petebishwhip/laradocs/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/petebishwhip/laradocs/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/petebishwhip/laradocs/compare/v0.5.3...v0.6.0
 [0.5.3]: https://github.com/petebishwhip/laradocs/compare/v0.5.2...v0.5.3
