@@ -115,6 +115,7 @@ return [
         'resources' => 'Resources',
         'request' => 'Request',
         'response' => 'Response',
+        'language' => 'Idioma',
         'code_samples' => 'Request and response samples',
         'expand_all' => 'Expand all',
         'collapse_all' => 'Collapse all',
