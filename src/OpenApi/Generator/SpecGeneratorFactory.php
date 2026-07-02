@@ -97,6 +97,7 @@ class SpecGeneratorFactory
         ?string $middleware,
     ): ScrambleSpecGenerator {
         return new ScrambleSpecGenerator(
+            router: $this->router,
             title: $title,
             version: $version,
             serverUrl: $serverUrl,
