@@ -1,0 +1,167 @@
+# Hand-crafted OpenAPI 3.1 fixture for the Pillar A e2e reference-page tests
+# (tests/e2e/openapi.spec.ts). Kept deliberately small but exercises the three
+# 3.1-specific shapes the renderer must survive:
+#   - a nullable field expressed as `type: ["string", "null"]`
+#   - an `examples` key (both a media-type examples map and a schema-level array)
+#   - `oneOf` (a union request field) and `allOf` (a composed schema)
+# Two tags (widgets, orders) so the overview groups operations by tag.
+openapi: 3.1.0
+info:
+  title: Warehouse API
+  version: 1.0.0
+  description: Hand-crafted OpenAPI 3.1 fixture served at /docs/api for e2e coverage.
+servers:
+  - url: https://api.example.com/v1
+    description: Production
+tags:
+  - name: widgets
+    description: Widget operations
+  - name: orders
+    description: Order operations
+paths:
+  /widgets:
+    get:
+      operationId: listWidgets
+      summary: List all widgets
+      description: Returns a paginated list of widgets.
+      tags:
+        - widgets
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: Filter widgets by lifecycle status.
+          schema:
+            type: string
+            enum:
+              - active
+              - archived
+      responses:
+        '200':
+          description: A list of widgets.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Widget'
+              examples:
+                twoWidgets:
+                  summary: Two widgets
+                  value:
+                    - id: 1
+                      name: Sprocket
+                      notes: null
+                    - id: 2
+                      name: Cog
+                      notes: Ships next week
+  /widgets/create:
+    post:
+      operationId: createWidget
+      summary: Create a widget
+      description: Adds a new widget to the catalogue.
+      tags:
+        - widgets
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WidgetInput'
+            examples:
+              minimal:
+                summary: Minimal payload
+                value:
+                  name: Sprocket
+      responses:
+        '201':
+          description: The created widget.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Widget'
+  /orders/{orderId}:
+    get:
+      operationId: getOrder
+      summary: Fetch an order
+      description: Returns a single order by id.
+      tags:
+        - orders
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          description: The order identifier.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The order.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+components:
+  schemas:
+    Identifiable:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+          format: int64
+    Widget:
+      # allOf composes the shared Identifiable base with the inline members.
+      allOf:
+        - $ref: '#/components/schemas/Identifiable'
+        - type: object
+          required:
+            - name
+          properties:
+            name:
+              type: string
+            kind:
+              type: string
+              enum:
+                - gadget
+                - gizmo
+            notes:
+              # OpenAPI 3.1 nullable: a type array including "null".
+              type:
+                - string
+                - 'null'
+              description: Optional free-form notes (nullable).
+              examples:
+                - Handle with care
+    WidgetInput:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        payment:
+          # oneOf union of two distinct payment shapes.
+          oneOf:
+            - $ref: '#/components/schemas/CardPayment'
+            - $ref: '#/components/schemas/CashPayment'
+    CardPayment:
+      type: object
+      properties:
+        cardNumber:
+          type: string
+    CashPayment:
+      type: object
+      properties:
+        amount:
+          type: number
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+        notes:
+          type:
+            - string
+            - 'null'
