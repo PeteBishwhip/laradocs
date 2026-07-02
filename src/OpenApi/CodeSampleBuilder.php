@@ -163,24 +163,55 @@ final class CodeSampleBuilder
             return null;
         }
 
+        $node = $this->resolveComposite($node);
+
         if (! empty($node['enum']) && is_array($node['enum'])) {
             return $node['enum'][0];
         }
 
-        foreach (['oneOf', 'anyOf'] as $key) {
-            if (! empty($node[$key]) && is_array($node[$key]) && isset($node[$key][0]) && is_array($node[$key][0])) {
-                return $this->example($node[$key][0], $depth);
-            }
-        }
-
-        $type = $node['type'] ?? (! empty($node['properties']) ? 'object' : (! empty($node['items']) ? 'array' : 'string'));
-
-        return match ($type) {
+        return match ($this->exampleType($node)) {
             'object' => $this->objectExample($node, $depth),
             'array' => [$this->example(is_array($node['items'] ?? null) ? $node['items'] : [], $depth + 1)],
             'integer', 'number' => 0,
             'boolean' => true,
             default => $this->stringExample($node),
+        };
+    }
+
+    /**
+     * Unwrap a oneOf/anyOf node to its first concrete branch so the example
+     * synthesiser can treat it like a plain schema.
+     *
+     * @param  array<array-key, mixed>  $node
+     * @return array<array-key, mixed>
+     */
+    private function resolveComposite(array $node): array
+    {
+        foreach (['oneOf', 'anyOf'] as $key) {
+            if (! empty($node[$key]) && is_array($node[$key]) && isset($node[$key][0]) && is_array($node[$key][0])) {
+                return $this->resolveComposite($node[$key][0]);
+            }
+        }
+
+        return $node;
+    }
+
+    /**
+     * The effective type for a schema node, inferred from `properties`/`items`
+     * when no explicit `type` is present.
+     *
+     * @param  array<array-key, mixed>  $node
+     */
+    private function exampleType(array $node): string
+    {
+        if (isset($node['type']) && is_scalar($node['type'])) {
+            return (string) $node['type'];
+        }
+
+        return match (true) {
+            ! empty($node['properties']) => 'object',
+            ! empty($node['items']) => 'array',
+            default => 'string',
         };
     }
 
@@ -225,41 +256,55 @@ final class CodeSampleBuilder
      */
     private function render(mixed $value, string $style, int $indent): string
     {
+        if (is_array($value)) {
+            return $this->renderArray($value, $style, $indent);
+        }
+
+        return $this->renderScalar($value, $this->style($style));
+    }
+
+    /**
+     * Render an array as a list literal or a keyed object/dict/hash literal.
+     *
+     * @param  array<int|string, mixed>  $value
+     */
+    private function renderArray(array $value, string $style, int $indent): string
+    {
         $s = $this->style($style);
         $pad = str_repeat('  ', $indent);
         $inner = str_repeat('  ', $indent + 1);
 
-        if (is_array($value) && $this->isList($value)) {
+        if ($this->isList($value)) {
             $items = array_map(fn ($v): string => $inner . $this->render($v, $style, $indent + 1), $value);
 
             return "[\n" . implode(",\n", $items) . "\n" . $pad . ']';
         }
 
-        if (is_array($value)) {
-            if ($value === []) {
-                return $s['open'] . $s['close'];
-            }
-            $rows = [];
-            foreach ($value as $key => $v) {
-                $rows[] = $inner . $s['key']((string) $key) . $s['arrow'] . $this->render($v, $style, $indent + 1);
-            }
-
-            return $s['open'] . "\n" . implode(",\n", $rows) . "\n" . $pad . $s['close'];
+        if ($value === []) {
+            return $s['open'] . $s['close'];
         }
 
-        if (is_bool($value)) {
-            return $value ? $s['true'] : $s['false'];
+        $rows = [];
+        foreach ($value as $key => $v) {
+            $rows[] = $inner . $s['key']((string) $key) . $s['arrow'] . $this->render($v, $style, $indent + 1);
         }
 
-        if ($value === null) {
-            return $s['null'];
-        }
+        return $s['open'] . "\n" . implode(",\n", $rows) . "\n" . $pad . $s['close'];
+    }
 
-        if (is_int($value) || is_float($value)) {
-            return (string) $value;
-        }
-
-        return $s['str'](is_scalar($value) ? (string) $value : '');
+    /**
+     * Render a scalar (or null) as a literal in the target language.
+     *
+     * @param  array{open: string, close: string, arrow: string, true: string, false: string, null: string, key: callable(string): string, str: callable(string): string}  $s
+     */
+    private function renderScalar(mixed $value, array $s): string
+    {
+        return match (true) {
+            is_bool($value) => $value ? $s['true'] : $s['false'],
+            $value === null => $s['null'],
+            is_int($value) || is_float($value) => (string) $value,
+            default => $s['str'](is_scalar($value) ? (string) $value : ''),
+        };
     }
 
     /**
