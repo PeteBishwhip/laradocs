@@ -801,8 +801,12 @@ return [
     |             The first match wins (YAML and JSON are both supported).
     | "base_slug" URL segment the generated reference pages are mounted under
     |             (e.g. /docs/api).
-    | "title"     Heading / nav label for the reference section.
-    | "group"     Sidebar group the reference pages are filed under.
+    | "title"     Heading / nav label for the reference *landing* page (the
+    |             operations index). Defaults to "Overview" so it reads as a
+    |             child of the "group" section below rather than repeating it.
+    |             Set to null to fall back to the spec's own info.title.
+    | "group"     Sidebar group the reference pages are filed under — the
+    |             section heading the whole reference lives beneath.
     | "order"     Sort weight of the reference section relative to other groups.
     | "render_markdown_descriptions"
     |             Render CommonMark in spec `description` fields rather than
@@ -825,7 +829,7 @@ return [
         'enabled' => (bool) env('LARADOCS_OPENAPI', false),
         'files' => ['openapi.yaml', 'openapi.yml', 'openapi.json'],
         'base_slug' => 'api',
-        'title' => 'API Reference',
+        'title' => 'Overview',
         'group' => 'API Reference',
         'order' => 100,
         'render_markdown_descriptions' => true,

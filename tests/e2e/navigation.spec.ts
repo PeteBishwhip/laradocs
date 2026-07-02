@@ -78,7 +78,7 @@ test('sidebar order honours explicit order at the top level', async ({ page }) =
         'Customisation',
         'Advanced',
         'Integrations',
-        'API Reference',
+        'HTTP API',
         'CLI',
     ];
     expect(topLevel.slice(0, expectedHead.length)).toEqual(expectedHead);

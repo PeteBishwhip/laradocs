@@ -19,7 +19,7 @@ via `laradocs.routing.strategy`:
 
 ```text
 docs/guide/getting-started.md   ->  /docs/guide/getting-started
-docs/api/_index.md              ->  /docs/api
+docs/http-api/_index.md         ->  /docs/http-api
 docs/_index.md                  ->  /docs
 ```
 

@@ -1,5 +1,5 @@
 ---
-redirect: api
+redirect: http-api
 hidden: true
 search: false
 ---

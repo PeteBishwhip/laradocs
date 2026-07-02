@@ -46,6 +46,93 @@
     });
   }
 
+  // Generic copy button: any element with [data-laradocs-copy] copies the
+  // attribute's value (or its own text when the attribute is empty) and shows a
+  // brief "copied" state. Used by the OpenAPI endpoint bars and server URLs.
+  function initCopyText() {
+    document.querySelectorAll('[data-laradocs-copy]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        var value = button.getAttribute('data-laradocs-copy') || button.textContent || '';
+        if (!value || !navigator.clipboard) return;
+        navigator.clipboard.writeText(value.trim()).then(function () {
+          button.classList.add('is-copied');
+          setTimeout(function () { button.classList.remove('is-copied'); }, 1500);
+        });
+      });
+    });
+  }
+
+  // Bulk expand/collapse for OpenAPI schema trees and the overview resource
+  // index: a toolbar button toggles the `open` state of every <details> inside
+  // its nearest <section>.
+  var OA_DETAILS = 'details.laradocs-openapi-property, details.laradocs-openapi-branch, details.laradocs-openapi-tag-section';
+  function initSchemaToggle() {
+    document.querySelectorAll('[data-laradocs-schema-toggle]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        var scope = button.closest('section') || document;
+        var open = button.getAttribute('data-laradocs-schema-toggle') === 'expand';
+        scope.querySelectorAll(OA_DETAILS).forEach(function (node) { node.open = open; });
+      });
+    });
+  }
+
+  // When a TOC / anchor link points at a heading inside a collapsed OpenAPI
+  // <details> (e.g. a resource section on the overview), open its ancestors so
+  // the target is actually revealed rather than hidden behind a closed summary.
+  function initOpenApiSections() {
+    function openAncestors(target) {
+      for (var el = target; el; el = el.parentElement) {
+        if (el.tagName === 'DETAILS' && !el.open) el.open = true;
+      }
+    }
+    function fromHash() {
+      var id = location.hash ? decodeURIComponent(location.hash.slice(1)) : '';
+      var target = id && document.getElementById(id);
+      if (target) openAncestors(target);
+    }
+    document.addEventListener('click', function (e) {
+      var link = e.target.closest && e.target.closest('a[href^="#"]');
+      if (!link) return;
+      var id = decodeURIComponent(link.getAttribute('href').slice(1));
+      var target = id && document.getElementById(id);
+      if (target) openAncestors(target);
+    });
+    window.addEventListener('hashchange', fromHash);
+    fromHash();
+  }
+
+  // OpenAPI operation pages render a request/response code panel inline in the
+  // body. On wide screens, dock it into the right rail (in place of the TOC);
+  // on narrow screens leave it inline near the top of the content.
+  function initOpenApiAside() {
+    var aside = document.querySelector('[data-laradocs-openapi-aside]');
+    if (!aside) return;
+    var main = document.querySelector('.laradocs-main');
+    if (!main) return;
+
+    var home = document.createComment('laradocs-openapi-aside');
+    aside.parentNode.insertBefore(home, aside);
+    var toc = main.querySelector('.laradocs-toc');
+    var wide = window.matchMedia('(min-width: 1181px)');
+
+    function place() {
+      if (wide.matches) {
+        if (toc) toc.setAttribute('hidden', '');
+        if (aside.parentNode !== main) main.appendChild(aside);
+        aside.classList.add('is-docked');
+      } else {
+        if (toc) toc.removeAttribute('hidden');
+        if (home.parentNode && aside.previousSibling !== home) home.parentNode.insertBefore(aside, home);
+        aside.classList.remove('is-docked');
+      }
+      aside.hidden = false;
+    }
+
+    place();
+    if (wide.addEventListener) wide.addEventListener('change', place);
+    else if (wide.addListener) wide.addListener(place);
+  }
+
   function initMobileNav() {
     var shell = document.querySelector('.laradocs-shell');
     var button = document.querySelector('[data-laradocs-menu]');
@@ -648,7 +735,11 @@
 
   function boot() {
     initTheme();
+    initOpenApiAside();
     initCopy();
+    initCopyText();
+    initSchemaToggle();
+    initOpenApiSections();
     initMobileNav();
     initScrollSpy();
     initProgress();
