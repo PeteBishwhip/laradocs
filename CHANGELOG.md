@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Cookie-consent integration for the `laradocs_locale` cookie (#95). A
+  previously-set cookie is now actively cleared the moment
+  `Laradocs::cookiesEnabled()` (or `locale.cookie`) reports consent is no
+  longer granted, instead of merely being ignored. A new
+  `GET {prefix}/_laradocs/consent?locale=<code>` endpoint lets a consent
+  banner's JS persist (or drop) the cookie immediately via `fetch()`, without
+  waiting for the next page navigation. See the "Cookie persistence" section
+  of the Localisation guide for integration examples with
+  whitecube/laravel-cookie-consent, Cookiebot and OneTrust.
 - Selectable OpenAPI generator backend for `laradocs:openapi` via the
   `laradocs.openapi.generator.driver` config (`LARADOCS_OPENAPI_DRIVER`) or the
   new `--driver` command option. Three drivers: `native` (the built-in,

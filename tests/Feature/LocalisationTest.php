@@ -446,6 +446,42 @@ it('does not set the persistence cookie when no explicit choice is made', functi
     $this->get('/docs')->assertOk()->assertCookieMissing('laradocs_locale');
 });
 
+it('clears a stale laradocs_locale cookie once locale.cookie is disabled', function () {
+    $this->makeDocs([
+        'index.md' => "---\ntitle: Home\norder: 1\n---\n# Welcome\n",
+    ]);
+
+    config()->set('laradocs.locale.available', ['en' => 'English', 'fr' => 'Français']);
+    config()->set('laradocs.locale.cookie', false);
+
+    // A cookie planted while consent was granted must not linger once the
+    // config flag (or a consent callback) says persistence is off again.
+    $this->withCookies(['laradocs_locale' => 'fr'])
+        ->get('/docs')
+        ->assertOk()
+        ->assertCookieExpired('laradocs_locale');
+});
+
+it('clears a stale laradocs_locale cookie once consent is withdrawn via cookiesEnabled', function () {
+    $this->makeDocs([
+        'index.md' => "---\ntitle: Home\norder: 1\n---\n# Welcome\n",
+    ]);
+
+    config()->set('laradocs.locale.available', ['en' => 'English', 'fr' => 'Français']);
+    config()->set('laradocs.locale.cookie', true); // config still says on…
+
+    Locale::setCookieResolver(fn () => false); // …but the CMP says consent was revoked
+
+    try {
+        $this->withCookies(['laradocs_locale' => 'fr'])
+            ->get('/docs')
+            ->assertOk()
+            ->assertCookieExpired('laradocs_locale');
+    } finally {
+        Locale::setCookieResolver(null);
+    }
+});
+
 // ---------------------------------------------------------------------------
 // Accept-Language browser detection
 // ---------------------------------------------------------------------------

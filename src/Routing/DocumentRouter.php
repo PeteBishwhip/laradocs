@@ -13,6 +13,7 @@ use Laradocs\Http\Controllers\ApiVersionsController;
 use Laradocs\Http\Controllers\AssetController;
 use Laradocs\Http\Controllers\DocsController;
 use Laradocs\Http\Controllers\FeedController;
+use Laradocs\Http\Controllers\LocaleConsentController;
 use Laradocs\Http\Controllers\McpController;
 use Laradocs\Http\Controllers\OgImageController;
 use Laradocs\Http\Controllers\RobotsController;
@@ -88,6 +89,14 @@ final class DocumentRouter
                 ->withoutMiddleware(SetDocsVersion::class)
                 ->name('asset');
             $router->get('_laradocs/search', SearchController::class)->name('search');
+            // Lets a consent banner's JS persist (or drop) the locale cookie the
+            // instant the visitor's decision changes, via fetch() — no full-page
+            // navigation required. SetDocsVersion is dropped for the same reason
+            // as the asset route above: this isn't a versioned doc page.
+            $router->get('_laradocs/consent', LocaleConsentController::class)
+                ->middleware(ThrottleApiRequests::class)
+                ->withoutMiddleware(SetDocsVersion::class)
+                ->name('consent');
 
             if (Config::bool('laradocs.seo.og_image.enabled', true)) {
                 $router->get('_laradocs/og', OgImageController::class)->name('og.index');
