@@ -62,7 +62,7 @@ final class CodeSampleBuilder
 
     private function curl(string $method, string $url, mixed $body): string
     {
-        $lines = ['curl -X ' . $method . ' "' . $url . '" \\'];
+        $lines = ['curl -X ' . $method . ' ' . $this->shellString($url) . ' \\'];
         $lines[] = '  -H "Authorization: Bearer ' . self::TOKEN . '" \\';
         $lines[] = '  -H "Accept: application/json"' . ($body !== null ? ' \\' : '');
 
@@ -77,20 +77,21 @@ final class CodeSampleBuilder
     private function php(string $method, string $url, mixed $body): string
     {
         $call = strtolower($method);
+        $url = $this->phpString($url);
         $out = "use Illuminate\\Support\\Facades\\Http;\n\n";
         $out .= '$response = Http::withToken(\'' . self::TOKEN . "')\n";
         $out .= "    ->acceptJson()\n";
 
         if ($body !== null) {
-            return $out . "    ->{$call}('{$url}', " . $this->render($body, 'php', 1) . ');';
+            return $out . "    ->{$call}({$url}, " . $this->render($body, 'php', 1) . ');';
         }
 
-        return $out . "    ->{$call}('{$url}');";
+        return $out . "    ->{$call}({$url});";
     }
 
     private function javascript(string $method, string $url, mixed $body): string
     {
-        $out = "const response = await fetch(\"{$url}\", {\n";
+        $out = 'const response = await fetch(' . $this->jsonString($url) . ", {\n";
         $out .= '  method: "' . $method . "\",\n";
         $out .= "  headers: {\n";
         $out .= '    "Authorization": "Bearer ' . self::TOKEN . "\",\n";
@@ -112,7 +113,7 @@ final class CodeSampleBuilder
         $call = strtolower($method);
         $out = "import requests\n\n";
         $out .= "response = requests.{$call}(\n";
-        $out .= "    \"{$url}\",\n";
+        $out .= '    ' . $this->doubleQuoted($url) . ",\n";
         $out .= "    headers={\n";
         $out .= '        "Authorization": "Bearer ' . self::TOKEN . "\",\n";
         $out .= '        "Accept": "application/json",' . "\n";
@@ -132,7 +133,7 @@ final class CodeSampleBuilder
     {
         $class = ucfirst(strtolower($method));
         $out = "require \"net/http\"\nrequire \"json\"\nrequire \"uri\"\n\n";
-        $out .= "uri = URI(\"{$url}\")\n";
+        $out .= 'uri = URI(' . $this->doubleQuoted($url, ['#{' => '\\#{']) . ")\n";
         $out .= "http = Net::HTTP.new(uri.host, uri.port)\n";
         $out .= "http.use_ssl = true\n\n";
         $out .= "request = Net::HTTP::{$class}.new(uri)\n";
@@ -356,6 +357,11 @@ final class CodeSampleBuilder
     private function phpString(string $value): string
     {
         return "'" . strtr($value, ['\\' => '\\\\', "'" => "\\'"]) . "'";
+    }
+
+    private function shellString(string $value): string
+    {
+        return "'" . str_replace("'", "'\\''", $value) . "'";
     }
 
     /**

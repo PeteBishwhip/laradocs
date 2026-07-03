@@ -18,7 +18,7 @@ it('emits a body-less request for GET even when a schema is supplied', function 
     $samples = $builder()->forOperation('GET', 'https://api.test/v1/widgets', $schema);
 
     expect($samples['cURL'])
-        ->toContain('curl -X GET "https://api.test/v1/widgets"')
+        ->toContain("curl -X GET 'https://api.test/v1/widgets'")
         ->not->toContain('-d ')
         ->not->toContain('Content-Type');
     expect($samples['PHP'])->toContain("->get('https://api.test/v1/widgets');");
@@ -138,4 +138,16 @@ it('escapes quotes in string values per language', function () use ($builder) {
 
     expect($samples['PHP'])->toContain("O\\'Brien");        // single-quote escaped for PHP
     expect($samples['Python'])->toContain('\\"x\\"');       // double-quote escaped for Python
+});
+
+it('escapes operation urls per target language', function () use ($builder) {
+    $url = 'https://api.test/v1/widgets?name=O\'Brien"`#{x}```';
+
+    $samples = $builder()->forOperation('GET', $url, null);
+
+    expect($samples['cURL'])->toContain("'https://api.test/v1/widgets?name=O'\\''Brien\"`#{x}```'")
+        ->and($samples['PHP'])->toContain("->get('https://api.test/v1/widgets?name=O\\'Brien\"`#{x}```');")
+        ->and($samples['JavaScript'])->toContain('fetch("https://api.test/v1/widgets?name=O\'Brien\"`#{x}```"')
+        ->and($samples['Python'])->toContain('    "https://api.test/v1/widgets?name=O\'Brien\\"`#{x}```",')
+        ->and($samples['Ruby'])->toContain('URI("https://api.test/v1/widgets?name=O\'Brien\\"`\\#{x}```")');
 });

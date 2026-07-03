@@ -161,7 +161,7 @@ final class OpenApiContentRenderer implements DocumentContentRenderer
         $fences = ['cURL' => 'bash', 'PHP' => 'php', 'JavaScript' => 'javascript', 'Python' => 'python', 'Ruby' => 'ruby'];
         $request = [];
         foreach ($languages as $label => $code) {
-            $request[$label] = $this->markdown->parse("```{$fences[$label]}\n{$code}\n```");
+            $request[$label] = $this->markdown->parse($this->fencedCode($fences[$label], $code));
         }
 
         [$responseSchema, $status] = $this->firstSuccessResponse($responses);
@@ -169,10 +169,24 @@ final class OpenApiContentRenderer implements DocumentContentRenderer
 
         return [
             'request' => $request,
-            'response' => $responseJson === null ? null : $this->markdown->parse("```json\n{$responseJson}\n```"),
+            'response' => $responseJson === null ? null : $this->markdown->parse($this->fencedCode('json', $responseJson)),
             'method' => $operation->method,
             'status' => $status,
         ];
+    }
+
+    private function fencedCode(string $language, string $code): string
+    {
+        preg_match_all('/`+/', $code, $matches);
+
+        $max = 0;
+        foreach ($matches[0] as $run) {
+            $max = max($max, strlen($run));
+        }
+
+        $fence = str_repeat('`', max(3, $max + 1));
+
+        return "{$fence}{$language}\n{$code}\n{$fence}";
     }
 
     /**
