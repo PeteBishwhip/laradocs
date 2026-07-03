@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Selectable OpenAPI generator backend for `laradocs:openapi` via the
+  `laradocs.openapi.generator.driver` config (`LARADOCS_OPENAPI_DRIVER`) or the
+  new `--driver` command option. Three drivers: `native` (the built-in,
+  dependency-free generator), `scramble` (delegates generation to
+  [dedoc/scramble](https://github.com/dedoc/scramble) `^0.13`, reusing the same
+  prefix/middleware route filters and config-driven title, description,
+  server URL and security), and `auto` (the default — Scramble when it is
+  installed, otherwise native). Requesting `scramble` without the package
+  installed fails with install instructions instead of silently falling back.
 - Tabbed code blocks and content tabs. Two complementary syntaxes: a code-tab
   shorthand (`tab:Label` in the fenced code info string) that groups consecutive
   code blocks into a tabbed block, and a `:::tabs` / `--- Label` container for
