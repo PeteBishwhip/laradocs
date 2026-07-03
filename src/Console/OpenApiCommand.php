@@ -6,7 +6,6 @@ namespace Laradocs\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
-use Illuminate\Routing\Router;
 use Laradocs\OpenApi\Generator\SpecBuilder;
 use Laradocs\OpenApi\Generator\SpecGeneratorFactory;
 use Laradocs\OpenApi\OpenApiException;
@@ -31,14 +30,17 @@ final class OpenApiCommand extends Command
 
     protected $description = 'Generate an OpenAPI spec from your API routes, FormRequests and Resources';
 
-    public function handle(Router $router, Filesystem $files): int
+    public function handle(Filesystem $files): int
     {
         $prefix = $this->resolve('prefix', 'laradocs.openapi.generator.prefix', 'api');
         $middleware = $this->resolve('middleware', 'laradocs.openapi.generator.middleware', 'api');
         $driver = $this->resolveDriver();
 
+        // Container-resolved so tests can bind a substitute factory.
+        $factory = $this->laravel->make(SpecGeneratorFactory::class);
+
         try {
-            $generator = (new SpecGeneratorFactory($router))->make(
+            $generator = $factory->make(
                 $driver,
                 Config::string('laradocs.openapi.generator.title', Config::string('laradocs.openapi.title', 'API')),
                 Config::string('laradocs.openapi.generator.version', '1.0.0'),

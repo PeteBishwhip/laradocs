@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
+use Laradocs\OpenApi\Generator\SpecGeneratorFactory;
 use Laradocs\Tests\Fixtures\Api\OrderController;
 use Symfony\Component\Yaml\Yaml;
 
@@ -81,9 +82,15 @@ it('generates a spec with the native driver', function (): void {
 });
 
 it('fails with install instructions when the scramble driver is requested but absent', function (): void {
-    if (class_exists('\Dedoc\Scramble\Generator')) {
-        $this->markTestSkipped('dedoc/scramble is installed, so the missing-package path cannot be exercised.');
-    }
+    // Pin the factory's availability probe to false so the missing-package
+    // path is exercised even on hosts (like CI) where Scramble IS installed.
+    $this->app->bind(SpecGeneratorFactory::class, fn (): SpecGeneratorFactory => new class(app('router')) extends SpecGeneratorFactory
+    {
+        protected function scrambleAvailable(): bool
+        {
+            return false;
+        }
+    });
 
     $exit = Artisan::call('laradocs:openapi', ['--output' => $this->output, '--driver' => 'scramble']);
 

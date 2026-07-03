@@ -11,10 +11,13 @@ import { expect, test } from '@playwright/test';
  * rendered DOM so a regression in the operation/overview partials is caught.
  *
  * DOM contract (see resources/views/partials/openapi/*.blade.php):
- *   - overview groups operations under `<h3 id="tag-{slug}">` headings, each
- *     immediately followed by a `<ul class="laradocs-openapi-operation-list">`.
- *   - an operation page renders `<span class="laradocs-openapi-method
- *     method-{verb}">VERB</span>`, `<code class="laradocs-openapi-path">`, a
+ *   - overview groups operations into collapsible
+ *     `<details id="section-{slug}">` resource sections whose summary carries an
+ *     `<h2 id="tag-{slug}">` heading (tag name + endpoint count); expanding one
+ *     reveals its `<ul class="laradocs-openapi-operation-list">`.
+ *   - operation pages mount at summary-based slugs (see OperationSlugger) and
+ *     render `<span class="laradocs-openapi-method method-{verb}">VERB</span>`,
+ *     `<code class="laradocs-openapi-path">`, a
  *     `section.laradocs-openapi-parameters`, and per-status
  *     `<h3 id="response-{code}">` headings under `section.laradocs-openapi-responses`.
  */
@@ -25,19 +28,26 @@ test.describe('OpenAPI reference pages', () => {
 
         await expect(page.locator('.laradocs-openapi-overview')).toBeVisible();
 
-        // Both fixture tags surface as their own grouping heading.
-        const widgetsHeading = page.locator('h3#tag-widgets');
-        const ordersHeading = page.locator('h3#tag-orders');
+        // Both fixture tags surface as their own collapsible resource section
+        // with a tag heading (which also carries the endpoint count).
+        const widgetsSection = page.locator('details#section-widgets');
+        const ordersSection = page.locator('details#section-orders');
+        const widgetsHeading = widgetsSection.locator('h2#tag-widgets');
+        const ordersHeading = ordersSection.locator('h2#tag-orders');
         await expect(widgetsHeading).toBeVisible();
-        await expect(widgetsHeading).toHaveText('widgets');
+        await expect(widgetsHeading).toContainText('widgets');
         await expect(ordersHeading).toBeVisible();
-        await expect(ordersHeading).toHaveText('orders');
+        await expect(ordersHeading).toContainText('orders');
 
-        // Each heading is immediately followed by the operation list for that
-        // tag, and the operations land under the *correct* group: the widgets
-        // list carries the widget paths and not the order path, and vice versa.
-        const widgetsList = page.locator('h3#tag-widgets + ul.laradocs-openapi-operation-list');
-        const ordersList = page.locator('h3#tag-orders + ul.laradocs-openapi-operation-list');
+        // Sections start collapsed; expanding one reveals the operation list
+        // for that tag, and the operations land under the *correct* group: the
+        // widgets list carries the widget paths and not the order path, and
+        // vice versa.
+        await widgetsSection.locator('summary').click();
+        await ordersSection.locator('summary').click();
+
+        const widgetsList = widgetsSection.locator('ul.laradocs-openapi-operation-list');
+        const ordersList = ordersSection.locator('ul.laradocs-openapi-operation-list');
 
         await expect(widgetsList.locator('.laradocs-openapi-path', { hasText: '/widgets' }).first()).toBeVisible();
         await expect(widgetsList).not.toContainText('/orders/{orderId}');
@@ -46,7 +56,9 @@ test.describe('OpenAPI reference pages', () => {
     });
 
     test('an operation page renders method, path, parameters and a response code', async ({ page }) => {
-        await page.goto('/docs/api/widgets/listwidgets');
+        // Operation slugs prefer the summary ("List all widgets") over the
+        // operationId — see OperationSlugger.
+        await page.goto('/docs/api/widgets/list-all-widgets');
 
         const operation = page.locator('.laradocs-openapi-operation');
         await expect(operation).toBeVisible();
@@ -93,7 +105,7 @@ test.describe('OpenAPI reference pages', () => {
         // The listWidgets response schema is an array of Widget, whose `notes`
         // property is the nullable `type: ["string", "null"]` field — the exact
         // 3.1 shape that must not break client-side rendering.
-        await page.goto('/docs/api/widgets/listwidgets');
+        await page.goto('/docs/api/widgets/list-all-widgets');
         await expect(page.locator('.laradocs-openapi-operation')).toBeVisible();
         await page.waitForLoadState('networkidle');
 

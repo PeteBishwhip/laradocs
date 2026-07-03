@@ -199,11 +199,11 @@ final class ScrambleSpecGenerator implements OpenApiSpecGenerator
      */
     private function finalize(array $spec): array
     {
-        if (! isset($spec['info']) || ! is_array($spec['info'])) {
-            $spec['info'] = [];
-        }
-
-        $spec['info']['title'] = $this->title;
+        // Scramble always emits an info object; the fallback only guards a
+        // malformed document (and keeps the array shape known for analysis).
+        $info = isset($spec['info']) && is_array($spec['info']) ? $spec['info'] : [];
+        $info['title'] = $this->title;
+        $spec['info'] = $info;
 
         if ($this->security !== []) {
             $spec['security'] = $this->security;

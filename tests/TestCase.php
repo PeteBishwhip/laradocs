@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Laradocs\Tests;
 
+use Dedoc\Scramble\ScrambleServiceProvider;
 use Illuminate\Filesystem\Filesystem;
 use Laradocs\LaradocsServiceProvider;
 use Laravel\Mcp\Server\McpServiceProvider;
@@ -48,6 +49,14 @@ abstract class TestCase extends Orchestra
             $providers[] = McpServiceProvider::class;
         }
 
+        // dedoc/scramble is likewise optional. Its provider must be registered
+        // for the Scramble generator driver to resolve (it binds PhpParser\Parser
+        // and Scramble's own config); auto-discovery handles this in a real
+        // application.
+        if (class_exists(ScrambleServiceProvider::class)) {
+            $providers[] = ScrambleServiceProvider::class;
+        }
+
         return $providers;
     }
 
@@ -59,6 +68,11 @@ abstract class TestCase extends Orchestra
         // Default to the dependency-free engine so tests never reach out to a
         // real Scout backend; Scout-specific tests opt in explicitly.
         $app['config']->set('laradocs.search.driver', 'json');
+        // CI installs Scramble in every job, so the default `auto` OpenAPI
+        // driver would silently switch every generator test to Scramble. Pin
+        // the built-in generator; Scramble-specific tests opt in explicitly
+        // with --driver=scramble.
+        $app['config']->set('laradocs.openapi.generator.driver', 'native');
     }
 
     /**

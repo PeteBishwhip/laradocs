@@ -14,14 +14,14 @@ use Symfony\Component\Yaml\Yaml;
  * be a valid OpenAPI 3.1 document with at least one documented operation — then
  * fed back through the Pillar A reference pages as a render smoke test.
  *
- * dedoc/scramble is an optional dependency and is NOT installed in CI, so every
- * test skips (rather than fails) when it is absent — the guard resolves the
- * package by string via `class_exists()`, never through a hard `use Dedoc\...`
- * import, so this file loads cleanly on hosts that do not have the package.
+ * dedoc/scramble is an optional dependency (CI installs it explicitly), so
+ * every test skips (rather than fails) when it is absent — the guard resolves
+ * the package by string via `class_exists()`, never through a hard `use
+ * Dedoc\...` import, so this file loads cleanly on hosts without the package.
  */
 beforeEach(function (): void {
-    // Skip the whole suite when Scramble is absent (the CI reality) so the
-    // suite stays green without the package. Referenced by string only.
+    // Skip the whole suite when Scramble is absent so the suite stays green
+    // without the package. Referenced by string only.
     if (! class_exists('\Dedoc\Scramble\Generator')) {
         $this->markTestSkipped('dedoc/scramble is not installed.');
     }
@@ -62,6 +62,30 @@ it('generates an OpenAPI 3.1 spec through the scramble driver', function (): voi
 
     $operations = array_values($paths)[0];
     expect($operations)->toBeArray()->not->toBe([]);
+});
+
+it('carries the configured description and security through, and honours the middleware filter', function (): void {
+    // An api-prefixed route that does NOT carry the api middleware must be
+    // filtered out of the documented surface.
+    Route::get('api/internal/ping', fn (): array => ['pong' => true]);
+
+    config()->set('laradocs.openapi.generator.description', 'Warehouse endpoints.');
+    config()->set('laradocs.openapi.generator.security', [['bearerAuth' => []]]);
+
+    $exit = Artisan::call('laradocs:openapi', [
+        '--driver' => 'scramble',
+        '--output' => $this->spec,
+        '--force' => true,
+    ]);
+
+    expect($exit)->toBe(0);
+
+    /** @var array<string, mixed> $spec */
+    $spec = Yaml::parseFile($this->spec);
+
+    expect($spec['info']['description'] ?? '')->toContain('Warehouse endpoints.')
+        ->and($spec['security'])->toBe([['bearerAuth' => []]])
+        ->and(json_encode($spec['paths']))->not->toContain('internal');
 });
 
 it('renders the scramble-generated spec through the reference pages', function (): void {
