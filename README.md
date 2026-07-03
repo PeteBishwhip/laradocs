@@ -3,6 +3,7 @@
 [![tests](https://github.com/PeteBishwhip/laradocs/actions/workflows/tests.yml/badge.svg)](https://github.com/PeteBishwhip/laradocs/actions/workflows/tests.yml)
 [![quality](https://github.com/PeteBishwhip/laradocs/actions/workflows/quality.yml/badge.svg)](https://github.com/PeteBishwhip/laradocs/actions/workflows/quality.yml)
 [![Latest Version](https://img.shields.io/packagist/v/petebishwhip/laradocs.svg)](https://packagist.org/packages/petebishwhip/laradocs)
+[![Total Downloads](https://img.shields.io/packagist/dt/petebishwhip/laradocs.svg)](https://packagist.org/packages/petebishwhip/laradocs)
 [![License](https://img.shields.io/packagist/l/petebishwhip/laradocs.svg)](LICENSE.md)
 
 Maintain beautiful, version-controlled documentation **inside** your Laravel
@@ -20,7 +21,7 @@ Then open `/docs`.
 
 | | Minimum | Notes |
 |---|---|---|
-| PHP | 8.2 | |
+| PHP | 8.3 | 8.4 and 8.5 fully supported |
 | Laravel | 11.14 | 12 and 13 fully supported |
 | dedoc/scramble | 0.13 | Optional — only needed for the `scramble` OpenAPI driver |
 

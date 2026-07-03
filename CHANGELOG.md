@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-07-03
+
+Laradocs' first stable release. The public API surface (`Laradocs\Laradocs`,
+the value objects under `Laradocs\Documents\*` and `Laradocs\Metadata\Metadata`,
+and the `Laradocs\Contracts\*` extension points) is now frozen — see
+[CONTRIBUTING.md](CONTRIBUTING.md#public-api-surface) for exactly what that
+covers and the SemVer guarantees it carries going forward.
+
 ### Added
 - Cookie-consent integration for the `laradocs_locale` cookie (#95). A
   previously-set cookie is now actively cleared the moment
@@ -287,7 +295,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Artisan commands: `laradocs:install`, `make:doc`, `laradocs:cache`, `laradocs:clear`.
 - Publishable config, views and assets; `php artisan about` integration.
 
-[Unreleased]: https://github.com/petebishwhip/laradocs/compare/v0.6.1...HEAD
+[Unreleased]: https://github.com/petebishwhip/laradocs/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/petebishwhip/laradocs/compare/v0.6.1...v1.0.0
 [0.6.1]: https://github.com/petebishwhip/laradocs/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/petebishwhip/laradocs/compare/v0.5.3...v0.6.0
 [0.5.3]: https://github.com/petebishwhip/laradocs/compare/v0.5.2...v0.5.3
