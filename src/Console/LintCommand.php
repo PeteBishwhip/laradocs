@@ -75,7 +75,6 @@ final class LintCommand extends Command
      * Warn for every document that is missing one of the configured required
      * front-matter fields. Uses snake_case YAML key names (e.g. "updated_at").
      *
-     * @param  DocumentCollection<int, Document>  $documents
      * @param  array<int, string>  $required
      * @return array<int, array{slug: string, path: string, field: string}>
      */
@@ -115,7 +114,6 @@ final class LintCommand extends Command
      * happen when a metadata "slug:" override clashes with another file's
      * path-derived slug, or when two files share an identical path stem.
      *
-     * @param  DocumentCollection<int, Document>  $documents
      * @return array<int, array{slug: string, paths: array<int, string>}>
      */
     private function checkSlugCollisions(DocumentCollection $documents): array
@@ -142,7 +140,6 @@ final class LintCommand extends Command
      * When laradocs.lint.layouts is non-empty, warn for any document whose
      * "layout" front-matter value is not in that allowlist.
      *
-     * @param  DocumentCollection<int, Document>  $documents
      * @param  array<int, string>  $layouts  Allowlist; empty disables the check.
      * @return array<int, array{slug: string, path: string, layout: string}>
      */
@@ -179,7 +176,6 @@ final class LintCommand extends Command
      *
      * Accepted formats: Y-m-d, Y-m-d H:i:s, Y-m-d\TH:i:s, Y-m-d\TH:i:sP
      *
-     * @param  DocumentCollection<int, Document>  $documents
      * @return array<int, array{slug: string, path: string, value: string}>
      */
     private function checkDates(DocumentCollection $documents): array
@@ -235,7 +231,6 @@ final class LintCommand extends Command
      * silently. The "reason" distinguishes an absent set (install the package)
      * from an unknown icon name (a typo or removed glyph).
      *
-     * @param  DocumentCollection<int, Document>  $documents
      * @return array<int, array{slug: string, path: string, icon: string, set: string, reason: string}>
      */
     private function checkIcons(DocumentCollection $documents, IconRegistry $icons): array

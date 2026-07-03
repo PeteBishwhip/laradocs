@@ -79,7 +79,6 @@ final class CheckCommand extends Command
      * Extract every internal markdown link (those pointing at the docs route
      * prefix) across all documents, paired with their resolved target slug.
      *
-     * @param  DocumentCollection<int, Document>  $documents
      * @return array<int, array{source: string, href: string, slug: string}>
      */
     private function collectLinks(DocumentCollection $documents): array
@@ -114,7 +113,6 @@ final class CheckCommand extends Command
      * only orphans are hidden pages that nothing links to — dead content that
      * can be reached by neither the menu nor a cross-reference.
      *
-     * @param  DocumentCollection<int, Document>  $documents
      * @param  array<string, true>  $linkedSlugs
      * @return array<int, array{slug: string, title: string, path: string}>
      */
@@ -148,7 +146,6 @@ final class CheckCommand extends Command
     /**
      * Walk every document's redirect chain and report any that form a cycle.
      *
-     * @param  DocumentCollection<int, Document>  $documents
      * @return array<int, array{cycle: array<int, string>}>
      */
     private function findRedirectCycles(DocumentCollection $documents): array
@@ -187,7 +184,6 @@ final class CheckCommand extends Command
     /**
      * Build a slug → target map of every redirect whose destination is a known document.
      *
-     * @param  DocumentCollection<int, Document>  $documents
      * @return array<string, string>
      */
     private function buildRedirectMap(DocumentCollection $documents): array

@@ -42,7 +42,7 @@ Then open `/docs`.
   canonical URLs and JSON-LD for every page, with per-page front-matter overrides.
 - 🗺️ **Sitemap** — an auto-generated `sitemap.xml` at `{prefix}/sitemap.xml`,
   cached and invalidated alongside the rest of the docs cache.
-- ✅ **Fully tested** — Pest + Testbench, 100% coverage gate, PHPStan max, Pint.
+- ✅ **Fully tested** — Pest + Testbench, 100% coverage gate, PHPStan & Psalm max, Pint.
 
 ## Quick start
 

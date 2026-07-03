@@ -145,8 +145,6 @@ final class Laradocs
 
     /**
      * Every document, unsorted, as loaded from disk.
-     *
-     * @return DocumentCollection<int, Document>
      */
     public function all(): DocumentCollection
     {
@@ -212,7 +210,7 @@ final class Laradocs
                 $bucket['label'],
                 (new DocumentCollection($bucket['documents']))->ordered(),
             ))
-            ->sortBy(fn (Tag $tag): string => Str::lower($tag->label), SORT_NATURAL)
+            ->sortBy(fn (Tag $tag): string => mb_strtolower($tag->label, 'UTF-8'), SORT_NATURAL)
             ->values();
     }
 

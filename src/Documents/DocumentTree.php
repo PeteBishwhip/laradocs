@@ -7,6 +7,9 @@ namespace Laradocs\Documents;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
+/**
+ * @psalm-immutable
+ */
 final class DocumentTree
 {
     /**
@@ -19,15 +22,15 @@ final class DocumentTree
 
     /**
      * Assemble a multi-level tree from a flat collection of documents.
-     *
-     * @param  DocumentCollection<int, Document>  $documents
      */
     public static function fromDocuments(DocumentCollection $documents, string $indexName = '_index'): self
     {
-        /** @var array<string, TreeNode> $index */
+        /** @var array<string, array{title: string, document: Document|null, depth: int}> $index */
         $index = [];
-        /** @var array<int, TreeNode> $roots */
-        $roots = [];
+        /** @var array<string, array<int, string>> $childSlugs */
+        $childSlugs = [];
+        /** @var array<int, string> $rootSlugs */
+        $rootSlugs = [];
         $rootDocument = null;
 
         foreach ($documents as $document) {
@@ -40,9 +43,8 @@ final class DocumentTree
             }
 
             if (self::isIndexFile($document, $indexName)) {
-                $node = self::ensureSection($segments, $index, $roots);
-                $node->document = $document;
-                $node->title = $document->title();
+                $slug = self::ensureSection($segments, $index, $childSlugs, $rootSlugs);
+                $index[$slug] = ['title' => $document->title(), 'document' => $document, 'depth' => $index[$slug]['depth']];
 
                 continue;
             }
@@ -51,31 +53,28 @@ final class DocumentTree
 
             if (isset($index[$slug])) {
                 // A section already exists at this slug — attach the document.
-                $index[$slug]->document = $document;
-                $index[$slug]->title = $document->title();
+                $index[$slug] = ['title' => $document->title(), 'document' => $document, 'depth' => $index[$slug]['depth']];
 
                 continue;
             }
 
-            $leaf = new TreeNode($document->title(), $slug, $document, depth: count($segments));
-            $index[$slug] = $leaf;
+            $index[$slug] = ['title' => $document->title(), 'document' => $document, 'depth' => count($segments)];
 
             $parentSegments = array_slice($segments, 0, -1);
 
             if ($parentSegments === []) {
-                $roots[] = $leaf;
+                $rootSlugs[] = $slug;
             } else {
-                self::ensureSection($parentSegments, $index, $roots)->addChild($leaf);
+                $childSlugs[self::ensureSection($parentSegments, $index, $childSlugs, $rootSlugs)][] = $slug;
             }
         }
 
-        foreach ($roots as $root) {
-            $root->sortChildren();
-        }
+        $roots = array_map(
+            fn (string $slug): TreeNode => self::buildNode($slug, $index, $childSlugs),
+            $rootSlugs
+        );
 
-        usort($roots, function (TreeNode $a, TreeNode $b): int {
-            return [$a->order(), strtolower($a->title)] <=> [$b->order(), strtolower($b->title)];
-        });
+        usort($roots, self::compareNodes(...));
 
         return new self($roots, $rootDocument);
     }
@@ -101,7 +100,14 @@ final class DocumentTree
     /**
      * Top-level navigation nodes bucketed by their group metadata.
      *
+     * Illuminate's Collection isn't annotated for Psalm purity upstream, but
+     * `make`/`groupBy`/`map` only ever build fresh collections here — none of
+     * them touch `$this`.
+     *
      * @return Collection<string, array<int, TreeNode>>
+     *
+     * @psalm-suppress ImpureMethodCall
+     * @psalm-suppress MixedArgumentTypeCoercion
      */
     public function grouped(): Collection
     {
@@ -111,38 +117,65 @@ final class DocumentTree
     }
 
     /**
-     * Find or lazily create the section node for a path of segments.
+     * Recursively materialise an immutable node (and its children) from the
+     * builder state accumulated while walking the document list.
+     *
+     * @param  array<string, array{title: string, document: Document|null, depth: int}>  $index
+     * @param  array<string, array<int, string>>  $childSlugs
+     */
+    private static function buildNode(string $slug, array $index, array $childSlugs): TreeNode
+    {
+        $data = $index[$slug];
+
+        $children = array_map(
+            fn (string $childSlug): TreeNode => self::buildNode($childSlug, $index, $childSlugs),
+            $childSlugs[$slug] ?? []
+        );
+
+        usort($children, self::compareNodes(...));
+
+        return new TreeNode($data['title'], $slug, $data['document'], $children, $data['depth']);
+    }
+
+    /**
+     * Find or lazily create the section entry for a path of segments,
+     * returning its slug.
      *
      * @param  array<int, string>  $segments
-     * @param  array<string, TreeNode>  $index
-     * @param  array<int, TreeNode>  $roots
+     * @param  array<string, array{title: string, document: Document|null, depth: int}>  $index
+     * @param  array<string, array<int, string>>  $childSlugs
+     * @param  array<int, string>  $rootSlugs
      */
-    private static function ensureSection(array $segments, array &$index, array &$roots): TreeNode
+    private static function ensureSection(array $segments, array &$index, array &$childSlugs, array &$rootSlugs): string
     {
         $slug = implode('/', $segments);
 
         if (isset($index[$slug])) {
-            return $index[$slug];
+            return $slug;
         }
 
         $last = $segments[count($segments) - 1];
 
-        $node = new TreeNode(
-            title: Str::of($last)->replace('-', ' ')->title()->toString(),
-            slug: $slug,
-            depth: count($segments),
-        );
-        $index[$slug] = $node;
+        $index[$slug] = [
+            'title' => Str::of($last)->replace('-', ' ')->title()->toString(),
+            'document' => null,
+            'depth' => count($segments),
+        ];
 
         $parentSegments = array_slice($segments, 0, -1);
 
         if ($parentSegments === []) {
-            $roots[] = $node;
+            $rootSlugs[] = $slug;
         } else {
-            self::ensureSection($parentSegments, $index, $roots)->addChild($node);
+            $childSlugs[self::ensureSection($parentSegments, $index, $childSlugs, $rootSlugs)][] = $slug;
         }
 
-        return $node;
+        return $slug;
+    }
+
+    private static function compareNodes(TreeNode $a, TreeNode $b): int
+    {
+        return [$a->order(), strtolower($a->title)] <=> [$b->order(), strtolower($b->title)];
     }
 
     private static function isIndexFile(Document $document, string $indexName): bool

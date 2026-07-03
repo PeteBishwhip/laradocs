@@ -38,7 +38,8 @@
         "pestphp/pest-plugin-laravel": "^3.0 || ^4.0",
         "phpstan/phpstan": "^1.11 || ^2.0",
         "rector/rector": "^1.2 || ^2.0",
-        "simonhamp/the-og": "^0.8"
+        "simonhamp/the-og": "^0.8",
+        "vimeo/psalm": "^6.16"
     },
     "suggest": {
         "dedoc/scramble": "Generate your OpenAPI spec with Scramble instead of the built-in native generator. Requires ^0.13 for Laravel 13 support. Select with laradocs.openapi.generator.driver=scramble (or leave it on auto) after installing.",
@@ -94,6 +95,7 @@
         "lint": "vendor/bin/pint",
         "test:lint": "vendor/bin/pint --test",
         "analyse": "vendor/bin/phpstan analyse --memory-limit=1G",
+        "psalm": "vendor/bin/psalm",
         "refactor": "vendor/bin/rector",
         "test:refactor": "vendor/bin/rector --dry-run",
         "test:unit": "vendor/bin/pest",
@@ -101,6 +103,7 @@
         "test": [
             "@test:lint",
             "@analyse",
+            "@psalm",
             "@test:unit"
         ]
     },

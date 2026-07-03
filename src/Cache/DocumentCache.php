@@ -36,7 +36,6 @@ final class DocumentCache
      * setting still receive a real DocumentTree on a hit (Laravel would
      * otherwise return __PHP_Incomplete_Class for any cached object).
      *
-     * @param  DocumentCollection<int, Document>  $documents
      * @param  Closure(): DocumentTree  $build
      */
     public function rememberTree(DocumentCollection $documents, Closure $build): DocumentTree
@@ -71,7 +70,6 @@ final class DocumentCache
      * so it busts whenever any file changes. Stored as a string, which is
      * unaffected by `cache.serializable_classes`.
      *
-     * @param  DocumentCollection<int, Document>  $documents
      * @param  Closure(): string  $build
      */
     public function rememberSitemap(DocumentCollection $documents, Closure $build): string
@@ -83,7 +81,6 @@ final class DocumentCache
      * Cache the rendered feed XML (RSS or Atom), keyed by format + combined
      * document mtimes so it busts whenever any file changes.
      *
-     * @param  DocumentCollection<int, Document>  $documents
      * @param  Closure(): string  $build
      */
     public function rememberFeed(DocumentCollection $documents, string $format, Closure $build): string
@@ -96,7 +93,6 @@ final class DocumentCache
      * mtimes so it busts whenever any file changes. Stored as a plain array
      * of scalars, which is unaffected by `cache.serializable_classes`.
      *
-     * @param  DocumentCollection<int, Document>  $documents
      * @param  Closure(): array<int, array{slug: string, title: string, group: string, content: string, rank: float}>  $build
      * @return array<int, array{slug: string, title: string, group: string, content: string, rank: float}>
      */
@@ -130,8 +126,6 @@ final class DocumentCache
     /**
      * A stable hash of the collection's files and mtimes, shared by every
      * collection-wide artifact (tree, search index) so they all bust together.
-     *
-     * @param  DocumentCollection<int, Document>  $documents
      */
     private function signature(DocumentCollection $documents): string
     {

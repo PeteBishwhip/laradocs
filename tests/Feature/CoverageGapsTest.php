@@ -171,8 +171,7 @@ it('returns 404 for a known asset whose file is missing on disk', function () {
 
 it('reports a TreeNode as a section when it has any children', function () {
     $leaf = new TreeNode('Leaf', 'leaf');
-    $section = new TreeNode('Section', 'section');
-    $section->addChild($leaf);
+    $section = new TreeNode('Section', 'section', children: [$leaf]);
 
     expect($section->isSection())->toBeTrue()
         ->and($leaf->isSection())->toBeFalse();
