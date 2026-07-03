@@ -263,7 +263,7 @@ final class KatexExtension implements HtmlExtension, MarkdownExtension
         }
 
         $node = $this->nodeBin ?? 'node';
-        $cmd = $node . ' ' . escapeshellarg($tmpFile) . ' ' . escapeshellarg($input);
+        $cmd = escapeshellarg($node) . ' ' . escapeshellarg($tmpFile) . ' ' . escapeshellarg($input);
         $descriptors = [['pipe', 'r'], ['pipe', 'w'], ['pipe', 'w']];
         $proc = proc_open($cmd, $descriptors, $pipes);
 
