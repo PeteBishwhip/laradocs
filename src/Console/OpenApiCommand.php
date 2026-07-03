@@ -6,12 +6,10 @@ namespace Laradocs\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
-use Illuminate\Routing\Router;
-use Laradocs\OpenApi\Generator\RequestInspector;
-use Laradocs\OpenApi\Generator\ResponseInspector;
-use Laradocs\OpenApi\Generator\RouteCollector;
+use Laradocs\OpenApi\Generator\GeneratorOptions;
 use Laradocs\OpenApi\Generator\SpecBuilder;
-use Laradocs\OpenApi\Generator\SpecGenerator;
+use Laradocs\OpenApi\Generator\SpecGeneratorFactory;
+use Laradocs\OpenApi\OpenApiException;
 use Laradocs\Support\Config;
 
 /**
@@ -26,25 +24,39 @@ final class OpenApiCommand extends Command
 {
     protected $signature = 'laradocs:openapi
         {--output= : Path to write the generated spec to (overrides config)}
+        {--driver= : Generator driver (auto|native|scramble — overrides config)}
         {--prefix= : Only include routes under this URI prefix}
         {--middleware= : Only include routes carrying this middleware}
         {--force : Overwrite the output file if it already exists}';
 
     protected $description = 'Generate an OpenAPI spec from your API routes, FormRequests and Resources';
 
-    public function handle(Router $router, Filesystem $files): int
+    public function handle(Filesystem $files): int
     {
         $prefix = $this->resolve('prefix', 'laradocs.openapi.generator.prefix', 'api');
         $middleware = $this->resolve('middleware', 'laradocs.openapi.generator.middleware', 'api');
+        $driver = $this->resolveDriver();
 
-        $generator = new SpecGenerator(
-            routes: new RouteCollector($router, $prefix, $middleware),
-            requests: new RequestInspector,
-            responses: new ResponseInspector,
+        // Container-resolved so tests can bind a substitute factory.
+        $factory = $this->laravel->make(SpecGeneratorFactory::class);
+
+        $options = new GeneratorOptions(
             title: Config::string('laradocs.openapi.generator.title', Config::string('laradocs.openapi.title', 'API')),
             version: Config::string('laradocs.openapi.generator.version', '1.0.0'),
             serverUrl: $this->serverUrl(),
+            description: Config::nullableString('laradocs.openapi.generator.description'),
+            security: Config::array('laradocs.openapi.generator.security', []),
+            prefix: $prefix,
+            middleware: $middleware,
         );
+
+        try {
+            $generator = $factory->make($driver, $options);
+        } catch (OpenApiException $e) {
+            $this->components->error($e->getMessage());
+
+            return self::FAILURE;
+        }
 
         $builder = new SpecBuilder($generator, $files);
         $spec = $builder->build();
@@ -86,6 +98,21 @@ final class OpenApiCommand extends Command
         $configured = Config::nullableString($configKey);
 
         return $configured ?? $default;
+    }
+
+    /**
+     * Resolve the generator driver from the command option, falling back to
+     * config then the `auto` default (Scramble when installed, else native).
+     */
+    private function resolveDriver(): string
+    {
+        $option = $this->option('driver');
+
+        if (is_string($option) && $option !== '') {
+            return $option;
+        }
+
+        return Config::nullableString('laradocs.openapi.generator.driver') ?? 'auto';
     }
 
     private function serverUrl(): ?string

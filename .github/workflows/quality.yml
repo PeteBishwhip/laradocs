@@ -49,10 +49,10 @@ jobs:
           extensions: dom, libxml, mbstring
           coverage: xdebug
       - run: composer install --prefer-dist --no-interaction
-      # laravel/mcp is an optional (suggested) dependency, so it isn't part of
-      # the base install. Pull it in here so the MCP feature is exercised and
-      # counted towards the 100% coverage requirement.
+      # Optional suggested dependencies — pull in so their features are exercised
+      # and counted towards the 100% coverage requirement.
       - run: composer require "laravel/mcp:^0.8" --no-interaction --no-progress
+      - run: composer require "dedoc/scramble:^0.13" --no-interaction --no-progress
       - name: Enforce 100% coverage and write a Clover report
         env:
           XDEBUG_MODE: coverage

@@ -355,6 +355,31 @@ php artisan laradocs:openapi \
 | `--middleware` | `openapi.generator.middleware` | Only include routes carrying this middleware name. Pass an empty string to disable the filter. |
 | `--force` | — | Overwrite the output file if it already exists (otherwise the command aborts). |
 
+### Using Scramble
+
+By default the command uses its own built-in route inspector. If you prefer to
+let [dedoc/scramble](https://scramble.dedoc.co) generate the spec, install it
+and pass `--driver=scramble`:
+
+```bash
+composer require dedoc/scramble
+php artisan laradocs:openapi --driver=scramble
+```
+
+The `auto` driver (the default) picks Scramble automatically when it is
+installed, and falls back to the native generator when it is not — so existing
+projects that already have Scramble can adopt it without any extra flags.
+
+> [!NOTE]
+> Scramble `^0.13` or higher is required for Laravel 13 support. Earlier
+> releases only support Laravel 10–12.
+
+You can also fix the driver permanently via config or environment variable:
+
+```dotenv
+LARADOCS_OPENAPI_DRIVER=scramble
+```
+
 The `generator` config block holds the defaults and a couple of values with no
 flag equivalent:
 

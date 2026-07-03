@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
+use Laradocs\OpenApi\Generator\SpecGeneratorFactory;
 use Laradocs\Tests\Fixtures\Api\OrderController;
 use Symfony\Component\Yaml\Yaml;
 
@@ -66,6 +67,36 @@ it('honours the prefix filter option', function (): void {
     $spec = Yaml::parseFile($this->output);
 
     expect($spec['paths'] ?? [])->toBe([]);
+});
+
+it('generates a spec with the native driver', function (): void {
+    $exit = Artisan::call('laradocs:openapi', ['--output' => $this->output, '--driver' => 'native']);
+
+    expect($exit)->toBe(0)
+        ->and(is_file($this->output))->toBeTrue();
+
+    /** @var array<string, mixed> $spec */
+    $spec = Yaml::parseFile($this->output);
+
+    expect($spec['openapi'])->toBe('3.0.3');
+});
+
+it('fails with install instructions when the scramble driver is requested but absent', function (): void {
+    // Pin the factory's availability probe to false so the missing-package
+    // path is exercised even on hosts (like CI) where Scramble IS installed.
+    $this->app->bind(SpecGeneratorFactory::class, fn (): SpecGeneratorFactory => new class(app('router')) extends SpecGeneratorFactory
+    {
+        protected function scrambleAvailable(): bool
+        {
+            return false;
+        }
+    });
+
+    $exit = Artisan::call('laradocs:openapi', ['--output' => $this->output, '--driver' => 'scramble']);
+
+    expect($exit)->toBe(1)
+        ->and(Artisan::output())->toContain('dedoc/scramble')
+        ->and(is_file($this->output))->toBeFalse();
 });
 
 it('uses the configured server url and output path when no options are given', function (): void {

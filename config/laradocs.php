@@ -814,6 +814,16 @@ return [
     |
     | "generator" Settings for the `laradocs:openapi` command, which scaffolds a
     |             spec from your routes / FormRequests / Resources:
+    |   "driver"      Which generation backend to use: auto | native | scramble.
+    |                   auto     — use Scramble (dedoc/scramble ^0.13) when it's
+    |                              installed, otherwise fall back to the built-in
+    |                              native generator.
+    |                   native   — force the built-in, dependency-free generator.
+    |                   scramble — force Scramble. Errors out if the package
+    |                              isn't installed rather than silently falling
+    |                              back, so a misconfiguration is caught early.
+    |                              Requires dedoc/scramble ^0.13 for Laravel 13.
+    |                 Set LARADOCS_OPENAPI_DRIVER to override.
     |   "prefix"      Only include routes whose URI starts with this prefix.
     |   "middleware"  Only include routes carrying this middleware name.
     |   "output"      Where the generated spec is written (relative paths are
@@ -821,7 +831,10 @@ return [
     |   "server_url"  The base server URL recorded in the spec (defaults to
     |                 app.url when null).
     |   "title"       The spec's info.title (falls back to "title" above).
+    |   "description" The spec's info.description (null omits it).
     |   "version"     The spec's info.version.
+    |   "security"    Security schemes advertised in the spec, e.g. a bearer token
+    |                 or API key. An empty array declares no authentication.
     |
     */
 
@@ -835,12 +848,15 @@ return [
         'render_markdown_descriptions' => true,
 
         'generator' => [
+            'driver' => env('LARADOCS_OPENAPI_DRIVER', 'auto'),
             'prefix' => 'api',
             'middleware' => 'api',
             'output' => 'docs/api/openapi.yaml',
             'server_url' => env('LARADOCS_OPENAPI_SERVER_URL'),
             'title' => null,
+            'description' => null,
             'version' => '1.0.0',
+            'security' => [],
         ],
     ],
 

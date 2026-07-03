@@ -45,6 +45,7 @@ default:
 |---------|---------|
 | `devizzent/cebe-php-openapi` | OpenAPI 3.0/3.1 spec parsing and native reference page rendering — see [OpenAPI](/docs/content/openapi) |
 | `symfony/yaml` | YAML serialisation used by the `laradocs:openapi` spec generator command — see [OpenAPI](/docs/content/openapi#generating-a-spec-from-your-routes) |
+| `dedoc/scramble` | Scramble-backed OpenAPI spec generation via `--driver=scramble`. Requires `^0.13` for Laravel 13 support — see [OpenAPI](/docs/content/openapi#using-scramble) |
 | `laravel/scout` | Full-text search powered by Meilisearch, Typesense, or Algolia — see [Search](/docs/guide/search) |
 | `simonhamp/the-og` | Automatic Open Graph / social card image generation — see [Open Graph images](/docs/guide/seo#open-graph-images) |
 | `nyholm/psr7` | PSR-17 HTTP factory required by the Meilisearch SDK when using Scout — see [Search](/docs/guide/search#laravel-scout) |

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Laradocs\OpenApi\Generator;
 
 use Illuminate\Support\Str;
+use Laradocs\Contracts\OpenApiSpecGenerator;
 
 /**
  * Assembles a complete OpenAPI 3.0 document (as a plain nested array) from the
@@ -15,7 +16,7 @@ use Illuminate\Support\Str;
  * route surface and whatever schema could be reflected, leaving descriptions and
  * fine detail for the developer.
  */
-final class SpecGenerator
+final class SpecGenerator implements OpenApiSpecGenerator
 {
     public function __construct(
         private readonly RouteCollector $routes,

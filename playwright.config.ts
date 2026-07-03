@@ -26,6 +26,19 @@ const VERSIONED_PATH = resolve(repoRoot, 'tests/e2e/fixtures/versioned');
 export const VERSIONING_SERVER = 'http://127.0.0.1:8004';
 
 /**
+ * The `openapi` project boots a dedicated `testbench serve` instance whose docs
+ * source is the hand-crafted spec tree in workbench/docs/api/ (a single
+ * openapi.yaml — an OpenAPI 3.1 fixture). Because the OpenApiLoader searches the
+ * docs *root* for the spec and the reference pages mount under base_slug `api`,
+ * pointing LARADOCS_PATH at workbench/docs/api serves the fixture at /docs/api.
+ * LARADOCS_OPENAPI flips laradocs.openapi.enabled on so the Pillar A pages
+ * render instead of 404ing. Kept on its own server so it can't collide with the
+ * markdown docs/api/ section the default server exposes.
+ */
+const OPENAPI_PATH = resolve(repoRoot, 'workbench/docs/api');
+export const OPENAPI_SERVER = 'http://127.0.0.1:8005';
+
+/**
  * The search "driver" defaults to `auto`, which prefers Laravel Scout when it's
  * installed (it is, in vendor/). Under Testbench serve the Scout collection
  * engine blows up (SearchableDocument::query() is undefined), 500-ing both the
@@ -140,6 +153,18 @@ export default defineConfig({
         LARADOCS_VERSION_OUTDATED_BANNER: 'true',
       },
     },
+    {
+      command: 'composer build && vendor/bin/testbench serve --ansi --port=8005',
+      // Health-check /docs/api (the OpenAPI overview) directly: with only the
+      // spec in the docs root there is no root index page to poll.
+      url: `${OPENAPI_SERVER}/docs/api`,
+      reuseExistingServer: !process.env.CI,
+      env: {
+        LARADOCS_PATH: OPENAPI_PATH,
+        LARADOCS_SEARCH_DRIVER,
+        LARADOCS_OPENAPI: 'true',
+      },
+    },
   ],
   projects: [
     {
@@ -147,7 +172,7 @@ export default defineConfig({
       // mobile viewport; banner.spec.ts and locale.spec.ts are excluded and
       // handled by their dedicated projects below.
       name: 'default',
-      testIgnore: /banner\.spec\.ts|locale\.spec\.ts|versioning\.spec\.ts/,
+      testIgnore: /banner\.spec\.ts|locale\.spec\.ts|versioning\.spec\.ts|openapi\.spec\.ts/,
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 390, height: 844 },
@@ -178,6 +203,17 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         baseURL: `${VERSIONING_SERVER}/docs`,
+      },
+    },
+    {
+      // Talks to the OpenAPI-enabled server on port 8005, whose docs root is the
+      // workbench/docs/api spec fixture. baseURL targets /docs so the specs can
+      // navigate to /docs/api (the reference overview) and the operation pages.
+      name: 'openapi',
+      testMatch: /openapi\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: `${OPENAPI_SERVER}/docs`,
       },
     },
   ],
