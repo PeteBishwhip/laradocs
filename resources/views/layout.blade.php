@@ -1,4 +1,5 @@
 @use('Laradocs\Routing\DocumentUrl')
+@use('Laradocs\Support\CssValue')
 @use('Laradocs\Support\Version')
 @php
     /** @var array<string, mixed> $brand */
@@ -10,11 +11,11 @@
 
     $defaultTheme = config('laradocs.ui.theme', 'auto');
     $preset = config('laradocs.ui.preset', 'classic');
-    $accent = config('laradocs.ui.accent');
-    $contentWidth = config('laradocs.ui.content_width');
-    $fontSans = $fonts['sans'] ?? null;
-    $fontMono = $fonts['mono'] ?? null;
-    $fontDisplay = $fonts['display'] ?? null;
+    $accent = CssValue::customProperty(config('laradocs.ui.accent'));
+    $contentWidth = CssValue::customProperty(config('laradocs.ui.content_width'));
+    $fontSans = CssValue::customProperty($fonts['sans'] ?? null);
+    $fontMono = CssValue::customProperty($fonts['mono'] ?? null);
+    $fontDisplay = CssValue::customProperty($fonts['display'] ?? null);
     $title = $brand['title'] ?? 'Documentation';
     $tagline = $brand['tagline'] ?? null;
     $loadWebfonts = (bool) config('laradocs.ui.webfonts', true);
@@ -55,7 +56,7 @@
             } catch (e) {}
         })();
     </script>
-    @if(Version::current() !== null)<script>window.__laradocsVersion = '{{ Version::current() }}';</script>@endif
+    @if(Version::current() !== null)<script>window.__laradocsVersion = @json(Version::current());</script>@endif
     @if(config('laradocs.locale.cookie'))<script>window.__laradocsCookies = true;</script>@endif
     @if($loadWebfonts)
         <link rel="preconnect" href="https://fonts.googleapis.com">

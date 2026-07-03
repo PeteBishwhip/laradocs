@@ -446,7 +446,7 @@ it('emits the active version to the page head when a version is active', functio
 
     $this->get('/docs/v1/getting-started')
         ->assertOk()
-        ->assertSee("window.__laradocsVersion = 'v1';", false);
+        ->assertSee('window.__laradocsVersion = "v1";', false);
 });
 
 it('does not emit the version hint when no version is active', function () {
