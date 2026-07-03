@@ -47,23 +47,6 @@ jobs:
             testbench: '10.*'
           - laravel: '13.*'
             testbench: '11.*'
-          # Dedicated jobs that install dedoc/scramble (^0.13 supports L11–L13)
-          # so the Scramble integration tests actually run rather than being skipped.
-          - php: '8.3'
-            laravel: '11.*'
-            testbench: '9.*'
-            stability: prefer-stable
-            scramble: true
-          - php: '8.4'
-            laravel: '12.*'
-            testbench: '10.*'
-            stability: prefer-stable
-            scramble: true
-          - php: '8.4'
-            laravel: '13.*'
-            testbench: '11.*'
-            stability: prefer-stable
-            scramble: true
 
     name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }} - ${{ matrix.stability }}
 
@@ -84,7 +67,6 @@ jobs:
           composer update --${{ matrix.stability }} --prefer-dist --no-interaction
 
       - name: Install Scramble
-        if: matrix.scramble
         run: composer require "dedoc/scramble:^0.13" --no-interaction --no-progress
 
       - name: Execute tests
