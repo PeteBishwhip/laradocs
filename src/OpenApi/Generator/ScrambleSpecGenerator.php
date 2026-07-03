@@ -100,15 +100,8 @@ final class ScrambleSpecGenerator implements OpenApiSpecGenerator
      */
     public function generate(): array
     {
-        // @codeCoverageIgnoreStart
-        // Everything from here on delegates to dedoc/scramble, an optional
-        // dependency that is absent from CI, so these lines cannot be executed
-        // (nor meaningfully asserted) without installing the package. The
-        // equivalent Scramble-missing behaviour is covered at the factory level
-        // by OpenApiGeneratorFactoryTest; this adapter's constructor is covered
-        // when the factory builds it with Scramble marked available.
         if (! class_exists('\Dedoc\Scramble\Generator')) {
-            throw new OpenApiException(SpecGeneratorFactory::MISSING_MESSAGE);
+            throw new OpenApiException(SpecGeneratorFactory::MISSING_MESSAGE); // @codeCoverageIgnore
         }
 
         $routes = $this->matchingRoutes();
@@ -186,7 +179,11 @@ final class ScrambleSpecGenerator implements OpenApiSpecGenerator
         $config = ['info' => $info];
 
         if ($this->serverUrl !== null && $this->serverUrl !== '') {
-            $config['servers'] = [['url' => rtrim($this->serverUrl, '/')]];
+            // Scramble's `servers` config is a description => URL-string map (it
+            // passes each value through url()); an OpenAPI-style ['url' => ...]
+            // object would reach url() as an array and blow up. Key the single
+            // server with an empty description.
+            $config['servers'] = ['' => rtrim($this->serverUrl, '/')];
         }
 
         return $config;
@@ -213,6 +210,5 @@ final class ScrambleSpecGenerator implements OpenApiSpecGenerator
         }
 
         return $spec;
-        // @codeCoverageIgnoreEnd
     }
 }

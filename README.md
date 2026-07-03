@@ -16,6 +16,14 @@ php artisan laradocs:install
 
 Then open `/docs`.
 
+## Requirements
+
+| | Minimum | Notes |
+|---|---|---|
+| PHP | 8.2 | |
+| Laravel | 11.14 | 12 and 13 fully supported |
+| dedoc/scramble | 0.13 | Optional — only needed for the `scramble` OpenAPI driver |
+
 ## Features
 
 - 📁 **Multi-level file structure** — nested folders become nested navigation.
@@ -88,6 +96,7 @@ Laradocs::macro('tweet', fn (array $args) => "<a href=\"...\">@{$args['user']}</
 | `make:doc {name}` | Scaffold a new markdown page with front-matter |
 | `laradocs:cache` | Pre-render and cache every page |
 | `laradocs:clear` | Clear the documentation cache |
+| `laradocs:openapi` | Generate an OpenAPI spec from your routes (`--driver=auto\|native\|scramble`) |
 
 ## Publishing
 

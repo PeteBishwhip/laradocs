@@ -815,13 +815,14 @@ return [
     | "generator" Settings for the `laradocs:openapi` command, which scaffolds a
     |             spec from your routes / FormRequests / Resources:
     |   "driver"      Which generation backend to use: auto | native | scramble.
-    |                   auto     — use Scramble (dedoc/scramble) when it's
+    |                   auto     — use Scramble (dedoc/scramble ^0.13) when it's
     |                              installed, otherwise fall back to the built-in
     |                              native generator.
     |                   native   — force the built-in, dependency-free generator.
     |                   scramble — force Scramble. Errors out if the package
     |                              isn't installed rather than silently falling
     |                              back, so a misconfiguration is caught early.
+    |                              Requires dedoc/scramble ^0.13 for Laravel 13.
     |                 Set LARADOCS_OPENAPI_DRIVER to override.
     |   "prefix"      Only include routes whose URI starts with this prefix.
     |   "middleware"  Only include routes carrying this middleware name.

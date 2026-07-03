@@ -81,6 +81,10 @@ it('generates a spec with the native driver', function (): void {
 });
 
 it('fails with install instructions when the scramble driver is requested but absent', function (): void {
+    if (class_exists('\Dedoc\Scramble\Generator')) {
+        $this->markTestSkipped('dedoc/scramble is installed, so the missing-package path cannot be exercised.');
+    }
+
     $exit = Artisan::call('laradocs:openapi', ['--output' => $this->output, '--driver' => 'scramble']);
 
     expect($exit)->toBe(1)
