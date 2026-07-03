@@ -166,6 +166,21 @@ it('returns empty string when the SVG file does not exist', function () {
     $files->deleteDirectory($root);
 });
 
+it('returns empty string for unsafe heroicon names', function () {
+    $root = sys_get_temp_dir() . '/laradocs-heroicons-' . bin2hex(random_bytes(4));
+    $files = new Filesystem;
+    $files->ensureDirectoryExists($root . '/24');
+    $files->put($root . '/24/secret.svg', '<svg></svg>');
+
+    $provider = new HeroiconProvider($root, $files);
+
+    expect($provider('../secret'))->toBe('')
+        ->and($provider('solid/check'))->toBe('')
+        ->and($provider('check.svg'))->toBe('');
+
+    $files->deleteDirectory($root);
+});
+
 it('strips the XML declaration from returned SVG', function () {
     $root = sys_get_temp_dir() . '/laradocs-heroicons-' . bin2hex(random_bytes(4));
     $files = new Filesystem;

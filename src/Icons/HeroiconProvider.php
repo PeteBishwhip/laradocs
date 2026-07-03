@@ -25,6 +25,10 @@ final class HeroiconProvider
 
     public function __invoke(string $name, string $variant = 'outline'): string
     {
+        if (! $this->validName($name)) {
+            return '';
+        }
+
         $variant = in_array($variant, ['outline', 'solid', 'mini', 'micro'], true)
             ? $variant
             : 'outline';
@@ -44,6 +48,11 @@ final class HeroiconProvider
         $svg = $this->files->get($path);
 
         return trim((string) preg_replace('/<\?xml[^>]*\?>\s*/', '', $svg));
+    }
+
+    private function validName(string $name): bool
+    {
+        return preg_match('/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i', $name) === 1;
     }
 
     /**
