@@ -186,6 +186,7 @@ are themselves built with Laradocs. Highlights:
   [Rich content](https://laradocs.dev/docs/features/rich-content)
 - [Customising the UI](https://laradocs.dev/docs/customising-the-ui) ·
   [Customising stubs](https://laradocs.dev/docs/customising-stubs)
+- [Migration guide: 0.x → 1.0](https://laradocs.dev/docs/migration-guide)
 
 The source for those pages lives in [`docs/`](docs); browse there or serve a
 local copy with `composer serve`.

@@ -5,6 +5,10 @@ All notable changes to `laradocs` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+> **Upgrading from a 0.x release?** See the
+> [Migration Guide: 0.x → 1.0](https://laradocs.dev/docs/migration-guide) for
+> every breaking change since `0.1.0`, with before/after snippets.
+
 ## [Unreleased]
 
 ### Added
@@ -33,6 +37,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Both produce WCAG 2.1 AA-compliant tab UIs with keyboard navigation, cross-page
   synchronisation by group name, and `localStorage` persistence. Disable with
   `parser.extensions.tabs => false`; configure via the `tabs` config block.
+
+### Changed
+- Froze the public PHP API surface ahead of `1.0`: `Document`, `DocumentTree`,
+  `DocumentCollection`, `Tag` and `Metadata` are documented as the supported
+  value objects, and Psalm now runs at maximum strictness alongside PHPStan to
+  enforce it. See the "Public API surface" and "Deprecation policy" sections
+  of `CONTRIBUTING.md`.
+- **BREAKING:** `TreeNode` is now fully immutable — its properties are
+  `readonly` and the `addChild()` / `sortChildren()` mutator methods are
+  removed. Code that builds a `TreeNode` tree by hand (a custom
+  `DocumentLoader`, a test helper, a hand-rolled nav renderer) must pass the
+  full, pre-sorted `children` array to the constructor instead. See
+  [Frozen `TreeNode` API](https://laradocs.dev/docs/migration-guide#frozen-treenode-api)
+  in the migration guide.
 
 ## [0.6.1] - 2026-06-25
 

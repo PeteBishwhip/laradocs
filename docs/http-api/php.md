@@ -47,8 +47,8 @@ extras:
 |---|---|
 | `visible()` | Filter out `hidden: true` documents. |
 | `ordered()` | Sort by `order:` then `title:`. |
-| `grouped()` | Bucket by `group:` (`Collection<string, Collection>`). |
-| `tagged($tag)` | Filter to docs with the given tag. |
+| `byGroup()` | Bucket by `group:` (`Collection<string, Collection>`). |
+| `byTag($tag)` | Filter to docs with the given tag. |
 | `findBySlug($slug)` | Locate a single doc, or `null`. |
 
 ### `DocumentTree`
