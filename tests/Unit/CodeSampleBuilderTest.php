@@ -138,4 +138,7 @@ it('escapes quotes in string values per language', function () use ($builder) {
 
     expect($samples['PHP'])->toContain("O\\'Brien");        // single-quote escaped for PHP
     expect($samples['Python'])->toContain('\\"x\\"');       // double-quote escaped for Python
+    // The apostrophe must be escaped so it doesn't terminate cURL's shell
+    // single-quoted -d body: ' becomes '\''.
+    expect($samples['cURL'])->toContain("O'\\''Brien");
 });

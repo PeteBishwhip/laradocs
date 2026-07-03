@@ -67,8 +67,12 @@ final class CodeSampleBuilder
         $lines[] = '  -H "Accept: application/json"' . ($body !== null ? ' \\' : '');
 
         if ($body !== null) {
+            $json = $this->render($body, 'json', 1);
+            // Escape any apostrophes so they don't terminate the shell
+            // single-quoted string: ' becomes '\''.
+            $json = str_replace("'", "'\\''", $json);
             $lines[] = '  -H "Content-Type: application/json" \\';
-            $lines[] = "  -d '" . $this->render($body, 'json', 1) . "'";
+            $lines[] = "  -d '" . $json . "'";
         }
 
         return implode("\n", $lines);
