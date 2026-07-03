@@ -7,6 +7,7 @@ namespace Laradocs\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
+use Illuminate\Support\Facades\Cookie;
 use Laradocs\Routing\DocumentUrl;
 use Laradocs\Support\Config;
 use Laradocs\Support\Locale;
@@ -71,13 +72,36 @@ final class SetDocsLocale
             }
         }
 
-        if (Locale::cookieEnabled() && Locale::explicitChoice($request) !== null) {
-            // Remember an explicit choice for a year so navigation keeps the
-            // selected language without re-appending the query parameter.
-            $response->headers->setCookie(cookie('laradocs_locale', $locale, 60 * 24 * 365));
-        }
+        $this->applyCookie($request, $response, $locale);
 
         return $response;
+    }
+
+    /**
+     * Write, or drop, the persistence cookie on the outgoing response.
+     *
+     * Written only when consent is granted (`Locale::cookieEnabled()`) and the
+     * visitor made an explicit choice on this request. When consent is not (or
+     * no longer) granted, a cookie left over from a previous, since-withdrawn
+     * consent is explicitly cleared rather than merely ignored — so a visitor
+     * who revokes consent doesn't keep carrying a dead preferences cookie.
+     */
+    private function applyCookie(Request $request, Response $response, string $locale): void
+    {
+        if (Locale::cookieEnabled()) {
+            if (Locale::explicitChoice($request) !== null) {
+                // Remember an explicit choice for a year so navigation keeps
+                // the selected language without re-appending the query
+                // parameter.
+                $response->headers->setCookie(cookie('laradocs_locale', $locale, 60 * 24 * 365));
+            }
+
+            return;
+        }
+
+        if ($request->hasCookie('laradocs_locale')) {
+            $response->headers->setCookie(Cookie::forget('laradocs_locale'));
+        }
     }
 
     /**
@@ -183,9 +207,7 @@ final class SetDocsLocale
 
         $response = redirect()->to($target, 301);
 
-        if (Locale::cookieEnabled()) {
-            $response->headers->setCookie(cookie('laradocs_locale', $choice, 60 * 24 * 365));
-        }
+        $this->applyCookie($request, $response, $choice);
 
         return $response;
     }

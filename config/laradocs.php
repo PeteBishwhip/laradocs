@@ -72,8 +72,13 @@ return [
     |                   without re-appending ?lang=. Disabled by default — EU
     |                   deployments require cookie consent before setting
     |                   non-essential cookies. Enable once your site has an
-    |                   appropriate consent mechanism in place, or see GitHub
-    |                   issue #95 for a first-class consent integration.
+    |                   appropriate consent mechanism in place, or — better —
+    |                   drive it from that mechanism directly with
+    |                   `Laradocs::cookiesEnabled(fn () => ...)`, which takes
+    |                   priority over this flag and is re-evaluated on every
+    |                   request (so a stale cookie is cleared automatically
+    |                   the moment consent is withdrawn). See the
+    |                   "Cookie persistence" section of the Localisation guide.
     |                   Set LARADOCS_LOCALE_COOKIE=true to enable.
     | "detect_browser"  Honour the browser's Accept-Language header for
     |                   first-time visitors who haven't made an explicit choice.

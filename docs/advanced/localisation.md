@@ -216,9 +216,81 @@ reader's choice survives navigation, back/forward, and new tabs. The cookie is
 **only** set when the visitor makes an explicit choice; browsing without
 selecting a language never writes the cookie.
 
-> A first-class consent integration is tracked in [issue #95](https://github.com/PeteBishwhip/laradocs/issues/95).
-> Until that ships, use your application's own consent library with Option B
-> above to gate the cookie on an affirmative visitor choice.
+**Withdrawal.** The callback (or config flag) is re-evaluated on every request,
+and it also gates *reading* the cookie, not just writing it. So the moment it
+starts returning `false` — consent withdrawn, session expired, whatever the
+reason — a `laradocs_locale` cookie left over from before is actively cleared
+on the very next request, rather than merely ignored. No extra wiring needed.
+
+### Integrating with a consent management platform
+
+**[whitecube/laravel-cookie-consent](https://github.com/whitecube/laravel-cookie-consent)**
+registers cookies under categories and exposes a `Cookies` facade to check
+consent for one. Register `laradocs_locale` under your "preferences" category
+in its config, then gate Laradocs on the same check:
+
+```php
+// App\Providers\AppServiceProvider::boot()
+use Laradocs\Facades\Laradocs;
+use Whitecube\LaravelCookieConsent\Facades\Cookies;
+
+Laradocs::cookiesEnabled(fn () => Cookies::hasConsentFor('laradocs_locale'));
+```
+
+**Cookiebot** exposes consent state on `window.Cookiebot.consent` and fires a
+`CookiebotOnAccept` / `CookiebotOnDecline` event whenever it changes. Read the
+same signal from PHP via the cookie Cookiebot itself sets:
+
+```php
+Laradocs::cookiesEnabled(function () {
+    $raw = request()->cookie('CookieConsent'); // Cookiebot's own consent cookie
+    parse_str(str_replace(['{', '}', '\''], '', (string) $raw), $consent);
+
+    return ($consent['preferences'] ?? 'false') === 'true';
+});
+```
+
+**OneTrust** writes the visitor's accepted category IDs into an
+`OnetrustActiveGroups` cookie (a comma-separated list, e.g. `,C0001,C0003,`) and
+fires a `OneTrustGroupsUpdated` event on change. Check whether your
+Functional/Preferences category ID (configured in the OneTrust dashboard) is
+present:
+
+```php
+Laradocs::cookiesEnabled(fn () => str_contains(
+    (string) request()->cookie('OnetrustActiveGroups'),
+    ',C0003,', // replace with your Preferences category ID
+));
+```
+
+In every case, `Laradocs::cookiesEnabled()` only needs to answer "is Preferences
+consent currently granted?" — how that's determined is entirely up to the
+platform you've integrated.
+
+### Instant persistence without a reload
+
+Once consent is granted, the cookie is written on the *next* navigation
+automatically — every internal link already carries the active locale, so a
+normal click is all it takes. If your consent banner needs to persist the
+choice immediately, without waiting for the visitor to click anywhere, call the
+built-in JSON-free helper endpoint from the banner's "accepted" callback:
+
+```js
+// Cookiebot example — fires as soon as the visitor accepts.
+window.addEventListener('CookiebotOnAccept', function () {
+    if (Cookiebot.consent.preferences) {
+        fetch('/docs/_laradocs/consent?locale=' + document.documentElement.lang, {
+            credentials: 'same-origin',
+        });
+    }
+});
+```
+
+`GET {prefix}/_laradocs/consent?locale=<code>` re-checks `cookiesEnabled()` on
+the server and either sets the `laradocs_locale` cookie to `<code>` (when
+consent is granted and `<code>` is one of the available locales) or clears any
+existing cookie (when it isn't) — no page render, no redirect, just a 204
+response with a `Set-Cookie` header.
 
 ### Navigation across pages
 

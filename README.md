@@ -113,6 +113,60 @@ php artisan vendor:publish --tag=laradocs-lang
 composer test
 ```
 
+## Local development (workbench)
+
+The package ships an [orchestra/testbench](https://packages.tools/testbench)
+**workbench** — a disposable Laravel app used to run Laradocs as a real,
+browsable site while you work on the package itself, rather than through Pest
+alone.
+
+```bash
+composer serve
+```
+
+This builds the workbench (`testbench workbench:build`) and boots it at
+`/docs`. The generated app lives at `vendor/orchestra/testbench-core/laravel`
+— it's regenerated on demand and isn't committed to git.
+
+**By default the workbench has no docs content**, so `/docs` renders an empty
+state. Point it at the real docs in this repo (so edits under `docs/` show up
+immediately, thanks to Laradocs' mtime-based cache) by adding to the
+workbench's `.env`:
+
+```dotenv
+# vendor/orchestra/testbench-core/laravel/.env
+LARADOCS_PATH=/absolute/path/to/laradocs/docs
+```
+
+Or seed your own throwaway fixtures directly under the workbench's `docs/`
+and `lang/vendor/laradocs/<locale>/` — useful for exercising a specific
+feature (a locale, a version, a front-matter combination) without touching
+the real docs. Any `config/laradocs.php` option can be set via the
+workbench's own `.env`, exactly as in a consumer app — e.g.
+`LARADOCS_LOCALE_AVAILABLE={"en":"English","fr":"Français"}` to test
+localisation.
+
+For finer control than `composer serve` gives you — e.g. driving the app with
+`curl` instead of a browser — build and serve it yourself:
+
+```bash
+composer run build              # just (re)build the workbench, don't serve
+cd vendor/orchestra/testbench-core/laravel
+php artisan config:clear        # pick up .env changes — Laravel may have cached the old config
+php artisan serve               # or: php -S 127.0.0.1:8000 -t public public/index.php
+```
+
+Two gotchas worth knowing:
+
+- **`composer dump-autoload` wipes the workbench.** The package's
+  `post-autoload-dump` hook runs `testbench package:purge-skeleton`, which
+  deletes the generated app — including any `.env` changes or fixtures you
+  added. Re-run `composer run build` (or `composer serve`) afterwards to
+  regenerate it.
+- **Config changes need `config:clear`.** After editing the workbench's
+  `.env`, run `php artisan config:clear` inside it if the change doesn't
+  seem to take effect.
+
 ## Documentation
 
 The full docs live at **[laradocs.dev/docs](https://laradocs.dev/docs)** — and
