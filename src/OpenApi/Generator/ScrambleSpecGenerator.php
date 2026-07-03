@@ -81,18 +81,9 @@ final class ScrambleSpecGenerator implements OpenApiSpecGenerator
      */
     private const API = 'laradocs';
 
-    /**
-     * @param  array<int|string, mixed>  $security
-     */
     public function __construct(
         private readonly Router $router,
-        private readonly string $title = 'API',
-        private readonly string $version = '1.0.0',
-        private readonly ?string $serverUrl = null,
-        private readonly ?string $description = null,
-        private readonly array $security = [],
-        private readonly ?string $prefix = 'api',
-        private readonly ?string $middleware = 'api',
+        private readonly GeneratorOptions $options = new GeneratorOptions,
     ) {}
 
     /**
@@ -148,15 +139,18 @@ final class ScrambleSpecGenerator implements OpenApiSpecGenerator
      */
     private function matches(Route $route): bool
     {
-        if ($this->prefix !== null && $this->prefix !== '') {
-            $needle = trim($this->prefix, '/');
+        $prefix = $this->options->prefix;
+        $middleware = $this->options->middleware;
+
+        if ($prefix !== null && $prefix !== '') {
+            $needle = trim($prefix, '/');
 
             if (! str_starts_with(trim($route->uri(), '/'), $needle)) {
                 return false;
             }
         }
 
-        if ($this->middleware !== null && $this->middleware !== '' && ! in_array($this->middleware, $route->gatherMiddleware(), true)) {
+        if ($middleware !== null && $middleware !== '' && ! in_array($middleware, $route->gatherMiddleware(), true)) {
             return false;
         }
 
@@ -170,20 +164,20 @@ final class ScrambleSpecGenerator implements OpenApiSpecGenerator
      */
     private function config(): array
     {
-        $info = ['title' => $this->title, 'version' => $this->version];
+        $info = ['title' => $this->options->title, 'version' => $this->options->version];
 
-        if ($this->description !== null && $this->description !== '') {
-            $info['description'] = $this->description;
+        if ($this->options->description !== null && $this->options->description !== '') {
+            $info['description'] = $this->options->description;
         }
 
         $config = ['info' => $info];
 
-        if ($this->serverUrl !== null && $this->serverUrl !== '') {
+        if ($this->options->serverUrl !== null && $this->options->serverUrl !== '') {
             // Scramble's `servers` config is a description => URL-string map (it
             // passes each value through url()); an OpenAPI-style ['url' => ...]
             // object would reach url() as an array and blow up. Key the single
             // server with an empty description.
-            $config['servers'] = ['' => rtrim($this->serverUrl, '/')];
+            $config['servers'] = ['' => rtrim($this->options->serverUrl, '/')];
         }
 
         return $config;
@@ -202,11 +196,11 @@ final class ScrambleSpecGenerator implements OpenApiSpecGenerator
         // Scramble always emits an info object; the fallback only guards a
         // malformed document (and keeps the array shape known for analysis).
         $info = isset($spec['info']) && is_array($spec['info']) ? $spec['info'] : [];
-        $info['title'] = $this->title;
+        $info['title'] = $this->options->title;
         $spec['info'] = $info;
 
-        if ($this->security !== []) {
-            $spec['security'] = $this->security;
+        if ($this->options->security !== []) {
+            $spec['security'] = $this->options->security;
         }
 
         return $spec;

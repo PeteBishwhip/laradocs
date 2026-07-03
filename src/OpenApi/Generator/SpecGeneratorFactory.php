@@ -31,28 +31,17 @@ class SpecGeneratorFactory
         private readonly Router $router,
     ) {}
 
-    /**
-     * @param  array<int|string, mixed>  $security
-     */
-    public function make(
-        string $driver,
-        string $title,
-        string $version,
-        ?string $serverUrl,
-        ?string $description,
-        array $security,
-        ?string $prefix,
-        ?string $middleware,
-    ): OpenApiSpecGenerator {
+    public function make(string $driver, GeneratorOptions $options): OpenApiSpecGenerator
+    {
         return match ($driver) {
             'scramble' => $this->scrambleAvailable()
-                ? $this->scramble($title, $version, $serverUrl, $description, $security, $prefix, $middleware)
+                ? $this->scramble($options)
                 : throw new OpenApiException(self::MISSING_MESSAGE),
             'auto' => $this->scrambleAvailable()
-                ? $this->scramble($title, $version, $serverUrl, $description, $security, $prefix, $middleware)
-                : $this->native($title, $version, $serverUrl, $prefix, $middleware),
+                ? $this->scramble($options)
+                : $this->native($options),
             // 'native' and any unrecognised driver fall back to the built-in generator.
-            default => $this->native($title, $version, $serverUrl, $prefix, $middleware),
+            default => $this->native($options),
         };
     }
 
@@ -67,44 +56,20 @@ class SpecGeneratorFactory
         return class_exists('\Dedoc\Scramble\Generator');
     }
 
-    private function native(
-        string $title,
-        string $version,
-        ?string $serverUrl,
-        ?string $prefix,
-        ?string $middleware,
-    ): SpecGenerator {
+    private function native(GeneratorOptions $options): SpecGenerator
+    {
         return new SpecGenerator(
-            routes: new RouteCollector($this->router, $prefix, $middleware),
+            routes: new RouteCollector($this->router, $options->prefix, $options->middleware),
             requests: new RequestInspector,
             responses: new ResponseInspector,
-            title: $title,
-            version: $version,
-            serverUrl: $serverUrl,
+            title: $options->title,
+            version: $options->version,
+            serverUrl: $options->serverUrl,
         );
     }
 
-    /**
-     * @param  array<int|string, mixed>  $security
-     */
-    private function scramble(
-        string $title,
-        string $version,
-        ?string $serverUrl,
-        ?string $description,
-        array $security,
-        ?string $prefix,
-        ?string $middleware,
-    ): ScrambleSpecGenerator {
-        return new ScrambleSpecGenerator(
-            router: $this->router,
-            title: $title,
-            version: $version,
-            serverUrl: $serverUrl,
-            description: $description,
-            security: $security,
-            prefix: $prefix,
-            middleware: $middleware,
-        );
+    private function scramble(GeneratorOptions $options): ScrambleSpecGenerator
+    {
+        return new ScrambleSpecGenerator($this->router, $options);
     }
 }

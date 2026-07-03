@@ -6,6 +6,7 @@ namespace Laradocs\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
+use Laradocs\OpenApi\Generator\GeneratorOptions;
 use Laradocs\OpenApi\Generator\SpecBuilder;
 use Laradocs\OpenApi\Generator\SpecGeneratorFactory;
 use Laradocs\OpenApi\OpenApiException;
@@ -39,17 +40,18 @@ final class OpenApiCommand extends Command
         // Container-resolved so tests can bind a substitute factory.
         $factory = $this->laravel->make(SpecGeneratorFactory::class);
 
+        $options = new GeneratorOptions(
+            title: Config::string('laradocs.openapi.generator.title', Config::string('laradocs.openapi.title', 'API')),
+            version: Config::string('laradocs.openapi.generator.version', '1.0.0'),
+            serverUrl: $this->serverUrl(),
+            description: Config::nullableString('laradocs.openapi.generator.description'),
+            security: Config::array('laradocs.openapi.generator.security', []),
+            prefix: $prefix,
+            middleware: $middleware,
+        );
+
         try {
-            $generator = $factory->make(
-                $driver,
-                Config::string('laradocs.openapi.generator.title', Config::string('laradocs.openapi.title', 'API')),
-                Config::string('laradocs.openapi.generator.version', '1.0.0'),
-                $this->serverUrl(),
-                Config::nullableString('laradocs.openapi.generator.description'),
-                Config::array('laradocs.openapi.generator.security', []),
-                $prefix,
-                $middleware,
-            );
+            $generator = $factory->make($driver, $options);
         } catch (OpenApiException $e) {
             $this->components->error($e->getMessage());
 

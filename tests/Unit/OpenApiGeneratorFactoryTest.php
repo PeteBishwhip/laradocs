@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Routing\Router;
 use Laradocs\Contracts\OpenApiSpecGenerator;
+use Laradocs\OpenApi\Generator\GeneratorOptions;
 use Laradocs\OpenApi\Generator\ScrambleSpecGenerator;
 use Laradocs\OpenApi\Generator\SpecGenerator;
 use Laradocs\OpenApi\Generator\SpecGeneratorFactory;
@@ -45,7 +46,7 @@ function makeFakeFactory(bool $scrambleAvailable): SpecGeneratorFactory
  */
 function resolveGenerator(SpecGeneratorFactory $factory, string $driver): OpenApiSpecGenerator
 {
-    return $factory->make($driver, 'API', '1.0.0', null, null, [], 'api', 'api');
+    return $factory->make($driver, new GeneratorOptions(title: 'API', version: '1.0.0', prefix: 'api', middleware: 'api'));
 }
 
 it('resolves the native driver to a SpecGenerator regardless of Scramble', function (): void {
