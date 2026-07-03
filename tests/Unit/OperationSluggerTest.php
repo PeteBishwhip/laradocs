@@ -97,3 +97,22 @@ it('resolve falls back to a locale-only operation own slug', function () {
         'GET /y' => 'api/widgets/extra-endpoint',
     ]);
 });
+
+it('resolve keeps a locale-only slug distinct from a colliding canonical slug', function () {
+    // GET /a is shared and claims `api/widgets/foo`. GET /b is locale-only and
+    // its summary slugs to the same value; it must gain a suffix rather than
+    // duplicate the canonical URL (which would shadow one of the two pages).
+    $translated = [
+        op(['method' => 'GET', 'path' => '/a', 'summary' => 'Foo (fr)', 'tags' => ['Widgets']]),
+        op(['method' => 'GET', 'path' => '/b', 'summary' => 'Foo', 'tags' => ['Widgets']]),
+    ];
+    $canonical = [op(['method' => 'GET', 'path' => '/a', 'summary' => 'Foo', 'tags' => ['Widgets']])];
+
+    $slugs = OperationSlugger::resolve($translated, $canonical, 'api');
+
+    expect($slugs)->toBe([
+        'GET /a' => 'api/widgets/foo',
+        'GET /b' => 'api/widgets/foo-2',
+    ]);
+    expect(array_values($slugs))->toBe(array_unique(array_values($slugs)));
+});

@@ -29,6 +29,20 @@ final class OperationSlugger
     public static function map(array $operations, string $baseSlug): array
     {
         $used = [];
+
+        return self::mapInto($operations, $baseSlug, $used);
+    }
+
+    /**
+     * As {@see self::map()}, but dedups against a shared, caller-owned `$used`
+     * set so slugs stay unique across multiple mapping passes.
+     *
+     * @param  array<int, Operation>  $operations
+     * @param  array<string, true>  $used
+     * @return array<string, string>
+     */
+    private static function mapInto(array $operations, string $baseSlug, array &$used): array
+    {
         $slugs = [];
 
         foreach ($operations as $operation) {
@@ -54,8 +68,17 @@ final class OperationSlugger
      */
     public static function resolve(array $operations, array $canonicalOperations, string $baseSlug): array
     {
-        $canonical = self::map($canonicalOperations, $baseSlug);
-        $own = self::map($operations, $baseSlug);
+        $used = [];
+        $canonical = self::mapInto($canonicalOperations, $baseSlug, $used);
+
+        // Operations unique to `$operations` derive their own slug, deduped
+        // against the canonical slugs already claimed above so the two sets
+        // can never collide.
+        $ownOnly = array_values(array_filter(
+            $operations,
+            fn (Operation $operation): bool => ! isset($canonical[self::identity($operation)]),
+        ));
+        $own = self::mapInto($ownOnly, $baseSlug, $used);
 
         $resolved = [];
 
