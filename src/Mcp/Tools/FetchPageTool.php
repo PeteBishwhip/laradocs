@@ -24,7 +24,7 @@ class FetchPageTool extends Tool
         $request->validate(['slug' => 'required|string']);
 
         $slug = $request->string('slug')->toString();
-        $document = $this->laradocs->all()->findBySlug($slug);
+        $document = $this->laradocs->all()->visible()->findBySlug($slug);
 
         if ($document === null) {
             return Response::error('Page not found: ' . $slug);

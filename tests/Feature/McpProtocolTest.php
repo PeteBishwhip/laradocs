@@ -272,6 +272,22 @@ it('fetch_page reports a null order when none is set', function () {
     expect($payload['metadata']['order'])->toBeNull();
 });
 
+it('fetch_page returns an error result for a hidden slug', function () {
+    $this->makeDocs([
+        'secret.md' => "---\ntitle: Secret\nhidden: true\n---\nDo not expose this.\n",
+    ]);
+
+    $this->postJson('/docs/mcp', [
+        'jsonrpc' => '2.0',
+        'id' => 15,
+        'method' => 'tools/call',
+        'params' => ['name' => 'fetch_page', 'arguments' => ['slug' => 'secret']],
+    ])
+        ->assertOk()
+        ->assertJsonPath('result.isError', true)
+        ->assertJsonPath('result.content.0.text', 'Page not found: secret');
+});
+
 it('fetch_page returns an error result for an unknown slug', function () {
     $this->makeDocs([
         'guide/install.md' => "---\ntitle: Installation\n---\nInstall it.\n",
@@ -279,7 +295,7 @@ it('fetch_page returns an error result for an unknown slug', function () {
 
     $this->postJson('/docs/mcp', [
         'jsonrpc' => '2.0',
-        'id' => 15,
+        'id' => 16,
         'method' => 'tools/call',
         'params' => ['name' => 'fetch_page', 'arguments' => ['slug' => 'nope/missing']],
     ])
@@ -291,7 +307,7 @@ it('fetch_page returns an error result for an unknown slug', function () {
 it('fetch_page without a slug argument returns a tool error', function () {
     $this->postJson('/docs/mcp', [
         'jsonrpc' => '2.0',
-        'id' => 16,
+        'id' => 17,
         'method' => 'tools/call',
         'params' => ['name' => 'fetch_page', 'arguments' => []],
     ])
