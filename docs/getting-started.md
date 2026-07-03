@@ -56,3 +56,5 @@ right-hand TOC to jump between headings on the current page.
 - Inject dynamic values with [Variables](/docs/content/variables).
 - Restyle the bundled views in
   [Customising the UI](/docs/customisation/ui).
+- Upgrading from an older `0.x` release? See the
+  [Migration Guide](/docs/migration-guide).
