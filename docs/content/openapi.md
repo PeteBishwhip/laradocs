@@ -316,6 +316,24 @@ mounts and links against.
 
 ---
 
+> [!WARNING]
+> **Directory name conflicts with `base_slug`.** The Markdown loader runs
+> before the OpenAPI loader, so if your docs directory already contains a
+> folder named `api/` (the default `base_slug`), that folder's content takes
+> over the `/docs/api` URL and the OpenAPI overview is silently hidden — not an
+> error. The symptom is that `/docs/api` shows your Markdown pages regardless
+> of `LARADOCS_OPENAPI=true`.
+>
+> Fix it by either renaming the conflicting directory or changing `base_slug`
+> to something that doesn't clash:
+>
+> ```php
+> // config/laradocs.php
+> 'openapi' => [
+>     'base_slug' => 'api-reference',
+> ],
+> ```
+
 ## Generating a spec from your routes
 
 Don't have a spec yet? The `laradocs:openapi` command scaffolds one by walking
