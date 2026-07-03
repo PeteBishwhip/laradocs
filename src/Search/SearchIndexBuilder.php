@@ -17,7 +17,6 @@ use Laradocs\Support\Html;
 final class SearchIndexBuilder
 {
     /**
-     * @param  DocumentCollection<int, Document>  $documents
      * @param  Closure(Document): string  $render  Renders a document to HTML.
      * @param  array<int, string>  $exclude  fnmatch slug patterns to exclude from the index.
      * @param  array<int, string>  $include  fnmatch slug patterns to include; when non-empty,

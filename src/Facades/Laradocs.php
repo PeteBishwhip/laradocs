@@ -9,13 +9,14 @@ use Illuminate\Support\Facades\Facade;
 use Laradocs\Documents\Document;
 use Laradocs\Documents\DocumentCollection;
 use Laradocs\Documents\DocumentTree;
+use Override;
 
 /**
  * @method static \Laradocs\Laradocs variables(array<string, mixed>|Closure $values)
  * @method static \Laradocs\Laradocs share(string $key, mixed $value)
  * @method static \Laradocs\Laradocs macro(string $name, Closure|string $handler)
  * @method static \Laradocs\Laradocs rateLimit(Closure|int|false $resolver)
- * @method static DocumentCollection<int, Document> all()
+ * @method static DocumentCollection all()
  * @method static DocumentTree tree()
  * @method static Document|null find(string $slug)
  * @method static Document|null home()
@@ -27,6 +28,7 @@ use Laradocs\Documents\DocumentTree;
  */
 final class Laradocs extends Facade
 {
+    #[Override]
     protected static function getFacadeAccessor(): string
     {
         return \Laradocs\Laradocs::class;

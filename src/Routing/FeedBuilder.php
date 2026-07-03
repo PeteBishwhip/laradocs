@@ -16,9 +16,6 @@ use Laradocs\Documents\DocumentCollection;
  */
 final class FeedBuilder
 {
-    /**
-     * @param  DocumentCollection<int, Document>  $documents
-     */
     public function build(
         DocumentCollection $documents,
         string $format,
@@ -39,9 +36,6 @@ final class FeedBuilder
         return $this->buildRss($items, $feedUrl, $siteTitle);
     }
 
-    /**
-     * @param  DocumentCollection<int, Document>  $items
-     */
     private function buildRss(DocumentCollection $items, string $feedUrl, string $siteTitle): string
     {
         $indexUrl = DocumentUrl::index();
@@ -82,9 +76,6 @@ final class FeedBuilder
         return $xml;
     }
 
-    /**
-     * @param  DocumentCollection<int, Document>  $items
-     */
     private function buildAtom(DocumentCollection $items, string $feedUrl, string $siteTitle): string
     {
         $indexUrl = DocumentUrl::index();

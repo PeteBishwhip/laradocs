@@ -7,6 +7,14 @@ namespace Laradocs\Documents;
 use Illuminate\Support\Collection;
 
 /**
+ * A typed collection of {@see Document} instances.
+ *
+ * Extends Laravel's Collection, so it remains mutable like any other
+ * collection (push, forget, etc. all still work). The domain-specific
+ * accessors below (`visible`, `ordered`, `byGroup`, `byTag`, `findBySlug`)
+ * never mutate the collection they're called on — each returns a new
+ * instance or a scalar/nullable read.
+ *
  * @extends Collection<int, Document>
  */
 final class DocumentCollection extends Collection
@@ -33,11 +41,11 @@ final class DocumentCollection extends Collection
     /**
      * Group documents by their metadata "group" (ungrouped under "").
      *
-     * @return Collection<string, DocumentCollection<int, Document>>
+     * @return Collection<string, DocumentCollection>
      */
     public function byGroup(): Collection
     {
-        /** @var Collection<string, DocumentCollection<int, Document>> $groups */
+        /** @var Collection<string, DocumentCollection> $groups */
         $groups = $this->groupBy(fn (Document $doc): string => $doc->group() ?? '');
 
         return $groups;

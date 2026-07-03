@@ -1,0 +1,961 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<files psalm-version="6.16.1@f1f5de594dc76faf8784e02d3dc4716c91c6f6ac">
+  <file src="src/Cache/DocumentCache.php">
+    <MixedAssignment>
+      <code><![CDATA[$cached]]></code>
+      <code><![CDATA[$value]]></code>
+    </MixedAssignment>
+    <MixedReturnStatement>
+      <code><![CDATA[$this->store->get($key)]]></code>
+    </MixedReturnStatement>
+  </file>
+  <file src="src/Console/CacheCommand.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[CacheCommand]]></code>
+      <code><![CDATA[CacheCommand]]></code>
+      <code><![CDATA[CacheCommand]]></code>
+      <code><![CDATA[CacheCommand]]></code>
+      <code><![CDATA[CacheCommand]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="src/Console/CheckCommand.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[CheckCommand]]></code>
+      <code><![CDATA[CheckCommand]]></code>
+      <code><![CDATA[CheckCommand]]></code>
+      <code><![CDATA[CheckCommand]]></code>
+      <code><![CDATA[CheckCommand]]></code>
+    </PropertyNotSetInConstructor>
+    <RiskyTruthyFalsyComparison>
+      <code><![CDATA[$this->option('json')]]></code>
+    </RiskyTruthyFalsyComparison>
+  </file>
+  <file src="src/Console/ClearCommand.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[ClearCommand]]></code>
+      <code><![CDATA[ClearCommand]]></code>
+      <code><![CDATA[ClearCommand]]></code>
+      <code><![CDATA[ClearCommand]]></code>
+      <code><![CDATA[ClearCommand]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="src/Console/CloneProjectCommand.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[CloneProjectCommand]]></code>
+      <code><![CDATA[CloneProjectCommand]]></code>
+      <code><![CDATA[CloneProjectCommand]]></code>
+      <code><![CDATA[CloneProjectCommand]]></code>
+      <code><![CDATA[CloneProjectCommand]]></code>
+    </PropertyNotSetInConstructor>
+    <RiskyTruthyFalsyComparison>
+      <code><![CDATA[! $this->option('force')]]></code>
+    </RiskyTruthyFalsyComparison>
+  </file>
+  <file src="src/Console/Concerns/ResolvesDeploySite.php">
+    <PossiblyInvalidCast>
+      <code><![CDATA[$this->option('site') ?: Config::string('laradocs.deploy.site')]]></code>
+    </PossiblyInvalidCast>
+    <RiskyTruthyFalsyComparison>
+      <code><![CDATA[$this->option('site')]]></code>
+    </RiskyTruthyFalsyComparison>
+  </file>
+  <file src="src/Console/ConfigCommand.php">
+    <InvalidArrayOffset>
+      <code><![CDATA[$config[$key]]]></code>
+      <code><![CDATA[[$key => $value]]]></code>
+    </InvalidArrayOffset>
+    <MixedArgumentTypeCoercion>
+      <code><![CDATA[[$key => $value]]]></code>
+    </MixedArgumentTypeCoercion>
+    <PossiblyInvalidCast>
+      <code><![CDATA[$key]]></code>
+    </PossiblyInvalidCast>
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[ConfigCommand]]></code>
+      <code><![CDATA[ConfigCommand]]></code>
+      <code><![CDATA[ConfigCommand]]></code>
+      <code><![CDATA[ConfigCommand]]></code>
+      <code><![CDATA[ConfigCommand]]></code>
+    </PropertyNotSetInConstructor>
+    <RedundantCastGivenDocblockType>
+      <code><![CDATA[(string) $v]]></code>
+      <code><![CDATA[(string) ($config[$key] ?? '')]]></code>
+      <code><![CDATA[(string) ($remote[$key] ?? '')]]></code>
+    </RedundantCastGivenDocblockType>
+    <RiskyTruthyFalsyComparison>
+      <code><![CDATA[$this->option('sync')]]></code>
+    </RiskyTruthyFalsyComparison>
+  </file>
+  <file src="src/Console/DeployCommand.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[DeployCommand]]></code>
+      <code><![CDATA[DeployCommand]]></code>
+      <code><![CDATA[DeployCommand]]></code>
+      <code><![CDATA[DeployCommand]]></code>
+      <code><![CDATA[DeployCommand]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="src/Console/IndexCommand.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[IndexCommand]]></code>
+      <code><![CDATA[IndexCommand]]></code>
+      <code><![CDATA[IndexCommand]]></code>
+      <code><![CDATA[IndexCommand]]></code>
+      <code><![CDATA[IndexCommand]]></code>
+    </PropertyNotSetInConstructor>
+    <RedundantCastGivenDocblockType>
+      <code><![CDATA[(string) $key]]></code>
+    </RedundantCastGivenDocblockType>
+  </file>
+  <file src="src/Console/InstallCommand.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[InstallCommand]]></code>
+      <code><![CDATA[InstallCommand]]></code>
+      <code><![CDATA[InstallCommand]]></code>
+      <code><![CDATA[InstallCommand]]></code>
+      <code><![CDATA[InstallCommand]]></code>
+    </PropertyNotSetInConstructor>
+    <RiskyTruthyFalsyComparison>
+      <code><![CDATA[$this->option('force')]]></code>
+    </RiskyTruthyFalsyComparison>
+  </file>
+  <file src="src/Console/LangCommand.php">
+    <MixedAssignment>
+      <code><![CDATA[$child]]></code>
+      <code><![CDATA[$value]]></code>
+      <code><![CDATA[$value]]></code>
+    </MixedAssignment>
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[LangCommand]]></code>
+      <code><![CDATA[LangCommand]]></code>
+      <code><![CDATA[LangCommand]]></code>
+      <code><![CDATA[LangCommand]]></code>
+      <code><![CDATA[LangCommand]]></code>
+    </PropertyNotSetInConstructor>
+    <RiskyTruthyFalsyComparison>
+      <code><![CDATA[! $this->option('force')]]></code>
+      <code><![CDATA[$this->option('list')]]></code>
+    </RiskyTruthyFalsyComparison>
+    <UnresolvableInclude>
+      <code><![CDATA[require $target]]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Console/LintCommand.php">
+    <MixedAssignment>
+      <code><![CDATA[$value]]></code>
+    </MixedAssignment>
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[LintCommand]]></code>
+      <code><![CDATA[LintCommand]]></code>
+      <code><![CDATA[LintCommand]]></code>
+      <code><![CDATA[LintCommand]]></code>
+      <code><![CDATA[LintCommand]]></code>
+    </PropertyNotSetInConstructor>
+    <RiskyTruthyFalsyComparison>
+      <code><![CDATA[$this->option('json')]]></code>
+    </RiskyTruthyFalsyComparison>
+  </file>
+  <file src="src/Console/LoginCommand.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[LoginCommand]]></code>
+      <code><![CDATA[LoginCommand]]></code>
+      <code><![CDATA[LoginCommand]]></code>
+      <code><![CDATA[LoginCommand]]></code>
+      <code><![CDATA[LoginCommand]]></code>
+    </PropertyNotSetInConstructor>
+    <RiskyTruthyFalsyComparison>
+      <code><![CDATA[$url = $this->option('url')]]></code>
+    </RiskyTruthyFalsyComparison>
+  </file>
+  <file src="src/Console/MakeDocCommand.php">
+    <PossiblyInvalidCast>
+      <code><![CDATA[$this->argument('name')]]></code>
+    </PossiblyInvalidCast>
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[MakeDocCommand]]></code>
+      <code><![CDATA[MakeDocCommand]]></code>
+      <code><![CDATA[MakeDocCommand]]></code>
+      <code><![CDATA[MakeDocCommand]]></code>
+      <code><![CDATA[MakeDocCommand]]></code>
+    </PropertyNotSetInConstructor>
+    <RiskyTruthyFalsyComparison>
+      <code><![CDATA[! $this->option('force')]]></code>
+    </RiskyTruthyFalsyComparison>
+  </file>
+  <file src="src/Console/OpenApiCommand.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[OpenApiCommand]]></code>
+      <code><![CDATA[OpenApiCommand]]></code>
+      <code><![CDATA[OpenApiCommand]]></code>
+      <code><![CDATA[OpenApiCommand]]></code>
+      <code><![CDATA[OpenApiCommand]]></code>
+    </PropertyNotSetInConstructor>
+    <RiskyTruthyFalsyComparison>
+      <code><![CDATA[! $this->option('force')]]></code>
+    </RiskyTruthyFalsyComparison>
+  </file>
+  <file src="src/Console/VersionsCommand.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[VersionsCommand]]></code>
+      <code><![CDATA[VersionsCommand]]></code>
+      <code><![CDATA[VersionsCommand]]></code>
+      <code><![CDATA[VersionsCommand]]></code>
+      <code><![CDATA[VersionsCommand]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="src/Deploy/ApiClient.php">
+    <InvalidReturnStatement>
+      <code><![CDATA[$request->get($this->url($path))]]></code>
+      <code><![CDATA[$request->patch($this->url($path), $payload)]]></code>
+      <code><![CDATA[$request->post($this->url($path), $payload)]]></code>
+    </InvalidReturnStatement>
+    <InvalidReturnType>
+      <code><![CDATA[Response]]></code>
+      <code><![CDATA[Response]]></code>
+      <code><![CDATA[Response]]></code>
+    </InvalidReturnType>
+  </file>
+  <file src="src/Deploy/ApiException.php">
+    <MixedAssignment>
+      <code><![CDATA[$deployment]]></code>
+      <code><![CDATA[$first]]></code>
+    </MixedAssignment>
+    <MixedReturnStatement>
+      <code><![CDATA[is_array($deployment) && isset($deployment['message']) && is_string($deployment['message'])
+            ? $deployment['message']
+            : null]]></code>
+      <code><![CDATA[is_array($deployment) && isset($deployment['message']) && is_string($deployment['message'])
+            ? $deployment['message']
+            : null]]></code>
+      <code><![CDATA[is_string($this->body['message'] ?? null) ? $this->body['message'] : $this->getMessage()]]></code>
+      <code><![CDATA[is_string($this->body['message'] ?? null) ? $this->body['message'] : $this->getMessage()]]></code>
+    </MixedReturnStatement>
+  </file>
+  <file src="src/Deploy/CredentialStore.php">
+    <RedundantCastGivenDocblockType>
+      <code><![CDATA[(string) $this->files->get($path)]]></code>
+    </RedundantCastGivenDocblockType>
+    <RiskyTruthyFalsyComparison>
+      <code><![CDATA[$configured]]></code>
+    </RiskyTruthyFalsyComparison>
+  </file>
+  <file src="src/Deploy/Json.php">
+    <MixedAssignment>
+      <code><![CDATA[$item]]></code>
+      <code><![CDATA[$out[(string) $key]]]></code>
+    </MixedAssignment>
+  </file>
+  <file src="src/Deploy/LocalDocs.php">
+    <RedundantCastGivenDocblockType>
+      <code><![CDATA[(string) $body]]></code>
+      <code><![CDATA[(string) $relative]]></code>
+      <code><![CDATA[(string) $this->files->get($file->getPathname())]]></code>
+    </RedundantCastGivenDocblockType>
+  </file>
+  <file src="src/Deploy/LoopbackServer.php">
+    <InvalidPropertyAssignmentValue>
+      <code><![CDATA[$this->socket]]></code>
+    </InvalidPropertyAssignmentValue>
+    <MixedAssignment>
+      <code><![CDATA[$value]]></code>
+    </MixedAssignment>
+    <RiskyTruthyFalsyComparison>
+      <code><![CDATA[strtok($request, "\r\n")]]></code>
+    </RiskyTruthyFalsyComparison>
+  </file>
+  <file src="src/Deploy/OAuthFlow.php">
+    <ClassMustBeFinal>
+      <code><![CDATA[OAuthFlow]]></code>
+    </ClassMustBeFinal>
+    <MissingClassConstType>
+      <code><![CDATA[SCOPES = 'deploy docs:read config:read config:write']]></code>
+    </MissingClassConstType>
+    <PossiblyUndefinedMethod>
+      <code><![CDATA[body]]></code>
+      <code><![CDATA[failed]]></code>
+      <code><![CDATA[failed]]></code>
+      <code><![CDATA[json]]></code>
+      <code><![CDATA[json]]></code>
+      <code><![CDATA[status]]></code>
+    </PossiblyUndefinedMethod>
+  </file>
+  <file src="src/Extensions/BladeComponentExtension.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function processMarkdown(string $markdown): string]]></code>
+    </MissingOverrideAttribute>
+    <MixedAssignment>
+      <code><![CDATA[$attributes[$name]]]></code>
+    </MixedAssignment>
+  </file>
+  <file src="src/Extensions/CalloutExtension.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function processHtml(string $html): string]]></code>
+    </MissingOverrideAttribute>
+    <PossiblyInvalidCast>
+      <code><![CDATA[__('laradocs::laradocs.callouts.' . $type)]]></code>
+    </PossiblyInvalidCast>
+  </file>
+  <file src="src/Extensions/CodeBlockExtension.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function processHtml(string $html): string]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="src/Extensions/HeadingAnchorExtension.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function processHtml(string $html): string]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="src/Extensions/IconExtension.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function processMarkdown(string $markdown): string]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="src/Extensions/ImageExtension.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function processHtml(string $html): string]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="src/Extensions/KatexExtension.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function processHtml(string $html): string]]></code>
+      <code><![CDATA[public function processMarkdown(string $markdown): string]]></code>
+    </MissingOverrideAttribute>
+    <MixedArgumentTypeCoercion>
+      <code><![CDATA[$elements]]></code>
+    </MixedArgumentTypeCoercion>
+    <MixedAssignment>
+      <code><![CDATA[$results]]></code>
+    </MixedAssignment>
+  </file>
+  <file src="src/Extensions/MacroExtension.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function processMarkdown(string $markdown): string]]></code>
+    </MissingOverrideAttribute>
+    <MixedAssignment>
+      <code><![CDATA[$arguments[$m[1]]]]></code>
+      <code><![CDATA[$arguments[$position++]]]></code>
+    </MixedAssignment>
+  </file>
+  <file src="src/Extensions/MermaidExtension.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function processHtml(string $html): string]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="src/Extensions/TabsHtmlExtension.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function processHtml(string $html): string]]></code>
+    </MissingOverrideAttribute>
+    <MixedArgument>
+      <code><![CDATA[$div]]></code>
+      <code><![CDATA[$div]]></code>
+    </MixedArgument>
+    <MixedAssignment>
+      <code><![CDATA[$child]]></code>
+      <code><![CDATA[$child]]></code>
+      <code><![CDATA[$div]]></code>
+      <code><![CDATA[$div]]></code>
+      <code><![CDATA[$parent]]></code>
+    </MixedAssignment>
+    <MixedMethodCall>
+      <code><![CDATA[getAttribute]]></code>
+    </MixedMethodCall>
+    <MixedPropertyFetch>
+      <code><![CDATA[$div->parentNode]]></code>
+    </MixedPropertyFetch>
+  </file>
+  <file src="src/Extensions/TabsMarkdownExtension.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function processMarkdown(string $markdown): string]]></code>
+    </MissingOverrideAttribute>
+    <RiskyTruthyFalsyComparison>
+      <code><![CDATA[preg_split('/^---[ \t]+/m', $inner, -1, PREG_SPLIT_NO_EMPTY)]]></code>
+    </RiskyTruthyFalsyComparison>
+  </file>
+  <file src="src/Extensions/VariableExtension.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function processMarkdown(string $markdown): string]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="src/Extensions/VersionBlockExtension.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function processMarkdown(string $markdown): string]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="src/Extensions/VideoExtension.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function processHtml(string $html): string]]></code>
+    </MissingOverrideAttribute>
+    <RiskyTruthyFalsyComparison>
+      <code><![CDATA[parse_url($url, PHP_URL_PATH)]]></code>
+    </RiskyTruthyFalsyComparison>
+  </file>
+  <file src="src/Http/Controllers/ApiVersionsController.php">
+    <RedundantCastGivenDocblockType>
+      <code><![CDATA[(string) $key]]></code>
+    </RedundantCastGivenDocblockType>
+  </file>
+  <file src="src/Http/Controllers/McpController.php">
+    <RiskyTruthyFalsyComparison>
+      <code><![CDATA[app()->environment('local')]]></code>
+    </RiskyTruthyFalsyComparison>
+  </file>
+  <file src="src/Http/Controllers/TagController.php">
+    <PossiblyInvalidArgument>
+      <code><![CDATA[$title]]></code>
+      <code><![CDATA[$title]]></code>
+      <code><![CDATA[__('laradocs::laradocs.tags.index_intro')]]></code>
+    </PossiblyInvalidArgument>
+  </file>
+  <file src="src/Http/Middleware/SetDocsLocale.php">
+    <DocblockTypeContradiction>
+      <code><![CDATA[! $route instanceof Route]]></code>
+    </DocblockTypeContradiction>
+    <RedundantConditionGivenDocblockType>
+      <code><![CDATA[$route instanceof Route]]></code>
+    </RedundantConditionGivenDocblockType>
+  </file>
+  <file src="src/Http/Middleware/SetDocsVersion.php">
+    <PossiblyInvalidCast>
+      <code><![CDATA[$request->route('path')]]></code>
+    </PossiblyInvalidCast>
+  </file>
+  <file src="src/Icons/IconReference.php">
+    <RedundantCastGivenDocblockType>
+      <code><![CDATA[(string) array_shift($tokens)]]></code>
+    </RedundantCastGivenDocblockType>
+  </file>
+  <file src="src/LaradocsServiceProvider.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function register(): void]]></code>
+    </MissingOverrideAttribute>
+    <MixedAssignment>
+      <code><![CDATA[$rawName]]></code>
+      <code><![CDATA[$setArg]]></code>
+      <code><![CDATA[$variantArg]]></code>
+    </MixedAssignment>
+    <RedundantCastGivenDocblockType>
+      <code><![CDATA[(string) $app->getLocale()]]></code>
+      <code><![CDATA[(string) $app->getLocale()]]></code>
+    </RedundantCastGivenDocblockType>
+    <UndefinedInterfaceMethod>
+      <code><![CDATA[forgetInstance]]></code>
+    </UndefinedInterfaceMethod>
+  </file>
+  <file src="src/Loaders/CompositeDocumentLoader.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function all(): DocumentCollection]]></code>
+      <code><![CDATA[public function find(string $slug): ?Document]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="src/Loaders/FilesystemLoader.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function all(): DocumentCollection]]></code>
+      <code><![CDATA[public function find(string $slug): ?Document]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="src/Loaders/OpenApiLoader.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function all(): DocumentCollection]]></code>
+      <code><![CDATA[public function find(string $slug): ?Document]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="src/Macros/MacroRegistry.php">
+    <MixedAssignment>
+      <code><![CDATA[$named[$key]]]></code>
+      <code><![CDATA[$result]]></code>
+      <code><![CDATA[$value]]></code>
+    </MixedAssignment>
+  </file>
+  <file src="src/Mcp/LaradocsMcpServer.php">
+    <ClassMustBeFinal>
+      <code><![CDATA[LaradocsMcpServer]]></code>
+    </ClassMustBeFinal>
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function boot(): void]]></code>
+    </MissingOverrideAttribute>
+    <NonInvariantDocblockPropertyType>
+      <code><![CDATA[$tools]]></code>
+    </NonInvariantDocblockPropertyType>
+  </file>
+  <file src="src/Mcp/McpServerHandler.php">
+    <PossiblyInvalidCast>
+      <code><![CDATA[$request->header('MCP-Session-Id')]]></code>
+    </PossiblyInvalidCast>
+  </file>
+  <file src="src/Mcp/Tools/FetchPageTool.php">
+    <ClassMustBeFinal>
+      <code><![CDATA[FetchPageTool]]></code>
+    </ClassMustBeFinal>
+    <InternalMethod>
+      <code><![CDATA[Response::json([
+            'slug' => $document->slug,
+            'title' => $document->title(),
+            'group' => $document->group(),
+            'url' => DocumentUrl::toSlug($document->slug),
+            'markdown' => $document->markdown,
+            'metadata' => [
+                'description' => $metadata->description,
+                'author' => $metadata->author,
+                'updated_at' => $metadata->updatedAt,
+                'tags' => $metadata->tags,
+                'hidden' => $metadata->hidden,
+                'order' => $metadata->order === PHP_INT_MAX ? null : $metadata->order,
+            ],
+        ])]]></code>
+    </InternalMethod>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function schema(JsonSchema $schema): array]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="src/Mcp/Tools/ListPagesTool.php">
+    <ClassMustBeFinal>
+      <code><![CDATA[ListPagesTool]]></code>
+    </ClassMustBeFinal>
+    <InternalMethod>
+      <code><![CDATA[Response::json(['pages' => $mapped])]]></code>
+    </InternalMethod>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function schema(JsonSchema $schema): array]]></code>
+    </MissingOverrideAttribute>
+    <MixedAssignment>
+      <code><![CDATA[$group]]></code>
+    </MixedAssignment>
+  </file>
+  <file src="src/Mcp/Tools/SearchDocsTool.php">
+    <ClassMustBeFinal>
+      <code><![CDATA[SearchDocsTool]]></code>
+    </ClassMustBeFinal>
+    <InternalMethod>
+      <code><![CDATA[Response::json(['results' => $mapped])]]></code>
+    </InternalMethod>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function schema(JsonSchema $schema): array]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="src/Metadata/FrontMatterMetadataResolver.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function resolve(string $raw): array]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="src/OpenApi/CodeSampleBuilder.php">
+    <MixedArgument>
+      <code><![CDATA[$schema]]></code>
+      <code><![CDATA[is_array($node['items'] ?? null) ? $node['items'] : []]]></code>
+    </MixedArgument>
+    <MixedAssignment>
+      <code><![CDATA[$body]]></code>
+      <code><![CDATA[$example]]></code>
+      <code><![CDATA[$out[(string) $name]]]></code>
+      <code><![CDATA[$property]]></code>
+      <code><![CDATA[$schema]]></code>
+      <code><![CDATA[$v]]></code>
+    </MixedAssignment>
+  </file>
+  <file src="src/OpenApi/Coerce.php">
+    <MixedAssignment>
+      <code><![CDATA[$item]]></code>
+      <code><![CDATA[$item]]></code>
+    </MixedAssignment>
+  </file>
+  <file src="src/OpenApi/Generator/AttributeReader.php">
+    <ArgumentTypeCoercion>
+      <code><![CDATA[$route->controller]]></code>
+      <code><![CDATA[$route->controller]]></code>
+    </ArgumentTypeCoercion>
+    <LessSpecificReturnStatement>
+      <code><![CDATA[$overrides]]></code>
+    </LessSpecificReturnStatement>
+    <MoreSpecificReturnType>
+      <code><![CDATA[array{summary?: string, description?: string, operationId?: string, tags?: array<int, string>, deprecated?: bool}]]></code>
+    </MoreSpecificReturnType>
+  </file>
+  <file src="src/OpenApi/Generator/MethodSource.php">
+    <RiskyTruthyFalsyComparison>
+      <code><![CDATA[file($file)]]></code>
+    </RiskyTruthyFalsyComparison>
+  </file>
+  <file src="src/OpenApi/Generator/RequestInspector.php">
+    <ArgumentTypeCoercion>
+      <code><![CDATA[$route->controller]]></code>
+      <code><![CDATA[$route->controller]]></code>
+    </ArgumentTypeCoercion>
+    <InvalidStringClass>
+      <code><![CDATA[new $class]]></code>
+    </InvalidStringClass>
+    <RedundantCastGivenDocblockType>
+      <code><![CDATA[(string) $field]]></code>
+    </RedundantCastGivenDocblockType>
+    <RiskyTruthyFalsyComparison>
+      <code><![CDATA[preg_match_all(
+            '/([\'"])([^\'"]+)\1\s*=>\s*([\'"])([^\'"]*)\3/',
+            $source,
+            $matches,
+            PREG_SET_ORDER,
+        )]]></code>
+    </RiskyTruthyFalsyComparison>
+  </file>
+  <file src="src/OpenApi/Generator/ResponseInspector.php">
+    <ArgumentTypeCoercion>
+      <code><![CDATA[$route->controller]]></code>
+      <code><![CDATA[$route->controller]]></code>
+    </ArgumentTypeCoercion>
+    <MixedAssignment>
+      <code><![CDATA[$default]]></code>
+    </MixedAssignment>
+    <RiskyTruthyFalsyComparison>
+      <code><![CDATA[preg_match_all('/([\'"])([A-Za-z_]\w*)\1\s*=>/', $source, $matches)]]></code>
+    </RiskyTruthyFalsyComparison>
+  </file>
+  <file src="src/OpenApi/Generator/RouteCollector.php">
+    <MixedArgument>
+      <code><![CDATA[$method]]></code>
+    </MixedArgument>
+    <MixedAssignment>
+      <code><![CDATA[$method]]></code>
+      <code><![CDATA[$name]]></code>
+    </MixedAssignment>
+    <PossiblyNullArgument>
+      <code><![CDATA[$route->getControllerClass()]]></code>
+    </PossiblyNullArgument>
+  </file>
+  <file src="src/OpenApi/Generator/RuleMapper.php">
+    <MixedAssignment>
+      <code><![CDATA[$rule]]></code>
+      <code><![CDATA[$schema['type']]]></code>
+      <code><![CDATA[$type]]></code>
+    </MixedAssignment>
+    <PossiblyUndefinedArrayOffset>
+      <code><![CDATA[$argument]]></code>
+    </PossiblyUndefinedArrayOffset>
+  </file>
+  <file src="src/OpenApi/Generator/ScrambleSpecGenerator.php">
+    <InvalidStringClass>
+      <code><![CDATA[$scramble::registerApi(self::API, $this->config())]]></code>
+    </InvalidStringClass>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function generate(): array]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="src/OpenApi/Generator/SpecGenerator.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function generate(): array]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="src/OpenApi/Generator/SpecGeneratorFactory.php">
+    <ClassMustBeFinal>
+      <code><![CDATA[SpecGeneratorFactory]]></code>
+    </ClassMustBeFinal>
+    <MissingClassConstType>
+      <code><![CDATA[MISSING_MESSAGE = 'The dedoc/scramble package is required for --driver=scramble. Install it with: composer require dedoc/scramble']]></code>
+    </MissingClassConstType>
+  </file>
+  <file src="src/OpenApi/NormalizedSpec.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function toArray(): array]]></code>
+    </MissingOverrideAttribute>
+    <MixedAssignment>
+      <code><![CDATA[$schema]]></code>
+    </MixedAssignment>
+    <RedundantCastGivenDocblockType>
+      <code><![CDATA[(string) $name]]></code>
+    </RedundantCastGivenDocblockType>
+  </file>
+  <file src="src/OpenApi/OpenApiContentRenderer.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function render(Document $document): string]]></code>
+      <code><![CDATA[public function supports(Document $document): bool]]></code>
+    </MissingOverrideAttribute>
+    <MixedAssignment>
+      <code><![CDATA[$marker]]></code>
+      <code><![CDATA[$media]]></code>
+      <code><![CDATA[$response]]></code>
+    </MixedAssignment>
+    <RedundantCastGivenDocblockType>
+      <code><![CDATA[(string) $mediaType]]></code>
+      <code><![CDATA[(string) $status]]></code>
+      <code><![CDATA[(string) view('laradocs::partials.openapi.operation', [
+            'operation' => $operation,
+            'baseUrl' => $baseUrl,
+            'parameters' => $this->expandParameters($operation->parameters, $schema),
+            'requestBody' => $requestBody,
+            'responses' => $responses,
+            'samples' => $this->samples($operation, $baseUrl, $requestBody, $responses),
+            'describe' => $describe,
+        ])->render()]]></code>
+      <code><![CDATA[(string) view('laradocs::partials.openapi.overview', [
+            'info' => $info,
+            'infoDescription' => Coerce::nullableString($info['description'] ?? null),
+            'servers' => $spec->servers(),
+            'tags' => $spec->tags(),
+            'operations' => $spec->operations(),
+            // Resolve slugs the same way the loader mounts the pages — against the
+            // canonical spec — so the index links always point at the real
+            // operation URLs, even when this locale's summaries are translated.
+            'operationSlugs' => OperationSlugger::resolve($spec->operations(), $canonicalSpec->operations(), $baseSlug),
+            'describe' => $describe,
+        ])->render()]]></code>
+    </RedundantCastGivenDocblockType>
+  </file>
+  <file src="src/OpenApi/OpenApiParser.php">
+    <MixedAssignment>
+      <code><![CDATA[$cached]]></code>
+      <code><![CDATA[$pathItem]]></code>
+      <code><![CDATA[$schema]]></code>
+    </MixedAssignment>
+    <RedundantCastGivenDocblockType>
+      <code><![CDATA[(string) $name]]></code>
+      <code><![CDATA[(string) $name]]></code>
+      <code><![CDATA[(string) $path]]></code>
+    </RedundantCastGivenDocblockType>
+  </file>
+  <file src="src/OpenApi/Operation.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function toArray(): array]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="src/OpenApi/OperationSlugger.php">
+    <RedundantCast>
+      <code><![CDATA[(string) ($candidate ?? '')]]></code>
+    </RedundantCast>
+  </file>
+  <file src="src/OpenApi/SchemaNode.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function toArray(): array]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="src/OpenApi/SchemaRenderer.php">
+    <MixedAssignment>
+      <code><![CDATA[$definition]]></code>
+      <code><![CDATA[$into['description']]]></code>
+      <code><![CDATA[$propSchema]]></code>
+      <code><![CDATA[$properties[(string) $name]]]></code>
+    </MixedAssignment>
+    <RedundantCastGivenDocblockType>
+      <code><![CDATA[(string) $name]]></code>
+      <code><![CDATA[(string) $name]]></code>
+      <code><![CDATA[(string) $name]]></code>
+      <code><![CDATA[(string) $name]]></code>
+    </RedundantCastGivenDocblockType>
+    <RiskyTruthyFalsyComparison>
+      <code><![CDATA[$from['nullable'] ?? false]]></code>
+      <code><![CDATA[$into['nullable'] ?? false]]></code>
+    </RiskyTruthyFalsyComparison>
+  </file>
+  <file src="src/Parsers/MarkdownParser.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function parse(string $markdown): string]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="src/Parsers/MarkdownPipelineFactory.php">
+    <RiskyTruthyFalsyComparison>
+      <code><![CDATA[$config['callouts'] ?? true]]></code>
+      <code><![CDATA[$config['components'] ?? true]]></code>
+      <code><![CDATA[$config['heading_anchors'] ?? true]]></code>
+      <code><![CDATA[$config['icons'] ?? true]]></code>
+      <code><![CDATA[$config['images'] ?? true]]></code>
+      <code><![CDATA[$config['katex'] ?? true]]></code>
+      <code><![CDATA[$config['katex'] ?? true]]></code>
+      <code><![CDATA[$config['macros'] ?? true]]></code>
+      <code><![CDATA[$config['mermaid'] ?? true]]></code>
+      <code><![CDATA[$config['tabs'] ?? true]]></code>
+      <code><![CDATA[$config['tabs'] ?? true]]></code>
+      <code><![CDATA[$config['variables'] ?? true]]></code>
+      <code><![CDATA[$config['video'] ?? true]]></code>
+      <code><![CDATA[$extensions['attributes'] ?? true]]></code>
+      <code><![CDATA[$extensions['footnotes'] ?? true]]></code>
+      <code><![CDATA[$extensions['gfm'] ?? true]]></code>
+    </RiskyTruthyFalsyComparison>
+  </file>
+  <file src="src/Routing/DocumentRouter.php">
+    <DeprecatedClass>
+      <code><![CDATA[VerifyCsrfToken::class]]></code>
+    </DeprecatedClass>
+    <MixedAssignment>
+      <code><![CDATA[$attributes['domain']]]></code>
+    </MixedAssignment>
+    <MixedMethodCall>
+      <code><![CDATA[name]]></code>
+      <code><![CDATA[name]]></code>
+      <code><![CDATA[name]]></code>
+      <code><![CDATA[name]]></code>
+      <code><![CDATA[withoutMiddleware]]></code>
+      <code><![CDATA[withoutMiddleware]]></code>
+    </MixedMethodCall>
+  </file>
+  <file src="src/Routing/DocumentUrl.php">
+    <MixedMethodCall>
+      <code><![CDATA[has]]></code>
+    </MixedMethodCall>
+    <RedundantCastGivenDocblockType>
+      <code><![CDATA[(string) app()->getLocale()]]></code>
+    </RedundantCastGivenDocblockType>
+  </file>
+  <file src="src/Routing/FeedBuilder.php">
+    <PossiblyNullArgument>
+      <code><![CDATA[$items->first()]]></code>
+    </PossiblyNullArgument>
+  </file>
+  <file src="src/Routing/RobotsBuilder.php">
+    <MixedAssignment>
+      <code><![CDATA[$item]]></code>
+    </MixedAssignment>
+  </file>
+  <file src="src/Routing/SitemapBuilder.php">
+    <MixedAssignment>
+      <code><![CDATA[$explicit]]></code>
+    </MixedAssignment>
+  </file>
+  <file src="src/Search/Excerpt.php">
+    <RedundantCastGivenDocblockType>
+      <code><![CDATA[(string) ($terms[0] ?? '')]]></code>
+    </RedundantCastGivenDocblockType>
+  </file>
+  <file src="src/Search/JsonSearchEngine.php">
+    <InvalidArgument>
+      <code><![CDATA[$entry]]></code>
+    </InvalidArgument>
+    <InvalidOperand>
+      <code><![CDATA[$score * $entry['rank']]]></code>
+    </InvalidOperand>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function flush(): void]]></code>
+      <code><![CDATA[public function name(): string]]></code>
+      <code><![CDATA[public function search(string $query, array $index, int $limit): array]]></code>
+      <code><![CDATA[public function sync(array $index): void]]></code>
+    </MissingOverrideAttribute>
+    <MixedArgument>
+      <code><![CDATA[$a['entry']['title']]]></code>
+      <code><![CDATA[$b['entry']['title']]]></code>
+    </MixedArgument>
+    <MixedArrayAccess>
+      <code><![CDATA[$a['entry']['title']]]></code>
+      <code><![CDATA[$b['entry']['title']]]></code>
+    </MixedArrayAccess>
+  </file>
+  <file src="src/Search/ScoutSearchEngine.php">
+    <ArgumentTypeCoercion>
+      <code><![CDATA[new Collection($documents)]]></code>
+    </ArgumentTypeCoercion>
+    <InvalidArgument>
+      <code><![CDATA[$this->prototype()]]></code>
+      <code><![CDATA[$this->prototype()]]></code>
+      <code><![CDATA[$this->prototype()]]></code>
+    </InvalidArgument>
+    <InvalidOperand>
+      <code><![CDATA[($total - $i) * $entry['rank']]]></code>
+    </InvalidOperand>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function flush(): void]]></code>
+      <code><![CDATA[public function name(): string]]></code>
+      <code><![CDATA[public function search(string $query, array $index, int $limit): array]]></code>
+      <code><![CDATA[public function sync(array $index): void]]></code>
+    </MissingOverrideAttribute>
+    <MixedArgument>
+      <code><![CDATA[$a['entry']['title']]]></code>
+      <code><![CDATA[$b['entry']['title']]]></code>
+      <code><![CDATA[is_string($task['type'] ?? null) ? $task['type'] : 'unknown task']]></code>
+    </MixedArgument>
+    <MixedArrayAccess>
+      <code><![CDATA[$a['entry']['title']]]></code>
+      <code><![CDATA[$b['entry']['title']]]></code>
+    </MixedArrayAccess>
+    <MixedAssignment>
+      <code><![CDATA[$client]]></code>
+      <code><![CDATA[$error]]></code>
+    </MixedAssignment>
+    <MixedReturnStatement>
+      <code><![CDATA[$error['message']]]></code>
+      <code><![CDATA[is_int($tasks[0]['uid'] ?? null) ? $tasks[0]['uid'] : -1]]></code>
+      <code><![CDATA[is_int($tasks[0]['uid'] ?? null) ? $tasks[0]['uid'] : -1]]></code>
+    </MixedReturnStatement>
+  </file>
+  <file src="src/Seo/OgImageData.php">
+    <MixedArgument>
+      <code><![CDATA[self::brand()]]></code>
+      <code><![CDATA[self::brand()]]></code>
+    </MixedArgument>
+  </file>
+  <file src="src/Seo/SeoFactory.php">
+    <TooManyTemplateParams>
+      <code><![CDATA[SchemaCollection::make()]]></code>
+    </TooManyTemplateParams>
+  </file>
+  <file src="src/Seo/TheOgImageGenerator.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function generate(OgImageData $data): string]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="src/Support/Config.php">
+    <MixedAssignment>
+      <code><![CDATA[$value]]></code>
+      <code><![CDATA[$value]]></code>
+      <code><![CDATA[$value]]></code>
+      <code><![CDATA[$value]]></code>
+      <code><![CDATA[$value]]></code>
+    </MixedAssignment>
+  </file>
+  <file src="src/Support/Html.php">
+    <MixedArgument>
+      <code><![CDATA[$child]]></code>
+      <code><![CDATA[$child]]></code>
+    </MixedArgument>
+    <MixedAssignment>
+      <code><![CDATA[$child]]></code>
+      <code><![CDATA[$child]]></code>
+    </MixedAssignment>
+    <RedundantCondition>
+      <code><![CDATA[$node->ownerDocument?->saveHTML($child)]]></code>
+    </RedundantCondition>
+    <TypeDoesNotContainNull>
+      <code><![CDATA[$node->ownerDocument]]></code>
+    </TypeDoesNotContainNull>
+    <TypeDoesNotContainType>
+      <code><![CDATA[! $dom instanceof DOMDocument]]></code>
+    </TypeDoesNotContainType>
+  </file>
+  <file src="src/Support/LastUpdatedConfig.php">
+    <MissingClosureReturnType>
+      <code><![CDATA[static fn (?CarbonImmutable $carbon) => $carbon]]></code>
+    </MissingClosureReturnType>
+    <MixedAssignment>
+      <code><![CDATA[$result]]></code>
+    </MixedAssignment>
+    <RedundantCastGivenDocblockType>
+      <code><![CDATA[(string) app()->getLocale()]]></code>
+    </RedundantCastGivenDocblockType>
+  </file>
+  <file src="src/Support/Locale.php">
+    <MixedAssignment>
+      <code><![CDATA[$explicit]]></code>
+    </MixedAssignment>
+    <PossiblyInvalidArgument>
+      <code><![CDATA[$request->header('Accept-Language', '')]]></code>
+    </PossiblyInvalidArgument>
+    <RedundantCastGivenDocblockType>
+      <code><![CDATA[(string) app()->getLocale()]]></code>
+      <code><![CDATA[(string) app()->getLocale()]]></code>
+      <code><![CDATA[(string) substr($path, strlen($segment))]]></code>
+    </RedundantCastGivenDocblockType>
+  </file>
+  <file src="src/Support/ValueCaster.php">
+    <InvalidOperand>
+      <code><![CDATA[$value + 0]]></code>
+    </InvalidOperand>
+  </file>
+  <file src="src/Support/Version.php">
+    <MixedAssignment>
+      <code><![CDATA[$explicit]]></code>
+    </MixedAssignment>
+  </file>
+  <file src="src/Support/VersionRegistry.php">
+    <MixedAssignment>
+      <code><![CDATA[$value]]></code>
+    </MixedAssignment>
+    <RedundantCastGivenDocblockType>
+      <code><![CDATA[(string) $key]]></code>
+      <code><![CDATA[(string) $key]]></code>
+      <code><![CDATA[(string) $key]]></code>
+      <code><![CDATA[(string) $key]]></code>
+    </RedundantCastGivenDocblockType>
+  </file>
+</files>

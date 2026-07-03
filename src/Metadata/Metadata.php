@@ -6,11 +6,14 @@ namespace Laradocs\Metadata;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Support\Arrayable;
+use Override;
 
 /**
  * Typed, immutable representation of a document's front-matter.
  *
  * @implements Arrayable<string, mixed>
+ *
+ * @psalm-immutable
  */
 final class Metadata implements Arrayable
 {
@@ -59,8 +62,6 @@ final class Metadata implements Arrayable
 
         $extra = array_diff_key($data, array_flip($known));
 
-        $tags = $data['tags'] ?? [];
-
         return new self(
             title: self::nullableString($data, 'title'),
             description: self::nullableString($data, 'description'),
@@ -70,7 +71,7 @@ final class Metadata implements Arrayable
             group: self::nullableString($data, 'group'),
             badge: self::nullableString($data, 'badge'),
             icon: self::nullableString($data, 'icon'),
-            tags: self::normaliseTags($tags),
+            tags: self::normaliseTags($data['tags'] ?? []),
             updatedAt: self::nullableString($data, 'updated_at'),
             author: self::nullableString($data, 'author'),
             layout: self::nullableString($data, 'layout'),
@@ -102,6 +103,9 @@ final class Metadata implements Arrayable
         }
 
         try {
+            // Carbon's static factories aren't annotated as pure upstream, but
+            // they only ever construct a fresh, independent instance.
+            /** @psalm-suppress ImpureMethodCall */
             return is_numeric($this->updatedAt)
                 ? CarbonImmutable::createFromTimestamp((int) $this->updatedAt)
                 : CarbonImmutable::parse($this->updatedAt);
@@ -125,6 +129,7 @@ final class Metadata implements Arrayable
     /**
      * @return array<string, mixed>
      */
+    #[Override]
     public function toArray(): array
     {
         return array_merge([

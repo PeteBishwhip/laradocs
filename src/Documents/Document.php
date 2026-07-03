@@ -5,13 +5,15 @@ declare(strict_types=1);
 namespace Laradocs\Documents;
 
 use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Support\Str;
 use Laradocs\Metadata\Metadata;
+use Override;
 
 /**
  * Immutable representation of a single documentation page.
  *
  * @implements Arrayable<string, mixed>
+ *
+ * @psalm-immutable
  */
 final class Document implements Arrayable
 {
@@ -59,9 +61,9 @@ final class Document implements Arrayable
         }
 
         $basename = basename($this->relativePath);
-        $name = Str::beforeLast($basename, '.');
+        $name = pathinfo($basename, PATHINFO_FILENAME);
 
-        return Str::of($name)->replace(['-', '_'], ' ')->title()->toString();
+        return mb_convert_case(str_replace(['-', '_'], ' ', $name), MB_CASE_TITLE, 'UTF-8');
     }
 
     public function isHidden(): bool
@@ -119,6 +121,7 @@ final class Document implements Arrayable
     /**
      * @return array<string, mixed>
      */
+    #[Override]
     public function toArray(): array
     {
         return [

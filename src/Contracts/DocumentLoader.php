@@ -11,8 +11,6 @@ interface DocumentLoader
 {
     /**
      * Load every document found in the configured source directory.
-     *
-     * @return DocumentCollection<int, Document>
      */
     public function all(): DocumentCollection;
 

@@ -4,23 +4,23 @@ declare(strict_types=1);
 
 namespace Laradocs\Documents;
 
+/**
+ * Immutable node in the assembled navigation tree.
+ *
+ * @psalm-immutable
+ */
 final class TreeNode
 {
     /**
      * @param  array<int, TreeNode>  $children
      */
     public function __construct(
-        public string $title,
-        public string $slug,
-        public ?Document $document = null,
-        public array $children = [],
-        public int $depth = 1,
+        public readonly string $title,
+        public readonly string $slug,
+        public readonly ?Document $document = null,
+        public readonly array $children = [],
+        public readonly int $depth = 1,
     ) {}
-
-    public function addChild(TreeNode $child): void
-    {
-        $this->children[] = $child;
-    }
 
     public function isSection(): bool
     {
@@ -45,17 +45,6 @@ final class TreeNode
     public function isHidden(): bool
     {
         return $this->document?->isHidden() ?? false;
-    }
-
-    public function sortChildren(): void
-    {
-        usort($this->children, function (TreeNode $a, TreeNode $b): int {
-            return [$a->order(), strtolower($a->title)] <=> [$b->order(), strtolower($b->title)];
-        });
-
-        foreach ($this->children as $child) {
-            $child->sortChildren();
-        }
     }
 
     /**

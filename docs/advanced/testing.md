@@ -8,10 +8,11 @@ order: 6
 
 Laradocs is developed with [Pest](https://pestphp.com) on top of
 [Orchestra Testbench](https://github.com/orchestral/testbench) and Workbench,
-with a 100% coverage gate, PHPStan at the maximum level and Laravel Pint.
+with a 100% coverage gate, PHPStan and Psalm at the maximum level, and Laravel
+Pint.
 
 ```bash
-composer test            # pint --test + phpstan + pest
+composer test            # pint --test + phpstan + psalm + pest
 composer test:coverage   # pest --coverage --min=100
 ```
 
