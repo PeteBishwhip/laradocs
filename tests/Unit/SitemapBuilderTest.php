@@ -56,3 +56,18 @@ it('includes pages when versioning is disabled', function () {
 
     expect($body)->toContain('intro');
 });
+
+it('excludes slugs matching seo.sitemap_exclude', function () {
+    config()->set('laradocs.versions.enabled', false);
+    config()->set('laradocs.seo.sitemap_exclude', ['api/broadcasting/*']);
+
+    $tree = DocumentTree::fromDocuments(new DocumentCollection([
+        makeDocument('intro', ['title' => 'Intro']),
+        makeDocument('api/broadcasting/auth', ['title' => 'Broadcasting Auth']),
+    ]));
+
+    $body = (new SitemapBuilder)->build($tree);
+
+    expect($body)->toContain('intro')
+        ->and($body)->not->toContain('broadcasting');
+});

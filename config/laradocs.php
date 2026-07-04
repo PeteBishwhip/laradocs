@@ -671,6 +671,15 @@ return [
         // of search engines; set true to list all versions.
         'sitemap_all_versions' => (bool) env('LARADOCS_SEO_SITEMAP_ALL_VERSIONS', false),
 
+        // fnmatch slug patterns always excluded from the sitemap, e.g. routes
+        // that exist for the app to function but carry nothing worth indexing
+        // — auth callbacks, broadcasting channel authorization, webhooks.
+        //   'sitemap_exclude' => ['api/broadcasting/*', 'api/webhooks/*']
+        // A page is still rendered and reachable; it just carries no <url>
+        // entry in sitemap.xml. Use front-matter `hidden: true` instead to
+        // remove a single page from navigation, search and the sitemap alike.
+        'sitemap_exclude' => [],
+
         // JSON-LD structured data emitted into the document <head>.
         'schema' => [
             'article' => (bool) env('LARADOCS_SEO_SCHEMA_ARTICLE', true),

@@ -56,7 +56,30 @@ final class SitemapBuilder
             return false;
         }
 
+        if ($this->excluded($document)) {
+            return false;
+        }
+
         return ! $document->isHidden() && $document->redirect() === null;
+    }
+
+    /**
+     * Whether the document's slug matches an fnmatch pattern in
+     * `seo.sitemap_exclude` — e.g. broadcasting auth or webhook routes that
+     * should stay reachable but not be advertised to crawlers.
+     */
+    private function excluded(Document $document): bool
+    {
+        /** @var array<int, string> $patterns */
+        $patterns = Config::array('laradocs.seo.sitemap_exclude');
+
+        foreach ($patterns as $pattern) {
+            if (fnmatch($pattern, $document->slug)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

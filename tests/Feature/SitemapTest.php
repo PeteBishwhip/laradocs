@@ -84,6 +84,20 @@ it('excludes redirected documents from the sitemap', function () {
         ->and($body)->not->toContain('/docs/old');
 });
 
+it('excludes slugs matching seo.sitemap_exclude from the sitemap', function () {
+    config()->set('laradocs.seo.sitemap_exclude', ['api/broadcasting/*']);
+
+    $this->makeDocs([
+        'a.md' => "---\ntitle: A\n---\nbody\n",
+        'api/broadcasting/auth.md' => "---\ntitle: Broadcasting Auth\n---\nbody\n",
+    ]);
+
+    $body = $this->get('/docs/sitemap.xml')->getContent();
+
+    expect($body)->toContain('/docs/a')
+        ->and($body)->not->toContain('/docs/api/broadcasting/auth');
+});
+
 it('orders sitemap entries by tree order (parents before children)', function () {
     $this->makeDocs([
         'guide/_index.md' => "---\ntitle: Guide\norder: 1\n---\n# Guide\n",
