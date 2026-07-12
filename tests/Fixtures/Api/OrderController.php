@@ -10,7 +10,6 @@ use Laradocs\OpenApi\Generator\Attributes\ApiOperation;
 
 final class OrderController extends Controller
 {
-    #[ApiOperation(summary: 'List all orders', tags: ['Orders'], deprecated: true)]
     public function index(): OrderResourceCollection
     {
         return new OrderResourceCollection([]);

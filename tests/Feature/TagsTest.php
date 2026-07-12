@@ -137,7 +137,9 @@ it('does not register tag routes when disabled', function () {
     ]);
 
     $names = collect($router->getRoutes()->getRoutes())
-        ->map(fn ($route) => $route->getName())
+        ->map(function ($route) {
+            return $route->getName();
+        })
         ->filter()
         ->values();
 

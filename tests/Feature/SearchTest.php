@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Closure;
 use Laradocs\Exceptions\MeilisearchIndexingException;
 use Laradocs\LaradocsServiceProvider;
 use Laradocs\Search\Contracts\SearchEngine;
@@ -28,7 +27,9 @@ function bindFakeScout(): FakeScoutEngine
 
     $fake = new FakeScoutEngine;
     $manager = new EngineManager(app());
-    $manager->extend('fake', fn (): FakeScoutEngine => $fake);
+    $manager->extend('fake', function () use ($fake): FakeScoutEngine {
+        return $fake;
+    });
     app()->instance(EngineManager::class, $manager);
 
     return $fake;
@@ -78,9 +79,11 @@ it('returns a humanised breadcrumb derived from the slug and group', function ()
         'overview.md' => "---\ntitle: Overview\n---\nUnique elephant term.\n",
     ]);
 
-    $breadcrumb = fn (string $term): mixed => $this->getJson("/docs/_laradocs/search?q={$term}")
-        ->assertOk()
-        ->json('results.0.breadcrumb');
+    $breadcrumb = function (string $term) {
+        return $this->getJson("/docs/_laradocs/search?q={$term}")
+            ->assertOk()
+            ->json('results.0.breadcrumb');
+    };
 
     expect($breadcrumb('aardvark'))->toBe(['Guide'])
         ->and($breadcrumb('boomerang'))->toBe(['Guide', 'Advanced'])
@@ -221,7 +224,14 @@ it('laradocs:index returns a failure exit when one version sync fails', function
     app()->bind(SearchEngine::class, function () use (&$calls): SearchEngine {
         return new class($calls) implements SearchEngine
         {
-            public function __construct(private int &$calls) {}
+            /**
+             * @var int
+             */
+            private $calls;
+            public function __construct(int &$calls)
+            {
+                $this->calls = $calls;
+            }
 
             public function search(string $query, array $index, int $limit): array
             {
@@ -272,27 +282,29 @@ it('laradocs:clear flushes the search engine', function () {
 it('laradocs:clear reports a search index flush failure without failing', function () {
     $this->makeDocs(['a.md' => ALPHA_DOC]);
 
-    app()->bind(SearchEngine::class, fn (): SearchEngine => new class implements SearchEngine
-    {
-        public function search(string $query, array $index, int $limit): array
+    app()->bind(SearchEngine::class, function (): SearchEngine {
+        return new class implements SearchEngine
         {
-            return [];
-        }
+            public function search(string $query, array $index, int $limit): array
+            {
+                return [];
+            }
 
-        public function sync(array $index): void
-        {
-            // No-op: this stub only exercises the flush() failure path.
-        }
+            public function sync(array $index): void
+            {
+                // No-op: this stub only exercises the flush() failure path.
+            }
 
-        public function flush(): void
-        {
-            throw new RuntimeException('index unreachable');
-        }
+            public function flush(): void
+            {
+                throw new RuntimeException('index unreachable');
+            }
 
-        public function name(): string
-        {
-            return 'broken';
-        }
+            public function name(): string
+            {
+                return 'broken';
+            }
+        };
     });
 
     $this->artisan('laradocs:clear')
@@ -352,7 +364,9 @@ it('auto driver picks scout when a non-default driver is configured', function (
     config()->set('scout.driver', 'fake');
 
     $manager = new EngineManager(app());
-    $manager->extend('fake', fn (): FakeScoutEngine => new FakeScoutEngine);
+    $manager->extend('fake', function (): FakeScoutEngine {
+        return new FakeScoutEngine;
+    });
     app()->instance(EngineManager::class, $manager);
     app()->forgetInstance(SearchManager::class);
 
@@ -362,27 +376,29 @@ it('auto driver picks scout when a non-default driver is configured', function (
 it('laradocs:index surfaces engine failures as a non-zero exit', function () {
     $this->makeDocs(['a.md' => ALPHA_DOC]);
 
-    app()->bind(SearchEngine::class, fn (): SearchEngine => new class implements SearchEngine
-    {
-        public function search(string $query, array $index, int $limit): array
+    app()->bind(SearchEngine::class, function (): SearchEngine {
+        return new class implements SearchEngine
         {
-            return [];
-        }
+            public function search(string $query, array $index, int $limit): array
+            {
+                return [];
+            }
 
-        public function sync(array $index): void
-        {
-            throw new RuntimeException('engine unreachable');
-        }
+            public function sync(array $index): void
+            {
+                throw new RuntimeException('engine unreachable');
+            }
 
-        public function flush(): void
-        {
-            // No-op: this stub only exercises the sync() failure path.
-        }
+            public function flush(): void
+            {
+                // No-op: this stub only exercises the sync() failure path.
+            }
 
-        public function name(): string
-        {
-            return 'broken';
-        }
+            public function name(): string
+            {
+                return 'broken';
+            }
+        };
     });
 
     $this->artisan('laradocs:index')
@@ -404,17 +420,19 @@ function bindFakeMeilisearchScout(?Closure $onUpdate = null): MeilisearchClient
     $client = new class('http://localhost') extends MeilisearchClient
     {
         /** @var array<int, array<string, mixed>> */
-        public array $taskLog = [];
+        public $taskLog = [];
 
         public function getTasks(?TasksQuery $options = null): TasksResults
         {
-            $query = $options?->toArray() ?? [];
+            $query = (($nullsafeVariable1 = $options) ? $nullsafeVariable1->toArray() : null) ?? [];
             $statusesCsv = is_string($query['statuses'] ?? null) ? $query['statuses'] : '';
             $statuses = $statusesCsv === '' ? [] : explode(',', $statusesCsv);
 
             $matching = array_values(array_filter(
                 $this->taskLog,
-                fn (array $task): bool => $statuses === [] || in_array($task['status'] ?? null, $statuses, true),
+                function (array $task) use ($statuses): bool {
+                    return $statuses === [] || in_array($task['status'] ?? null, $statuses, true);
+                },
             ));
 
             return new TasksResults(['results' => $matching]);
@@ -439,10 +457,19 @@ function bindFakeMeilisearchScout(?Closure $onUpdate = null): MeilisearchClient
     // indexing tasks when documents are pushed.
     $scoutEngine = new class($client, $onUpdate) extends FakeScoutEngine
     {
-        public function __construct(
-            protected MeilisearchClient $meilisearch,
-            private ?Closure $onUpdate,
-        ) {}
+        /**
+         * @var MeilisearchClient
+         */
+        protected $meilisearch;
+        /**
+         * @var \Closure|null
+         */
+        private $onUpdate;
+        public function __construct(MeilisearchClient $meilisearch, ?Closure $onUpdate)
+        {
+            $this->meilisearch = $meilisearch;
+            $this->onUpdate = $onUpdate;
+        }
 
         public function update($models): void
         {
@@ -458,13 +485,18 @@ function bindFakeMeilisearchScout(?Closure $onUpdate = null): MeilisearchClient
     config()->set('scout.driver', 'fake-meili');
 
     $manager = new EngineManager(app());
-    $manager->extend('fake-meili', fn (): object => $scoutEngine);
+    $manager->extend('fake-meili', function () use ($scoutEngine): object {
+        return $scoutEngine;
+    });
     app()->instance(EngineManager::class, $manager);
 
     return $client;
 }
 
 it('ScoutSearchEngine surfaces failed Meilisearch tasks queued during sync', function () {
+    if (! class_exists(MeilisearchClient::class)) {
+        $this->markTestSkipped('The optional Meilisearch SDK is not installed for PHP 7.3.');
+    }
     $client = bindFakeMeilisearchScout();
 
     // Baseline lookup returns the highest existing task UID; anything > 10
@@ -477,13 +509,18 @@ it('ScoutSearchEngine surfaces failed Meilisearch tasks queued during sync', fun
 
     $engine = new ScoutSearchEngine(app(EngineManager::class), 'laradocs-test');
 
-    expect(fn () => $engine->sync([
-        ['slug' => 'a', 'title' => 'A', 'group' => '', 'content' => 'body'],
-    ]))
+    expect(function () use ($engine) {
+        return $engine->sync([
+            ['slug' => 'a', 'title' => 'A', 'group' => '', 'content' => 'body'],
+        ]);
+    })
         ->toThrow(MeilisearchIndexingException::class, 'invalid primary key');
 });
 
 it('laradocs:index fails when Meilisearch rejects a queued indexing task', function () {
+    if (! class_exists(MeilisearchClient::class)) {
+        $this->markTestSkipped('The optional Meilisearch SDK is not installed for PHP 7.3.');
+    }
     $this->makeDocs(['a.md' => ALPHA_DOC]);
 
     $client = bindFakeMeilisearchScout();
@@ -497,6 +534,9 @@ it('laradocs:index fails when Meilisearch rejects a queued indexing task', funct
 });
 
 it('ScoutSearchEngine awaits pending tasks and reports a failure with no error message', function () {
+    if (! class_exists(MeilisearchClient::class)) {
+        $this->markTestSkipped('The optional Meilisearch SDK is not installed for PHP 7.3.');
+    }
     // Empty taskLog exercises the "no prior tasks" baseline branch in
     // latestTaskUid(). The update hook then queues an enqueued task (waited
     // on by waitForPendingTasks) and a failed task with no `error.message`,
@@ -508,9 +548,11 @@ it('ScoutSearchEngine awaits pending tasks and reports a failure with no error m
 
     $engine = new ScoutSearchEngine(app(EngineManager::class), 'laradocs-test');
 
-    expect(fn () => $engine->sync([
-        ['slug' => 'a', 'title' => 'A', 'group' => '', 'content' => 'body'],
-    ]))
+    expect(function () use ($engine) {
+        return $engine->sync([
+            ['slug' => 'a', 'title' => 'A', 'group' => '', 'content' => 'body'],
+        ]);
+    })
         ->toThrow(MeilisearchIndexingException::class, 'unknown error [documentAdditionOrUpdate]');
 
     // The enqueued task should have been waited on and marked succeeded.
@@ -518,6 +560,9 @@ it('ScoutSearchEngine awaits pending tasks and reports a failure with no error m
 });
 
 it('laradocs:index succeeds against Meilisearch when no tasks fail', function () {
+    if (! class_exists(MeilisearchClient::class)) {
+        $this->markTestSkipped('The optional Meilisearch SDK is not installed for PHP 7.3.');
+    }
     $this->makeDocs(['a.md' => ALPHA_DOC]);
 
     $client = bindFakeMeilisearchScout();

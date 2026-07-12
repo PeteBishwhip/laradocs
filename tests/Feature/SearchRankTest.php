@@ -6,7 +6,10 @@ use Laradocs\Tests\Fixtures\FakeScoutEngine;
 use Laravel\Scout\EngineManager;
 
 // Helpers — re-run a search and return the ordered list of slugs.
-function searchSlugs(mixed $test, string $query): array
+/**
+ * @param mixed $test
+ */
+function searchSlugs($test, string $query): array
 {
     return array_column(
         $test->getJson("/docs/_laradocs/search?q={$query}")->assertOk()->json('results'),
@@ -129,7 +132,9 @@ function bindFakeScoutEngine(): FakeScoutEngine
 
     $fake = new FakeScoutEngine;
     $manager = new EngineManager(app());
-    $manager->extend('fake-rank', fn (): FakeScoutEngine => $fake);
+    $manager->extend('fake-rank', function () use ($fake): FakeScoutEngine {
+        return $fake;
+    });
     app()->instance(EngineManager::class, $manager);
 
     return $fake;

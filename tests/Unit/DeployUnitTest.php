@@ -201,7 +201,9 @@ it('throws when the loopback port cannot be bound', function () {
     $first = LoopbackServer::start(0);
 
     try {
-        expect(fn () => LoopbackServer::start($first->port()))->toThrow(RuntimeException::class);
+        expect(function () use ($first) {
+            return LoopbackServer::start($first->port());
+        })->toThrow(RuntimeException::class);
     } finally {
         $first->close();
     }
@@ -211,7 +213,9 @@ it('throws when no callback arrives before the timeout', function () {
     $server = LoopbackServer::start(0);
 
     try {
-        expect(fn () => $server->awaitCallback(0))->toThrow(RuntimeException::class);
+        expect(function () use ($server) {
+            return $server->awaitCallback(0);
+        })->toThrow(RuntimeException::class);
     } finally {
         $server->close();
     }
@@ -236,7 +240,14 @@ it('builds a browser command containing the escaped url', function () {
 
     $flow = new class($captured) extends OAuthFlow
     {
-        public function __construct(public ?string &$captured) {}
+        /**
+         * @var string|null
+         */
+        public $captured;
+        public function __construct(?string &$captured)
+        {
+            $this->captured =& $captured;
+        }
 
         protected function exec(string $command): void
         {
@@ -265,7 +276,8 @@ it('runs the real exec seam without error', function () {
     };
 
     $flow->execNow('true');
-})->throwsNoExceptions();
+    expect(true)->toBeTrue();
+});
 
 it('guards the callback state and presence of a code', function () {
     $flow = new class extends OAuthFlow
@@ -286,11 +298,21 @@ it('guards the callback state and presence of a code', function () {
     $flow->guard('s', ['state' => 's', 'code' => 'c']);
     expect($flow->code(['code' => 'c']))->toBe('c');
 
-    expect(fn () => $flow->guard('s', ['error' => 'access_denied']))->toThrow(RuntimeException::class);
-    expect(fn () => $flow->guard('s', ['state' => 'other']))->toThrow(RuntimeException::class);
-    expect(fn () => $flow->guard('s', []))->toThrow(RuntimeException::class);
-    expect(fn () => $flow->code([]))->toThrow(RuntimeException::class);
-    expect(fn () => $flow->code(['code' => '']))->toThrow(RuntimeException::class);
+    expect(function () use ($flow) {
+        return $flow->guard('s', ['error' => 'access_denied']);
+    })->toThrow(RuntimeException::class);
+    expect(function () use ($flow) {
+        return $flow->guard('s', ['state' => 'other']);
+    })->toThrow(RuntimeException::class);
+    expect(function () use ($flow) {
+        return $flow->guard('s', []);
+    })->toThrow(RuntimeException::class);
+    expect(function () use ($flow) {
+        return $flow->code([]);
+    })->toThrow(RuntimeException::class);
+    expect(function () use ($flow) {
+        return $flow->code(['code' => '']);
+    })->toThrow(RuntimeException::class);
 });
 
 it('refreshes a token', function () {
@@ -306,7 +328,9 @@ it('reports a refresh failure', function () {
 
     Http::fake(['https://refresh.test/oauth/token' => Http::response([], 400)]);
 
-    expect(fn () => (new OAuthFlow)->refresh('rt'))->toThrow(RuntimeException::class);
+    expect(function () {
+        return (new OAuthFlow)->refresh('rt');
+    })->toThrow(RuntimeException::class);
 });
 
 it('completes login end to end over a real loopback socket', function () {
@@ -323,7 +347,14 @@ it('completes login end to end over a real loopback socket', function () {
 
     $flow = new class($port) extends OAuthFlow
     {
-        public function __construct(public int $port) {}
+        /**
+         * @var int
+         */
+        public $port;
+        public function __construct(int $port)
+        {
+            $this->port = $port;
+        }
 
         // Stand in for the browser: connect to the loopback and deliver the code.
         protected function openBrowser(string $url): void
@@ -343,9 +374,11 @@ it('completes login end to end over a real loopback socket', function () {
     expect($token['access_token'])->toBe('tok')
         ->and($prompted)->toContain('https://login.test/oauth/authorize');
 
-    Http::assertSent(fn ($request) => str_contains($request->url(), '/oauth/token')
-        && $request['grant_type'] === 'authorization_code'
-        && $request['code'] === 'the-code');
+    Http::assertSent(function ($request) {
+        return strpos($request->url(), '/oauth/token') !== false
+            && $request['grant_type'] === 'authorization_code'
+            && $request['code'] === 'the-code';
+    });
 });
 
 it('throws when the token exchange fails during login', function () {
@@ -360,7 +393,14 @@ it('throws when the token exchange fails during login', function () {
 
     $flow = new class($port) extends OAuthFlow
     {
-        public function __construct(public int $port) {}
+        /**
+         * @var int
+         */
+        public $port;
+        public function __construct(int $port)
+        {
+            $this->port = $port;
+        }
 
         protected function openBrowser(string $url): void
         {
@@ -371,7 +411,9 @@ it('throws when the token exchange fails during login', function () {
         }
     };
 
-    expect(fn () => $flow->login())->toThrow(RuntimeException::class);
+    expect(function () use ($flow) {
+        return $flow->login();
+    })->toThrow(RuntimeException::class);
 });
 
 it('rejects a mismatched state returned from authorization', function () {
@@ -385,7 +427,9 @@ it('rejects a mismatched state returned from authorization', function () {
         }
     };
 
-    expect(fn () => $flow->login())->toThrow(RuntimeException::class);
+    expect(function () use ($flow) {
+        return $flow->login();
+    })->toThrow(RuntimeException::class);
 });
 
 function freePort(): int

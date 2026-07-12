@@ -21,7 +21,7 @@ function makeOpenApiLoader(string $dir, string $locale = ''): OpenApiLoader
     $store = Cache::store();
 
     return new OpenApiLoader(
-        new OpenApiParser($store, cacheEnabled: false),
+        new OpenApiParser($store, false),
         $dir,
         ['petstore-3.0.yaml'],
         'api',
@@ -44,7 +44,9 @@ it('emits one overview document plus one document per operation', function () us
             'type' => 'overview',
         ]);
 
-    $slugs = $documents->map(fn (Document $doc): string => $doc->slug)->all();
+    $slugs = $documents->map(function (Document $doc): string {
+        return $doc->slug;
+    })->all();
     expect($slugs)->toContain('api')
         ->toContain('api/pets/list-all-pets')
         ->toContain('api/pets/create-a-pet');
@@ -70,8 +72,12 @@ it('marks each operation document with its operation reference', function () use
 it('gives every synthetic document a distinct path and relativePath', function () use ($fixtures) {
     $documents = makeOpenApiLoader($fixtures)->all();
 
-    $paths = $documents->map(fn (Document $doc): string => $doc->path)->all();
-    $relatives = $documents->map(fn (Document $doc): string => $doc->relativePath)->all();
+    $paths = $documents->map(function (Document $doc): string {
+        return $doc->path;
+    })->all();
+    $relatives = $documents->map(function (Document $doc): string {
+        return $doc->relativePath;
+    })->all();
 
     expect($paths)->toHaveCount(3)
         ->and(array_unique($paths))->toHaveCount(3)
@@ -104,34 +110,46 @@ it('groups operations by first tag and nests them under the base slug in the tre
     // The base slug is a single root carrying the overview document.
     $roots = array_values(array_filter(
         $tree->roots,
-        fn ($node): bool => $node->slug === 'api',
+        function ($node): bool {
+            return $node->slug === 'api';
+        },
     ));
     expect($roots)->toHaveCount(1);
 
     $api = $roots[0];
-    expect($api->document?->slug)->toBe('api');
+    expect(($nullsafeVariable1 = $api->document) ? $nullsafeVariable1->slug : null)->toBe('api');
 
     // Operations nest one level deeper, under their first tag ("pets").
     $tag = collect($api->children)->firstWhere('slug', 'api/pets');
     expect($tag)->not->toBeNull();
 
-    $opSlugs = collect($tag->children)->map(fn ($node): string => $node->slug)->all();
+    $opSlugs = collect($tag->children)->map(function ($node): string {
+        return $node->slug;
+    })->all();
     expect($opSlugs)->toContain('api/pets/list-all-pets')
         ->toContain('api/pets/create-a-pet');
 });
 
 it('resolves filesystem documents before OpenApi documents on a slug collision', function () use ($fixtures) {
     $userDoc = new Document(
-        path: '/docs/api.md',
-        relativePath: 'api.md',
-        slug: 'api',
-        metadata: Metadata::fromArray(['title' => 'Hand-written API page']),
-        markdown: '# API',
+        '/docs/api.md',
+        'api.md',
+        'api',
+        Metadata::fromArray(['title' => 'Hand-written API page']),
+        '# API',
     );
 
     $filesystem = new class($userDoc) implements DocumentLoader
     {
-        public function __construct(private readonly Document $doc) {}
+        /**
+         * @readonly
+         * @var \Laradocs\Documents\Document
+         */
+        private $doc;
+        public function __construct(Document $doc)
+        {
+            $this->doc = $doc;
+        }
 
         public function all(): DocumentCollection
         {

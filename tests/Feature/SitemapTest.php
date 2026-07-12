@@ -186,7 +186,7 @@ it('clears the cached sitemap when laradocs:clear runs', function () {
     $found = false;
     $index = $store->get('laradocs:index', []);
     foreach ((array) $index as $key) {
-        if (str_starts_with((string) $key, 'laradocs:sitemap:')) {
+        if (strncmp((string) $key, 'laradocs:sitemap:', strlen('laradocs:sitemap:')) === 0) {
             $found = true;
             break;
         }

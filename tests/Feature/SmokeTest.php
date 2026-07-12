@@ -30,5 +30,5 @@ it('loads and renders a document end to end', function () {
     $laradocs = app(Laradocs::class);
 
     expect($laradocs->all())->toHaveCount(2)
-        ->and($laradocs->find('guide/intro')?->html)->toContain('Getting started');
+        ->and(($nullsafeVariable1 = $laradocs->find('guide/intro')) ? $nullsafeVariable1->html : null)->toContain('Getting started');
 });

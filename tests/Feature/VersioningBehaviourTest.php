@@ -262,7 +262,7 @@ describe('SetDocsVersion middleware', function () {
 */
 
 describe('ApiVersionsController', function () {
-    beforeEach(function () {
+    $setupApiVersions = function (): void {
         config()->set('laradocs.versions.enabled', true);
         config()->set('laradocs.versions.strategy', 'config');
         config()->set('laradocs.versions.default', 'latest');
@@ -273,9 +273,10 @@ describe('ApiVersionsController', function () {
             'secret' => ['label' => 'Secret', 'hidden' => true],
         ]);
         $this->makeDocs(['a.md' => "---\ntitle: A\n---\nbody\n"]);
-    });
+    };
 
-    it('returns the documented JSON shape', function () {
+    it('returns the documented JSON shape', function () use ($setupApiVersions) {
+        $setupApiVersions->call($this);
         $this->getJson('/docs/_laradocs/api/versions')
             ->assertOk()
             ->assertJsonStructure([
@@ -286,19 +287,23 @@ describe('ApiVersionsController', function () {
             ]);
     });
 
-    it('flags exactly one latest version matching the registry', function () {
+    it('flags exactly one latest version matching the registry', function () use ($setupApiVersions) {
+        $setupApiVersions->call($this);
         $response = $this->getJson('/docs/_laradocs/api/versions')->assertOk();
 
         $latest = array_values(array_filter(
             $response->json('versions'),
-            fn (array $v): bool => $v['latest'] === true,
+            function (array $v): bool {
+                return $v['latest'] === true;
+            },
         ));
 
         expect($latest)->toHaveCount(1)
             ->and($latest[0]['key'])->toBe(app(VersionRegistry::class)->latest());
     });
 
-    it('reflects the deprecated flag and excludes hidden versions', function () {
+    it('reflects the deprecated flag and excludes hidden versions', function () use ($setupApiVersions) {
+        $setupApiVersions->call($this);
         $response = $this->getJson('/docs/_laradocs/api/versions')->assertOk();
 
         $byKey = collect($response->json('versions'))->keyBy('key');
@@ -308,12 +313,15 @@ describe('ApiVersionsController', function () {
             ->and($byKey)->not->toHaveKey('secret');
     });
 
-    it('marks the default version at the top level and per entry', function () {
+    it('marks the default version at the top level and per entry', function () use ($setupApiVersions) {
+        $setupApiVersions->call($this);
         $response = $this->getJson('/docs/_laradocs/api/versions')->assertOk();
 
         $marked = array_values(array_filter(
             $response->json('versions'),
-            fn (array $v): bool => $v['default'] === true,
+            function (array $v): bool {
+                return $v['default'] === true;
+            },
         ));
 
         expect($response->json('default'))->toBe('v2.0')
@@ -329,11 +337,8 @@ describe('ApiVersionsController', function () {
 */
 
 describe('VersionBlockExtension', function () {
-    beforeEach(function () {
-        config()->set('laradocs.versions.inline.enabled', true);
-    });
-
     it('emits hidden client-mode blocks with data attributes for since/until/only', function () {
+        config()->set('laradocs.versions.inline.enabled', true);
         config()->set('laradocs.versions.inline.behaviour', 'client');
 
         $since = vbRender(":::version-since[2.0]\nNew in 2.0.\n:::");
@@ -350,6 +355,7 @@ describe('VersionBlockExtension', function () {
     });
 
     it('keeps a matching server-mode block without the hidden attribute', function () {
+        config()->set('laradocs.versions.inline.enabled', true);
         config()->set('laradocs.versions.inline.behaviour', 'server');
         config()->set('laradocs._current_version', 'v2.0');
 
@@ -364,6 +370,7 @@ describe('VersionBlockExtension', function () {
     });
 
     it('strips a non-matching server-mode block entirely', function () {
+        config()->set('laradocs.versions.inline.enabled', true);
         config()->set('laradocs.versions.inline.behaviour', 'server');
         config()->set('laradocs._current_version', 'v2.0');
 

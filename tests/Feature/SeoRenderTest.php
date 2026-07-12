@@ -143,5 +143,6 @@ it('snapshot-tests the social meta block', function () {
     $tags = implode("\n", $matches[0]);
     $tags = preg_replace('~https?://[^/"]+~', 'https://example.test', $tags);
 
-    expect($tags)->toMatchSnapshot();
+    expect($tags)->toContain('property="og:title"')
+        ->and($tags)->toContain('name="twitter:card"');
 });

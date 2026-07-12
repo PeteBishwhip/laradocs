@@ -52,7 +52,7 @@ it('renders the home document through the index route with caching', function ()
 
     $laradocs = app(Laradocs::class);
 
-    expect($laradocs->home()?->html)->toContain('Homepage');
+    expect(($nullsafeVariable1 = $laradocs->home()) ? $nullsafeVariable1->html : null)->toContain('Homepage');
     $this->get('/docs')->assertOk()->assertSee('Homepage');
 });
 

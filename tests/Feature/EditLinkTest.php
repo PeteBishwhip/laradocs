@@ -14,7 +14,14 @@ function renderEditLink(string $relativePath): string
 {
     $document = new class($relativePath)
     {
-        public function __construct(public string $relativePath) {}
+        /**
+         * @var string
+         */
+        public $relativePath;
+        public function __construct(string $relativePath)
+        {
+            $this->relativePath = $relativePath;
+        }
     };
 
     return view('laradocs::partials.edit-link', ['document' => $document])->render();

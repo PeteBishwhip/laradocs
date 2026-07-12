@@ -30,7 +30,14 @@ function stubEngine(string $name): SearchEngine
 {
     return new class($name) implements SearchEngine
     {
-        public function __construct(private string $label) {}
+        /**
+         * @var string
+         */
+        private $label;
+        public function __construct(string $label)
+        {
+            $this->label = $label;
+        }
 
         public function search(string $query, array $index, int $limit): array
         {
@@ -69,7 +76,9 @@ it('builds an index of visible, searchable pages in order', function () {
 
     $index = (new SearchIndexBuilder)->build(
         $documents,
-        fn (Document $document): string => '<p>' . $document->markdown . '</p>',
+        function (Document $document): string {
+            return '<p>' . $document->markdown . '</p>';
+        },
     );
 
     expect($index)->toHaveCount(2)
@@ -83,7 +92,9 @@ it('caps indexed content at the configured length', function () {
 
     $index = (new SearchIndexBuilder)->build(
         $documents,
-        fn (Document $document): string => $document->markdown,
+        function (Document $document): string {
+            return $document->markdown;
+        },
         4,
     );
 
@@ -162,11 +173,15 @@ it('maps the root index slug to a non-empty primary key', function () {
 it('resolves the configured search engine', function () {
     $json = stubEngine('json');
     $scout = stubEngine('scout');
-    $factory = fn (): SearchEngine => $scout;
+    $factory = function () use ($scout): SearchEngine {
+        return $scout;
+    };
 
-    $forced = fn (string $driver, bool $available, bool $configured): SearchManager => new SearchManager(
-        $driver, $available, $configured, $factory, $json,
-    );
+    $forced = function (string $driver, bool $available, bool $configured) use ($factory, $json): SearchManager {
+        return new SearchManager(
+            $driver, $available, $configured, $factory, $json,
+        );
+    };
 
     expect($forced('json', true, true)->engine()->name())->toBe('json')
         ->and($forced('scout', true, false)->engine()->name())->toBe('scout')
@@ -183,7 +198,9 @@ it('resolves the configured search engine', function () {
 it('indexes and searches through a scout engine', function () {
     config()->set('scout.driver', 'fake');
     $manager = app(EngineManager::class);
-    $manager->extend('fake', fn (): FakeScoutEngine => new FakeScoutEngine);
+    $manager->extend('fake', function (): FakeScoutEngine {
+        return new FakeScoutEngine;
+    });
 
     /** @var FakeScoutEngine $fake */
     $fake = $manager->engine('fake');
@@ -199,7 +216,9 @@ it('indexes and searches through a scout engine', function () {
     expect(array_column($results, 'slug'))->toBe(['install']);
 
     // A key returned by the engine but absent from the supplied index is dropped.
-    $partial = array_values(array_filter(sampleIndex(), fn (array $e): bool => $e['slug'] !== 'install'));
+    $partial = array_values(array_filter(sampleIndex(), function (array $e): bool {
+        return $e['slug'] !== 'install';
+    }));
     expect($engine->search('install', $partial, 10))->toBe([]);
 
     $engine->flush();
@@ -210,7 +229,9 @@ it('indexes and searches through a scout engine', function () {
 it('flushes before syncing and skips an empty scout index', function () {
     config()->set('scout.driver', 'fake');
     $manager = app(EngineManager::class);
-    $manager->extend('fake', fn (): FakeScoutEngine => new FakeScoutEngine);
+    $manager->extend('fake', function (): FakeScoutEngine {
+        return new FakeScoutEngine;
+    });
 
     /** @var FakeScoutEngine $fake */
     $fake = $manager->engine('fake');

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 use Laradocs\Support\CodeAwareReplacer;
 
-$upper = fn (string $text): string => strtoupper($text);
+$upper = function (string $text): string {
+    return strtoupper($text);
+};
 
 it('transforms normal text', function () use ($upper) {
     expect(CodeAwareReplacer::apply('hello world', $upper))->toBe('HELLO WORLD');

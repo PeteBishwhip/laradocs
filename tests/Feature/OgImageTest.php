@@ -16,9 +16,19 @@ function fakeOgGenerator(string $bytes = 'FAKE-PNG-BYTES'): OgImageGenerator
 {
     return new class($bytes) implements OgImageGenerator
     {
-        public int $calls = 0;
+        /**
+         * @var string
+         */
+        public $bytes;
+        /**
+         * @var int
+         */
+        public $calls = 0;
 
-        public function __construct(public string $bytes) {}
+        public function __construct(string $bytes)
+        {
+            $this->bytes = $bytes;
+        }
 
         public function generate(OgImageData $data): string
         {
@@ -30,6 +40,10 @@ function fakeOgGenerator(string $bytes = 'FAKE-PNG-BYTES'): OgImageGenerator
 }
 
 beforeEach(function () {
+    if (! class_exists(\SimonHamp\TheOg\Image::class)) {
+        $this->markTestSkipped('The optional OG image generator has no PHP 7.3-compatible release.');
+    }
+
     config()->set('laradocs.ui.brand.title', 'Acme Docs');
 
     $this->makeDocs([
@@ -176,7 +190,7 @@ it('versions the generated og image url and resolves it back to a document', fun
 describe('TheOgImageGenerator', function () {
     it('renders a card with a background colour and no description or url', function () {
         $bytes = (new TheOgImageGenerator)->generate(
-            new OgImageData(title: 'Title only', backgroundColor: '#101010'),
+            new OgImageData('Title only', null, null, '#FF2D20', '#101010'),
         );
 
         expect(substr($bytes, 0, 8))->toBe("\x89PNG\r\n\x1a\n");
@@ -184,15 +198,17 @@ describe('TheOgImageGenerator', function () {
 
     it('falls back to a logo-less card when the logo is unreadable', function () {
         $bytes = (new TheOgImageGenerator)->generate(
-            new OgImageData(title: 'Branded', logo: '/no/such/logo.png'),
+            new OgImageData('Branded', null, null, '#FF2D20', null, 'light', '/no/such/logo.png'),
         );
 
         expect(substr($bytes, 0, 8))->toBe("\x89PNG\r\n\x1a\n");
     });
 
     it('rethrows when rendering fails for a reason other than the logo', function () {
-        expect(fn () => (new TheOgImageGenerator)->generate(
-            new OgImageData(title: 'Bad', accentColor: 'not-a-real-colour'),
-        ))->toThrow(ImageException::class);
+        expect(function () {
+            return (new TheOgImageGenerator)->generate(
+                new OgImageData('Bad', null, null, 'not-a-real-colour'),
+            );
+        })->toThrow(ImageException::class);
     });
 });

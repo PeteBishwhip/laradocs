@@ -53,7 +53,9 @@ it('flags the latest version to match VersionRegistry::latest()', function () {
 
     $latest = array_values(array_filter(
         $response->json('versions'),
-        fn (array $v): bool => $v['latest'] === true,
+        function (array $v): bool {
+            return $v['latest'] === true;
+        },
     ));
 
     expect($latest)->toHaveCount(1)
@@ -67,7 +69,9 @@ it('marks the default version with default true at top level and per entry', fun
 
     $marked = array_values(array_filter(
         $response->json('versions'),
-        fn (array $v): bool => $v['default'] === true,
+        function (array $v): bool {
+            return $v['default'] === true;
+        },
     ));
 
     expect($default)->toBe('v2.0')

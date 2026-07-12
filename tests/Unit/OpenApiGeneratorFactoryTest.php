@@ -19,8 +19,14 @@ use Laradocs\OpenApi\OpenApiException;
  */
 final class FakeSpecGeneratorFactory extends SpecGeneratorFactory
 {
-    public function __construct(Router $router, private readonly bool $available)
+    /**
+     * @readonly
+     * @var bool
+     */
+    private $available;
+    public function __construct(Router $router, bool $available)
     {
+        $this->available = $available;
         parent::__construct($router);
     }
 
@@ -46,7 +52,7 @@ function makeFakeFactory(bool $scrambleAvailable): SpecGeneratorFactory
  */
 function resolveGenerator(SpecGeneratorFactory $factory, string $driver): OpenApiSpecGenerator
 {
-    return $factory->make($driver, new GeneratorOptions(title: 'API', version: '1.0.0', prefix: 'api', middleware: 'api'));
+    return $factory->make($driver, new GeneratorOptions('API', '1.0.0', null, null, [], 'api', 'api'));
 }
 
 it('resolves the native driver to a SpecGenerator regardless of Scramble', function (): void {
@@ -78,7 +84,9 @@ it('resolves scramble to the Scramble adapter when it is available', function ()
 });
 
 it('throws with install instructions when scramble is requested but unavailable', function (): void {
-    expect(fn (): OpenApiSpecGenerator => resolveGenerator(makeFakeFactory(false), 'scramble'))
+    expect(function (): OpenApiSpecGenerator {
+        return resolveGenerator(makeFakeFactory(false), 'scramble');
+    })
         ->toThrow(OpenApiException::class, SpecGeneratorFactory::MISSING_MESSAGE);
 });
 

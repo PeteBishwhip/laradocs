@@ -170,7 +170,9 @@ it('falls through to the query/cookie/browser chain when the request has no boun
 
     $response = (new SetDocsLocale)->handle(
         $request,
-        fn () => response((string) app()->getLocale()),
+        function () {
+            return response((string) app()->getLocale());
+        },
     );
 
     expect($response->getContent())->toBe('fr');
@@ -470,7 +472,9 @@ it('clears a stale laradocs_locale cookie once consent is withdrawn via cookiesE
     config()->set('laradocs.locale.available', ['en' => 'English', 'fr' => 'Français']);
     config()->set('laradocs.locale.cookie', true); // config still says on…
 
-    Locale::setCookieResolver(fn () => false); // …but the CMP says consent was revoked
+    Locale::setCookieResolver(function () {
+        return false;
+    }); // …but the CMP says consent was revoked
 
     try {
         $this->withCookies(['laradocs_locale' => 'fr'])
@@ -596,7 +600,9 @@ it('Laradocs::cookiesEnabled registers a callback that enables cookie reading re
     // Register through the public fluent API (not Locale::setCookieResolver
     // directly) so the entry point developers actually use is covered.
     $laradocs = app(Laradocs::class);
-    expect($laradocs->cookiesEnabled(fn () => true))->toBe($laradocs); // callback overrides, fluent
+    expect($laradocs->cookiesEnabled(function () {
+        return true;
+    }))->toBe($laradocs); // callback overrides, fluent
 
     try {
         $request = Request::create('/docs', 'GET');
@@ -613,7 +619,9 @@ it('cookiesEnabled callback returning false disables cookies even when locale.co
     config()->set('laradocs.locale.cookie', true); // config says on
     config()->set('laradocs.locale.detect_browser', false);
 
-    Locale::setCookieResolver(fn () => false); // callback overrides
+    Locale::setCookieResolver(function () {
+        return false;
+    }); // callback overrides
 
     try {
         $request = Request::create('/docs', 'GET');
@@ -630,7 +638,9 @@ it('clearing the cookiesEnabled callback reverts to the locale.cookie config val
     config()->set('laradocs.locale.cookie', false);
     config()->set('laradocs.locale.detect_browser', false);
 
-    Locale::setCookieResolver(fn () => true);
+    Locale::setCookieResolver(function () {
+        return true;
+    });
     Locale::setCookieResolver(null); // clear — should fall back to config (false)
 
     $request = Request::create('/docs', 'GET');

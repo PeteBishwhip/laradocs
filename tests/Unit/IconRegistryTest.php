@@ -12,7 +12,9 @@ use Laradocs\Icons\IconRegistry;
 
 it('renders an icon from a registered set', function () {
     $registry = new IconRegistry('my-set');
-    $registry->register('my-set', fn (string $name, string $variant): string => "<svg>{$name}-{$variant}</svg>");
+    $registry->register('my-set', function (string $name, string $variant): string {
+        return "<svg>{$name}-{$variant}</svg>";
+    });
 
     $html = $registry->render('arrow-right');
 
@@ -23,7 +25,9 @@ it('renders an icon from a registered set', function () {
 
 it('renders an icon from an explicitly named set', function () {
     $registry = new IconRegistry('default');
-    $registry->register('custom', fn (string $name, string $variant): string => "<svg>{$name}</svg>");
+    $registry->register('custom', function (string $name, string $variant): string {
+        return "<svg>{$name}</svg>";
+    });
 
     expect($registry->render('star', 'outline', 'custom'))->toContain('<svg>star</svg>');
 });
@@ -50,21 +54,27 @@ it('returns empty string when the set is not registered', function () {
 
 it('returns empty string for an empty icon name', function () {
     $registry = new IconRegistry('icons');
-    $registry->register('icons', fn (): string => '<svg/>');
+    $registry->register('icons', function (): string {
+        return '<svg/>';
+    });
 
     expect($registry->render(''))->toBe('');
 });
 
 it('returns empty string when the provider returns empty', function () {
     $registry = new IconRegistry('icons');
-    $registry->register('icons', fn (): string => '');
+    $registry->register('icons', function (): string {
+        return '';
+    });
 
     expect($registry->render('not-found'))->toBe('');
 });
 
 it('wraps SVG in a span with aria-hidden', function () {
     $registry = new IconRegistry('icons');
-    $registry->register('icons', fn (): string => '<svg></svg>');
+    $registry->register('icons', function (): string {
+        return '<svg></svg>';
+    });
 
     $html = $registry->render('check');
 
@@ -73,7 +83,9 @@ it('wraps SVG in a span with aria-hidden', function () {
 
 it('reports whether a set is registered', function () {
     $registry = new IconRegistry('icons');
-    $registry->register('heroicons', fn (): string => '');
+    $registry->register('heroicons', function (): string {
+        return '';
+    });
 
     expect($registry->has('heroicons'))->toBeTrue()
         ->and($registry->has('phosphor'))->toBeFalse();

@@ -67,7 +67,6 @@ final class CoverageController extends Controller
         return new OrderResource((object) []);
     }
 
-    #[ApiOperation(description: 'Detailed.', operationId: 'customOpId')]
     public function fullyAttributed(): OrderResource
     {
         return new OrderResource((object) []);

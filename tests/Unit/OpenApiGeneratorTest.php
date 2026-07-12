@@ -29,7 +29,9 @@ function defineApiRoutes(): Router
     });
 
     // A web route that must NOT be collected.
-    Route::get('dashboard', fn () => 'home')->name('dashboard');
+    Route::get('dashboard', function () {
+        return 'home';
+    })->name('dashboard');
 
     /** @var Router $router */
     $router = app('router');
@@ -42,7 +44,9 @@ it('enumerates and filters routes by prefix and middleware', function (): void {
 
     $routes = (new RouteCollector($router, 'api', 'api'))->collect();
 
-    $uris = array_map(fn ($route) => $route->uri, $routes);
+    $uris = array_map(function ($route) {
+        return $route->uri;
+    }, $routes);
 
     expect($uris)->toContain('/api/orders', '/api/orders/{order}', '/api/orders/search')
         ->not->toContain('/dashboard');
@@ -165,12 +169,12 @@ it('assembles a complete OpenAPI document', function (): void {
     $router = defineApiRoutes();
 
     $spec = (new SpecGenerator(
-        routes: new RouteCollector($router, 'api', 'api'),
-        requests: new RequestInspector,
-        responses: new ResponseInspector,
-        title: 'Orders API',
-        version: '2.1.0',
-        serverUrl: 'https://example.test/',
+        new RouteCollector($router, 'api', 'api'),
+        new RequestInspector,
+        new ResponseInspector,
+        'Orders API',
+        '2.1.0',
+        'https://example.test/',
     ))->generate();
 
     expect($spec['openapi'])->toBe('3.0.3')
@@ -237,19 +241,19 @@ it('reads a method source and returns null for sourceless methods', function ():
 function coverageRoute(string $action, string $method = 'GET'): CollectedRoute
 {
     return new CollectedRoute(
-        methods: [$method],
-        uri: '/api/x',
-        pathParameters: [],
-        controller: CoverageController::class,
-        action: $action,
+        [$method],
+        '/api/x',
+        [],
+        CoverageController::class,
+        $action,
     );
 }
 
-it('applies docblock and attribute overrides and ignores unresolvable routes', function (): void {
+it('applies docblock overrides and ignores unresolvable routes', function (): void {
     $reader = new AttributeReader;
 
     // No controller/action -> nothing to read.
-    expect($reader->read(new CollectedRoute(methods: ['GET'], uri: '/x', pathParameters: [])))->toBe([]);
+    expect($reader->read(new CollectedRoute(['GET'], '/x', [])))->toBe([]);
 
     // Controller present but the action does not exist.
     expect($reader->read(coverageRoute('missing')))->toBe([]);
@@ -261,18 +265,17 @@ it('applies docblock and attribute overrides and ignores unresolvable routes', f
         'deprecated' => true,
     ]);
 
-    // An attribute that overrides the description and operationId.
-    expect($reader->read(coverageRoute('fullyAttributed')))->toMatchArray([
-        'description' => 'Detailed.',
-        'operationId' => 'customOpId',
-    ]);
+    // PHP attributes are intentionally unavailable in the PHP 7.3 backport.
+    expect($reader->read(coverageRoute('fullyAttributed')))->toBe([]);
 });
 
 it('degrades gracefully for unresolvable or unusual request inputs', function (): void {
-    $inspect = fn (string $action): array => (new RequestInspector)->inspect(coverageRoute($action, 'POST'));
+    $inspect = function (string $action): array {
+        return (new RequestInspector)->inspect(coverageRoute($action, 'POST'));
+    };
 
     // Null controller/action.
-    expect((new RequestInspector)->inspect(new CollectedRoute(methods: ['POST'], uri: '/x', pathParameters: [])))
+    expect((new RequestInspector)->inspect(new CollectedRoute(['POST'], '/x', [])))
         ->toBe(['properties' => [], 'required' => []])
         // Missing action method.
         ->and($inspect('missing'))->toBe(['properties' => [], 'required' => []])
@@ -287,9 +290,11 @@ it('degrades gracefully for unresolvable or unusual request inputs', function ()
 });
 
 it('degrades gracefully for unresolvable or non-resource responses', function (): void {
-    $inspect = fn (string $action): array => (new ResponseInspector)->inspect(coverageRoute($action));
+    $inspect = function (string $action): array {
+        return (new ResponseInspector)->inspect(coverageRoute($action));
+    };
 
-    expect((new ResponseInspector)->inspect(new CollectedRoute(methods: ['GET'], uri: '/x', pathParameters: []))['schema'])->toBeNull()
+    expect((new ResponseInspector)->inspect(new CollectedRoute(['GET'], '/x', []))['schema'])->toBeNull()
         ->and($inspect('missing')['schema'])->toBeNull()
         // A builtin (array) return type.
         ->and($inspect('returnsArray')['schema'])->toBeNull()
@@ -306,7 +311,9 @@ it('degrades gracefully for unresolvable or non-resource responses', function ()
 
 it('handles closure routes and empty request bodies in the assembled document', function (): void {
     Route::middleware('api')->prefix('api')->group(function (): void {
-        Route::get('ping', fn () => 'pong');
+        Route::get('ping', function () {
+            return 'pong';
+        });
         Route::post('empty', [CoverageController::class, 'emptyPost']);
     });
 
@@ -314,9 +321,9 @@ it('handles closure routes and empty request bodies in the assembled document', 
     $router = app('router');
 
     $spec = (new SpecGenerator(
-        routes: new RouteCollector($router, 'api', 'api'),
-        requests: new RequestInspector,
-        responses: new ResponseInspector,
+        new RouteCollector($router, 'api', 'api'),
+        new RequestInspector,
+        new ResponseInspector,
     ))->generate();
 
     // A closure route has no action/controller, so summary and tag fall back.
@@ -330,14 +337,20 @@ it('handles closure routes and empty request bodies in the assembled document', 
 
 it('excludes routes failing the middleware filter and verb-only routes', function (): void {
     // Prefix matches but the api middleware is absent.
-    Route::prefix('api')->get('plain', fn () => 'x');
+    Route::prefix('api')->get('plain', function () {
+        return 'x';
+    });
     // Only OPTIONS, which is stripped, leaving no documentable verb.
-    Route::middleware('api')->prefix('api')->match(['OPTIONS'], 'opts', fn () => 'x');
+    Route::middleware('api')->prefix('api')->match(['OPTIONS'], 'opts', function () {
+        return 'x';
+    });
 
     /** @var Router $router */
     $router = app('router');
 
-    $uris = array_map(fn ($route) => $route->uri, (new RouteCollector($router, 'api', 'api'))->collect());
+    $uris = array_map(function ($route) {
+        return $route->uri;
+    }, (new RouteCollector($router, 'api', 'api'))->collect());
 
     expect($uris)->not->toContain('/api/plain')
         ->and($uris)->not->toContain('/api/opts');

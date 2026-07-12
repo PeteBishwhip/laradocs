@@ -6,10 +6,11 @@ namespace Laradocs\Tests;
 
 use Dedoc\Scramble\ScrambleServiceProvider;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Contracts\Console\Kernel;
 use Laradocs\LaradocsServiceProvider;
 use Laravel\Mcp\Server\McpServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
-use RalphJSmit\Laravel\SEO\LaravelSEOServiceProvider;
+use Laradocs\Tests\Support\PendingCommand;
 
 abstract class TestCase extends Orchestra
 {
@@ -18,7 +19,16 @@ abstract class TestCase extends Orchestra
      *
      * @var array<int, string>
      */
-    protected array $tempDocs = [];
+    protected $tempDocs = [];
+
+    public function artisan($command, $parameters = [])
+    {
+        if (! $this->mockConsoleOutput) {
+            return $this->app[Kernel::class]->call($command, $parameters);
+        }
+
+        return new PendingCommand($this, $this->app, $command, $parameters);
+    }
 
     protected function tearDown(): void
     {
@@ -36,10 +46,7 @@ abstract class TestCase extends Orchestra
      */
     protected function getPackageProviders($app): array
     {
-        $providers = [
-            LaravelSEOServiceProvider::class,
-            LaradocsServiceProvider::class,
-        ];
+        $providers = [LaradocsServiceProvider::class];
 
         // laravel/mcp is an optional dependency. When it is installed, register
         // its service provider so the MCP request/argument container bindings

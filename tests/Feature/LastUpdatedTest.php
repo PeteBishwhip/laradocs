@@ -7,7 +7,9 @@ use Laradocs\Documents\Document;
 use Laradocs\Metadata\Metadata;
 use Laradocs\Support\LastUpdatedConfig;
 
-afterEach(fn () => LastUpdatedConfig::setResolver(null));
+afterEach(function () {
+    return LastUpdatedConfig::setResolver(null);
+});
 
 // ── front_matter (default) ─────────────────────────────────────────────────────
 
@@ -49,14 +51,7 @@ it('ignores front-matter updated_at when source is mtime', function () {
 
 it('returns null from mtime when modifiedAt is zero', function () {
     config()->set('laradocs.ui.last_updated_source', 'mtime');
-    $doc = new Document(
-        path: '/virtual/intro.md',
-        relativePath: 'intro.md',
-        slug: 'intro',
-        metadata: Metadata::fromArray([]),
-        markdown: '',
-        modifiedAt: 0,
-    );
+    $doc = new Document('/virtual/intro.md', 'intro.md', 'intro', Metadata::fromArray([]), '', null, 0);
 
     expect(LastUpdatedConfig::resolve($doc))->toBeNull();
 });
@@ -85,7 +80,9 @@ it('falls back to mtime when front-matter is absent and source is front_matter_o
 it('uses a registered closure over any config source', function () {
     config()->set('laradocs.ui.last_updated_source', 'front_matter');
 
-    LastUpdatedConfig::setResolver(fn (Document $doc) => 'custom-' . $doc->slug);
+    LastUpdatedConfig::setResolver(function (Document $doc) {
+        return 'custom-' . $doc->slug;
+    });
 
     $doc = makeDocument('intro', ['updated_at' => '2026-03-01']);
 
@@ -93,13 +90,17 @@ it('uses a registered closure over any config source', function () {
 });
 
 it('treats an empty string returned by the closure as null', function () {
-    LastUpdatedConfig::setResolver(fn (Document $doc) => '');
+    LastUpdatedConfig::setResolver(function (Document $doc) {
+        return '';
+    });
 
     expect(LastUpdatedConfig::resolve(makeDocument('intro')))->toBeNull();
 });
 
 it('treats null returned by the closure as null', function () {
-    LastUpdatedConfig::setResolver(fn (Document $doc) => null);
+    LastUpdatedConfig::setResolver(function (Document $doc) {
+        return null;
+    });
 
     expect(LastUpdatedConfig::resolve(makeDocument('intro')))->toBeNull();
 });
@@ -107,7 +108,9 @@ it('treats null returned by the closure as null', function () {
 it('reverts to config-driven resolution when closure is cleared', function () {
     config()->set('laradocs.ui.last_updated_source', 'front_matter');
 
-    LastUpdatedConfig::setResolver(fn (Document $doc) => 'custom');
+    LastUpdatedConfig::setResolver(function (Document $doc) {
+        return 'custom';
+    });
     LastUpdatedConfig::setResolver(null);
 
     $doc = makeDocument('intro', ['updated_at' => '2026-03-01']);
@@ -118,19 +121,22 @@ it('reverts to config-driven resolution when closure is cleared', function () {
 // ── locale-aware formatting ────────────────────────────────────────────────────
 
 it('translates the month name when a non-English docs locale is active', function () {
-    app()->setLocale('de');
-
-    $doc = makeDocument('intro', ['updated_at' => '2026-03-01']);
-
-    // German month name — Carbon translates 'F' via translatedFormat().
-    expect(LastUpdatedConfig::resolve($doc))->toContain('März');
-})->after(fn () => app()->setLocale('en'));
+    try {
+        app()->setLocale('de');
+        $doc = makeDocument('intro', ['updated_at' => '2026-03-01']);
+        expect(LastUpdatedConfig::resolve($doc))->toContain('März');
+    } finally {
+        app()->setLocale('en');
+    }
+});
 
 it('formats mtime dates using the active locale', function () {
-    app()->setLocale('de');
-
-    config()->set('laradocs.ui.last_updated_source', 'mtime');
-    $doc = makeDocument('intro'); // modifiedAt = 1700000000 → 15 Nov 2023
-
-    expect(LastUpdatedConfig::resolve($doc))->toContain('November');
-})->after(fn () => app()->setLocale('en'));
+    try {
+        app()->setLocale('de');
+        config()->set('laradocs.ui.last_updated_source', 'mtime');
+        $doc = makeDocument('intro'); // modifiedAt = 1700000000 → 15 Nov 2023
+        expect(LastUpdatedConfig::resolve($doc))->toContain('November');
+    } finally {
+        app()->setLocale('en');
+    }
+});

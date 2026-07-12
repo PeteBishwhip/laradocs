@@ -9,7 +9,7 @@ use Laradocs\Support\Navigation;
 function navTree(): array
 {
     $docs = new DocumentCollection([
-        makeDocument('guide', ['title' => 'Guide', 'order' => 1], relativePath: 'guide/_index.md'),
+        makeDocument('guide', ['title' => 'Guide', 'order' => 1], '', 'guide/_index.md'),
         makeDocument('guide/intro', ['title' => 'Intro', 'order' => 1]),
         makeDocument('guide/advanced', ['title' => 'Advanced', 'order' => 2]),
         makeDocument('about', ['title' => 'About', 'order' => 2]),
@@ -35,8 +35,8 @@ it('returns empty breadcrumbs for an unknown slug', function () {
 it('finds previous and next siblings', function () {
     [$prev, $next] = Navigation::siblings(navTree(), 'guide/intro');
 
-    expect($prev?->slug)->toBe('guide')
-        ->and($next?->slug)->toBe('guide/advanced');
+    expect(($nullsafeVariable1 = $prev) ? $nullsafeVariable1->slug : null)->toBe('guide')
+        ->and(($nullsafeVariable2 = $next) ? $nullsafeVariable2->slug : null)->toBe('guide/advanced');
 });
 
 it('returns nulls around an unknown slug', function () {

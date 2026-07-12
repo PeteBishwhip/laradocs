@@ -34,6 +34,6 @@ it('filters by tag', function () {
 });
 
 it('finds by slug', function () {
-    expect(collection()->findBySlug('a')?->title())->toBe('Alpha')
+    expect(($nullsafeVariable1 = collection()->findBySlug('a')) ? $nullsafeVariable1->title() : null)->toBe('Alpha')
         ->and(collection()->findBySlug('missing'))->toBeNull();
 });

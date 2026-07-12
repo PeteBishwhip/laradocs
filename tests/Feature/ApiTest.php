@@ -3,8 +3,10 @@
 declare(strict_types=1);
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
-
-function apiContentType(mixed $response): string
+/**
+ * @param mixed $response
+ */
+function apiContentType($response): string
 {
     return (string) $response->headers->get('Content-Type');
 }

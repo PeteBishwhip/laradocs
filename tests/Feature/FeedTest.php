@@ -258,7 +258,7 @@ it('clears the cached feed when laradocs:clear runs', function () {
 
     $found = false;
     foreach ((array) $store->get('laradocs:index', []) as $key) {
-        if (str_starts_with((string) $key, 'laradocs:feed:')) {
+        if (strncmp((string) $key, 'laradocs:feed:', strlen('laradocs:feed:')) === 0) {
             $found = true;
             break;
         }

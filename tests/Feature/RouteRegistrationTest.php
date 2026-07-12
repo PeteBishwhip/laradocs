@@ -17,7 +17,9 @@ it('defaults laradocs.route.register to true and registers the docs routes', fun
     expect(config('laradocs.route.register'))->toBeTrue();
 
     $names = collect(app(Registrar::class)->getRoutes())
-        ->map(fn (Route $route): ?string => $route->getName())
+        ->map(function (Route $route): ?string {
+            return $route->getName();
+        })
         ->filter()
         ->values()
         ->all();
@@ -33,6 +35,9 @@ it('skips route registration when laradocs.route.register is false', function ()
 
     $provider = new LaradocsServiceProvider(app());
     $method = new ReflectionMethod($provider, 'registerRoutes');
+    if (PHP_VERSION_ID < 80100) {
+        $method->setAccessible(true);
+    }
     $method->invoke($provider);
 
     expect($router->getRoutes()->getRoutes())->toBeEmpty();
@@ -46,10 +51,15 @@ it('still registers routes when laradocs.route.register is explicitly true', fun
 
     $provider = new LaradocsServiceProvider(app());
     $method = new ReflectionMethod($provider, 'registerRoutes');
+    if (PHP_VERSION_ID < 80100) {
+        $method->setAccessible(true);
+    }
     $method->invoke($provider);
 
     $names = collect($router->getRoutes())
-        ->map(fn (Route $route): ?string => $route->getName())
+        ->map(function (Route $route): ?string {
+            return $route->getName();
+        })
         ->filter()
         ->values()
         ->all();
@@ -59,11 +69,13 @@ it('still registers routes when laradocs.route.register is explicitly true', fun
 
 it('docs index route carries the default package middleware', function () {
     $route = collect(app(Registrar::class)->getRoutes())
-        ->first(fn (Route $route): bool => $route->getName() === 'laradocs.index');
+        ->first(function (Route $route): bool {
+            return $route->getName() === 'laradocs.index';
+        });
 
     expect($route)->not->toBeNull();
 
-    $middleware = $route->gatherMiddleware();
+    $middleware = (array) $route->getAction('middleware');
 
     expect($middleware)
         ->toContain(EnsureDocsEnabled::class)
@@ -82,11 +94,13 @@ it('uses a custom package_middleware list when set in config', function () {
     ]);
 
     $route = collect($router->getRoutes())
-        ->first(fn (Route $route): bool => $route->getName() === 'laradocs.index');
+        ->first(function (Route $route): bool {
+            return $route->getName() === 'laradocs.index';
+        });
 
     expect($route)->not->toBeNull();
 
-    $middleware = $route->gatherMiddleware();
+    $middleware = (array) $route->getAction('middleware');
 
     expect($middleware)
         ->toContain('web')
@@ -106,11 +120,13 @@ it('falls back to the default package middleware when package_middleware key is 
     ]);
 
     $route = collect($router->getRoutes())
-        ->first(fn (Route $route): bool => $route->getName() === 'laradocs.index');
+        ->first(function (Route $route): bool {
+            return $route->getName() === 'laradocs.index';
+        });
 
     expect($route)->not->toBeNull();
 
-    $middleware = $route->gatherMiddleware();
+    $middleware = (array) $route->getAction('middleware');
 
     expect($middleware)
         ->toContain(EnsureDocsEnabled::class)
@@ -119,6 +135,10 @@ it('falls back to the default package middleware when package_middleware key is 
 });
 
 it('hooks laradocs:cache and laradocs:clear into optimize by default', function () {
+    if (! property_exists(ServiceProvider::class, 'optimizeCommands')) {
+        $this->markTestSkipped('Laravel 8 does not expose package optimize hooks.');
+    }
+
     // `registerCommands` only runs in console; testbench boots with the
     // package provider so the static optimize registry already reflects
     // the default config (`route.register => true`).
@@ -127,6 +147,10 @@ it('hooks laradocs:cache and laradocs:clear into optimize by default', function 
 });
 
 it('skips the optimize hooks when laradocs.route.register is false', function () {
+    if (! property_exists(ServiceProvider::class, 'optimizeCommands')) {
+        $this->markTestSkipped('Laravel 8 does not expose package optimize hooks.');
+    }
+
     // The `laradocs:cache` sitemap step calls `route('laradocs.index')`,
     // which only exists when the package owns the docs URL. With
     // `route.register => false`, hooking the command into `optimize`
@@ -142,6 +166,9 @@ it('skips the optimize hooks when laradocs.route.register is false', function ()
 
         $provider = new LaradocsServiceProvider(app());
         $method = new ReflectionMethod($provider, 'registerCommands');
+        if (PHP_VERSION_ID < 80100) {
+            $method->setAccessible(true);
+        }
         $method->invoke($provider);
 
         expect(ServiceProvider::$optimizeCommands)->not->toContain('laradocs:cache')

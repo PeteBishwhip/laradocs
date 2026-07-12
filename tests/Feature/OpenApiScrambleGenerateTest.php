@@ -67,7 +67,9 @@ it('generates an OpenAPI 3.1 spec through the scramble driver', function (): voi
 it('carries the configured description and security through, and honours the middleware filter', function (): void {
     // An api-prefixed route that does NOT carry the api middleware must be
     // filtered out of the documented surface.
-    Route::get('api/internal/ping', fn (): array => ['pong' => true]);
+    Route::get('api/internal/ping', function (): array {
+        return ['pong' => true];
+    });
 
     config()->set('laradocs.openapi.generator.description', 'Warehouse endpoints.');
     config()->set('laradocs.openapi.generator.security', [['bearerAuth' => []]]);

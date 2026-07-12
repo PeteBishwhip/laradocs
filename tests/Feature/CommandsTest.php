@@ -59,6 +59,10 @@ it('refuses to overwrite with make:doc unless forced', function () {
 });
 
 it('reports package details to the about command', function () {
+    if (! class_exists(\Illuminate\Foundation\Console\AboutCommand::class)) {
+        $this->markTestSkipped('The about command was introduced after Laravel 8.');
+    }
+
     $this->artisan('about', ['--only' => 'laradocs'])
         ->assertSuccessful()
         ->expectsOutputToContain('Laradocs');

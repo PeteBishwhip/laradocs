@@ -22,7 +22,9 @@ it('logs critically and returns a 500 server error when laravel/mcp is not insta
 
     Log::shouldReceive('critical')
         ->once()
-        ->withArgs(fn (string $message): bool => str_contains($message, 'laravel/mcp'));
+        ->withArgs(function (string $message): bool {
+            return strpos($message, 'laravel/mcp') !== false;
+        });
 
     $this->postJson(MCP_ENDPOINT, ['jsonrpc' => '2.0', 'id' => 1, 'method' => 'ping'])
         ->assertStatus(500);

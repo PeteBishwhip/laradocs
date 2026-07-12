@@ -23,12 +23,12 @@ function specWithSchemas(array $schemas): NormalizedSpec
     }
 
     return new NormalizedSpec(
-        openApiVersion: '3.0.3',
-        info: [],
-        servers: [],
-        tags: [],
-        operations: [],
-        schemas: $nodes,
+        '3.0.3',
+        [],
+        [],
+        [],
+        [],
+        $nodes,
     );
 }
 
@@ -221,7 +221,7 @@ it('caps depth for a deeply nested inline structure', function () {
         ];
     }
 
-    $renderer = new SchemaRenderer(specWithSchemas([]), maxDepth: 10);
+    $renderer = new SchemaRenderer(specWithSchemas([]), 10);
 
     // Descend the rendered tree; somewhere within the cap it must be truncated.
     $node = $renderer->render($schema);

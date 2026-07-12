@@ -60,11 +60,13 @@ it('maps a site\'s files to a path => contents array', function () {
 });
 
 it('throws when there is no stored credential', function () {
-    expect(fn () => app(ApiClient::class)->getSite('acme'))->toThrow(NotAuthenticatedException::class);
+    expect(function () {
+        return app(ApiClient::class)->getSite('acme');
+    })->toThrow(NotAuthenticatedException::class);
 });
 
 it('refreshes an expired access token before the request', function () {
-    seedApiToken(expiresIn: -100); // already expired
+    seedApiToken(-100); // already expired
 
     Http::fake([
         API_URL . '/oauth/token' => Http::response(['access_token' => 'refreshed', 'refresh_token' => 'r2', 'expires_in' => 3600]),
@@ -76,8 +78,10 @@ it('refreshes an expired access token before the request', function () {
     expect($site['slug'])->toBe('acme')
         ->and(app(CredentialStore::class)->forUrl(API_URL)['access_token'])->toBe('refreshed');
 
-    Http::assertSent(fn ($request) => str_contains($request->url(), '/oauth/token')
-        && $request['grant_type'] === 'refresh_token');
+    Http::assertSent(function ($request) {
+        return strpos($request->url(), '/oauth/token') !== false
+            && $request['grant_type'] === 'refresh_token';
+    });
 });
 
 it('refreshes and retries once on a 401', function () {
@@ -92,7 +96,9 @@ it('refreshes and retries once on a 401', function () {
 
     expect(app(ApiClient::class)->getSite('acme')['slug'])->toBe('acme');
 
-    Http::assertSent(fn ($request) => str_contains($request->url(), '/oauth/token'));
+    Http::assertSent(function ($request) {
+        return strpos($request->url(), '/oauth/token') !== false;
+    });
 });
 
 it('throws an ApiException on a non-401 failure', function () {
@@ -100,6 +106,8 @@ it('throws an ApiException on a non-401 failure', function () {
 
     Http::fake([API_URL . '/api/v1/sites/acme' => Http::response(['message' => 'Server error'], 500)]);
 
-    expect(fn () => app(ApiClient::class)->getSite('acme'))
+    expect(function () {
+        return app(ApiClient::class)->getSite('acme');
+    })
         ->toThrow(ApiException::class);
 });

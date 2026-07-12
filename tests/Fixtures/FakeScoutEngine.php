@@ -19,9 +19,12 @@ class FakeScoutEngine extends Engine
     /**
      * @var array<int, array<string, mixed>>
      */
-    public array $documents = [];
+    public $documents = [];
 
-    public int $flushed = 0;
+    /**
+     * @var int
+     */
+    public $flushed = 0;
 
     /**
      * @param  Collection<int, mixed>  $models
@@ -49,14 +52,17 @@ class FakeScoutEngine extends Engine
         // No-op: tests flush and re-index wholesale, so per-model deletes are unused.
     }
 
-    public function search(Builder $builder): mixed
+    /**
+     * @return mixed
+     */
+    public function search(Builder $builder)
     {
         $query = mb_strtolower($builder->query);
 
         $hits = array_values(array_filter($this->documents, function (array $doc) use ($query): bool {
             $haystack = mb_strtolower(($doc['title'] ?? '') . ' ' . ($doc['content'] ?? ''));
 
-            return $query === '' || str_contains($haystack, $query);
+            return $query === '' || strpos($haystack, $query) !== false;
         }));
 
         if ($builder->limit !== null) {
@@ -66,7 +72,10 @@ class FakeScoutEngine extends Engine
         return ['hits' => $hits];
     }
 
-    public function paginate(Builder $builder, $perPage, $page): mixed
+    /**
+     * @return mixed
+     */
+    public function paginate(Builder $builder, $perPage, $page)
     {
         return $this->search($builder);
     }

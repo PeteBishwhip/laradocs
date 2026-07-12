@@ -174,7 +174,7 @@ it('does not register locale routes for a single-locale site', function () {
 // ---------------------------------------------------------------------------
 
 describe('locale composed with versions', function () {
-    beforeEach(function () {
+    $setupVersionedLocale = function (): void {
         config()->set('laradocs.versions.enabled', true);
         config()->set('laradocs.versions.strategy', 'config');
         config()->set('laradocs.versions.available', ['v1.0' => 'v1.0', 'v2.0' => 'v2.0']);
@@ -185,22 +185,25 @@ describe('locale composed with versions', function () {
             'v2.0/guide.md' => "---\ntitle: Guide\n---\n# Guide\n\nEnglish v2 body.\n",
             'v2.0/guide.fr.md' => "---\ntitle: Guide\n---\n# Guide\n\nCorps v2 français.\n",
         ]);
-    });
+    };
 
-    it('renders a versioned page under the locale segment', function () {
+    it('renders a versioned page under the locale segment', function () use ($setupVersionedLocale) {
+        $setupVersionedLocale->call($this);
         $this->get('/docs/fr/v2.0/guide')
             ->assertOk()
             ->assertSee('Corps v2 français.')
             ->assertDontSee('English v2 body.');
     });
 
-    it('redirects a versioned ?lang= request into the {locale}/{version} path form', function () {
+    it('redirects a versioned ?lang= request into the {locale}/{version} path form', function () use ($setupVersionedLocale) {
+        $setupVersionedLocale->call($this);
         $this->get('/docs/v2.0/guide?lang=fr')
             ->assertStatus(301)
             ->assertRedirect('/docs/fr/v2.0/guide');
     });
 
-    it('keeps both the locale and version segments on internal links', function () {
+    it('keeps both the locale and version segments on internal links', function () use ($setupVersionedLocale) {
+        $setupVersionedLocale->call($this);
         $html = $this->get('/docs/fr/v2.0/guide')->assertOk()->getContent();
 
         expect($html)->toContain(url('/docs/fr/v2.0/guide'));

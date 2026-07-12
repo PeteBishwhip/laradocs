@@ -34,7 +34,9 @@ it('honours ignored patterns and extensions', function () {
 
     expect($slugs)->toContain('keep')
         ->and($slugs)->not->toContain('readme')
-        ->and(collect($slugs)->filter(fn ($s) => str_contains($s, 'wip')))->toBeEmpty();
+        ->and(collect($slugs)->filter(function ($s) {
+            return strpos($s, 'wip') !== false;
+        }))->toBeEmpty();
 });
 
 it('finds a document by slug and records its mtime', function () {
@@ -42,7 +44,7 @@ it('finds a document by slug and records its mtime', function () {
 
     $doc = app(DocumentLoader::class)->find('guide/intro');
 
-    expect($doc?->title())->toBe('Intro')
-        ->and($doc?->modifiedAt)->toBeGreaterThan(0)
+    expect(($nullsafeVariable1 = $doc) ? $nullsafeVariable1->title() : null)->toBe('Intro')
+        ->and(($nullsafeVariable2 = $doc) ? $nullsafeVariable2->modifiedAt : null)->toBeGreaterThan(0)
         ->and(app(DocumentLoader::class)->find('missing'))->toBeNull();
 });

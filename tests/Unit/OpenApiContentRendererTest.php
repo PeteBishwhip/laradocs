@@ -19,7 +19,7 @@ function makeOpenApiRenderer(bool $renderMarkdown = true): OpenApiContentRendere
     $store = Cache::store();
 
     return new OpenApiContentRenderer(
-        new OpenApiParser($store, cacheEnabled: false),
+        new OpenApiParser($store, false),
         app(DocumentParser::class),
         $renderMarkdown,
     );
@@ -28,10 +28,10 @@ function makeOpenApiRenderer(bool $renderMarkdown = true): OpenApiContentRendere
 function makeOperationDocument(string $specPath, string $method, string $path, ?string $operationId = null): Document
 {
     return new Document(
-        path: $specPath . '#op@',
-        relativePath: $specPath . '#op@',
-        slug: 'api/pets/op',
-        metadata: Metadata::fromArray([
+        $specPath . '#op@',
+        $specPath . '#op@',
+        'api/pets/op',
+        Metadata::fromArray([
             'title' => 'An operation',
             'openapi' => [
                 'type' => 'operation',
@@ -39,7 +39,7 @@ function makeOperationDocument(string $specPath, string $method, string $path, ?
                 'op' => ['method' => $method, 'path' => $path, 'operationId' => $operationId],
             ],
         ]),
-        markdown: '',
+        '',
     );
 }
 
@@ -97,7 +97,9 @@ it('emits no <h1> and yields TOC anchors from heading ids', function () use ($fi
 
     expect($toc->isEmpty())->toBeFalse();
 
-    $ids = array_map(fn ($heading): string => $heading->id, $toc->headings);
+    $ids = array_map(function ($heading): string {
+        return $heading->id;
+    }, $toc->headings);
     expect($ids)->toContain('parameters')
         ->toContain('responses');
 });
@@ -108,7 +110,7 @@ it('runs descriptions through the markdown parser when enabled', function () use
 
     // "Returns every pet in the store." is the operation description; markdown
     // rendering wraps it in a <p> via the DocumentParser.
-    $html = makeOpenApiRenderer(renderMarkdown: true)->render($document);
+    $html = makeOpenApiRenderer(true)->render($document);
 
     expect($html)->toContain('<p>Returns every pet in the store.</p>');
 });
@@ -117,7 +119,7 @@ it('escapes descriptions as plain text when markdown rendering is off', function
     $spec = $fixtures . '/petstore-3.0.yaml';
     $document = makeOperationDocument($spec, 'GET', '/pets', 'listPets');
 
-    $html = makeOpenApiRenderer(renderMarkdown: false)->render($document);
+    $html = makeOpenApiRenderer(false)->render($document);
 
     expect($html)->toContain('Returns every pet in the store.');
 });
@@ -134,14 +136,14 @@ it('renders a deprecated operation marker', function () use ($fixtures) {
 it('renders the overview page with info, servers and operations grouped by tag', function () use ($fixtures) {
     $spec = $fixtures . '/petstore-3.0.yaml';
     $document = new Document(
-        path: $spec . '#overview@',
-        relativePath: $spec . '#overview@',
-        slug: 'api',
-        metadata: Metadata::fromArray([
+        $spec . '#overview@',
+        $spec . '#overview@',
+        'api',
+        Metadata::fromArray([
             'title' => 'API Reference',
             'openapi' => ['type' => 'overview', 'spec' => $spec],
         ]),
-        markdown: '',
+        '',
     );
 
     $html = makeOpenApiRenderer()->render($document);
@@ -155,7 +157,9 @@ it('renders the overview page with info, servers and operations grouped by tag',
     // The overview groups operations into a section per tag, each heading
     // anchored as tag-{slug} so the on-page TOC lists every resource.
     $toc = TableOfContents::fromHtml($html);
-    $ids = array_map(fn ($heading): string => $heading->id, $toc->headings);
+    $ids = array_map(function ($heading): string {
+        return $heading->id;
+    }, $toc->headings);
     expect($ids)->toContain('tag-pets');
 });
 

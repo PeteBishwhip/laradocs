@@ -36,7 +36,9 @@ it('does not set a cookie when consent is not granted', function () {
 it('clears a stale cookie when called after consent has been withdrawn', function () {
     config()->set('laradocs.locale.cookie', true);
 
-    Locale::setCookieResolver(fn () => false); // the CMP says consent was just revoked
+    Locale::setCookieResolver(function () {
+        return false;
+    }); // the CMP says consent was just revoked
 
     try {
         $this->withCookies(['laradocs_locale' => 'fr'])

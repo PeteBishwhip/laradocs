@@ -247,8 +247,8 @@ it('server-side renders math through the node binary when SSR is enabled', funct
     $ext = new KatexExtension(
         'https://example.com/katex.js',
         'https://example.com/katex.css',
-        ssr: true,
-        nodeBin: $node,
+        true,
+        $node,
     );
 
     $html = $ext->processHtml($ext->processMarkdown("Inline \$x^2\$ and:\n\n\$\$\n\\frac{a}{b}\n\$\$"));
@@ -268,8 +268,8 @@ it('falls back to client-side rendering when the node renderer exits non-zero', 
     $ext = new KatexExtension(
         'https://example.com/katex.js',
         'https://example.com/katex.css',
-        ssr: true,
-        nodeBin: $node,
+        true,
+        $node,
     );
 
     $html = $ext->processHtml($ext->processMarkdown("\$\$\n\\frac{a}{b}\n\$\$"));
@@ -286,8 +286,8 @@ it('falls back to client-side rendering when the node renderer emits invalid jso
     $ext = new KatexExtension(
         'https://example.com/katex.js',
         'https://example.com/katex.css',
-        ssr: true,
-        nodeBin: $node,
+        true,
+        $node,
     );
 
     $html = $ext->processHtml($ext->processMarkdown("\$\$\n\\frac{a}{b}\n\$\$"));

@@ -312,10 +312,10 @@ describe('SeoFactory', function () {
         expect($seo->image)->toBeNull();
     });
 
-    it('falls back to a generated card url when no image is configured', function () {
+    it('leaves image null when the optional generator is unavailable', function () {
         $seo = app(SeoFactory::class)->forDocument(makeDocument(SEO_SLUG, ['title' => 'Intro']));
 
-        expect($seo->image)->toContain('/docs/_laradocs/og/');
+        expect($seo->image)->toBeNull();
     });
 
     it('noindexes a non-default version page', function () {
@@ -383,14 +383,14 @@ describe('SeoFactory', function () {
 
     it('builds a breadcrumb trail from linked ancestors', function () {
         $ancestor = new TreeNode(
-            title: 'Guide',
-            slug: 'guide',
-            document: makeDocument('guide', ['title' => 'Guide']),
+            'Guide',
+            'guide',
+            makeDocument('guide', ['title' => 'Guide']),
         );
         $current = new TreeNode(
-            title: 'Intro',
-            slug: SEO_SLUG,
-            document: makeDocument(SEO_SLUG, ['title' => 'Intro']),
+            'Intro',
+            SEO_SLUG,
+            makeDocument(SEO_SLUG, ['title' => 'Intro']),
         );
 
         $seo = app(SeoFactory::class)->forDocument(

@@ -12,7 +12,7 @@ function tree(DocumentCollection $docs): DocumentTree
 
 it('builds a multi-level tree with sections from index files', function () {
     $docs = new DocumentCollection([
-        makeDocument('guide', ['title' => 'Guide'], relativePath: 'guide/_index.md'),
+        makeDocument('guide', ['title' => 'Guide'], '', 'guide/_index.md'),
         makeDocument('guide/intro', ['title' => 'Intro', 'order' => 1]),
         makeDocument('guide/deep/nested', ['title' => 'Nested']),
     ]);
@@ -29,11 +29,11 @@ it('builds a multi-level tree with sections from index files', function () {
 
 it('captures the root index document', function () {
     $docs = new DocumentCollection([
-        makeDocument('', ['title' => 'Home'], relativePath: '_index.md'),
+        makeDocument('', ['title' => 'Home'], '', '_index.md'),
         makeDocument('about', ['title' => 'About']),
     ]);
 
-    expect(tree($docs)->rootDocument?->title())->toBe('Home');
+    expect(($nullsafeVariable1 = tree($docs)->rootDocument) ? $nullsafeVariable1->title() : null)->toBe('Home');
 });
 
 it('orders siblings by order then title', function () {
@@ -57,7 +57,7 @@ it('excludes hidden leaves from navigation', function () {
 
 it('keeps a section when its index is hidden but children are visible', function () {
     $docs = new DocumentCollection([
-        makeDocument('guide', ['title' => 'Guide', 'hidden' => true], relativePath: 'guide/_index.md'),
+        makeDocument('guide', ['title' => 'Guide', 'hidden' => true], '', 'guide/_index.md'),
         makeDocument('guide/intro', ['title' => 'Intro']),
     ]);
 

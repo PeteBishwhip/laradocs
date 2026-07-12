@@ -15,7 +15,9 @@ use Laradocs\Http\Middleware\ThrottleApiRequests;
 function laradocsMcpRoute(): Route
 {
     $route = collect(app(Registrar::class)->getRoutes())
-        ->first(fn (Route $route): bool => $route->getName() === 'laradocs.mcp');
+        ->first(function (Route $route): bool {
+            return $route->getName() === 'laradocs.mcp';
+        });
 
     expect($route)->not->toBeNull();
 

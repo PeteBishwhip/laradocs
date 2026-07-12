@@ -6,7 +6,9 @@ use Laradocs\Exceptions\UnknownMacroException;
 use Laradocs\Macros\MacroRegistry;
 
 it('registers and reports macros', function () {
-    $registry = (new MacroRegistry)->register('hi', fn (): string => 'hello');
+    $registry = (new MacroRegistry)->register('hi', function (): string {
+        return 'hello';
+    });
 
     expect($registry->has('hi'))->toBeTrue()
         ->and($registry->names())->toBe(['hi']);
@@ -15,7 +17,9 @@ it('registers and reports macros', function () {
 it('renders a closure macro with arguments', function () {
     $registry = (new MacroRegistry)->register(
         'greet',
-        fn (array $arguments): string => 'Hi ' . ($arguments['name'] ?? 'there')
+        function (array $arguments): string {
+            return 'Hi ' . ($arguments['name'] ?? 'there');
+        }
     );
 
     expect($registry->render('greet', ['name' => 'Sam']))->toBe('Hi Sam');

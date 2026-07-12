@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 use Laradocs\OpenApi\CodeSampleBuilder;
 
-$builder = fn (): CodeSampleBuilder => new CodeSampleBuilder;
+$builder = function (): CodeSampleBuilder {
+    return new CodeSampleBuilder;
+};
 
 it('builds a snippet for every supported language', function () use ($builder) {
     $samples = $builder()->forOperation('GET', 'https://api.test/v1/widgets', null);

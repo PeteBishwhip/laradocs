@@ -14,7 +14,9 @@ it('mcp is disabled by default', function () {
 it('404s when mcp is disabled', function () {
     config()->set('laradocs.mcp.enabled', false);
 
-    (new EnsureMcpEnabled)->handle(Request::create('/'), fn () => new Response('ok'));
+    (new EnsureMcpEnabled)->handle(Request::create('/'), function () {
+        return new Response('ok');
+    });
 })->throws(NotFoundHttpException::class);
 
 it('passes the request through when mcp is enabled', function () {
@@ -22,7 +24,9 @@ it('passes the request through when mcp is enabled', function () {
 
     $response = (new EnsureMcpEnabled)->handle(
         Request::create('/'),
-        fn (Request $request) => new Response('ok'),
+        function (Request $request) {
+            return new Response('ok');
+        },
     );
 
     expect($response->getContent())->toBe('ok');

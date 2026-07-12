@@ -18,7 +18,9 @@ it('seeds from constructor values', function () {
 });
 
 it('resolves closure values lazily', function () {
-    $registry = (new VariableRegistry)->set('time', fn (): string => 'computed');
+    $registry = (new VariableRegistry)->set('time', function (): string {
+        return 'computed';
+    });
 
     expect($registry->get('time'))->toBe('computed');
 });
@@ -33,7 +35,9 @@ it('supports dotted access into nested arrays', function () {
 it('merges arrays and defers closures via register()', function () {
     $registry = (new VariableRegistry)
         ->register(['a' => 1])
-        ->register(fn (): array => ['b' => 2]);
+        ->register(function (): array {
+            return ['b' => 2];
+        });
 
     expect($registry->all())->toMatchArray(['a' => 1, 'b' => 2]);
 });

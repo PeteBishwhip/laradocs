@@ -12,7 +12,9 @@ it('passes through when no auth guard is configured', function () {
 
     $response = (new EnsureMcpAuthenticated)->handle(
         Request::create('/'),
-        fn (Request $request) => new Response('ok'),
+        function (Request $request) {
+            return new Response('ok');
+        },
     );
 
     expect($response->getContent())->toBe('ok');
@@ -29,7 +31,9 @@ it('passes through when the configured guard authenticates the request', functio
 
     $response = (new EnsureMcpAuthenticated)->handle(
         Request::create('/'),
-        fn (Request $request) => new Response('ok'),
+        function (Request $request) {
+            return new Response('ok');
+        },
     );
 
     expect($response->getContent())->toBe('ok')
@@ -47,7 +51,9 @@ it('returns 401 when the configured guard rejects the request', function () {
 
     $response = (new EnsureMcpAuthenticated)->handle(
         Request::create('/'),
-        fn () => new Response('should not reach'),
+        function () {
+            return new Response('should not reach');
+        },
     );
 
     expect($response->getStatusCode())->toBe(401);
@@ -64,7 +70,9 @@ it('returns json with an error key on 401', function () {
 
     $response = (new EnsureMcpAuthenticated)->handle(
         Request::create('/'),
-        fn () => new Response('should not reach'),
+        function () {
+            return new Response('should not reach');
+        },
     );
 
     $body = json_decode($response->getContent(), true);

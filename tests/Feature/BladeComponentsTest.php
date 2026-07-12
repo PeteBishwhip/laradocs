@@ -34,11 +34,13 @@ it('renders a block component whose tags span multiple lines', function () {
 });
 
 it('round-trips with the macro engine for equivalent calls', function () {
-    app(Laradocs::class)->macro('note', fn (array $arguments): string => sprintf(
-        '<aside data-tone="%s">%s</aside>',
-        $arguments['tone'] ?? 'plain',
-        $arguments['slot'] ?? '',
-    ));
+    app(Laradocs::class)->macro('note', function (array $arguments): string {
+        return sprintf(
+            '<aside data-tone="%s">%s</aside>',
+            $arguments['tone'] ?? 'plain',
+            $arguments['slot'] ?? '',
+        );
+    });
 
     $viaComponent = component('<x-note tone="warm">Hello there</x-note>');
     $viaMacro = component("@docs('note', tone: 'warm', slot: 'Hello there')");
@@ -49,12 +51,14 @@ it('round-trips with the macro engine for equivalent calls', function () {
 });
 
 it('casts attribute values the same way the macro engine does', function () {
-    app(Laradocs::class)->macro('probe', fn (array $arguments): string => sprintf(
-        '<i>%s|%s|%s</i>',
-        var_export($arguments['open'] ?? null, true),
-        var_export($arguments['count'] ?? null, true),
-        var_export($arguments['flag'] ?? null, true),
-    ));
+    app(Laradocs::class)->macro('probe', function (array $arguments): string {
+        return sprintf(
+            '<i>%s|%s|%s</i>',
+            var_export($arguments['open'] ?? null, true),
+            var_export($arguments['count'] ?? null, true),
+            var_export($arguments['flag'] ?? null, true),
+        );
+    });
 
     // Bare scalars cast; a bound `:count` unwraps then casts; a valueless
     // attribute becomes boolean true.
@@ -85,7 +89,9 @@ it('leaves components inside code spans and fenced blocks untouched', function (
 });
 
 it('expands components nested inside a slot', function () {
-    app(Laradocs::class)->macro('wrap', fn (array $arguments): string => '<div class="wrap">' . ($arguments['slot'] ?? '') . '</div>');
+    app(Laradocs::class)->macro('wrap', function (array $arguments): string {
+        return '<div class="wrap">' . ($arguments['slot'] ?? '') . '</div>';
+    });
 
     $html = component('<x-wrap>Get <x-badge text="Beta" /> today</x-wrap>');
 
@@ -102,7 +108,8 @@ it('treats an opening tag with no matching close as literal text', function () {
 });
 
 it('ignores a malformed component-like fragment', function () {
-    expect(fn () => component('before <x-> after'))->not->toThrow(Exception::class);
+    expect(component('before <x-> after'))->toContain('before')
+        ->and(component('before <x-> after'))->toContain('after');
 });
 
 it('leaves a tag inside an unterminated fence untouched', function () {
@@ -141,7 +148,9 @@ it('tracks depth when the same component nests inside itself', function () {
 });
 
 it('does not bump depth when the nested same-name tag is self-closing', function () {
-    app(Laradocs::class)->macro('selfish', fn (array $arguments): string => '<i class="selfish-' . ($arguments['k'] ?? '') . '">' . ($arguments['slot'] ?? '') . '</i>');
+    app(Laradocs::class)->macro('selfish', function (array $arguments): string {
+        return '<i class="selfish-' . ($arguments['k'] ?? '') . '">' . ($arguments['slot'] ?? '') . '</i>';
+    });
 
     $html = component('<x-selfish k="outer">A <x-selfish k="inner" /> B</x-selfish>');
 
@@ -152,8 +161,12 @@ it('does not bump depth when the nested same-name tag is self-closing', function
 it('skips a prefix-collision tag while scanning for the matching close', function () {
     // `<x-foo` is a prefix of `<x-foobar`. The closing-tag scan must NOT mistake
     // the nested longer-named tag for another opening of the outer component.
-    app(Laradocs::class)->macro('foo', fn (array $arguments): string => '<div class="x-foo">' . ($arguments['slot'] ?? '') . '</div>');
-    app(Laradocs::class)->macro('foobar', fn (): string => '<span class="x-foobar"></span>');
+    app(Laradocs::class)->macro('foo', function (array $arguments): string {
+        return '<div class="x-foo">' . ($arguments['slot'] ?? '') . '</div>';
+    });
+    app(Laradocs::class)->macro('foobar', function (): string {
+        return '<span class="x-foobar"></span>';
+    });
 
     $html = component('<x-foo>start <x-foobar /> end</x-foo>');
 
@@ -185,13 +198,15 @@ it('still expands a component on a line with an unbalanced inline backtick', fun
 });
 
 it('reads bare, unquoted attribute values and casts them', function () {
-    app(Laradocs::class)->macro('vals', fn (array $arguments): string => sprintf(
-        '<b>%s|%s|%s|%s</b>',
-        var_export($arguments['flag'] ?? null, true),
-        var_export($arguments['off'] ?? null, true),
-        var_export($arguments['n'] ?? null, true),
-        var_export($arguments['s'] ?? null, true),
-    ));
+    app(Laradocs::class)->macro('vals', function (array $arguments): string {
+        return sprintf(
+            '<b>%s|%s|%s|%s</b>',
+            var_export($arguments['flag'] ?? null, true),
+            var_export($arguments['off'] ?? null, true),
+            var_export($arguments['n'] ?? null, true),
+            var_export($arguments['s'] ?? null, true),
+        );
+    });
 
     // No quotes around any value — exercises the unquoted-value reader.
     $html = component('<x-vals flag=true off=false n=42 s=plain />');
@@ -211,7 +226,9 @@ it('skips stray characters between attributes', function () {
 it('treats an attribute with a trailing = and no value as valueless', function () {
     // `text=` runs out before a value — it falls back to a valueless (true)
     // attribute rather than erroring.
-    expect(fn () => component('<x-badge text= />'))->not->toThrow(Exception::class);
+    expect(function () {
+        return component('<x-badge text= />');
+    })->not->toThrow(Exception::class);
 
     expect(component('<x-badge text= />'))->toContain('laradocs-pill');
 });

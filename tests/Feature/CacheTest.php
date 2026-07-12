@@ -33,7 +33,7 @@ it('caches rendered html on a miss and serves it on a hit', function () {
 });
 
 it('bypasses the cache entirely when disabled', function () {
-    $cache = arrayCache(enabled: false);
+    $cache = arrayCache(false);
     $doc = makeDocument('a');
     $calls = 0;
 
@@ -60,19 +60,27 @@ it('invalidates when a file mtime changes', function () {
 
     expect($cache->documentKey($before))->not->toBe($cache->documentKey($after));
 
-    $cache->rememberHtml($before, fn (): string => 'old');
+    $cache->rememberHtml($before, function (): string {
+        return 'old';
+    });
 
-    expect($cache->rememberHtml($after, fn (): string => 'new'))->toBe('new');
+    expect($cache->rememberHtml($after, function (): string {
+        return 'new';
+    }))->toBe('new');
 });
 
 it('flushes all tracked entries', function () {
     $cache = arrayCache();
     $doc = makeDocument('a');
 
-    $cache->rememberHtml($doc, fn (): string => 'first');
+    $cache->rememberHtml($doc, function (): string {
+        return 'first';
+    });
     $cache->flush();
 
-    expect($cache->rememberHtml($doc, fn (): string => 'second'))->toBe('second');
+    expect($cache->rememberHtml($doc, function (): string {
+        return 'second';
+    }))->toBe('second');
 });
 
 it('caches the tree keyed by combined mtimes', function () {
@@ -101,7 +109,10 @@ it('survives a cache store that forbids unserializing objects', function () {
     // and unserialize it itself.
     $store = new class extends ArrayStore
     {
-        public function get($key): mixed
+        /**
+         * @return mixed
+         */
+        public function get($key)
         {
             $value = parent::get($key);
 
@@ -115,8 +126,12 @@ it('survives a cache store that forbids unserializing objects', function () {
     $docs = new DocumentCollection([makeDocument('a')]);
     $tree = new DocumentTree([new TreeNode('A', 'a')]);
 
-    $cache->rememberTree($docs, fn (): DocumentTree => $tree);
-    $hit = $cache->rememberTree($docs, fn (): DocumentTree => $tree);
+    $cache->rememberTree($docs, function () use ($tree): DocumentTree {
+        return $tree;
+    });
+    $hit = $cache->rememberTree($docs, function () use ($tree): DocumentTree {
+        return $tree;
+    });
 
     expect($hit)->toBeInstanceOf(DocumentTree::class)
         ->and($hit)->not->toBeInstanceOf(__PHP_Incomplete_Class::class);

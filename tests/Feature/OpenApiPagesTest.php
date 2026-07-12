@@ -35,7 +35,7 @@ beforeEach(function () {
  */
 function widgetsSpec(string $version): array
 {
-    $nullableString = str_starts_with($version, '3.1')
+    $nullableString = strncmp($version, '3.1', strlen('3.1')) === 0
         ? ['type' => ['string', 'null']]
         : ['type' => 'string', 'nullable' => true];
 
@@ -265,8 +265,12 @@ it('groups operations under their tag in the sidebar tree', function (string $ve
     expect($widgets)->not->toBeNull()
         ->and($orders)->not->toBeNull();
 
-    $widgetSlugs = array_map(fn (TreeNode $child): string => $child->slug, $widgets->children);
-    $orderSlugs = array_map(fn (TreeNode $child): string => $child->slug, $orders->children);
+    $widgetSlugs = array_map(function (TreeNode $child): string {
+        return $child->slug;
+    }, $widgets->children);
+    $orderSlugs = array_map(function (TreeNode $child): string {
+        return $child->slug;
+    }, $orders->children);
 
     expect($widgetSlugs)
         ->toContain('api/widgets/list-all-widgets')
@@ -341,9 +345,11 @@ it('emits heading anchors and a populated table of contents', function (string $
 it('indexes operations so they are searchable by path, summary and description', function (string $version) {
     $this->makeDocs(['openapi.json' => widgetsSpecJson($version)]);
 
-    $slugs = fn (string $term): array => collect(
-        $this->getJson("/docs/_laradocs/search?q={$term}")->assertOk()->json('results')
-    )->pluck('slug')->all();
+    $slugs = function (string $term): array {
+        return collect(
+            $this->getJson("/docs/_laradocs/search?q={$term}")->assertOk()->json('results')
+        )->pluck('slug')->all();
+    };
 
     // By description term, by summary term, and by a path/parameter token.
     expect($slugs('paginated'))->toContain('api/widgets/list-all-widgets')
@@ -408,7 +414,7 @@ it('rebuilds tree, search and sitemap caches when the spec changes', function (s
 
     // Rewrite the spec with an extra operation and bump the mtime so the
     // mtime-folding cache keys bust.
-    file_put_contents($root . '/openapi.json', widgetsSpecJson($version, extra: true));
+    file_put_contents($root . '/openapi.json', widgetsSpecJson($version, true));
     touch($root . '/openapi.json', time() + 60);
     clearstatcache();
 

@@ -111,7 +111,9 @@ it('the named limiter callback yields an unlimited limit when disabled', functio
 // ─── Custom resolver closure ──────────────────────────────────────────────────
 
 it('honours a custom closure resolver', function () {
-    Laradocs::rateLimit(fn () => Limit::perMinute(2)->by('test-consumer'));
+    Laradocs::rateLimit(function () {
+        return Limit::perMinute(2)->by('test-consumer');
+    });
 
     $this->getJson('/docs/_laradocs/api/tree')->assertOk();
     $this->getJson('/docs/_laradocs/api/tree')->assertOk();

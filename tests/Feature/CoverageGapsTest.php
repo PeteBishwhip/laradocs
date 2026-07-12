@@ -20,8 +20,12 @@ it('exposes the variables(), macro(), variableRegistry() and cache() helpers on 
     $laradocs = app(Laradocs::class);
 
     $laradocs->variables(['from_array' => 'A']);
-    $laradocs->variables(fn (): array => ['from_closure' => 'B']);
-    $laradocs->macro('coverage_macro', fn (): string => '<em>x</em>');
+    $laradocs->variables(function (): array {
+        return ['from_closure' => 'B'];
+    });
+    $laradocs->macro('coverage_macro', function (): string {
+        return '<em>x</em>';
+    });
 
     expect($laradocs->variableRegistry())->toBeInstanceOf(VariableRegistry::class)
         ->and($laradocs->macroRegistry())->toBeInstanceOf(MacroRegistry::class)
@@ -41,7 +45,9 @@ it('emits unbalanced @docs( verbatim and stops scanning', function () {
 });
 
 it('parses macro calls with nested parentheses', function () {
-    app(Laradocs::class)->macro('coverage_nested', fn (array $arguments): string => 'OK');
+    app(Laradocs::class)->macro('coverage_nested', function (array $arguments): string {
+        return 'OK';
+    });
 
     expect(app(DocumentParser::class)->parse("@docs('coverage_nested', value: (1+2))"))
         ->toContain('OK');
@@ -54,10 +60,15 @@ it('drops an empty @docs() call', function () {
 it('passes positional and boolean arguments to macros', function () {
     app(Laradocs::class)->macro('coverage_args', function (array $arguments): string {
         return '[' . implode('|', array_map(
-            fn (mixed $value): string => match (true) {
-                $value === true => 'TRUE',
-                $value === false => 'FALSE',
-                default => (string) $value,
+            function ($value): string {
+                switch (true) {
+                    case $value === true:
+                        return 'TRUE';
+                    case $value === false:
+                        return 'FALSE';
+                    default:
+                        return (string) $value;
+                }
             },
             $arguments
         )) . ']';
@@ -68,7 +79,9 @@ it('passes positional and boolean arguments to macros', function () {
 });
 
 it('accepts unquoted macro names and bare positional args', function () {
-    app(Laradocs::class)->macro('barename', fn (array $arguments): string => '[' . ($arguments[0] ?? '') . ']');
+    app(Laradocs::class)->macro('barename', function (array $arguments): string {
+        return '[' . ($arguments[0] ?? '') . ']';
+    });
 
     expect(app(DocumentParser::class)->parse('@docs(barename, bareval)'))
         ->toContain('[bareval]');
@@ -77,7 +90,9 @@ it('accepts unquoted macro names and bare positional args', function () {
 it('passes a single-character macro name through unquote unchanged', function () {
     // The unquote helper bails out when the value is shorter than the two
     // characters needed for a matching quote pair — exercises that early-out.
-    app(Laradocs::class)->macro('a', fn (): string => '<b>letter</b>');
+    app(Laradocs::class)->macro('a', function (): string {
+        return '<b>letter</b>';
+    });
 
     expect(app(DocumentParser::class)->parse('@docs(a)'))
         ->toContain('letter');
@@ -124,7 +139,9 @@ it('embeds youtube /embed/ urls and youtube-nocookie paths', function () {
 it('treats an unbalanced inline backtick run as text and keeps scanning', function () {
     $output = CodeAwareReplacer::apply(
         'a `unbalanced',
-        fn (string $text): string => '<<' . $text . '>>'
+        function (string $text): string {
+            return '<<' . $text . '>>';
+        }
     );
 
     expect($output)->toBe('<<a `unbalanced>>');
@@ -141,7 +158,9 @@ it('applies the configured route domain', function () {
     ]);
 
     $route = collect(Route::getRoutes()->getRoutes())
-        ->first(fn ($r) => $r->getName() === 'laradocs-coverage.index');
+        ->first(function ($r) {
+            return $r->getName() === 'laradocs-coverage.index';
+        });
 
     expect($route)->not->toBeNull()
         ->and($route->getDomain())->toBe('docs.example.test');
@@ -171,7 +190,7 @@ it('returns 404 for a known asset whose file is missing on disk', function () {
 
 it('reports a TreeNode as a section when it has any children', function () {
     $leaf = new TreeNode('Leaf', 'leaf');
-    $section = new TreeNode('Section', 'section', children: [$leaf]);
+    $section = new TreeNode('Section', 'section', null, [$leaf]);
 
     expect($section->isSection())->toBeTrue()
         ->and($leaf->isSection())->toBeFalse();

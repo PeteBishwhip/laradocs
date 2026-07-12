@@ -35,11 +35,13 @@ it('returns documents from the new docs.path via the Laradocs facade', function 
 
 it('writes cache entries under the current laradocs.cache.key_prefix', function () {
     $store = new ArrayStore;
-    $cache = new DocumentCache(new Repository($store), enabled: true);
+    $cache = new DocumentCache(new Repository($store), true);
     $doc = makeDocument('a');
 
     config()->set('laradocs.cache.key_prefix', 'tenant_a');
-    $cache->rememberHtml($doc, fn (): string => '<p>A</p>');
+    $cache->rememberHtml($doc, function (): string {
+        return '<p>A</p>';
+    });
 
     expect($store->get('tenant_a:doc:' . hash('sha256', $doc->path) . ':' . $doc->modifiedAt))
         ->toBe('<p>A</p>');
@@ -47,7 +49,9 @@ it('writes cache entries under the current laradocs.cache.key_prefix', function 
     // Changing the prefix produces a fresh key (no hit on the old prefix), so
     // the new render is written instead of a cached hit being returned.
     config()->set('laradocs.cache.key_prefix', 'tenant_b');
-    $cache->rememberHtml($doc, fn (): string => '<p>B</p>');
+    $cache->rememberHtml($doc, function (): string {
+        return '<p>B</p>';
+    });
 
     expect($store->get('tenant_b:doc:' . hash('sha256', $doc->path) . ':' . $doc->modifiedAt))
         ->toBe('<p>B</p>')

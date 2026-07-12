@@ -14,8 +14,9 @@ use Laradocs\Support\CacheKey;
  * Recursively assert a value contains only scalars and plain arrays — never an
  * object. This is what makes the structure safe under
  * `cache.serializable_classes => false`.
+ * @param mixed $value
  */
-function assertNoObjects(mixed $value): void
+function assertNoObjects($value): void
 {
     expect(is_object($value))->toBeFalse();
 
@@ -50,7 +51,9 @@ it('parses a 3.0 spec into a normalized spec', function () use ($fixtures) {
         ->and($spec->operations())->toHaveCount(2)
         ->and($spec->schemas())->toHaveKey('Pet');
 
-    $operationIds = array_map(fn (Operation $op): ?string => $op->operationId, $spec->operations());
+    $operationIds = array_map(function (Operation $op): ?string {
+        return $op->operationId;
+    }, $spec->operations());
     expect($operationIds)->toContain('listPets')->toContain('createPet');
 
     $list = collect($spec->operations())->firstWhere('operationId', 'listPets');

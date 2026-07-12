@@ -17,7 +17,9 @@ it('renders every page without error', function () {
     // carry only front-matter and no body — the controller 301s them before
     // rendering, so there is nothing to render. Skip them here.
     app(Laradocs::class)->all()
-        ->reject(fn ($document) => $document->redirect() !== null)
+        ->reject(function ($document) {
+            return $document->redirect() !== null;
+        })
         ->each(function ($document) {
             $html = app(Laradocs::class)->render($document);
             expect($html)->toBeString()->not->toBe('');
@@ -35,7 +37,9 @@ it('has no broken internal documentation links', function () {
         preg_match_all('~href="/docs/([^"#]*)~', $html, $matches);
 
         foreach ($matches[1] as $target) {
-            if (! in_array(trim($target, '/'), array_map(fn ($s) => trim($s, '/'), $slugs), true)) {
+            if (! in_array(trim($target, '/'), array_map(function ($s) {
+                return trim($s, '/');
+            }, $slugs), true)) {
                 $broken[] = $document->slug . ' -> /docs/' . $target;
             }
         }

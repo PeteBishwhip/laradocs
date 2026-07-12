@@ -42,7 +42,7 @@ it('leaves unrelated markdown untouched', function () {
 
 it('emits a matching block without hidden in server mode', function () {
     config()->set('laradocs._current_version', 'v2.0');
-    $extension = new VersionBlockExtension(server: true);
+    $extension = new VersionBlockExtension(true);
 
     $out = $extension->processMarkdown(":::version-since[2.0]\nNew in 2.0.\n:::");
 
@@ -53,7 +53,7 @@ it('emits a matching block without hidden in server mode', function () {
 
 it('strips a non-matching version-until block in server mode', function () {
     config()->set('laradocs._current_version', 'v2.0');
-    $extension = new VersionBlockExtension(server: true);
+    $extension = new VersionBlockExtension(true);
 
     $out = $extension->processMarkdown("Before\n\n:::version-until[2.0]\nGone.\n:::\n\nAfter");
 
@@ -65,7 +65,7 @@ it('strips a non-matching version-until block in server mode', function () {
 
 it('strips a non-matching version-only block in server mode', function () {
     config()->set('laradocs._current_version', 'v2.0');
-    $extension = new VersionBlockExtension(server: true);
+    $extension = new VersionBlockExtension(true);
 
     $out = $extension->processMarkdown(":::version-only[1.0, 1.1]\nOld notes.\n:::");
 
@@ -74,7 +74,7 @@ it('strips a non-matching version-only block in server mode', function () {
 
 it('keeps a version-only block when the current version is listed', function () {
     config()->set('laradocs._current_version', 'v1.1');
-    $extension = new VersionBlockExtension(server: true);
+    $extension = new VersionBlockExtension(true);
 
     $out = $extension->processMarkdown(":::version-only[1.0, 1.1]\nListed.\n:::");
 
@@ -85,7 +85,7 @@ it('keeps a version-only block when the current version is listed', function () 
 
 it('strips server-mode blocks when no current version is set', function () {
     config()->set('laradocs._current_version', null);
-    $extension = new VersionBlockExtension(server: true);
+    $extension = new VersionBlockExtension(true);
 
     expect($extension->processMarkdown(":::version-since[2.0]\nNew.\n:::"))->toBe('');
 });

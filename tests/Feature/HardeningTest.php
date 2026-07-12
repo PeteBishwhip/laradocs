@@ -55,12 +55,14 @@ it('treats quoted "false" as not hidden', function () {
 
     $docs = app(Laradocs::class)->all();
 
-    expect($docs->findBySlug('a')?->isHidden())->toBeFalse()
-        ->and($docs->findBySlug('b')?->isHidden())->toBeTrue();
+    expect(($nullsafeVariable1 = $docs->findBySlug('a')) ? $nullsafeVariable1->isHidden() : null)->toBeFalse()
+        ->and(($nullsafeVariable2 = $docs->findBySlug('b')) ? $nullsafeVariable2->isHidden() : null)->toBeTrue();
 });
 
 it('protects interpolation inside double-backtick code spans and tilde fences', function () {
-    $upper = fn (string $t): string => strtoupper($t);
+    $upper = function (string $t): string {
+        return strtoupper($t);
+    };
 
     expect(CodeAwareReplacer::apply('a `` x ` {{v}} `` b', $upper))
         ->toBe('A `` x ` {{v}} `` B');

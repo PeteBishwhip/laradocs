@@ -57,7 +57,7 @@ it('generates a spec file from the workbench app routes', function (): void {
 it('parses the emitted spec cleanly through OpenApiParser', function (): void {
     generateWorkbenchSpec();
 
-    $parser = new OpenApiParser(app('cache.store'), cacheEnabled: false);
+    $parser = new OpenApiParser(app('cache.store'), false);
 
     $normalized = $parser->parse($this->spec);
 
@@ -66,33 +66,31 @@ it('parses the emitted spec cleanly through OpenApiParser', function (): void {
     $operations = collect($normalized->operations);
 
     // The FormRequest-backed POST surfaces its inferred request body...
-    $store = $operations->first(fn ($op) => $op->method === 'POST' && $op->path === '/api/orders');
+    $store = $operations->first(function ($op) {
+        return $op->method === 'POST' && $op->path === '/api/orders';
+    });
     $body = $store->requestBody;
     expect($body)->not->toBe([]);
     $schema = $body['content']['application/json']['schema'];
     expect($schema['properties'])->toHaveKeys(['reference', 'quantity', 'email', 'status']);
 
     // ...and the JsonResource-backed GET surfaces its inferred response schema.
-    $show = $operations->first(fn ($op) => $op->method === 'GET' && $op->path === '/api/orders/{order}');
+    $show = $operations->first(function ($op) {
+        return $op->method === 'GET' && $op->path === '/api/orders/{order}';
+    });
     expect($show->responses)->toHaveKey('200');
 });
 
-it('applies attribute and docblock overrides over the inferred values', function (): void {
+it('applies docblock overrides over the inferred values', function (): void {
     generateWorkbenchSpec();
 
-    $parser = new OpenApiParser(app('cache.store'), cacheEnabled: false);
+    $parser = new OpenApiParser(app('cache.store'), false);
     $operations = collect($parser->parse($this->spec)->operations);
 
-    // index() carries an #[ApiOperation] attribute: summary, tags and the
-    // deprecated flag all override the inferred values.
-    $index = $operations->first(fn ($op) => $op->method === 'GET' && $op->path === '/api/orders');
-    expect($index->summary)->toBe('List all orders')
-        ->and($index->tags)->toContain('Orders')
-        ->and($index->deprecated)->toBeTrue();
-
-    // show() carries no attribute — its summary/description come from the
-    // action docblock instead.
-    $show = $operations->first(fn ($op) => $op->method === 'GET' && $op->path === '/api/orders/{order}');
+    // show() summary/description come from the action docblock.
+    $show = $operations->first(function ($op) {
+        return $op->method === 'GET' && $op->path === '/api/orders/{order}';
+    });
     expect($show->summary)->toBe('Show a single order.')
         ->and($show->description)->toContain('identified by the given id')
         ->and($show->deprecated)->toBeFalse();
@@ -103,14 +101,6 @@ it('renders the emitted spec through the Pillar A reference pages', function ():
 
     // Overview page mounts under the base slug.
     $this->get('/docs/api')->assertOk();
-
-    // The attribute-tagged operation nests under its overridden tag and shows
-    // the overridden summary plus the deprecated marker.
-    $index = $this->get('/docs/api/orders/list-all-orders')->assertOk()->getContent();
-    expect($index)
-        ->toContain('GET')
-        ->toContain('/api/orders')
-        ->toContain('List all orders');
 
     // The docblock-described operation renders its summary and path parameter.
     $show = $this->get('/docs/api/order/show-a-single-order')->assertOk()->getContent();
