@@ -1,5 +1,3 @@
-@use('Laradocs\Routing\DocumentUrl')
-@use('Laradocs\Documents\TreeNode')
 @php
     $active = $activeSlug ?? null;
     $showRoot = (bool) config('laradocs.ui.sidebar.show_root', true);
@@ -11,7 +9,7 @@
             @if($showRoot && $tree->rootDocument)
                 <ul>
                     <li>
-                        <a href="{{ DocumentUrl::index() }}" class="{{ ($active === '' || $active === null) ? 'is-active' : '' }}">
+                        <a href="{{ \Laradocs\Routing\DocumentUrl::index() }}" class="{{ ($active === '' || $active === null) ? 'is-active' : '' }}">
                             {{ $tree->rootDocument->title() }}
                         </a>
                     </li>
@@ -26,9 +24,9 @@
                     // reference inside the Overview page.
                     $items = [];
                     foreach ($nodes as $node) {
-                        $marker = $node->document?->metadata->get('openapi');
+                        $marker = $node->document !== null ? $node->document->metadata->get('openapi') : null;
                         if (is_array($marker) && ($marker['type'] ?? null) === 'overview' && $node->children !== []) {
-                            $items[] = new TreeNode($node->title, $node->slug, $node->document, [], $node->depth);
+                            $items[] = new \Laradocs\Documents\TreeNode($node->title, $node->slug, $node->document, [], $node->depth);
                             foreach ($node->children as $child) {
                                 $items[] = $child;
                             }
@@ -40,7 +38,7 @@
                 @if($group !== '')
                     <div class="laradocs-nav-group"><span>{{ $group }}</span></div>
                 @endif
-                <ul @class(['laradocs-nav-group-items' => $group !== ''])>
+                <ul class="{{ $group !== '' ? 'laradocs-nav-group-items' : '' }}">
                     @foreach($items as $node)
                         @include('laradocs::partials.sidebar-node', ['node' => $node, 'active' => $active])
                     @endforeach

@@ -5,12 +5,16 @@
 --}}
 @php
     $status = (string) $response['status'];
-    $statusClass = match (substr($status, 0, 1)) {
-        '2' => 'is-success',
-        '3' => 'is-redirect',
-        '4', '5' => 'is-error',
-        default => 'is-info',
-    };
+    $statusGroup = substr($status, 0, 1);
+    if ($statusGroup === '2') {
+        $statusClass = 'is-success';
+    } elseif ($statusGroup === '3') {
+        $statusClass = 'is-redirect';
+    } elseif ($statusGroup === '4' || $statusGroup === '5') {
+        $statusClass = 'is-error';
+    } else {
+        $statusClass = 'is-info';
+    }
 @endphp
 <div class="laradocs-openapi-response {{ $statusClass }}">
     <div class="laradocs-openapi-response-head">

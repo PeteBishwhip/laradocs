@@ -1,8 +1,5 @@
 @extends('laradocs::layout')
 
-@use('Laradocs\Routing\DocumentUrl')
-@use('Laradocs\Icons\Icon')
-@use('Illuminate\Support\Str')
 
 @section('title', $document->title())
 @if($document->metadata->description)
@@ -12,13 +9,13 @@
 @section('content')
     @if(count($breadcrumbs) > 1)
         <nav class="laradocs-breadcrumbs" aria-label="{{ __('laradocs::laradocs.nav.breadcrumb') }}">
-            <a href="{{ DocumentUrl::index() }}">{{ __('laradocs::laradocs.nav.home') }}</a>
+            <a href="{{ \Laradocs\Routing\DocumentUrl::index() }}">{{ __('laradocs::laradocs.nav.home') }}</a>
             @foreach($breadcrumbs as $crumb)
                 <span aria-hidden="true">·</span>
                 @if($loop->last)
                     <span>{{ $crumb->title }}</span>
                 @elseif($crumb->isLink())
-                    <a href="{{ DocumentUrl::toSlug($crumb->slug) }}">{{ $crumb->title }}</a>
+                    <a href="{{ \Laradocs\Routing\DocumentUrl::toSlug($crumb->slug) }}">{{ $crumb->title }}</a>
                 @else
                     <span>{{ $crumb->title }}</span>
                 @endif
@@ -35,7 +32,7 @@
         @endif
         <h1 class="laradocs-page-title">
             @if($document->metadata->icon)
-                {!! Icon::render($document->metadata->icon) !!}
+                {!! \Laradocs\Icons\Icon::render($document->metadata->icon) !!}
             @endif
             {{ $document->title() }}
         </h1>
@@ -69,12 +66,14 @@
 
     @php
         $tagsEnabled = (bool) config('laradocs.tags.enabled', true);
-        $docTags = $tagsEnabled ? array_values(array_filter($document->metadata->tags, fn ($t) => trim((string) $t) !== '')) : [];
+        $docTags = $tagsEnabled ? array_values(array_filter($document->metadata->tags, function ($tag) {
+            return trim((string) $tag) !== '';
+        })) : [];
     @endphp
     @if($docTags !== [])
         <nav class="laradocs-page-tags" aria-label="{{ __('laradocs::laradocs.tags.label') }}">
             @foreach($docTags as $tag)
-                <a class="laradocs-tag-chip" href="{{ DocumentUrl::tag(Str::slug($tag)) }}">{{ $tag }}</a>
+                <a class="laradocs-tag-chip" href="{{ \Laradocs\Routing\DocumentUrl::tag(\Illuminate\Support\Str::slug($tag)) }}">{{ $tag }}</a>
             @endforeach
         </nav>
     @endif
@@ -97,12 +96,12 @@
     @if($previous || $next)
         <nav class="laradocs-pager" aria-label="{{ __('laradocs::laradocs.nav.pagination') }}">
             @if($previous)
-                <a class="prev" href="{{ DocumentUrl::toSlug($previous->slug) }}">
+                <a class="prev" href="{{ \Laradocs\Routing\DocumentUrl::toSlug($previous->slug) }}">
                     <span>{{ __('laradocs::laradocs.nav.previous') }}</span>{{ $previous->title }}
                 </a>
             @endif
             @if($next)
-                <a class="next" href="{{ DocumentUrl::toSlug($next->slug) }}">
+                <a class="next" href="{{ \Laradocs\Routing\DocumentUrl::toSlug($next->slug) }}">
                     <span>{{ __('laradocs::laradocs.nav.next') }}</span>{{ $next->title }}
                 </a>
             @endif

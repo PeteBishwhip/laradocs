@@ -26,10 +26,10 @@
                         @if($handle === $latestVersion)
                             <span class="laradocs-version-badge laradocs-version-badge--latest">{{ __('laradocs::laradocs.version.badge.latest') }}</span>
                         @endif
-                        @if($info?->deprecated)
+                        @if($info !== null && $info->deprecated)
                             <span class="laradocs-version-badge laradocs-version-badge--deprecated">{{ __('laradocs::laradocs.version.badge.deprecated') }}</span>
                         @endif
-                        @if($info?->preRelease)
+                        @if($info !== null && $info->preRelease)
                             <span class="laradocs-version-badge laradocs-version-badge--pre-release">{{ __('laradocs::laradocs.version.badge.pre_release') }}</span>
                         @endif
                     </a>

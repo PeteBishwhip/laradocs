@@ -1,12 +1,10 @@
-@use('Laradocs\Routing\DocumentUrl')
-@use('Laradocs\Support\Version')
 @php
     $versionsEnabled = (bool) config('laradocs.versions.enabled', false);
     $outdatedEnabled = (bool) config('laradocs.versions.outdated_banner', true);
 
-    $currentVersion = Version::current();
-    $defaultVersion = Version::default();
-    $currentInfo = $currentVersion !== null ? Version::info($currentVersion) : null;
+    $currentVersion = \Laradocs\Support\Version::current();
+    $defaultVersion = \Laradocs\Support\Version::default();
+    $currentInfo = $currentVersion !== null ? \Laradocs\Support\Version::info($currentVersion) : null;
 
     // A page may opt out of the banner with `version_banner: false` front-matter,
     // surfaced as the typed Metadata::$versionBanner property (null = unset).
@@ -18,14 +16,14 @@
         && $defaultVersion !== null
         && $currentVersion !== $defaultVersion
         && ! $suppressed
-        && ! ($currentInfo?->hidden ?? false);
+        && ! ($currentInfo !== null ? $currentInfo->hidden : false);
 
-    $currentLabel = $currentInfo?->label ?? $currentVersion;
-    $deprecatedMessage = $currentInfo?->deprecatedMessage;
+    $currentLabel = $currentInfo !== null ? $currentInfo->label : $currentVersion;
+    $deprecatedMessage = $currentInfo !== null ? $currentInfo->deprecatedMessage : null;
 @endphp
 
 @if($showOutdated)
-    @php($currentUrl = DocumentUrl::forVersion(isset($document) ? $document->slug : '', $defaultVersion))
+    @php($currentUrl = \Laradocs\Routing\DocumentUrl::forVersion(isset($document) ? $document->slug : '', $defaultVersion))
     <div class="laradocs-banner laradocs-version-outdated" role="alert" data-laradocs-outdated-banner>
         <div class="laradocs-banner-inner">
             @if($deprecatedMessage !== null && $deprecatedMessage !== '')

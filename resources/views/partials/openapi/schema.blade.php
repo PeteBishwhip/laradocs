@@ -20,8 +20,9 @@
 @php
     $head = $head ?? true;
     $open = $open ?? true;
-    $expandable = static fn (array $n): bool =>
-        ! empty($n['properties']) || ! empty($n['items']) || ! empty($n['oneOf']) || ! empty($n['anyOf']);
+    $expandable = static function (array $node): bool {
+        return ! empty($node['properties']) || ! empty($node['items']) || ! empty($node['oneOf']) || ! empty($node['anyOf']);
+    };
 @endphp
 <div class="laradocs-openapi-schema">
     @if($head)

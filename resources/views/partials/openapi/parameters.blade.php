@@ -11,7 +11,9 @@
     }
     // Present locations in a stable, sensible order regardless of spec ordering.
     $order = ['path' => 0, 'query' => 1, 'header' => 2, 'cookie' => 3];
-    uksort($groups, fn ($a, $b) => ($order[$a] ?? 99) <=> ($order[$b] ?? 99));
+    uksort($groups, function ($a, $b) use ($order) {
+        return ($order[$a] ?? 99) <=> ($order[$b] ?? 99);
+    });
 
     // Full, static translation keys per location so each resolves (and stays
     // discoverable by the localisation linter — no dynamic key concatenation).

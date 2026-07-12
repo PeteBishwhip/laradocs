@@ -1,21 +1,19 @@
-@use('Laradocs\Routing\DocumentUrl')
-@use('Laradocs\Icons\Icon')
 <li>
     @if($node->isLink())
-        <a href="{{ DocumentUrl::toSlug($node->slug) }}"
+        <a href="{{ \Laradocs\Routing\DocumentUrl::toSlug($node->slug) }}"
            class="{{ ($active ?? null) === $node->slug ? 'is-active' : '' }}">
-            @if($node->document?->metadata->icon)
-                {!! Icon::render($node->document->metadata->icon) !!}
+            @if($node->document !== null && $node->document->metadata->icon)
+                {!! \Laradocs\Icons\Icon::render($node->document->metadata->icon) !!}
             @endif
             {{ $node->title }}
-            @if($node->document?->metadata->badge)
+            @if($node->document !== null && $node->document->metadata->badge)
                 <span class="laradocs-badge">{{ $node->document->metadata->badge }}</span>
             @endif
         </a>
     @else
         <div class="laradocs-nav-group">
-            @if($node->document?->metadata->icon)
-                {!! Icon::render($node->document->metadata->icon) !!}
+            @if($node->document !== null && $node->document->metadata->icon)
+                {!! \Laradocs\Icons\Icon::render($node->document->metadata->icon) !!}
             @endif
             <span>{{ $node->title }}</span>
         </div>

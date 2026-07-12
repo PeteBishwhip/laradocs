@@ -1,5 +1,3 @@
-@use('Laradocs\Routing\DocumentUrl')
-@use('Laradocs\Support\Version')
 @php
     /** @var array<string, mixed> $brand */
     $brand = (array) config('laradocs.ui.brand', []);
@@ -24,7 +22,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    @php $hasSeo = ! empty($seo) && function_exists('seo'); @endphp
+    @php $hasSeo = ! empty($seo); @endphp
     @if($hasSeo)
         {{-- ralphjsmit/laravel-seo already emits summary_large_image for pages
              with an image (our default), so only emit an explicit card when the
@@ -34,9 +32,7 @@
         @if(! empty($xCard) && $xCard !== 'summary_large_image')
             <meta name="twitter:card" content="{{ $xCard }}">
         @endif
-        {{-- Rich SEO meta (title, description, Open Graph, Twitter, canonical,
-             robots, favicon and JSON-LD) via ralphjsmit/laravel-seo. --}}
-        {!! seo($seo) !!}
+        {!! $seo->toHtml() !!}
     @else
         <title>@yield('title', $title)</title>
         @hasSection('description')
@@ -55,14 +51,14 @@
             } catch (e) {}
         })();
     </script>
-    @if(Version::current() !== null)<script>window.__laradocsVersion = '{{ Version::current() }}';</script>@endif
+    @if(\Laradocs\Support\Version::current() !== null)<script>window.__laradocsVersion = '{{ \Laradocs\Support\Version::current() }}';</script>@endif
     @if(config('laradocs.locale.cookie'))<script>window.__laradocsCookies = true;</script>@endif
     @if($loadWebfonts)
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
     @endif
-    <link rel="stylesheet" href="{{ DocumentUrl::asset('laradocs.css') }}">
+    <link rel="stylesheet" href="{{ \Laradocs\Routing\DocumentUrl::asset('laradocs.css') }}">
     @if($accent || $contentWidth || $fontSans || $fontMono || $fontDisplay)
         <style>
             :root {
@@ -99,7 +95,7 @@
                 @foreach($tree->grouped() as $group => $nodes)
                     @php
                         $first = collect($nodes)->first(fn($n) => $n->isLink());
-                        $href = $first ? DocumentUrl::toSlug($first->slug) : '#';
+                        $href = $first ? \Laradocs\Routing\DocumentUrl::toSlug($first->slug) : '#';
                         $label = $group === '' ? __('laradocs::laradocs.nav.overview') : $group;
                     @endphp
                     <a href="{{ $href }}"
@@ -131,7 +127,7 @@
         // segment can't ride a fixed _laradocs/search route, so the locale is
         // forwarded as ?lang= (which SetDocsLocale honours on API routes without
         // redirecting) to keep results and their URLs within the language.
-        $searchUrl = DocumentUrl::search();
+        $searchUrl = \Laradocs\Routing\DocumentUrl::search();
         $searchLocale = \Laradocs\Support\Locale::segment();
         if ($searchLocale !== null) {
             $searchUrl .= '?lang=' . $searchLocale;
@@ -156,7 +152,7 @@
                         @foreach($nodes as $node)
                             @if($node->isLink())
                                 <li>
-                                    <a href="{{ DocumentUrl::toSlug($node->slug) }}"
+                                    <a href="{{ \Laradocs\Routing\DocumentUrl::toSlug($node->slug) }}"
                                        data-label="{{ strtolower($node->title) }}">
                                         <span class="laradocs-palette-title">{{ $node->title }}</span>
                                         @if($group !== '')
@@ -169,7 +165,7 @@
                                 @foreach($node->children as $child)
                                     @if($child->isLink())
                                         <li>
-                                            <a href="{{ DocumentUrl::toSlug($child->slug) }}"
+                                            <a href="{{ \Laradocs\Routing\DocumentUrl::toSlug($child->slug) }}"
                                                data-label="{{ strtolower($child->title) }}">
                                                 <span class="laradocs-palette-title">{{ $child->title }}</span>
                                                 <span class="laradocs-palette-group">{{ $group !== '' ? $group . ' › ' . $node->title : $node->title }}</span>
@@ -194,7 +190,7 @@
         @include('laradocs::partials.footer', ['footer' => $footer, 'title' => $title])
     @endif
 
-    <script src="{{ DocumentUrl::asset('laradocs.js') }}"></script>
+    <script src="{{ \Laradocs\Routing\DocumentUrl::asset('laradocs.js') }}"></script>
     @stack('scripts')
 </body>
 </html>

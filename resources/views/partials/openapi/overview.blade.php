@@ -6,8 +6,6 @@
     reveal its endpoints — so a large spec stays scannable instead of unrolling
     every operation at once.
 --}}
-@use('Laradocs\Routing\DocumentUrl')
-@use('Laradocs\OpenApi\OperationSlugger')
 @php
     $version = isset($info['version']) && is_scalar($info['version']) ? (string) $info['version'] : null;
 
@@ -20,9 +18,11 @@
 
     // $operationSlugs maps each operation to the exact slug the loader mounted
     // it at (see OperationSlugger), so index links never drift from real URLs.
-    $operationUrl = static fn ($operation): string => DocumentUrl::toSlug(
-        $operationSlugs[OperationSlugger::identity($operation)] ?? '',
-    );
+    $operationUrl = static function ($operation) use ($operationSlugs): string {
+        return \Laradocs\Routing\DocumentUrl::toSlug(
+            $operationSlugs[\Laradocs\OpenApi\OperationSlugger::identity($operation)] ?? ''
+        );
+    };
 @endphp
 <div class="laradocs-openapi laradocs-openapi-overview">
     @if(($description = $describe($infoDescription)) !== '')
@@ -77,10 +77,10 @@
         </div>
 
         @foreach($byTag as $tag => $group)
-            <details class="laradocs-openapi-tag-section" id="section-{{ Str::slug($tag) }}">
+            <details class="laradocs-openapi-tag-section" id="section-{{ \Illuminate\Support\Str::slug($tag) }}">
                 <summary class="laradocs-openapi-tag-summary">
                     <span class="laradocs-openapi-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span>
-                    <h2 id="tag-{{ Str::slug($tag) }}" class="laradocs-openapi-tag-heading">
+                    <h2 id="tag-{{ \Illuminate\Support\Str::slug($tag) }}" class="laradocs-openapi-tag-heading">
                         {{ $tag }}
                         <span class="laradocs-openapi-tag-count">{{ trans_choice('laradocs::laradocs.openapi.endpoint_count', count($group), ['count' => count($group)]) }}</span>
                     </h2>
