@@ -1,6 +1,6 @@
 {
-    "name": "petebishwhip/laradocs",
-    "description": "Maintain beautiful, version-controlled documentation alongside your Laravel codebase. Markdown in, a polished docs site out.",
+    "name": "artmanclassic/laradocs-php7.3",
+    "description": "LaraDocs backport for PHP 7.3 and Laravel 8: Markdown documentation rendered as a polished Laravel site.",
     "keywords": [
         "laravel",
         "documentation",
@@ -8,7 +8,7 @@
         "markdown",
         "commonmark"
     ],
-    "homepage": "https://github.com/petebishwhip/laradocs",
+    "homepage": "https://github.com/artmanclassic/laradocs-php7.3",
     "license": "MIT",
     "authors": [
         {
@@ -17,36 +17,28 @@
         }
     ],
     "require": {
-        "php": "^8.3",
-        "devizzent/cebe-php-openapi": "^1.1",
-        "illuminate/contracts": "^11.14 || ^12.0 || ^13.0",
-        "illuminate/support": "^11.14 || ^12.0 || ^13.0",
-        "league/commonmark": "^2.4",
-        "ralphjsmit/laravel-seo": "^1.8",
-        "spatie/yaml-front-matter": "^2.0"
+        "php": "^7.3 || ^8.0",
+        "devizzent/cebe-php-openapi": "^1.0",
+        "illuminate/contracts": "^8.0",
+        "illuminate/support": "^8.0",
+        "league/commonmark": "^1.6",
+        "symfony/polyfill-php80": "^1.22",
+        "symfony/polyfill-php81": "^1.23",
+        "symfony/yaml": "^5.1"
     },
     "require-dev": {
-        "larastan/larastan": "^2.9 || ^3.0",
-        "laravel/mcp": "^0.8",
-        "laravel/pint": "^1.18",
-        "laravel/scout": "^11.2",
-        "meilisearch/meilisearch-php": "^1.0",
-        "nyholm/psr7": "^1.5",
-        "orchestra/testbench": "^9.0 || ^10.0 || ^11.0",
-        "orchestra/workbench": "^9.0 || ^10.0 || ^11.0",
-        "pestphp/pest": "^3.0 || ^4.0",
-        "pestphp/pest-plugin-laravel": "^3.0 || ^4.0",
-        "phpstan/phpstan": "^1.11 || ^2.0",
-        "rector/rector": "^1.2 || ^2.0",
-        "simonhamp/the-og": "^0.8",
-        "vimeo/psalm": "^6.16"
+        "guzzlehttp/guzzle": "^7.2",
+        "laravel/scout": "^8.6",
+        "orchestra/testbench": "^6.22",
+        "pestphp/pest": "^1.21",
+        "pestphp/pest-plugin-laravel": "^1.1",
+        "phpstan/phpstan": "^1.10"
     },
     "suggest": {
-        "dedoc/scramble": "Generate your OpenAPI spec with Scramble instead of the built-in native generator. Requires ^0.13 for Laravel 13 support. Select with laradocs.openapi.generator.driver=scramble (or leave it on auto) after installing.",
-        "laravel/mcp": "Expose your docs as an MCP server so AI assistants can search and browse them. Enable with LARADOCS_MCP=true after installing.",
-        "laravel/scout": "Power full-text docs search with Meilisearch, Typesense or Algolia (falls back to a built-in JSON index).",
+        "laravel/scout": "Power full-text docs search with a Laravel 8-compatible Scout 8 installation (falls back to the built-in JSON index).",
         "nyholm/psr7": "When using Meilisearch via Scout, install a PSR-17 factory (nyholm/psr7, guzzlehttp/psr7 ^2, or symfony/http-client) so the Meilisearch SDK can build HTTP requests.",
-        "simonhamp/the-og": "Generate Open Graph / social card images for pages that don't declare their own (the default OgImageGenerator)."
+        "simonhamp/the-og": "Optional Open Graph image generation; no PHP 7.3-compatible release is currently available.",
+        "laravel/mcp": "Optional MCP support is disabled on PHP 7.3 because laravel/mcp requires a newer PHP and Laravel release."
     },
     "autoload": {
         "psr-4": {
@@ -56,9 +48,7 @@
     "autoload-dev": {
         "psr-4": {
             "Laradocs\\Tests\\": "tests/",
-            "Workbench\\App\\": "workbench/app/",
-            "Workbench\\Database\\Factories\\": "workbench/database/factories/",
-            "Workbench\\Database\\Seeders\\": "workbench/database/seeders/"
+            "Workbench\\App\\": "workbench/app/"
         }
     },
     "config": {
@@ -80,30 +70,13 @@
         }
     },
     "scripts": {
-        "post-autoload-dump": [
-            "@clear",
-            "@prepare"
-        ],
-        "clear": "@php vendor/bin/testbench package:purge-skeleton --ansi",
-        "prepare": "@php vendor/bin/testbench package:discover --ansi",
-        "build": "@php vendor/bin/testbench workbench:build --ansi",
-        "serve": [
-            "Composer\\Config::disableProcessTimeout",
-            "@build",
-            "@php vendor/bin/testbench serve --ansi"
-        ],
-        "lint": "vendor/bin/pint",
-        "test:lint": "vendor/bin/pint --test",
+        "lint": "find src config tests -name '*.php' -print0 | xargs -0 -n1 php -l",
+        "test:lint": "@lint",
         "analyse": "vendor/bin/phpstan analyse --memory-limit=1G",
-        "psalm": "vendor/bin/psalm",
-        "refactor": "vendor/bin/rector",
-        "test:refactor": "vendor/bin/rector --dry-run",
         "test:unit": "vendor/bin/pest",
         "test:coverage": "vendor/bin/pest --coverage --min=100",
         "test": [
             "@test:lint",
-            "@analyse",
-            "@psalm",
             "@test:unit"
         ]
     },
