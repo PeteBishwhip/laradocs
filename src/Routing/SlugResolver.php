@@ -8,10 +8,21 @@ use Illuminate\Support\Str;
 
 final class SlugResolver
 {
-    public function __construct(
-        private readonly string $strategy = 'both',
-        private readonly string $indexName = '_index',
-    ) {}
+    /**
+     * @readonly
+     * @var string
+     */
+    private $strategy = 'both';
+    /**
+     * @readonly
+     * @var string
+     */
+    private $indexName = '_index';
+    public function __construct(string $strategy = 'both', string $indexName = '_index')
+    {
+        $this->strategy = $strategy;
+        $this->indexName = $indexName;
+    }
 
     /**
      * Resolve the public slug for a document.
@@ -36,7 +47,9 @@ final class SlugResolver
         $relativePath = str_replace('\\', '/', $relativePath);
         $withoutExtension = preg_replace('/\.[^.\/]+$/', '', $relativePath) ?? $relativePath;
 
-        $segments = array_values(array_filter(explode('/', $withoutExtension), fn ($s): bool => $s !== ''));
+        $segments = array_values(array_filter(explode('/', $withoutExtension), function ($s): bool {
+            return $s !== '';
+        }));
 
         // A section index file represents its parent directory.
         if ($segments !== [] && end($segments) === $this->indexName) {

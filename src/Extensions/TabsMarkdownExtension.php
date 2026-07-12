@@ -103,7 +103,9 @@ final class TabsMarkdownExtension implements MarkdownExtension
                 // parts: the content after the opening fence starts with a newline,
                 // creating a phantom empty first element before the first --- separator.
                 $parts = preg_split('/^---[ \t]+/m', $inner, -1, PREG_SPLIT_NO_EMPTY) ?: [];
-                $parts = array_values(array_filter($parts, fn (string $p): bool => trim($p) !== ''));
+                $parts = array_values(array_filter($parts, function (string $p): bool {
+                    return trim($p) !== '';
+                }));
 
                 if (empty($parts)) {
                     return '';
@@ -113,8 +115,8 @@ final class TabsMarkdownExtension implements MarkdownExtension
 
                 foreach ($parts as $part) {
                     $eol = strpos($part, "\n");
-                    $label = $eol !== false ? trim(substr($part, 0, $eol)) : trim($part);
-                    $body = $eol !== false ? rtrim(substr($part, $eol + 1)) : '';
+                    $label = $eol !== false ? trim((string) substr($part, 0, $eol)) : trim($part);
+                    $body = $eol !== false ? rtrim((string) substr($part, $eol + 1)) : '';
 
                     $escapedLabel = htmlspecialchars($label, ENT_QUOTES, 'UTF-8');
 

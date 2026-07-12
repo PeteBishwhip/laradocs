@@ -21,6 +21,11 @@ namespace Laradocs\OpenApi;
  */
 final class SchemaRenderer
 {
+    /**
+     * @readonly
+     * @var int
+     */
+    private $maxDepth = self::DEFAULT_MAX_DEPTH;
     private const DEFAULT_MAX_DEPTH = 20;
 
     /**
@@ -28,12 +33,13 @@ final class SchemaRenderer
      *
      * @var array<string, array<string, mixed>>
      */
-    private array $schemas;
+    private $schemas;
 
     public function __construct(
         NormalizedSpec $spec,
-        private readonly int $maxDepth = self::DEFAULT_MAX_DEPTH,
+        int $maxDepth = self::DEFAULT_MAX_DEPTH
     ) {
+        $this->maxDepth = $maxDepth;
         $schemas = [];
 
         foreach ($spec->schemas() as $name => $node) {
@@ -109,7 +115,7 @@ final class SchemaRenderer
             return ['type' => 'object', 'nullable' => false, 'ref' => $name, 'circular' => true];
         }
 
-        $resolved = $this->walk($this->schemas[$name], $depth + 1, [...$visited, $name]);
+        $resolved = $this->walk($this->schemas[$name], $depth + 1, array_merge($visited, [$name]));
         $resolved['ref'] = $name;
 
         return $resolved;
@@ -145,7 +151,9 @@ final class SchemaRenderer
         }
 
         $node[$keyword] = array_map(
-            fn (array $sub): array => $this->walk($sub, $depth + 1, $visited),
+            function (array $sub) use ($depth, $visited): array {
+                return $this->walk($sub, $depth + 1, $visited);
+            },
             $subschemas,
         );
 
@@ -261,13 +269,16 @@ final class SchemaRenderer
      * `"null"` in 3.1) to a primary type plus whether `null` was a member.
      *
      * @return array{0: string, 1: bool}
+     * @param mixed $type
      */
-    private function normalizeType(mixed $type): array
+    private function normalizeType($type): array
     {
         if (is_array($type)) {
             $types = Coerce::stringList($type);
             $nullable = in_array('null', $types, true);
-            $types = array_values(array_filter($types, static fn (string $t): bool => $t !== 'null'));
+            $types = array_values(array_filter($types, static function (string $t): bool {
+                return $t !== 'null';
+            }));
 
             return [$types[0] ?? 'mixed', $nullable];
         }
@@ -287,6 +298,6 @@ final class SchemaRenderer
     {
         $pos = strrpos($ref, '/');
 
-        return $pos === false ? '' : substr($ref, $pos + 1);
+        return $pos === false ? '' : (string) substr($ref, $pos + 1);
     }
 }

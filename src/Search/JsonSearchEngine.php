@@ -31,11 +31,15 @@ final class JsonSearchEngine implements SearchEngine
             }
         }
 
-        usort($scored, fn (array $a, array $b): int => $b['score'] <=> $a['score']
-            ?: strcmp($a['entry']['title'], $b['entry']['title']));
+        usort($scored, function (array $a, array $b): int {
+            return $b['score'] <=> $a['score']
+                ?: strcmp($a['entry']['title'], $b['entry']['title']);
+        });
 
         return array_map(
-            fn (array $row): array => $row['entry'],
+            function (array $row): array {
+                return $row['entry'];
+            },
             array_slice($scored, 0, $limit)
         );
     }
@@ -71,8 +75,8 @@ final class JsonSearchEngine implements SearchEngine
         $score = 0;
 
         foreach ($terms as $term) {
-            $inTitle = str_contains($title, $term);
-            $inContent = str_contains($content, $term);
+            $inTitle = strpos($title, $term) !== false;
+            $inContent = strpos($content, $term) !== false;
 
             if (! $inTitle && ! $inContent) {
                 return null;
@@ -91,6 +95,8 @@ final class JsonSearchEngine implements SearchEngine
     {
         $terms = preg_split('/\s+/u', mb_strtolower(trim($query))) ?: [];
 
-        return array_values(array_filter($terms, fn (string $term): bool => $term !== ''));
+        return array_values(array_filter($terms, function (string $term): bool {
+            return $term !== '';
+        }));
     }
 }

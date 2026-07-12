@@ -18,15 +18,52 @@ use Laradocs\Contracts\OpenApiSpecGenerator;
  */
 final class SpecGenerator implements OpenApiSpecGenerator
 {
-    public function __construct(
-        private readonly RouteCollector $routes,
-        private readonly RequestInspector $requests,
-        private readonly ResponseInspector $responses,
-        private readonly string $title = 'API',
-        private readonly string $version = '1.0.0',
-        private readonly ?string $serverUrl = null,
-        private readonly AttributeReader $attributes = new AttributeReader,
-    ) {}
+    /**
+     * @readonly
+     * @var \Laradocs\OpenApi\Generator\RouteCollector
+     */
+    private $routes;
+    /**
+     * @readonly
+     * @var \Laradocs\OpenApi\Generator\RequestInspector
+     */
+    private $requests;
+    /**
+     * @readonly
+     * @var \Laradocs\OpenApi\Generator\ResponseInspector
+     */
+    private $responses;
+    /**
+     * @readonly
+     * @var string
+     */
+    private $title = 'API';
+    /**
+     * @readonly
+     * @var string
+     */
+    private $version = '1.0.0';
+    /**
+     * @readonly
+     * @var string|null
+     */
+    private $serverUrl;
+    /**
+     * @readonly
+     * @var \Laradocs\OpenApi\Generator\AttributeReader
+     */
+    private $attributes;
+    public function __construct(RouteCollector $routes, RequestInspector $requests, ResponseInspector $responses, string $title = 'API', string $version = '1.0.0', ?string $serverUrl = null, ?AttributeReader $attributes = null)
+    {
+        $attributes = $attributes ?? new AttributeReader;
+        $this->routes = $routes;
+        $this->requests = $requests;
+        $this->responses = $responses;
+        $this->title = $title;
+        $this->version = $version;
+        $this->serverUrl = $serverUrl;
+        $this->attributes = $attributes;
+    }
 
     /**
      * @return array<string, mixed>
@@ -223,7 +260,7 @@ final class SpecGenerator implements OpenApiSpecGenerator
     private function summary(CollectedRoute $route): string
     {
         if ($route->action !== null && $route->action !== '__invoke') {
-            return Str::of($route->action)->headline()->toString();
+            return (string) Str::of($route->action)->headline();
         }
 
         return strtoupper(implode('/', $route->methods)) . ' ' . $route->uri;
@@ -243,10 +280,11 @@ final class SpecGenerator implements OpenApiSpecGenerator
     private function tag(CollectedRoute $route): string
     {
         if ($route->controller !== null) {
-            return Str::of(class_basename($route->controller))
+            $tag = (string) Str::of(class_basename($route->controller))
                 ->beforeLast('Controller')
-                ->headline()
-                ->toString() ?: 'Default';
+                ->headline();
+
+            return $tag !== '' ? $tag : 'Default';
         }
 
         return 'Default';

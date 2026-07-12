@@ -18,9 +18,15 @@ use Laradocs\Support\VersionRegistry;
  */
 final class ApiVersionsController
 {
-    public function __construct(
-        private readonly VersionRegistry $registry,
-    ) {}
+    /**
+     * @readonly
+     * @var \Laradocs\Support\VersionRegistry
+     */
+    private $registry;
+    public function __construct(VersionRegistry $registry)
+    {
+        $this->registry = $registry;
+    }
 
     public function __invoke(): JsonResponse
     {

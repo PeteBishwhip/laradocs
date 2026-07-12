@@ -24,8 +24,9 @@ final class LastUpdatedConfig
      *
      * Register via `LastUpdatedConfig::setResolver(fn (Document $doc) => ...)`
      * in a service provider. Pass `null` to clear and revert to config.
+     * @var \Closure|null
      */
-    private static ?Closure $resolver = null;
+    private static $resolver;
 
     /**
      * Register a custom resolver for the "last updated" date.
@@ -75,14 +76,17 @@ final class LastUpdatedConfig
             ? CarbonImmutable::createFromTimestamp($document->modifiedAt)
             : null;
 
-        $render = static fn (?CarbonImmutable $carbon) => $carbon
-            ?->settings(['locale' => $locale])
-            ->translatedFormat($format);
-
-        return match ($source) {
-            'mtime' => $render($mtimeCarbon),
-            'front_matter_or_mtime' => $render($document->metadata->updatedAtCarbon() ?? $mtimeCarbon),
-            default => $render($document->metadata->updatedAtCarbon()),
+        $render = static function (?CarbonImmutable $carbon) use ($locale, $format) {
+            return ($nullsafeVariable1 = $carbon) ? $nullsafeVariable1->settings(['locale' => $locale])->translatedFormat($format) : null;
         };
+
+        switch ($source) {
+            case 'mtime':
+                return $render($mtimeCarbon);
+            case 'front_matter_or_mtime':
+                return $render($document->metadata->updatedAtCarbon() ?? $mtimeCarbon);
+            default:
+                return $render($document->metadata->updatedAtCarbon());
+        }
     }
 }

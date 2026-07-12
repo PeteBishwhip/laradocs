@@ -19,32 +19,64 @@ use Laradocs\Search\Contracts\SearchEngine;
  */
 final class SearchManager
 {
-    private ?SearchEngine $resolved = null;
+    /**
+     * @readonly
+     * @var string
+     */
+    private $driver;
+    /**
+     * @readonly
+     * @var bool
+     */
+    private $scoutAvailable;
+    /**
+     * @readonly
+     * @var bool
+     */
+    private $scoutConfigured;
+    /**
+     * @var Closure():SearchEngine
+     * @readonly
+     */
+    private $scoutFactory;
+    /**
+     * @readonly
+     * @var \Laradocs\Search\Contracts\SearchEngine
+     */
+    private $json;
+    /**
+     * @var \Laradocs\Search\Contracts\SearchEngine|null
+     */
+    private $resolved;
 
     /**
      * @param  Closure(): SearchEngine  $scoutFactory
      */
-    public function __construct(
-        private readonly string $driver,
-        private readonly bool $scoutAvailable,
-        private readonly bool $scoutConfigured,
-        private readonly Closure $scoutFactory,
-        private readonly SearchEngine $json,
-    ) {}
+    public function __construct(string $driver, bool $scoutAvailable, bool $scoutConfigured, Closure $scoutFactory, SearchEngine $json)
+    {
+        $this->driver = $driver;
+        $this->scoutAvailable = $scoutAvailable;
+        $this->scoutConfigured = $scoutConfigured;
+        $this->scoutFactory = $scoutFactory;
+        $this->json = $json;
+    }
 
     public function engine(): SearchEngine
     {
-        return $this->resolved ??= $this->resolve();
+        return $this->resolved = $this->resolved ?? $this->resolve();
     }
 
     private function resolve(): SearchEngine
     {
-        return match ($this->driver) {
-            'json' => $this->json,
-            'scout' => $this->scoutAvailable ? ($this->scoutFactory)() : $this->json,
-            default => $this->scoutAvailable && $this->scoutConfigured
-                ? ($this->scoutFactory)()
-                : $this->json,
-        };
+        switch ($this->driver) {
+            case 'json':
+                return $this->json;
+            case 'scout':
+                return $this->scoutAvailable ? ($this->scoutFactory)() : $this->json;
+            default:
+                return $this->scoutAvailable && $this->scoutConfigured
+                    ? ($this->scoutFactory)()
+                    : $this->json;
+        }
     }
 }

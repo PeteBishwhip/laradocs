@@ -14,10 +14,21 @@ use Laradocs\Support\Config;
 
 final class ApiSearchController
 {
-    public function __construct(
-        private readonly Laradocs $laradocs,
-        private readonly SearchEngine $engine,
-    ) {}
+    /**
+     * @readonly
+     * @var \Laradocs\Laradocs
+     */
+    private $laradocs;
+    /**
+     * @readonly
+     * @var \Laradocs\Search\Contracts\SearchEngine
+     */
+    private $engine;
+    public function __construct(Laradocs $laradocs, SearchEngine $engine)
+    {
+        $this->laradocs = $laradocs;
+        $this->engine = $engine;
+    }
 
     public function __invoke(Request $request): JsonResponse
     {
@@ -34,17 +45,19 @@ final class ApiSearchController
             Config::int('laradocs.search.limit', 20),
         );
 
-        $data = array_map(fn (array $entry): array => [
-            'type' => 'page',
-            'id' => $entry['slug'] === '' ? '_root' : $entry['slug'],
-            'attributes' => [
-                'title' => $entry['title'],
-                'slug' => $entry['slug'],
-                'url' => DocumentUrl::toSlug($entry['slug']),
-                'group' => $entry['group'],
-                'excerpt' => Excerpt::make($entry['content'], $query),
-            ],
-        ], $results);
+        $data = array_map(function (array $entry) use ($query): array {
+            return [
+                'type' => 'page',
+                'id' => $entry['slug'] === '' ? '_root' : $entry['slug'],
+                'attributes' => [
+                    'title' => $entry['title'],
+                    'slug' => $entry['slug'],
+                    'url' => DocumentUrl::toSlug($entry['slug']),
+                    'group' => $entry['group'],
+                    'excerpt' => Excerpt::make($entry['content'], $query),
+                ],
+            ];
+        }, $results);
 
         return $this->envelope($request, $data);
     }

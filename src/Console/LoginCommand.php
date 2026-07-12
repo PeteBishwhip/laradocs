@@ -24,7 +24,7 @@ final class LoginCommand extends Command
 
         $base = Config::string('laradocs.deploy.url', 'https://laradocs.dev');
 
-        $this->components->info("Opening your browser to authorize with {$base} …");
+        $this->info("Opening your browser to authorize with {$base} …");
 
         try {
             $token = $oauth->login(function (string $authorizeUrl): void {
@@ -32,14 +32,14 @@ final class LoginCommand extends Command
                 $this->line('  ' . $authorizeUrl);
             });
         } catch (Throwable $e) {
-            $this->components->error($e->getMessage());
+            $this->error($e->getMessage());
 
             return self::FAILURE;
         }
 
         $credentials->store($base, $token);
 
-        $this->components->info('Authenticated. You can now run laradocs:deploy.');
+        $this->info('Authenticated. You can now run laradocs:deploy.');
 
         return self::SUCCESS;
     }

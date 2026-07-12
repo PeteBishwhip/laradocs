@@ -39,6 +39,51 @@ use Laradocs\Support\CacheKey;
 final class OpenApiLoader implements DocumentLoader
 {
     /**
+     * @readonly
+     * @var \Laradocs\OpenApi\OpenApiParser
+     */
+    private $parser;
+    /**
+     * @var string|Closure():string
+     * @readonly
+     */
+    private $path;
+    /**
+     * @var array<int, string>
+     * @readonly
+     */
+    private $files = ['openapi.yaml', 'openapi.yml', 'openapi.json'];
+    /**
+     * @readonly
+     * @var string
+     */
+    private $baseSlug = 'api';
+    /**
+     * @readonly
+     * @var string|null
+     */
+    private $title;
+    /**
+     * @readonly
+     * @var string|null
+     */
+    private $group;
+    /**
+     * @readonly
+     * @var int
+     */
+    private $order = 0;
+    /**
+     * @var string|Closure():string
+     * @readonly
+     */
+    private $activeLocale = '';
+    /**
+     * @var string|Closure():string
+     * @readonly
+     */
+    private $defaultLocale = '';
+    /**
      * @param  string|Closure(): string  $path  The docs source to scan for spec
      *                                          files, re-invoked per call so a closure-backed path tracks the
      *                                          request's active version.
@@ -52,17 +97,18 @@ final class OpenApiLoader implements DocumentLoader
      *                                                   spec (openapi.{locale}.json or {locale}/openapi.json), falling back
      *                                                   to the un-suffixed file when no translation exists.
      */
-    public function __construct(
-        private readonly OpenApiParser $parser,
-        private readonly string|Closure $path,
-        private readonly array $files = ['openapi.yaml', 'openapi.yml', 'openapi.json'],
-        private readonly string $baseSlug = 'api',
-        private readonly ?string $title = null,
-        private readonly ?string $group = null,
-        private readonly int $order = 0,
-        private readonly string|Closure $activeLocale = '',
-        private readonly string|Closure $defaultLocale = '',
-    ) {}
+    public function __construct(OpenApiParser $parser, $path, array $files = ['openapi.yaml', 'openapi.yml', 'openapi.json'], string $baseSlug = 'api', ?string $title = null, ?string $group = null, int $order = 0, $activeLocale = '', $defaultLocale = '')
+    {
+        $this->parser = $parser;
+        $this->path = $path;
+        $this->files = $files;
+        $this->baseSlug = $baseSlug;
+        $this->title = $title;
+        $this->group = $group;
+        $this->order = $order;
+        $this->activeLocale = $activeLocale;
+        $this->defaultLocale = $defaultLocale;
+    }
 
     public function all(): DocumentCollection
     {
@@ -183,7 +229,7 @@ final class OpenApiLoader implements DocumentLoader
     private function localeVariant(string $dir, string $name, string $locale): ?string
     {
         $ext = pathinfo($name, PATHINFO_EXTENSION);
-        $stem = $ext === '' ? $name : substr($name, 0, -(strlen($ext) + 1));
+        $stem = $ext === '' ? $name : (string) substr($name, 0, -(strlen($ext) + 1));
         $suffixed = $dir . ($ext === '' ? "{$stem}.{$locale}" : "{$stem}.{$locale}.{$ext}");
 
         if (is_file($suffixed)) {
@@ -260,14 +306,14 @@ final class OpenApiLoader implements DocumentLoader
         $reference = $specPath . '#' . $opKey . '@' . $locale;
 
         return new Document(
-            path: $reference,
-            relativePath: $reference,
-            slug: $slug,
-            metadata: $metadata,
-            markdown: '',
-            html: null,
-            modifiedAt: $mtime,
-            locale: $locale === '' ? null : $locale,
+            $reference,
+            $reference,
+            $slug,
+            $metadata,
+            '',
+            null,
+            $mtime,
+            $locale === '' ? null : $locale,
         );
     }
 

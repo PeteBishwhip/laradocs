@@ -22,11 +22,27 @@ use Laradocs\Support\CacheKey;
  */
 final class OpenApiParser
 {
-    public function __construct(
-        private readonly Repository $cache,
-        private readonly bool $cacheEnabled = true,
-        private readonly ?int $ttl = null,
-    ) {}
+    /**
+     * @readonly
+     * @var \Illuminate\Contracts\Cache\Repository
+     */
+    private $cache;
+    /**
+     * @readonly
+     * @var bool
+     */
+    private $cacheEnabled = true;
+    /**
+     * @readonly
+     * @var int|null
+     */
+    private $ttl;
+    public function __construct(Repository $cache, bool $cacheEnabled = true, ?int $ttl = null)
+    {
+        $this->cache = $cache;
+        $this->cacheEnabled = $cacheEnabled;
+        $this->ttl = $ttl;
+    }
 
     /**
      * Parse the spec at the given path into a normalized, cache-safe value
@@ -98,12 +114,12 @@ final class OpenApiParser
         }
 
         return new NormalizedSpec(
-            openApiVersion: Coerce::string($data['openapi'] ?? ''),
-            info: Coerce::assoc($data['info'] ?? []),
-            servers: array_values(Coerce::listOfAssoc($data['servers'] ?? [])),
-            tags: array_values(Coerce::listOfAssoc($data['tags'] ?? [])),
-            operations: $this->operations(Coerce::assoc($data['paths'] ?? [])),
-            schemas: $schemaNodes,
+            Coerce::string($data['openapi'] ?? ''),
+            Coerce::assoc($data['info'] ?? []),
+            array_values(Coerce::listOfAssoc($data['servers'] ?? [])),
+            array_values(Coerce::listOfAssoc($data['tags'] ?? [])),
+            $this->operations(Coerce::assoc($data['paths'] ?? [])),
+            $schemaNodes,
         );
     }
 
@@ -129,16 +145,16 @@ final class OpenApiParser
                 $operation = Coerce::assoc($pathItem[$method]);
 
                 $operations[] = new Operation(
-                    method: strtoupper($method),
-                    path: (string) $path,
-                    operationId: Coerce::nullableString($operation['operationId'] ?? null),
-                    summary: Coerce::nullableString($operation['summary'] ?? null),
-                    description: Coerce::nullableString($operation['description'] ?? null),
-                    tags: array_values(Coerce::stringList($operation['tags'] ?? [])),
-                    parameters: array_values(Coerce::listOfAssoc($operation['parameters'] ?? [])),
-                    requestBody: Coerce::assoc($operation['requestBody'] ?? []),
-                    responses: Coerce::assoc($operation['responses'] ?? []),
-                    deprecated: Coerce::bool($operation['deprecated'] ?? false),
+                    strtoupper($method),
+                    (string) $path,
+                    Coerce::nullableString($operation['operationId'] ?? null),
+                    Coerce::nullableString($operation['summary'] ?? null),
+                    Coerce::nullableString($operation['description'] ?? null),
+                    array_values(Coerce::stringList($operation['tags'] ?? [])),
+                    array_values(Coerce::listOfAssoc($operation['parameters'] ?? [])),
+                    Coerce::assoc($operation['requestBody'] ?? []),
+                    Coerce::assoc($operation['responses'] ?? []),
+                    Coerce::bool($operation['deprecated'] ?? false),
                 );
             }
         }
@@ -149,15 +165,19 @@ final class OpenApiParser
     /**
      * Recursively cast the cebe serialisable structure (nested stdClass/array)
      * into plain PHP arrays.
+     * @param mixed $value
+     * @return mixed
      */
-    private function toArray(mixed $value): mixed
+    private function toArray($value)
     {
         if ($value instanceof \stdClass) {
             $value = (array) $value;
         }
 
         if (is_array($value)) {
-            return array_map(fn (mixed $item): mixed => $this->toArray($item), $value);
+            return array_map(function ($item) {
+                return $this->toArray($item);
+            }, $value);
         }
 
         return $value;

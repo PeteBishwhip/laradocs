@@ -13,12 +13,23 @@ use Illuminate\Support\Str;
 final class DocumentTree
 {
     /**
+     * @var array<int, TreeNode>
+     * @readonly
+     */
+    public $roots = [];
+    /**
+     * @readonly
+     * @var \Laradocs\Documents\Document|null
+     */
+    public $rootDocument;
+    /**
      * @param  array<int, TreeNode>  $roots
      */
-    public function __construct(
-        public readonly array $roots = [],
-        public readonly ?Document $rootDocument = null,
-    ) {}
+    public function __construct(array $roots = [], ?Document $rootDocument = null)
+    {
+        $this->roots = $roots;
+        $this->rootDocument = $rootDocument;
+    }
 
     /**
      * Assemble a multi-level tree from a flat collection of documents.
@@ -70,11 +81,13 @@ final class DocumentTree
         }
 
         $roots = array_map(
-            fn (string $slug): TreeNode => self::buildNode($slug, $index, $childSlugs),
+            function (string $slug) use ($index, $childSlugs): TreeNode {
+                return self::buildNode($slug, $index, $childSlugs);
+            },
             $rootSlugs
         );
 
-        usort($roots, self::compareNodes(...));
+        usort($roots, \Closure::fromCallable([self::class, 'compareNodes']));
 
         return new self($roots, $rootDocument);
     }
@@ -112,8 +125,12 @@ final class DocumentTree
     public function grouped(): Collection
     {
         return Collection::make($this->navigation())
-            ->groupBy(fn (TreeNode $node): string => $node->group() ?? '')
-            ->map(fn (Collection $nodes): array => $nodes->all());
+            ->groupBy(function (TreeNode $node): string {
+                return $node->group() ?? '';
+            })
+            ->map(function (Collection $nodes): array {
+                return $nodes->all();
+            });
     }
 
     /**
@@ -128,11 +145,13 @@ final class DocumentTree
         $data = $index[$slug];
 
         $children = array_map(
-            fn (string $childSlug): TreeNode => self::buildNode($childSlug, $index, $childSlugs),
+            function (string $childSlug) use ($index, $childSlugs): TreeNode {
+                return self::buildNode($childSlug, $index, $childSlugs);
+            },
             $childSlugs[$slug] ?? []
         );
 
-        usort($children, self::compareNodes(...));
+        usort($children, \Closure::fromCallable([self::class, 'compareNodes']));
 
         return new TreeNode($data['title'], $slug, $data['document'], $children, $data['depth']);
     }
@@ -157,7 +176,7 @@ final class DocumentTree
         $last = $segments[count($segments) - 1];
 
         $index[$slug] = [
-            'title' => Str::of($last)->replace('-', ' ')->title()->toString(),
+            'title' => (string) Str::of($last)->replace('-', ' ')->title(),
             'document' => null,
             'depth' => count($segments),
         ];

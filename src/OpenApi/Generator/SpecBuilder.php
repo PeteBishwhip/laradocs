@@ -21,10 +21,22 @@ use Symfony\Component\Yaml\Yaml;
  */
 final class SpecBuilder
 {
-    public function __construct(
-        private readonly OpenApiSpecGenerator $generator,
-        private readonly Filesystem $files = new Filesystem,
-    ) {}
+    /**
+     * @readonly
+     * @var \Laradocs\Contracts\OpenApiSpecGenerator
+     */
+    private $generator;
+    /**
+     * @readonly
+     * @var \Illuminate\Filesystem\Filesystem
+     */
+    private $files;
+    public function __construct(OpenApiSpecGenerator $generator, ?Filesystem $files = null)
+    {
+        $files = $files ?? new Filesystem;
+        $this->generator = $generator;
+        $this->files = $files;
+    }
 
     /**
      * Assemble the OpenAPI document as a plain nested array.

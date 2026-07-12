@@ -25,9 +25,9 @@ use Laradocs\Icons\IconRegistry;
 use Laradocs\Macros\MacroRegistry;
 use Laradocs\Support\Config;
 use Laradocs\Variables\VariableRegistry;
-use League\CommonMark\Environment\Environment;
+use League\CommonMark\Environment;
 use League\CommonMark\Extension\Attributes\AttributesExtension;
-use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
+use League\CommonMark\Extension\CommonMarkCoreExtension;
 use League\CommonMark\Extension\Footnote\FootnoteExtension;
 use League\CommonMark\Extension\GithubFlavoredMarkdownExtension;
 use League\CommonMark\MarkdownConverter;
@@ -38,7 +38,8 @@ final class MarkdownPipelineFactory
     {
         $extensions = Config::array('laradocs.parser.extensions');
 
-        $environment = new Environment([
+        $environment = new Environment;
+        $environment->mergeConfig([
             'html_input' => 'allow',
             'allow_unsafe_links' => false,
         ]);

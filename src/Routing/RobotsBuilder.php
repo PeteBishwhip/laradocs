@@ -89,8 +89,9 @@ final class RobotsBuilder
 
     /**
      * @return array<int, string>
+     * @param mixed $value
      */
-    private function strings(mixed $value): array
+    private function strings($value): array
     {
         if (is_string($value)) {
             $value = [$value];

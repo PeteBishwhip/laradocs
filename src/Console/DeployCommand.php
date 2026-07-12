@@ -30,12 +30,14 @@ final class DeployCommand extends Command
         $slug = $this->resolveSite();
 
         if ($slug === null) {
-            $this->components->error('No site specified. Pass --site or set LARADOCS_SITE.');
+            $this->error('No site specified. Pass --site or set LARADOCS_SITE.');
 
             return self::FAILURE;
         }
 
-        return $this->guardApi(fn (): int => $this->deploy($api, $docs, $slug, $this->refOption()));
+        return $this->guardApi(function () use ($api, $docs, $slug): int {
+            return $this->deploy($api, $docs, $slug, $this->refOption());
+        });
     }
 
     private function deploy(ApiClient $api, LocalDocs $docs, string $slug, string $ref): int
@@ -76,7 +78,7 @@ final class DeployCommand extends Command
             throw new DeployException("No markdown files found in {$docs->path()}. Aborting so the site is not wiped.");
         }
 
-        $this->components->info('Uploading ' . count($files) . ' file(s) …');
+        $this->info('Uploading ' . count($files) . ' file(s) …');
 
         return ['files' => $files];
     }
@@ -86,7 +88,7 @@ final class DeployCommand extends Command
      */
     private function gitPayload(string $ref): array
     {
-        $this->components->info($ref !== ''
+        $this->info($ref !== ''
             ? "Deploying from ref {$ref} …"
             : 'Deploying from the connected branch …');
 
@@ -102,14 +104,14 @@ final class DeployCommand extends Command
         $deployment = $result['deployment'] ?? null;
 
         if (is_array($deployment)) {
-            $this->components->info(sprintf(
+            $this->info(sprintf(
                 'Deployed %s: %d written, %d pruned.',
                 $slug,
                 Json::int($deployment['files_written'] ?? null),
                 Json::int($deployment['files_pruned'] ?? null),
             ));
         } else {
-            $this->components->info("Deploy queued for {$slug}.");
+            $this->info("Deploy queued for {$slug}.");
         }
 
         return self::SUCCESS;

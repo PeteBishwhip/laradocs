@@ -12,10 +12,21 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class ThrottleApiRequests
 {
-    public function __construct(
-        private readonly RateLimiterConfig $config,
-        private readonly ThrottleRequests $throttle,
-    ) {}
+    /**
+     * @readonly
+     * @var \Laradocs\Support\RateLimiterConfig
+     */
+    private $config;
+    /**
+     * @readonly
+     * @var \Illuminate\Routing\Middleware\ThrottleRequests
+     */
+    private $throttle;
+    public function __construct(RateLimiterConfig $config, ThrottleRequests $throttle)
+    {
+        $this->config = $config;
+        $this->throttle = $throttle;
+    }
 
     /**
      * @param  Closure(Request): Response  $next

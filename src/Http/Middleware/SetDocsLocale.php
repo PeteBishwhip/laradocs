@@ -111,8 +111,9 @@ final class SetDocsLocale
      * canonical path form, the locale string when a non-default segment is
      * present (after stripping it from the route), or null when there is nothing
      * to do and resolution should fall through to {@see Locale::determine()}.
+     * @return \Symfony\Component\HttpFoundation\Response|string|null
      */
-    private function resolveRouteLocale(Request $request): Response|string|null
+    private function resolveRouteLocale(Request $request)
     {
         if (! Locale::urlEnabled()) {
             return null;
@@ -137,8 +138,9 @@ final class SetDocsLocale
      * Returns a 301 Response when the default-locale prefix must be
      * canonicalised, the locale string when a non-default segment is found, or
      * null when no locale segment is present.
+     * @return \Symfony\Component\HttpFoundation\Response|string|null
      */
-    private function resolveFromRoute(Route $route): Response|string|null
+    private function resolveFromRoute(Route $route)
     {
         [$locale, $rest] = Locale::split($this->routePath($route));
 
@@ -202,7 +204,7 @@ final class SetDocsLocale
         unset($query['lang']);
 
         if ($query !== []) {
-            $target .= (str_contains($target, '?') ? '&' : '?') . http_build_query($query);
+            $target .= (strpos($target, '?') !== false ? '&' : '?') . http_build_query($query);
         }
 
         $response = redirect()->to($target, 301);

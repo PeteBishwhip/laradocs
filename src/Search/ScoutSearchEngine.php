@@ -24,10 +24,21 @@ use ReflectionProperty;
  */
 final class ScoutSearchEngine implements SearchEngine
 {
-    public function __construct(
-        private readonly EngineManager $engines,
-        private readonly string $index,
-    ) {}
+    /**
+     * @readonly
+     * @var \Laravel\Scout\EngineManager
+     */
+    private $engines;
+    /**
+     * @readonly
+     * @var string
+     */
+    private $index;
+    public function __construct(EngineManager $engines, string $index)
+    {
+        $this->engines = $engines;
+        $this->index = $index;
+    }
 
     public function search(string $query, array $index, int $limit): array
     {
@@ -81,10 +92,14 @@ final class ScoutSearchEngine implements SearchEngine
             $scored[] = ['score' => ($total - $i) * $entry['rank'], 'entry' => $entry];
         }
 
-        usort($scored, fn (array $a, array $b): int => $b['score'] <=> $a['score']
-            ?: strcmp($a['entry']['title'], $b['entry']['title']));
+        usort($scored, function (array $a, array $b): int {
+            return $b['score'] <=> $a['score']
+                ?: strcmp($a['entry']['title'], $b['entry']['title']);
+        });
 
-        return array_map(fn (array $row): array => $row['entry'], $scored);
+        return array_map(function (array $row): array {
+            return $row['entry'];
+        }, $scored);
     }
 
     public function sync(array $index): void
@@ -99,13 +114,15 @@ final class ScoutSearchEngine implements SearchEngine
         // @phpstan-ignore argument.type
         $engine->flush($this->prototype());
 
-        $documents = array_map(fn (array $entry): SearchableDocument => new SearchableDocument(
-            $this->index,
-            $entry['slug'],
-            $entry['title'],
-            $entry['content'],
-            $entry['group'],
-        ), $index);
+        $documents = array_map(function (array $entry): SearchableDocument {
+            return new SearchableDocument(
+                $this->index,
+                $entry['slug'],
+                $entry['title'],
+                $entry['content'],
+                $entry['group'],
+            );
+        }, $index);
 
         if ($documents !== []) {
             // @phpstan-ignore argument.type
@@ -197,8 +214,10 @@ final class ScoutSearchEngine implements SearchEngine
 
         $newFailures = array_values(array_filter(
             $failed,
-            fn (array $task): bool => is_int($task['uid'] ?? null)
-                && ($baselineTaskUid === null || $task['uid'] > $baselineTaskUid),
+            function (array $task) use ($baselineTaskUid): bool {
+                return is_int($task['uid'] ?? null)
+                    && ($baselineTaskUid === null || $task['uid'] > $baselineTaskUid);
+            },
         ));
 
         if ($newFailures === []) {
@@ -206,11 +225,13 @@ final class ScoutSearchEngine implements SearchEngine
         }
 
         $messages = array_map(
-            fn (array $task): string => sprintf(
-                '%s [%s]',
-                $this->failedTaskMessage($task),
-                is_string($task['type'] ?? null) ? $task['type'] : 'unknown task',
-            ),
+            function (array $task): string {
+                return sprintf(
+                    '%s [%s]',
+                    $this->failedTaskMessage($task),
+                    is_string($task['type'] ?? null) ? $task['type'] : 'unknown task',
+                );
+            },
             $newFailures,
         );
 

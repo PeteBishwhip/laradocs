@@ -34,11 +34,11 @@ trait ResolvesDeploySite
         try {
             return $work();
         } catch (ApiException $e) {
-            $this->components->error($e->userMessage());
+            $this->error($e->userMessage());
 
             return Command::FAILURE;
         } catch (DeployException|NotAuthenticatedException $e) {
-            $this->components->error($e->getMessage());
+            $this->error($e->getMessage());
 
             return Command::FAILURE;
         }

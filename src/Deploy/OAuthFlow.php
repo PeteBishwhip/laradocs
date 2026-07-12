@@ -92,11 +92,14 @@ class OAuthFlow
      */
     public function browserCommand(string $osFamily): string
     {
-        return match ($osFamily) {
-            'Darwin' => 'open',
-            'Windows' => 'start ""',
-            default => 'xdg-open',
-        };
+        switch ($osFamily) {
+            case 'Darwin':
+                return 'open';
+            case 'Windows':
+                return 'start ""';
+            default:
+                return 'xdg-open';
+        }
     }
 
     protected function exec(string $command): void

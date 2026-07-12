@@ -14,17 +14,63 @@ namespace Laradocs\Support;
  * newest stable version) and {@see self::$preRelease} (derived from the
  * normalised semver).
  */
-final readonly class VersionInfo
+final class VersionInfo
 {
-    public function __construct(
-        public string $key,
-        public string $label,
-        public ?string $semver = null,
-        public bool $stable = true,
-        public bool $deprecated = false,
-        public bool $hidden = false,
-        public bool $latest = false,
-        public bool $preRelease = false,
-        public ?string $deprecatedMessage = null,
-    ) {}
+    /**
+     * @readonly
+     * @var string
+     */
+    public $key;
+    /**
+     * @readonly
+     * @var string
+     */
+    public $label;
+    /**
+     * @readonly
+     * @var string|null
+     */
+    public $semver;
+    /**
+     * @readonly
+     * @var bool
+     */
+    public $stable = true;
+    /**
+     * @readonly
+     * @var bool
+     */
+    public $deprecated = false;
+    /**
+     * @readonly
+     * @var bool
+     */
+    public $hidden = false;
+    /**
+     * @readonly
+     * @var bool
+     */
+    public $latest = false;
+    /**
+     * @readonly
+     * @var bool
+     */
+    public $preRelease = false;
+    /**
+     * @readonly
+     * @var string|null
+     */
+    public $deprecatedMessage;
+    public function __construct(string $key, string $label, ?string $semver = null, bool $stable = true, bool $deprecated = false, bool $hidden = false, bool $latest = false, bool $preRelease = false, ?string $deprecatedMessage = null)
+    {
+        $this->key = $key;
+        $this->label = $label;
+        $this->semver = $semver;
+        $this->stable = $stable;
+        $this->deprecated = $deprecated;
+        $this->hidden = $hidden;
+        $this->latest = $latest;
+        $this->preRelease = $preRelease;
+        $this->deprecatedMessage = $deprecatedMessage;
+    }
 }

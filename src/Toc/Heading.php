@@ -6,9 +6,25 @@ namespace Laradocs\Toc;
 
 final class Heading
 {
-    public function __construct(
-        public readonly int $level,
-        public readonly string $id,
-        public readonly string $text,
-    ) {}
+    /**
+     * @readonly
+     * @var int
+     */
+    public $level;
+    /**
+     * @readonly
+     * @var string
+     */
+    public $id;
+    /**
+     * @readonly
+     * @var string
+     */
+    public $text;
+    public function __construct(int $level, string $id, string $text)
+    {
+        $this->level = $level;
+        $this->id = $id;
+        $this->text = $text;
+    }
 }

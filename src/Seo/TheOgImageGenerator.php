@@ -22,7 +22,7 @@ final class TheOgImageGenerator implements OgImageGenerator
     public function generate(OgImageData $data): string
     {
         try {
-            return $this->build($data, withLogo: true)->toString();
+            return $this->build($data, true)->toString();
         } catch (Throwable $e) {
             // The logo is the only input that reaches out to the filesystem or
             // network, so it's the likely culprit. Retry without it before
@@ -31,7 +31,7 @@ final class TheOgImageGenerator implements OgImageGenerator
                 throw $e;
             }
 
-            return $this->build($data, withLogo: false)->toString();
+            return $this->build($data, false)->toString();
         }
     }
 

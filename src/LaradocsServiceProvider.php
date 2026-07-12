@@ -127,16 +127,20 @@ final class LaradocsServiceProvider extends ServiceProvider
 
             if ($heroiconsPath !== null) {
                 $provider = new HeroiconProvider($heroiconsPath, $app->make(Filesystem::class));
-                $registry->register('heroicons', fn (string $name, string $variant): string => $provider($name, $variant));
+                $registry->register('heroicons', function (string $name, string $variant) use ($provider): string {
+                    return $provider($name, $variant);
+                });
             }
 
             return $registry;
         });
 
-        $this->app->singleton(SlugResolver::class, fn (): SlugResolver => new SlugResolver(
-            Config::string('laradocs.routing.strategy', 'both'),
-            Config::string('laradocs.docs.index', '_index'),
-        ));
+        $this->app->singleton(SlugResolver::class, function (): SlugResolver {
+            return new SlugResolver(
+                Config::string('laradocs.routing.strategy', 'both'),
+                Config::string('laradocs.docs.index', '_index'),
+            );
+        });
 
         $this->app->singleton(MetadataResolver::class, FrontMatterMetadataResolver::class);
 
@@ -200,7 +204,9 @@ final class LaradocsServiceProvider extends ServiceProvider
             new Filesystem,
             $app->make(MetadataResolver::class),
             $app->make(SlugResolver::class),
-            fn (): string => Version::docsPath(),
+            function (): string {
+                return Version::docsPath();
+            },
             $extensions,
             $ignored,
             $defaults,
@@ -208,9 +214,15 @@ final class LaradocsServiceProvider extends ServiceProvider
             // the in-page switcher. Per-language pages (page.fr.md or
             // fr/page.md) are served for the request's locale, falling back
             // to the default-locale file when a translation is missing.
-            fn (): array => array_keys(Locale::available()),
-            fn (): string => (string) $app->getLocale(),
-            fn (): string => Locale::fallback(),
+            function (): array {
+                return array_keys(Locale::available());
+            },
+            function () use ($app): string {
+                return (string) $app->getLocale();
+            },
+            function (): string {
+                return Locale::fallback();
+            },
         );
     }
 
@@ -226,16 +238,22 @@ final class LaradocsServiceProvider extends ServiceProvider
 
         return new OpenApiLoader(
             $this->makeOpenApiParser($app),
-            fn (): string => Version::docsPath(),
+            function (): string {
+                return Version::docsPath();
+            },
             $files,
             Config::string('laradocs.openapi.base_slug', 'api'),
             Config::nullableString('laradocs.openapi.title'),
             Config::nullableString('laradocs.openapi.group'),
             Config::int('laradocs.openapi.order'),
-            fn (): string => (string) $app->getLocale(),
+            function () use ($app): string {
+                return (string) $app->getLocale();
+            },
             // A localised spec (openapi.{locale}.json or {locale}/openapi.json) is
             // preferred for a non-default locale, matching content-page localisation.
-            fn (): string => Locale::fallback(),
+            function (): string {
+                return Locale::fallback();
+            },
         );
     }
 
@@ -378,14 +396,18 @@ final class LaradocsServiceProvider extends ServiceProvider
                 Config::string('laradocs.search.driver', 'auto'),
                 class_exists(EngineManager::class),
                 self::scoutIsConfigured(),
-                fn (): SearchEngine => new ScoutSearchEngine($app->make(EngineManager::class), $index),
+                function () use ($app, $index): SearchEngine {
+                    return new ScoutSearchEngine($app->make(EngineManager::class), $index);
+                },
                 new JsonSearchEngine,
             );
         });
 
         $this->app->bind(
             SearchEngine::class,
-            fn (Application $app): SearchEngine => $app->make(SearchManager::class)->engine(),
+            function (Application $app): SearchEngine {
+                return $app->make(SearchManager::class)->engine();
+            },
         );
     }
 
@@ -485,7 +507,7 @@ final class LaradocsServiceProvider extends ServiceProvider
     {
         $config = [self::CONFIG => $this->app->configPath('laradocs.php')];
         $views = [self::VIEWS => $this->app->resourcePath('views/vendor/laradocs')];
-        $lang = [self::LANG => $this->app->langPath('vendor/laradocs')];
+        $lang = [self::LANG => $this->app->langPath() . '/vendor/laradocs'];
         $assets = [self::DIST => $this->app->publicPath('vendor/laradocs')];
         $stubs = [self::STUBS => $this->app->basePath('stubs/laradocs')];
 
@@ -522,20 +544,26 @@ final class LaradocsServiceProvider extends ServiceProvider
         // to false to wire docs into its own routes, hooking the command
         // into `optimize` would throw RouteNotFoundException on every
         // deploy. The consumer is responsible for warming its own cache.
-        if (Config::bool('laradocs.route.register', true)) {
+        if (Config::bool('laradocs.route.register', true) && method_exists($this, 'optimizes')) {
             $this->optimizes('laradocs:cache', 'laradocs:clear');
         }
     }
 
     private function registerAbout(): void
     {
-        AboutCommand::add('Laradocs', fn (): array => [
-            'Route Prefix' => '/' . Config::string('laradocs.route.prefix'),
-            'Docs Path' => Config::string('laradocs.docs.path'),
-            'Caching' => Config::bool('laradocs.cache.enabled') ? 'enabled' : 'disabled',
-            'Search Driver' => Config::string('laradocs.search.driver'),
-            'Theme' => Config::string('laradocs.ui.theme'),
-            'Banner' => Config::bool('laradocs.ui.banner.enabled') ? Config::string('laradocs.ui.banner.type', 'info') : 'disabled',
-        ]);
+        if (! class_exists(AboutCommand::class) || ! method_exists(AboutCommand::class, 'add')) {
+            return;
+        }
+
+        AboutCommand::add('Laradocs', function (): array {
+            return [
+                'Route Prefix' => '/' . Config::string('laradocs.route.prefix'),
+                'Docs Path' => Config::string('laradocs.docs.path'),
+                'Caching' => Config::bool('laradocs.cache.enabled') ? 'enabled' : 'disabled',
+                'Search Driver' => Config::string('laradocs.search.driver'),
+                'Theme' => Config::string('laradocs.ui.theme'),
+                'Banner' => Config::bool('laradocs.ui.banner.enabled') ? Config::string('laradocs.ui.banner.type', 'info') : 'disabled',
+            ];
+        });
     }
 }

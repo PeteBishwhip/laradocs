@@ -14,13 +14,21 @@ use Laradocs\Support\ValueCaster;
  */
 final class MacroExtension implements MarkdownExtension
 {
-    public function __construct(
-        private readonly MacroRegistry $macros,
-    ) {}
+    /**
+     * @readonly
+     * @var \Laradocs\Macros\MacroRegistry
+     */
+    private $macros;
+    public function __construct(MacroRegistry $macros)
+    {
+        $this->macros = $macros;
+    }
 
     public function processMarkdown(string $markdown): string
     {
-        return CodeAwareReplacer::apply($markdown, fn (string $text): string => $this->expand($text));
+        return CodeAwareReplacer::apply($markdown, function (string $text): string {
+            return $this->expand($text);
+        });
     }
 
     private function expand(string $text): string
@@ -41,7 +49,7 @@ final class MacroExtension implements MarkdownExtension
                 return $result;
             }
 
-            $inner = substr($text, $start + strlen('@docs('), $close - ($start + strlen('@docs(')));
+            $inner = (string) substr($text, $start + strlen('@docs('), $close - ($start + strlen('@docs(')));
             $result .= $this->renderCall($inner);
             $offset = $close + 1;
         }

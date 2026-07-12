@@ -81,8 +81,8 @@ final class Html
     {
         $html = '';
 
-        foreach ($node->childNodes as $child) {
-            $html .= $node->ownerDocument?->saveHTML($child) ?? '';
+        foreach ($node->childNodes ?? [] as $child) {
+            $html .= (($nullsafeVariable1 = $node->ownerDocument) ? $nullsafeVariable1->saveHTML($child) : null) ?? '';
         }
 
         return $html;

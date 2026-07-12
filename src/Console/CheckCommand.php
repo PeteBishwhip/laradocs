@@ -19,7 +19,7 @@ final class CheckCommand extends Command
     protected $description = 'Validate internal links, detect redirect cycles, and surface orphaned pages';
 
     /** @var array<string, true> */
-    private array $slugIndex = [];
+    private $slugIndex = [];
 
     public function handle(Laradocs $laradocs): int
     {
@@ -36,7 +36,9 @@ final class CheckCommand extends Command
 
         $brokenLinks = array_values(array_filter(
             $links,
-            fn (array $link): bool => ! isset($this->slugIndex[$link['slug']]),
+            function (array $link): bool {
+                return ! isset($this->slugIndex[$link['slug']]);
+            },
         ));
 
         $linkedSlugs = [];
@@ -69,7 +71,7 @@ final class CheckCommand extends Command
         $this->renderFindings($brokenLinks, $orphans, $redirectCycles);
 
         if ($total === 0) {
-            $this->components->info('All checks passed.');
+            $this->info('All checks passed.');
         }
 
         return $total > 0 ? self::FAILURE : self::SUCCESS;
@@ -90,7 +92,7 @@ final class CheckCommand extends Command
             preg_match_all('/\[[^\]]*\]\(([^)\s]+)\)/', $document->markdown, $matches);
 
             foreach ($matches[1] as $href) {
-                if (! str_starts_with($href, $prefix)) {
+                if (strncmp($href, $prefix, strlen($prefix)) !== 0) {
                     continue;
                 }
 
@@ -198,7 +200,7 @@ final class CheckCommand extends Command
                 continue;
             }
 
-            $target = str_starts_with($raw, $prefix)
+            $target = strncmp($raw, $prefix, strlen($prefix)) === 0
                 ? $this->hrefToSlug($raw, $prefix)
                 : $raw;
 
@@ -228,7 +230,7 @@ final class CheckCommand extends Command
     {
         [$path] = explode('#', $href, 2);
 
-        return ltrim(substr($path, strlen($prefix)), '/');
+        return ltrim((string) substr($path, strlen($prefix)), '/');
     }
 
     /**
@@ -239,24 +241,29 @@ final class CheckCommand extends Command
     private function renderFindings(array $brokenLinks, array $orphans, array $redirectCycles): void
     {
         foreach ($brokenLinks as $finding) {
-            $this->components->twoColumnDetail(
+            $this->twoColumnDetail(
                 '<fg=red>BROKEN LINK</>',
                 sprintf('%s → <href=%s>%s</>', $finding['source'], $finding['href'], $finding['href']),
             );
         }
 
         foreach ($orphans as $orphan) {
-            $this->components->twoColumnDetail(
+            $this->twoColumnDetail(
                 '<fg=yellow>ORPHAN</>',
                 sprintf('%s  <fg=gray>(%s)</>', $orphan['slug'], $orphan['path']),
             );
         }
 
         foreach ($redirectCycles as $cycle) {
-            $this->components->twoColumnDetail(
+            $this->twoColumnDetail(
                 '<fg=red>REDIRECT CYCLE</>',
                 implode(' → ', $cycle['cycle']),
             );
         }
+    }
+
+    private function twoColumnDetail(string $label, string $detail): void
+    {
+        $this->line($label . '  ' . $detail);
     }
 }

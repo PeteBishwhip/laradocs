@@ -27,8 +27,9 @@ final class Locale
      * priority over the `laradocs.locale.cookie` config value.
      *
      * Register via `Laradocs::cookiesEnabled(fn () => ...)` in a service provider.
+     * @var \Closure|null
      */
-    private static ?Closure $cookieResolver = null;
+    private static $cookieResolver;
 
     /**
      * Register a callback that determines whether cookie persistence is enabled.
@@ -92,7 +93,7 @@ final class Locale
 
         return cache()
             ->store(Config::nullableString('laradocs.cache.store'))
-            ->remember($key, $ttl, self::scan(...));
+            ->remember($key, $ttl, \Closure::fromCallable([self::class, 'scan']));
     }
 
     /**
@@ -292,7 +293,7 @@ final class Locale
 
             foreach (array_slice($segments, 1) as $param) {
                 $param = trim($param);
-                if (str_starts_with($param, 'q=')) {
+                if (strncmp($param, 'q=', strlen('q=')) === 0) {
                     $q = (float) substr($param, 2);
 
                     break;
@@ -304,7 +305,9 @@ final class Locale
             }
         }
 
-        usort($tags, fn (array $a, array $b): int => $b['q'] <=> $a['q']);
+        usort($tags, function (array $a, array $b): int {
+            return $b['q'] <=> $a['q'];
+        });
 
         return $tags;
     }
@@ -352,7 +355,7 @@ final class Locale
      */
     private static function scan(): array
     {
-        $path = app()->langPath(self::PUBLISHED);
+        $path = app()->langPath() . '/' . self::PUBLISHED;
 
         if (! is_dir($path)) {
             return [];

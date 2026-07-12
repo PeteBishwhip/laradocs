@@ -14,12 +14,18 @@ use Closure;
  */
 final class IconRegistry
 {
+    /**
+     * @readonly
+     * @var string
+     */
+    private $defaultSet = 'heroicons';
     /** @var array<string, Closure(string, string): string> */
-    private array $sets = [];
+    private $sets = [];
 
-    public function __construct(
-        private readonly string $defaultSet = 'heroicons',
-    ) {}
+    public function __construct(string $defaultSet = 'heroicons')
+    {
+        $this->defaultSet = $defaultSet;
+    }
 
     /**
      * Register an icon set. The provider receives the icon name and variant
@@ -68,7 +74,7 @@ final class IconRegistry
             return '';
         }
 
-        $set ??= $this->defaultSet;
+        $set = $set ?? $this->defaultSet;
 
         if (! isset($this->sets[$set])) {
             return '';

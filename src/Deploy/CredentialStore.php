@@ -13,7 +13,14 @@ use Laradocs\Support\Config;
  */
 final class CredentialStore
 {
-    public function __construct(private Filesystem $files) {}
+    /**
+     * @var \Illuminate\Filesystem\Filesystem
+     */
+    private $files;
+    public function __construct(Filesystem $files)
+    {
+        $this->files = $files;
+    }
 
     /**
      * @return array{access_token:string,refresh_token:?string,token_type:string,expires_at:?int}|null

@@ -18,30 +18,126 @@ use Override;
 final class Metadata implements Arrayable
 {
     /**
+     * @readonly
+     * @var string|null
+     */
+    public $title;
+    /**
+     * @readonly
+     * @var string|null
+     */
+    public $description;
+    /**
+     * @readonly
+     * @var string|null
+     */
+    public $slug;
+    /**
+     * @readonly
+     * @var int
+     */
+    public $order = PHP_INT_MAX;
+    /**
+     * @readonly
+     * @var bool
+     */
+    public $hidden = false;
+    /**
+     * @readonly
+     * @var string|null
+     */
+    public $group;
+    /**
+     * @readonly
+     * @var string|null
+     */
+    public $badge;
+    /**
+     * @readonly
+     * @var string|null
+     */
+    public $icon;
+    /**
+     * @var array<int, string>
+     * @readonly
+     */
+    public $tags = [];
+    /**
+     * @readonly
+     * @var string|null
+     */
+    public $updatedAt;
+    /**
+     * @readonly
+     * @var string|null
+     */
+    public $author;
+    /**
+     * @readonly
+     * @var string|null
+     */
+    public $layout;
+    /**
+     * @readonly
+     * @var string|null
+     */
+    public $image;
+    /**
+     * @readonly
+     * @var string|null
+     */
+    public $redirect;
+    /**
+     * @readonly
+     * @var bool
+     */
+    public $searchable = true;
+    /**
+     * @readonly
+     * @var float
+     */
+    public $searchRank = 1.0;
+    /**
+     * @readonly
+     * @var bool|null
+     */
+    public $versionBanner;
+    /**
+     * @readonly
+     * @var string|null
+     */
+    public $unchangedSince;
+    /**
+     * @var array<string, mixed>
+     * @readonly
+     */
+    public $extra = [];
+    /**
      * @param  array<int, string>  $tags
      * @param  array<string, mixed>  $extra  Any front-matter keys without a dedicated property.
      */
-    public function __construct(
-        public readonly ?string $title = null,
-        public readonly ?string $description = null,
-        public readonly ?string $slug = null,
-        public readonly int $order = PHP_INT_MAX,
-        public readonly bool $hidden = false,
-        public readonly ?string $group = null,
-        public readonly ?string $badge = null,
-        public readonly ?string $icon = null,
-        public readonly array $tags = [],
-        public readonly ?string $updatedAt = null,
-        public readonly ?string $author = null,
-        public readonly ?string $layout = null,
-        public readonly ?string $image = null,
-        public readonly ?string $redirect = null,
-        public readonly bool $searchable = true,
-        public readonly float $searchRank = 1.0,
-        public readonly ?bool $versionBanner = null,
-        public readonly ?string $unchangedSince = null,
-        public readonly array $extra = [],
-    ) {}
+    public function __construct(?string $title = null, ?string $description = null, ?string $slug = null, int $order = PHP_INT_MAX, bool $hidden = false, ?string $group = null, ?string $badge = null, ?string $icon = null, array $tags = [], ?string $updatedAt = null, ?string $author = null, ?string $layout = null, ?string $image = null, ?string $redirect = null, bool $searchable = true, float $searchRank = 1.0, ?bool $versionBanner = null, ?string $unchangedSince = null, array $extra = [])
+    {
+        $this->title = $title;
+        $this->description = $description;
+        $this->slug = $slug;
+        $this->order = $order;
+        $this->hidden = $hidden;
+        $this->group = $group;
+        $this->badge = $badge;
+        $this->icon = $icon;
+        $this->tags = $tags;
+        $this->updatedAt = $updatedAt;
+        $this->author = $author;
+        $this->layout = $layout;
+        $this->image = $image;
+        $this->redirect = $redirect;
+        $this->searchable = $searchable;
+        $this->searchRank = $searchRank;
+        $this->versionBanner = $versionBanner;
+        $this->unchangedSince = $unchangedSince;
+        $this->extra = $extra;
+    }
 
     /**
      * Build metadata from a front-matter array, layering in defaults.
@@ -63,25 +159,25 @@ final class Metadata implements Arrayable
         $extra = array_diff_key($data, array_flip($known));
 
         return new self(
-            title: self::nullableString($data, 'title'),
-            description: self::nullableString($data, 'description'),
-            slug: self::nullableString($data, 'slug'),
-            order: isset($data['order']) && is_numeric($data['order']) ? (int) $data['order'] : PHP_INT_MAX,
-            hidden: self::toBool($data['hidden'] ?? false),
-            group: self::nullableString($data, 'group'),
-            badge: self::nullableString($data, 'badge'),
-            icon: self::nullableString($data, 'icon'),
-            tags: self::normaliseTags($data['tags'] ?? []),
-            updatedAt: self::nullableString($data, 'updated_at'),
-            author: self::nullableString($data, 'author'),
-            layout: self::nullableString($data, 'layout'),
-            image: self::nullableString($data, 'image'),
-            redirect: self::nullableString($data, 'redirect'),
-            searchable: self::toBool($data['search'] ?? true),
-            searchRank: is_numeric($data['search_rank'] ?? null) ? max(0.0, (float) $data['search_rank']) : 1.0,
-            versionBanner: array_key_exists('version_banner', $data) ? self::toBool($data['version_banner']) : null,
-            unchangedSince: self::nullableString($data, 'unchanged_since'),
-            extra: $extra,
+            self::nullableString($data, 'title'),
+            self::nullableString($data, 'description'),
+            self::nullableString($data, 'slug'),
+            isset($data['order']) && is_numeric($data['order']) ? (int) $data['order'] : PHP_INT_MAX,
+            self::toBool($data['hidden'] ?? false),
+            self::nullableString($data, 'group'),
+            self::nullableString($data, 'badge'),
+            self::nullableString($data, 'icon'),
+            self::normaliseTags($data['tags'] ?? []),
+            self::nullableString($data, 'updated_at'),
+            self::nullableString($data, 'author'),
+            self::nullableString($data, 'layout'),
+            self::nullableString($data, 'image'),
+            self::nullableString($data, 'redirect'),
+            self::toBool($data['search'] ?? true),
+            is_numeric($data['search_rank'] ?? null) ? max(0.0, (float) $data['search_rank']) : 1.0,
+            array_key_exists('version_banner', $data) ? self::toBool($data['version_banner']) : null,
+            self::nullableString($data, 'unchanged_since'),
+            $extra,
         );
     }
 
@@ -109,15 +205,17 @@ final class Metadata implements Arrayable
             return is_numeric($this->updatedAt)
                 ? CarbonImmutable::createFromTimestamp((int) $this->updatedAt)
                 : CarbonImmutable::parse($this->updatedAt);
-        } catch (\Throwable) {
+        } catch (\Throwable $exception) {
             return null;
         }
     }
 
     /**
      * Fetch a value by key, checking dedicated properties then extra data.
+     * @param mixed $default
+     * @return mixed
      */
-    public function get(string $key, mixed $default = null): mixed
+    public function get(string $key, $default = null)
     {
         if (property_exists($this, $key)) {
             return $this->{$key};
@@ -129,7 +227,6 @@ final class Metadata implements Arrayable
     /**
      * @return array<string, mixed>
      */
-    #[Override]
     public function toArray(): array
     {
         return array_merge([
@@ -165,8 +262,9 @@ final class Metadata implements Arrayable
     /**
      * Coerce a front-matter value to bool, treating the strings "false", "0",
      * "no" and "off" (case-insensitive) as false rather than truthy.
+     * @param mixed $value
      */
-    private static function toBool(mixed $value): bool
+    private static function toBool($value): bool
     {
         if (is_string($value)) {
             return ! in_array(strtolower(trim($value)), ['', 'false', '0', 'no', 'off'], true);
@@ -177,15 +275,18 @@ final class Metadata implements Arrayable
 
     /**
      * @return array<int, string>
+     * @param mixed $tags
      */
-    private static function normaliseTags(mixed $tags): array
+    private static function normaliseTags($tags): array
     {
         if (! is_array($tags)) {
             return is_scalar($tags) ? [(string) $tags] : [];
         }
 
         return array_values(array_map(
-            fn (mixed $tag): string => is_scalar($tag) ? (string) $tag : '',
+            function ($tag): string {
+                return is_scalar($tag) ? (string) $tag : '';
+            },
             $tags
         ));
     }

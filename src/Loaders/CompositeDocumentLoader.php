@@ -21,12 +21,18 @@ use Laradocs\Documents\DocumentCollection;
 final class CompositeDocumentLoader implements DocumentLoader
 {
     /**
+     * @var array<int, DocumentLoader>
+     * @readonly
+     */
+    private $loaders;
+    /**
      * @param  array<int, DocumentLoader>  $loaders  Consulted in order; earlier
      *                                               loaders win slug collisions in {@see find()}.
      */
-    public function __construct(
-        private readonly array $loaders,
-    ) {}
+    public function __construct(array $loaders)
+    {
+        $this->loaders = $loaders;
+    }
 
     public function all(): DocumentCollection
     {

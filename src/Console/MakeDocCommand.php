@@ -28,7 +28,7 @@ final class MakeDocCommand extends Command
         $path = rtrim(Config::string('laradocs.docs.path'), '/') . '/' . $relative;
 
         if ($files->exists($path) && ! $this->option('force')) {
-            $this->components->error('Document already exists: ' . $path);
+            $this->error('Document already exists: ' . $path);
 
             return self::FAILURE;
         }
@@ -36,7 +36,7 @@ final class MakeDocCommand extends Command
         $files->ensureDirectoryExists(dirname($path));
         $files->put($path, $this->stub($name));
 
-        $this->components->info('Created ' . $path);
+        $this->info('Created ' . $path);
 
         return self::SUCCESS;
     }
@@ -59,10 +59,11 @@ final class MakeDocCommand extends Command
 
         $path = is_file($published) ? $published : $package;
 
-        return Blade::render(
-            (string) file_get_contents($path),
-            ['title' => $title, 'group' => $group, 'order' => $order, 'name' => $name],
-            deleteCachedView: true,
-        );
+        return view()->file($path, [
+            'title' => $title,
+            'group' => $group,
+            'order' => $order,
+            'name' => $name,
+        ])->render();
     }
 }

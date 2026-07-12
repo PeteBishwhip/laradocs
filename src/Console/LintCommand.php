@@ -65,7 +65,7 @@ final class LintCommand extends Command
         $this->renderFindings($missingFields, $slugCollisions, $unknownLayouts, $invalidDates, $unresolvedIcons);
 
         if ($total === 0) {
-            $this->components->info('All lint checks passed.');
+            $this->info('All lint checks passed.');
         }
 
         return $total > 0 ? self::FAILURE : self::SUCCESS;
@@ -299,42 +299,47 @@ final class LintCommand extends Command
         array $slugCollisions,
         array $unknownLayouts,
         array $invalidDates,
-        array $unresolvedIcons,
+        array $unresolvedIcons
     ): void {
         foreach ($missingFields as $finding) {
-            $this->components->twoColumnDetail(
+            $this->twoColumnDetail(
                 '<fg=red>MISSING FIELD</>',
                 sprintf('%s  <fg=gray>"%s" missing  (%s)</>', $finding['slug'], $finding['field'], $finding['path']),
             );
         }
 
         foreach ($slugCollisions as $collision) {
-            $this->components->twoColumnDetail(
+            $this->twoColumnDetail(
                 '<fg=red>SLUG COLLISION</>',
                 sprintf('%s  <fg=gray>%s</>', $collision['slug'], implode(', ', $collision['paths'])),
             );
         }
 
         foreach ($unknownLayouts as $finding) {
-            $this->components->twoColumnDetail(
+            $this->twoColumnDetail(
                 '<fg=yellow>UNKNOWN LAYOUT</>',
                 sprintf('%s  <fg=gray>"%s" (%s)</>', $finding['slug'], $finding['layout'], $finding['path']),
             );
         }
 
         foreach ($invalidDates as $finding) {
-            $this->components->twoColumnDetail(
+            $this->twoColumnDetail(
                 '<fg=red>INVALID DATE</>',
                 sprintf('%s  <fg=gray>updated_at "%s" (%s)</>', $finding['slug'], $finding['value'], $finding['path']),
             );
         }
 
         foreach ($unresolvedIcons as $finding) {
-            $this->components->twoColumnDetail(
+            $this->twoColumnDetail(
                 '<fg=red>UNRESOLVED ICON</>',
                 sprintf('%s  <fg=gray>%s (%s)</>', $finding['slug'], $this->iconHint($finding), $finding['path']),
             );
         }
+    }
+
+    private function twoColumnDetail(string $label, string $detail): void
+    {
+        $this->line($label . '  ' . $detail);
     }
 
     /**

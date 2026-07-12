@@ -13,11 +13,27 @@ use Laradocs\Support\CacheKey;
 
 final class DocumentCache
 {
-    public function __construct(
-        private readonly Repository $store,
-        private readonly bool $enabled = true,
-        private readonly ?int $ttl = null,
-    ) {}
+    /**
+     * @readonly
+     * @var \Illuminate\Contracts\Cache\Repository
+     */
+    private $store;
+    /**
+     * @readonly
+     * @var bool
+     */
+    private $enabled = true;
+    /**
+     * @readonly
+     * @var int|null
+     */
+    private $ttl;
+    public function __construct(Repository $store, bool $enabled = true, ?int $ttl = null)
+    {
+        $this->store = $store;
+        $this->enabled = $enabled;
+        $this->ttl = $ttl;
+    }
 
     /**
      * Cache a document's rendered HTML, keyed by file path + mtime.
@@ -130,7 +146,9 @@ final class DocumentCache
     private function signature(DocumentCollection $documents): string
     {
         return hash('sha256', $documents
-            ->map(fn (Document $doc): string => $doc->relativePath . ':' . $doc->modifiedAt)
+            ->map(function (Document $doc): string {
+                return $doc->relativePath . ':' . $doc->modifiedAt;
+            })
             ->sort()
             ->implode('|'));
     }
@@ -141,7 +159,7 @@ final class DocumentCache
      * @param  Closure(): T  $callback
      * @return T
      */
-    private function remember(string $key, Closure $callback): mixed
+    private function remember(string $key, Closure $callback)
     {
         if (! $this->enabled) {
             return $callback();
@@ -158,7 +176,10 @@ final class DocumentCache
         return $value;
     }
 
-    private function put(string $key, mixed $value): void
+    /**
+     * @param mixed $value
+     */
+    private function put(string $key, $value): void
     {
         if ($this->ttl === null) {
             $this->store->forever($key, $value);

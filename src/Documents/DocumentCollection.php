@@ -24,7 +24,9 @@ final class DocumentCollection extends Collection
      */
     public function visible(): self
     {
-        return $this->reject(fn (Document $doc): bool => $doc->isHidden())->values();
+        return $this->reject(function (Document $doc): bool {
+            return $doc->isHidden();
+        })->values();
     }
 
     /**
@@ -33,8 +35,10 @@ final class DocumentCollection extends Collection
     public function ordered(): self
     {
         return $this->sort(
-            fn (Document $a, Document $b): int => [$a->order(), strtolower($a->title())]
-                <=> [$b->order(), strtolower($b->title())]
+            function (Document $a, Document $b): int {
+                return [$a->order(), strtolower($a->title())]
+                    <=> [$b->order(), strtolower($b->title())];
+            }
         )->values();
     }
 
@@ -46,7 +50,9 @@ final class DocumentCollection extends Collection
     public function byGroup(): Collection
     {
         /** @var Collection<string, DocumentCollection> $groups */
-        $groups = $this->groupBy(fn (Document $doc): string => $doc->group() ?? '');
+        $groups = $this->groupBy(function (Document $doc): string {
+            return $doc->group() ?? '';
+        });
 
         return $groups;
     }
@@ -57,12 +63,16 @@ final class DocumentCollection extends Collection
     public function byTag(string $tag): self
     {
         return $this->filter(
-            fn (Document $doc): bool => in_array($tag, $doc->metadata->tags, true)
+            function (Document $doc) use ($tag): bool {
+                return in_array($tag, $doc->metadata->tags, true);
+            }
         )->values();
     }
 
     public function findBySlug(string $slug): ?Document
     {
-        return $this->first(fn (Document $doc): bool => $doc->slug === $slug);
+        return $this->first(function (Document $doc) use ($slug): bool {
+            return $doc->slug === $slug;
+        });
     }
 }

@@ -25,7 +25,7 @@ final class CacheKey
 
     public static function make(string ...$segments): string
     {
-        return implode(':', [self::prefix(), ...$segments]);
+        return implode(':', array_merge([self::prefix()], $segments));
     }
 
     public static function document(Document $document): string

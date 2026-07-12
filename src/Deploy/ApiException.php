@@ -9,13 +9,25 @@ use RuntimeException;
 final class ApiException extends RuntimeException
 {
     /**
+     * @readonly
+     * @var int
+     */
+    public $status = 0;
+    /**
+     * @var array<string, mixed>
+     * @readonly
+     */
+    public $body = [];
+    /**
      * @param  array<string, mixed>  $body
      */
     public function __construct(
         string $message,
-        public readonly int $status = 0,
-        public readonly array $body = [],
+        int $status = 0,
+        array $body = []
     ) {
+        $this->status = $status;
+        $this->body = $body;
         parent::__construct($message);
     }
 

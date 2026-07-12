@@ -14,17 +14,22 @@ final class ValueCaster
     /**
      * `true`/`false` become booleans, numeric strings become int/float, and
      * everything else is returned as an unquoted string.
+     * @return mixed
      */
-    public static function cast(string $value): mixed
+    public static function cast(string $value)
     {
         $value = trim($value);
 
-        return match (true) {
-            $value === 'true' => true,
-            $value === 'false' => false,
-            is_numeric($value) => $value + 0,
-            default => self::unquote($value),
-        };
+        switch (true) {
+            case $value === 'true':
+                return true;
+            case $value === 'false':
+                return false;
+            case is_numeric($value):
+                return $value + 0;
+            default:
+                return self::unquote($value);
+        }
     }
 
     /**
@@ -83,7 +88,7 @@ final class ValueCaster
             $last = $value[strlen($value) - 1];
 
             if (($first === '"' || $first === "'") && $first === $last) {
-                return substr($value, 1, -1);
+                return (string) substr($value, 1, -1);
             }
         }
 

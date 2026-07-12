@@ -29,13 +29,13 @@ final class InstallCommand extends Command
 
         if (! $files->exists($index) || $this->option('force')) {
             $files->put($index, $this->stub());
-            $this->components->info('Created starter document at ' . $index);
+            $this->info('Created starter document at ' . $index);
         } else {
-            $this->components->warn('A document already exists at ' . $index);
+            $this->warn('A document already exists at ' . $index);
         }
 
-        $this->components->info('Laradocs installed. Visit /' . Config::string('laradocs.route.prefix') . ' to view your docs.');
-        $this->components->info('Customise the page templates with: php artisan vendor:publish --tag=laradocs-stubs');
+        $this->info('Laradocs installed. Visit /' . Config::string('laradocs.route.prefix') . ' to view your docs.');
+        $this->info('Customise the page templates with: php artisan vendor:publish --tag=laradocs-stubs');
 
         return self::SUCCESS;
     }
@@ -47,6 +47,6 @@ final class InstallCommand extends Command
 
         $path = is_file($published) ? $published : $package;
 
-        return Blade::render((string) file_get_contents($path), [], deleteCachedView: true);
+        return view()->file($path)->render();
     }
 }

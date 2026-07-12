@@ -13,7 +13,10 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 final class McpController
 {
-    public function __invoke(Request $request): Response|StreamedResponse
+    /**
+     * @return \Illuminate\Http\Response|\Symfony\Component\HttpFoundation\StreamedResponse
+     */
+    public function __invoke(Request $request)
     {
         // @codeCoverageIgnoreStart
         // Defensive guard for when the MCP route is enabled but the optional

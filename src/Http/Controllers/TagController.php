@@ -9,8 +9,8 @@ use Illuminate\Http\RedirectResponse;
 use Laradocs\Documents\Tag;
 use Laradocs\Laradocs;
 use Laradocs\Seo\SeoFactory;
+use Laradocs\Seo\SeoData;
 use Laradocs\Support\Config;
-use RalphJSmit\Laravel\SEO\Support\SEOData;
 
 /**
  * Renders the auto-generated tag index pages: a global "/tags" listing and a
@@ -24,16 +24,33 @@ use RalphJSmit\Laravel\SEO\Support\SEOData;
  */
 final class TagController
 {
-    public function __construct(
-        private readonly Laradocs $laradocs,
-        private readonly SeoFactory $seo,
-        private readonly DocsController $docs,
-    ) {}
+    /**
+     * @readonly
+     * @var \Laradocs\Laradocs
+     */
+    private $laradocs;
+    /**
+     * @readonly
+     * @var \Laradocs\Seo\SeoFactory
+     */
+    private $seo;
+    /**
+     * @readonly
+     * @var \Laradocs\Http\Controllers\DocsController
+     */
+    private $docs;
+    public function __construct(Laradocs $laradocs, SeoFactory $seo, DocsController $docs)
+    {
+        $this->laradocs = $laradocs;
+        $this->seo = $seo;
+        $this->docs = $docs;
+    }
 
     /**
      * The global index of every tag.
+     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
      */
-    public function index(): View|RedirectResponse
+    public function index()
     {
         $slug = self::indexSlug();
 
@@ -55,8 +72,9 @@ final class TagController
 
     /**
      * The pages carrying a single tag.
+     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
      */
-    public function show(string $tag): View|RedirectResponse
+    public function show(string $tag)
     {
         $path = self::prefix() . '/' . $tag;
 
@@ -119,7 +137,7 @@ final class TagController
         return $this->laradocs->all()->findBySlug($slug) !== null;
     }
 
-    private function seo(string $title, ?string $description = null): ?SEOData
+    private function seo(string $title, ?string $description = null): ?SeoData
     {
         return $this->seoEnabled() ? $this->seo->forPage($title, $description) : null;
     }
@@ -131,6 +149,6 @@ final class TagController
     private function seoEnabled(): bool
     {
         return Config::bool('laradocs.seo.enabled', true)
-            && class_exists(SEOData::class);
+            && class_exists(SeoData::class);
     }
 }

@@ -21,11 +21,13 @@ final class CacheCommand extends Command
         $laradocs->tree();
         $laradocs->sitemap();
 
-        $documents->each(fn (Document $document) => $laradocs->render($document));
+        $documents->each(function (Document $document) use ($laradocs) {
+            return $laradocs->render($document);
+        });
 
         $this->call('laradocs:index');
 
-        $this->components->info(sprintf('Cached %d documentation page(s).', $documents->count()));
+        $this->info(sprintf('Cached %d documentation page(s).', $documents->count()));
 
         return self::SUCCESS;
     }

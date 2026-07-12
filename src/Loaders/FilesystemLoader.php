@@ -17,6 +17,56 @@ use SplFileInfo;
 final class FilesystemLoader implements DocumentLoader
 {
     /**
+     * @readonly
+     * @var \Illuminate\Filesystem\Filesystem
+     */
+    private $files;
+    /**
+     * @readonly
+     * @var \Laradocs\Contracts\MetadataResolver
+     */
+    private $metadataResolver;
+    /**
+     * @readonly
+     * @var \Laradocs\Routing\SlugResolver
+     */
+    private $slugResolver;
+    /**
+     * @var string|Closure():string
+     * @readonly
+     */
+    private $path;
+    /**
+     * @var array<int, string>
+     * @readonly
+     */
+    private $extensions = ['md'];
+    /**
+     * @var array<int, string>
+     * @readonly
+     */
+    private $ignoredPatterns = [];
+    /**
+     * @var array<string, mixed>
+     * @readonly
+     */
+    private $metadataDefaults = [];
+    /**
+     * @var array<int, string>|Closure():array<int, string>
+     * @readonly
+     */
+    private $locales = [];
+    /**
+     * @var string|Closure():string
+     * @readonly
+     */
+    private $activeLocale = '';
+    /**
+     * @var string|Closure():string
+     * @readonly
+     */
+    private $defaultLocale = '';
+    /**
      * @param  string|Closure(): string  $path  Eagerly resolved string, or a closure
      *                                          re-invoked at each call so consumer apps
      *                                          can retarget the docs path per request.
@@ -32,18 +82,19 @@ final class FilesystemLoader implements DocumentLoader
      * @param  string|Closure(): string  $defaultLocale  The locale an un-suffixed file
      *                                                   belongs to, and the one a missing translation falls back to.
      */
-    public function __construct(
-        private readonly Filesystem $files,
-        private readonly MetadataResolver $metadataResolver,
-        private readonly SlugResolver $slugResolver,
-        private readonly string|Closure $path,
-        private readonly array $extensions = ['md'],
-        private readonly array $ignoredPatterns = [],
-        private readonly array $metadataDefaults = [],
-        private readonly array|Closure $locales = [],
-        private readonly string|Closure $activeLocale = '',
-        private readonly string|Closure $defaultLocale = '',
-    ) {}
+    public function __construct(Filesystem $files, MetadataResolver $metadataResolver, SlugResolver $slugResolver, $path, array $extensions = ['md'], array $ignoredPatterns = [], array $metadataDefaults = [], $locales = [], $activeLocale = '', $defaultLocale = '')
+    {
+        $this->files = $files;
+        $this->metadataResolver = $metadataResolver;
+        $this->slugResolver = $slugResolver;
+        $this->path = $path;
+        $this->extensions = $extensions;
+        $this->ignoredPatterns = $ignoredPatterns;
+        $this->metadataDefaults = $metadataDefaults;
+        $this->locales = $locales;
+        $this->activeLocale = $activeLocale;
+        $this->defaultLocale = $defaultLocale;
+    }
 
     public function all(): DocumentCollection
     {
@@ -192,14 +243,14 @@ final class FilesystemLoader implements DocumentLoader
         $slug = $this->slugResolver->resolve($slugPath, $metadata->slug);
 
         return new Document(
-            path: $file->getPathname(),
-            relativePath: $relative,
-            slug: $slug,
-            metadata: $metadata,
-            markdown: $body,
-            html: null,
-            modifiedAt: (int) $file->getMTime(),
-            locale: $locale ?? $default,
+            $file->getPathname(),
+            $relative,
+            $slug,
+            $metadata,
+            $body,
+            null,
+            (int) $file->getMTime(),
+            $locale ?? $default,
         );
     }
 
@@ -242,7 +293,7 @@ final class FilesystemLoader implements DocumentLoader
         $slash = strpos($path, '/');
 
         if ($slash !== false && in_array(substr($path, 0, $slash), $locales, true)) {
-            return [substr($path, 0, $slash), substr($path, $slash + 1)];
+            return [(string) substr($path, 0, $slash), (string) substr($path, $slash + 1)];
         }
 
         return null;
@@ -262,8 +313,8 @@ final class FilesystemLoader implements DocumentLoader
         $file = $path;
 
         if (($lastSlash = strrpos($path, '/')) !== false) {
-            $dir = substr($path, 0, $lastSlash + 1);
-            $file = substr($path, $lastSlash + 1);
+            $dir = (string) substr($path, 0, $lastSlash + 1);
+            $file = (string) substr($path, $lastSlash + 1);
         }
 
         if (preg_match('/^(.+)\.([A-Za-z0-9_-]+)\.([^.]+)$/', $file, $m) && in_array($m[2], $locales, true)) {

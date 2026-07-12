@@ -15,8 +15,9 @@ final class Json
      * Coerce a decoded JSON value into a string-keyed array (an object).
      *
      * @return array<string, mixed>
+     * @param mixed $value
      */
-    public static function object(mixed $value): array
+    public static function object($value): array
     {
         if (! is_array($value)) {
             return [];
@@ -30,17 +31,26 @@ final class Json
         return $out;
     }
 
-    public static function string(mixed $value, string $default = ''): string
+    /**
+     * @param mixed $value
+     */
+    public static function string($value, string $default = ''): string
     {
         return is_scalar($value) ? (string) $value : $default;
     }
 
-    public static function nullableString(mixed $value): ?string
+    /**
+     * @param mixed $value
+     */
+    public static function nullableString($value): ?string
     {
         return is_scalar($value) ? (string) $value : null;
     }
 
-    public static function int(mixed $value, int $default = 0): int
+    /**
+     * @param mixed $value
+     */
+    public static function int($value, int $default = 0): int
     {
         return is_numeric($value) ? (int) $value : $default;
     }

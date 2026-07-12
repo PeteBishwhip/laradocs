@@ -24,18 +24,20 @@ final class CloneProjectCommand extends Command
         $slug = $this->resolveSite();
 
         if ($slug === null) {
-            $this->components->error('No site specified. Pass --site or set LARADOCS_SITE.');
+            $this->error('No site specified. Pass --site or set LARADOCS_SITE.');
 
             return self::FAILURE;
         }
 
-        return $this->guardApi(fn (): int => $this->pull($api, $docs, $slug));
+        return $this->guardApi(function () use ($api, $docs, $slug): int {
+            return $this->pull($api, $docs, $slug);
+        });
     }
 
     private function pull(ApiClient $api, LocalDocs $docs, string $slug): int
     {
         if (! $docs->isEmpty() && ! $this->option('force')) {
-            $this->components->error("{$docs->path()} already contains docs. Re-run with --force to overwrite.");
+            $this->error("{$docs->path()} already contains docs. Re-run with --force to overwrite.");
 
             return self::FAILURE;
         }
@@ -43,14 +45,14 @@ final class CloneProjectCommand extends Command
         $files = $api->files($slug);
 
         if ($files === []) {
-            $this->components->warn("{$slug} has no files to pull yet.");
+            $this->warn("{$slug} has no files to pull yet.");
 
             return self::SUCCESS;
         }
 
         $written = $docs->write($files);
 
-        $this->components->info('Pulled ' . count($written) . " file(s) into {$docs->path()}.");
+        $this->info('Pulled ' . count($written) . " file(s) into {$docs->path()}.");
 
         return self::SUCCESS;
     }

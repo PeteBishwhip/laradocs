@@ -21,11 +21,15 @@ final class FeedBuilder
         string $format,
         int $limit,
         string $feedUrl,
-        string $siteTitle,
+        string $siteTitle
     ): string {
         $items = $documents
-            ->filter(fn (Document $doc): bool => ! $doc->isHidden() && $doc->redirect() === null)
-            ->sortByDesc(fn (Document $doc): int => $this->timestamp($doc))
+            ->filter(function (Document $doc): bool {
+                return ! $doc->isHidden() && $doc->redirect() === null;
+            })
+            ->sortByDesc(function (Document $doc): int {
+                return $this->timestamp($doc);
+            })
             ->take($limit)
             ->values();
 

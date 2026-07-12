@@ -28,7 +28,6 @@ use Override;
  */
 final class Laradocs extends Facade
 {
-    #[Override]
     protected static function getFacadeAccessor(): string
     {
         return \Laradocs\Laradocs::class;

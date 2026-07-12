@@ -67,6 +67,16 @@ interface ScrambleDocumentGenerator
 final class ScrambleSpecGenerator implements OpenApiSpecGenerator
 {
     /**
+     * @readonly
+     * @var \Illuminate\Routing\Router
+     */
+    private $router;
+    /**
+     * @readonly
+     * @var \Laradocs\OpenApi\Generator\GeneratorOptions
+     */
+    private $options;
+    /**
      * Static utility used to register a named API and its route resolver.
      */
     private const SCRAMBLE = 'Dedoc\Scramble\Scramble';
@@ -81,10 +91,12 @@ final class ScrambleSpecGenerator implements OpenApiSpecGenerator
      */
     private const API = 'laradocs';
 
-    public function __construct(
-        private readonly Router $router,
-        private readonly GeneratorOptions $options = new GeneratorOptions,
-    ) {}
+    public function __construct(Router $router, ?GeneratorOptions $options = null)
+    {
+        $options = $options ?? new GeneratorOptions;
+        $this->router = $router;
+        $this->options = $options;
+    }
 
     /**
      * @return array<string, mixed>
@@ -101,7 +113,9 @@ final class ScrambleSpecGenerator implements OpenApiSpecGenerator
 
         /** @var ScrambleApiRegistration $api */
         $api = $scramble::registerApi(self::API, $this->config());
-        $api->routes(static fn (Route $route): bool => in_array($route, $routes, true));
+        $api->routes(static function (Route $route) use ($routes): bool {
+            return in_array($route, $routes, true);
+        });
 
         /** @var ScrambleDocumentGenerator $generator */
         $generator = app(self::GENERATOR);
@@ -145,7 +159,7 @@ final class ScrambleSpecGenerator implements OpenApiSpecGenerator
         if ($prefix !== null && $prefix !== '') {
             $needle = trim($prefix, '/');
 
-            if (! str_starts_with(trim($route->uri(), '/'), $needle)) {
+            if (strncmp(trim($route->uri(), '/'), $needle, strlen($needle)) !== 0) {
                 return false;
             }
         }

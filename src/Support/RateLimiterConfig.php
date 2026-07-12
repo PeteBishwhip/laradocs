@@ -13,14 +13,23 @@ use Closure;
  */
 final class RateLimiterConfig
 {
-    private Closure|int|false|null $resolver = null;
+    /**
+     * @var \Closure|int|false|null
+     */
+    private $resolver = null;
 
-    public function set(Closure|int|false $resolver): void
+    /**
+     * @param \Closure|int|false $resolver
+     */
+    public function set($resolver): void
     {
         $this->resolver = $resolver;
     }
 
-    public function get(): Closure|int|false|null
+    /**
+     * @return \Closure|int|false|null
+     */
+    public function get()
     {
         return $this->resolver;
     }

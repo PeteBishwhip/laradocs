@@ -12,15 +12,41 @@ namespace Laradocs\Documents;
 final class TreeNode
 {
     /**
+     * @readonly
+     * @var string
+     */
+    public $title;
+    /**
+     * @readonly
+     * @var string
+     */
+    public $slug;
+    /**
+     * @readonly
+     * @var \Laradocs\Documents\Document|null
+     */
+    public $document;
+    /**
+     * @var array<int, TreeNode>
+     * @readonly
+     */
+    public $children = [];
+    /**
+     * @readonly
+     * @var int
+     */
+    public $depth = 1;
+    /**
      * @param  array<int, TreeNode>  $children
      */
-    public function __construct(
-        public readonly string $title,
-        public readonly string $slug,
-        public readonly ?Document $document = null,
-        public readonly array $children = [],
-        public readonly int $depth = 1,
-    ) {}
+    public function __construct(string $title, string $slug, ?Document $document = null, array $children = [], int $depth = 1)
+    {
+        $this->title = $title;
+        $this->slug = $slug;
+        $this->document = $document;
+        $this->children = $children;
+        $this->depth = $depth;
+    }
 
     public function isSection(): bool
     {
@@ -34,17 +60,17 @@ final class TreeNode
 
     public function order(): int
     {
-        return $this->document?->order() ?? PHP_INT_MAX;
+        return (($nullsafeVariable1 = $this->document) ? $nullsafeVariable1->order() : null) ?? PHP_INT_MAX;
     }
 
     public function group(): ?string
     {
-        return $this->document?->group();
+        return ($nullsafeVariable2 = $this->document) ? $nullsafeVariable2->group() : null;
     }
 
     public function isHidden(): bool
     {
-        return $this->document?->isHidden() ?? false;
+        return (($nullsafeVariable3 = $this->document) ? $nullsafeVariable3->isHidden() : null) ?? false;
     }
 
     /**

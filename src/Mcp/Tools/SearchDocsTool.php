@@ -14,16 +14,27 @@ use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Tool;
 
-#[Description('Full-text search across the documentation. Returns matching pages ranked by relevance.')]
 class SearchDocsTool extends Tool
 {
-    protected string $name = 'search_docs';
-
-    public function __construct(
-        private readonly Laradocs $laradocs,
-        private readonly SearchEngine $engine,
-    ) {}
-
+    /**
+     * @readonly
+     * @var \Laradocs\Laradocs
+     */
+    private $laradocs;
+    /**
+     * @readonly
+     * @var \Laradocs\Search\Contracts\SearchEngine
+     */
+    private $engine;
+    /**
+     * @var string
+     */
+    protected $name = 'search_docs';
+    public function __construct(Laradocs $laradocs, SearchEngine $engine)
+    {
+        $this->laradocs = $laradocs;
+        $this->engine = $engine;
+    }
     public function handle(Request $request): Response
     {
         $request->validate([
@@ -36,17 +47,18 @@ class SearchDocsTool extends Tool
 
         $results = $this->engine->search($query, $this->laradocs->searchIndex(), $limit);
 
-        $mapped = array_map(fn (array $entry): array => [
-            'slug' => $entry['slug'],
-            'title' => $entry['title'],
-            'group' => $entry['group'],
-            'url' => DocumentUrl::toSlug($entry['slug']),
-            'excerpt' => Excerpt::make($entry['content'], $query),
-        ], $results);
+        $mapped = array_map(function (array $entry) use ($query): array {
+            return [
+                'slug' => $entry['slug'],
+                'title' => $entry['title'],
+                'group' => $entry['group'],
+                'url' => DocumentUrl::toSlug($entry['slug']),
+                'excerpt' => Excerpt::make($entry['content'], $query),
+            ];
+        }, $results);
 
         return Response::json(['results' => $mapped]);
     }
-
     /**
      * @return array<string, mixed>
      */

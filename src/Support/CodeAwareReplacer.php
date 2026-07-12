@@ -108,7 +108,9 @@ final class CodeAwareReplacer
             $output[] = $token(implode("\n", $buffer));
         }
 
-        $restore = static fn (string $text): string => strtr($text, $placeholders);
+        $restore = static function (string $text) use ($placeholders): string {
+            return strtr($text, $placeholders);
+        };
 
         return [implode("\n", $output), $restore];
     }
@@ -146,7 +148,7 @@ final class CodeAwareReplacer
             }
 
             $result .= substr($line, $textStart, $runStart - $textStart);
-            $result .= $token(substr($line, $runStart, ($close + $runLength) - $runStart));
+            $result .= $token((string) substr($line, $runStart, ($close + $runLength) - $runStart));
             $i = $close + $runLength;
             $textStart = $i;
         }
@@ -188,13 +190,13 @@ final class CodeAwareReplacer
                 continue;
             }
 
-            $result .= $callback(substr($line, $textStart, $runStart - $textStart));
+            $result .= $callback((string) substr($line, $textStart, $runStart - $textStart));
             $result .= substr($line, $runStart, ($close + $runLength) - $runStart);
             $i = $close + $runLength;
             $textStart = $i;
         }
 
-        return $result . $callback(substr($line, $textStart));
+        return $result . $callback((string) substr($line, $textStart));
     }
 
     /**

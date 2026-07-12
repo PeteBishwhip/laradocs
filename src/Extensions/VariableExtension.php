@@ -13,10 +13,21 @@ use Laradocs\Variables\VariableRegistry;
  */
 final class VariableExtension implements MarkdownExtension
 {
-    public function __construct(
-        private readonly VariableRegistry $variables,
-        private readonly string $onUnknown = 'blank',
-    ) {}
+    /**
+     * @readonly
+     * @var \Laradocs\Variables\VariableRegistry
+     */
+    private $variables;
+    /**
+     * @readonly
+     * @var string
+     */
+    private $onUnknown = 'blank';
+    public function __construct(VariableRegistry $variables, string $onUnknown = 'blank')
+    {
+        $this->variables = $variables;
+        $this->onUnknown = $onUnknown;
+    }
 
     public function processMarkdown(string $markdown): string
     {

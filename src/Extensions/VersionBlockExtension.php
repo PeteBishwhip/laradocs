@@ -27,20 +27,28 @@ use Laradocs\Support\VersionRegistry;
 final class VersionBlockExtension implements MarkdownExtension
 {
     /**
+     * @readonly
+     * @var bool
+     */
+    private $server = false;
+    /**
      * Matches a `:::version-{type}[{spec}]` … `:::` fenced block. The `m` flag
      * anchors the fences to line starts; `s` lets the inner `(.*?)` span lines.
      */
     private const PATTERN = '/^:::version-(since|until|only)\[([^\]]+)\]\s*$(.*?)^:::$/ms';
 
-    public function __construct(
-        private readonly bool $server = false,
-    ) {}
+    public function __construct(bool $server = false)
+    {
+        $this->server = $server;
+    }
 
     public function processMarkdown(string $markdown): string
     {
         return (string) preg_replace_callback(
             self::PATTERN,
-            fn (array $m): string => $this->render($m[1], trim($m[2]), trim($m[3], "\n")),
+            function (array $m): string {
+                return $this->render($m[1], trim($m[2]), trim($m[3], "\n"));
+            },
             $markdown,
         );
     }
@@ -71,12 +79,16 @@ final class VersionBlockExtension implements MarkdownExtension
      */
     private function matches(string $type, string $spec, string $current): bool
     {
-        return match ($type) {
-            'since' => VersionRegistry::compare($current, $spec) >= 0,
-            'until' => VersionRegistry::compare($current, $spec) < 0,
-            'only' => $this->inList($current, $spec),
-            default => false,
-        };
+        switch ($type) {
+            case 'since':
+                return VersionRegistry::compare($current, $spec) >= 0;
+            case 'until':
+                return VersionRegistry::compare($current, $spec) < 0;
+            case 'only':
+                return $this->inList($current, $spec);
+            default:
+                return false;
+        }
     }
 
     /**

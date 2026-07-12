@@ -28,11 +28,27 @@ use Laradocs\Support\Config;
  */
 final class OpenApiContentRenderer implements DocumentContentRenderer
 {
-    public function __construct(
-        private readonly OpenApiParser $parser,
-        private readonly DocumentParser $markdown,
-        private readonly bool $renderMarkdownDescriptions = true,
-    ) {}
+    /**
+     * @readonly
+     * @var \Laradocs\OpenApi\OpenApiParser
+     */
+    private $parser;
+    /**
+     * @readonly
+     * @var \Laradocs\Contracts\DocumentParser
+     */
+    private $markdown;
+    /**
+     * @readonly
+     * @var bool
+     */
+    private $renderMarkdownDescriptions = true;
+    public function __construct(OpenApiParser $parser, DocumentParser $markdown, bool $renderMarkdownDescriptions = true)
+    {
+        $this->parser = $parser;
+        $this->markdown = $markdown;
+        $this->renderMarkdownDescriptions = $renderMarkdownDescriptions;
+    }
 
     public function supports(Document $document): bool
     {
@@ -203,7 +219,7 @@ final class OpenApiContentRenderer implements DocumentContentRenderer
     {
         foreach ($responses as $response) {
             $status = Coerce::string($response['status'] ?? '');
-            if (str_starts_with($status, '2') && ($schema = $this->firstSchema(Coerce::listOfAssoc($response['content'] ?? []))) !== null) {
+            if (strncmp($status, '2', strlen('2')) === 0 && ($schema = $this->firstSchema(Coerce::listOfAssoc($response['content'] ?? []))) !== null) {
                 return [$schema, $status];
             }
         }

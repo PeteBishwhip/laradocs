@@ -51,7 +51,9 @@ final class VersionRegistry
         /** @var array<string, VersionInfo> */
         return cache()
             ->store(Config::nullableString('laradocs.cache.store'))
-            ->remember($key, $ttl, fn (): array => $this->resolve());
+            ->remember($key, $ttl, function (): array {
+                return $this->resolve();
+            });
     }
 
     /**
@@ -108,11 +110,14 @@ final class VersionRegistry
             return $aliases[$alias];
         }
 
-        return match ($alias) {
-            'latest' => $this->latest(),
-            'stable' => $this->stable(),
-            default => null,
-        };
+        switch ($alias) {
+            case 'latest':
+                return $this->latest();
+            case 'stable':
+                return $this->stable();
+            default:
+                return null;
+        }
     }
 
     /**
@@ -156,11 +161,17 @@ final class VersionRegistry
      */
     private function resolve(): array
     {
-        $versions = match (Config::string('laradocs.versions.strategy', 'auto')) {
-            'config' => $this->fromConfig(),
-            'both' => $this->merge($this->scan(), $this->fromConfig()),
-            default => $this->scan(),
-        };
+        switch (Config::string('laradocs.versions.strategy', 'auto')) {
+            case 'config':
+                $versions = $this->fromConfig();
+                break;
+            case 'both':
+                $versions = $this->merge($this->scan(), $this->fromConfig());
+                break;
+            default:
+                $versions = $this->scan();
+                break;
+        }
 
         return $this->finalise($versions);
     }
@@ -242,7 +253,9 @@ final class VersionRegistry
      */
     private function finalise(array $versions): array
     {
-        uasort($versions, fn (VersionInfo $a, VersionInfo $b): int => -self::compareInfo($a, $b));
+        uasort($versions, function (VersionInfo $a, VersionInfo $b): int {
+            return -self::compareInfo($a, $b);
+        });
 
         $latest = $this->computeLatest($versions);
 
@@ -264,7 +277,7 @@ final class VersionRegistry
         $fallback = null;
 
         foreach ($versions as $key => $info) {
-            $fallback ??= (string) $key;
+            $fallback = $fallback ?? (string) $key;
 
             if (! $info->preRelease) {
                 return (string) $key;
@@ -286,15 +299,15 @@ final class VersionRegistry
         $parsed = self::parseSemver($raw);
 
         return new VersionInfo(
-            key: $key,
-            label: isset($meta['label']) && is_string($meta['label']) ? $meta['label'] : $key,
-            semver: $parsed !== null ? self::normalise($parsed) : null,
-            stable: isset($meta['stable']) ? (bool) $meta['stable'] : true,
-            deprecated: isset($meta['deprecated']) && (bool) $meta['deprecated'],
-            hidden: isset($meta['hidden']) && (bool) $meta['hidden'],
-            latest: false,
-            preRelease: $parsed !== null && $parsed[3] !== null,
-            deprecatedMessage: isset($meta['deprecated_message']) && is_string($meta['deprecated_message'])
+            $key,
+            isset($meta['label']) && is_string($meta['label']) ? $meta['label'] : $key,
+            $parsed !== null ? self::normalise($parsed) : null,
+            isset($meta['stable']) ? (bool) $meta['stable'] : true,
+            isset($meta['deprecated']) && (bool) $meta['deprecated'],
+            isset($meta['hidden']) && (bool) $meta['hidden'],
+            false,
+            $parsed !== null && $parsed[3] !== null,
+            isset($meta['deprecated_message']) && is_string($meta['deprecated_message'])
                 ? $meta['deprecated_message']
                 : null,
         );
@@ -306,15 +319,15 @@ final class VersionRegistry
     private function withLatest(VersionInfo $info): VersionInfo
     {
         return new VersionInfo(
-            key: $info->key,
-            label: $info->label,
-            semver: $info->semver,
-            stable: $info->stable,
-            deprecated: $info->deprecated,
-            hidden: $info->hidden,
-            latest: true,
-            preRelease: $info->preRelease,
-            deprecatedMessage: $info->deprecatedMessage,
+            $info->key,
+            $info->label,
+            $info->semver,
+            $info->stable,
+            $info->deprecated,
+            $info->hidden,
+            true,
+            $info->preRelease,
+            $info->deprecatedMessage,
         );
     }
 

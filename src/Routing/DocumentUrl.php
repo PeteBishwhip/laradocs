@@ -113,7 +113,9 @@ final class DocumentUrl
     {
         return implode('/', array_filter(
             $parts,
-            static fn (?string $part): bool => $part !== null && $part !== '',
+            static function (?string $part): bool {
+                return $part !== null && $part !== '';
+            },
         ));
     }
 

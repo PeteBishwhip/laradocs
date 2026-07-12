@@ -12,10 +12,6 @@ use Laradocs\Metadata\Metadata;
 use Laradocs\Routing\DocumentUrl;
 use Laradocs\Support\Config;
 use Laradocs\Support\Version;
-use RalphJSmit\Laravel\SEO\Schema\BreadcrumbListSchema;
-use RalphJSmit\Laravel\SEO\SchemaCollection;
-use RalphJSmit\Laravel\SEO\Support\ImageMeta;
-use RalphJSmit\Laravel\SEO\Support\SEOData;
 use Throwable;
 
 /**
@@ -35,8 +31,9 @@ final class SeoFactory
      * Exposed via xCard() so the controller can pass it as a separate view
      * variable, letting the layout emit an explicit twitter:card tag first
      * (X/Twitter parsers honour the first occurrence).
+     * @var string
      */
-    private string $lastXCard = 'summary_large_image';
+    private $lastXCard = 'summary_large_image';
 
     /**
      * Return the X card type resolved during the most recent
@@ -66,34 +63,34 @@ final class SeoFactory
 
         [$image, $imageMeta] = $this->resolveImage($this->explicitImage($document), $document->slug);
 
-        return new SEOData(
-            title: $this->suffixedTitle($title),
-            description: $description,
-            author: SeoValue::asString($this->pick($seo, $meta, 'author')) ?? $this->stringOrNull('laradocs.seo.author'),
+        return new SeoData([
+            'title' => $this->suffixedTitle($title),
+            'description' => $description,
+            'author' => SeoValue::asString($this->pick($seo, $meta, 'author')) ?? $this->stringOrNull('laradocs.seo.author'),
             // An explicit image (front-matter or seo.image) always wins; only
             // when none is declared do we fall back to a generated card.
-            image: $image,
+            'image' => $image,
             // We bake the suffix into the title (above) and disable the SEO
             // package's own suffixing, which would otherwise also drag the
             // brand into og:title / x:title. Social cards instead read
             // the clean title from openGraphTitle below.
-            enableTitleSuffix: false,
+            'enableTitleSuffix' => false,
             // Generated cards carry their known dimensions so og:image:width /
             // og:image:height (and the Twitter image size) are advertised.
-            imageMeta: $imageMeta,
-            published_time: $this->publishedTime($seo, $meta),
-            modified_time: $this->timestamp($document->modifiedAt),
-            section: SeoValue::asString($this->pick($seo, $meta, 'section')) ?? $meta->group,
-            tags: $this->resolveTags($seo, $meta),
-            twitter_username: $this->stringOrNull('laradocs.seo.x'),
-            schema: $this->schema($breadcrumbs),
-            type: SeoValue::asString($this->pick($seo, $meta, 'type')) ?? $this->stringOrNull('laradocs.seo.type') ?? 'article',
-            site_name: $this->siteName(),
-            favicon: $this->stringOrNull('laradocs.ui.brand.favicon'),
-            robots: $this->resolveRobots($seo, $meta),
-            canonical_url: SeoValue::asString($this->pick($seo, $meta, 'canonical')),
-            openGraphTitle: $title,
-        );
+            'imageMeta' => $imageMeta,
+            'published_time' => $this->publishedTime($seo, $meta),
+            'modified_time' => $this->timestamp($document->modifiedAt),
+            'section' => SeoValue::asString($this->pick($seo, $meta, 'section')) ?? $meta->group,
+            'tags' => $this->resolveTags($seo, $meta),
+            'twitter_username' => $this->stringOrNull('laradocs.seo.x'),
+            'schema' => $this->schema($breadcrumbs),
+            'type' => SeoValue::asString($this->pick($seo, $meta, 'type')) ?? $this->stringOrNull('laradocs.seo.type') ?? 'article',
+            'site_name' => $this->siteName(),
+            'favicon' => $this->stringOrNull('laradocs.ui.brand.favicon'),
+            'robots' => $this->resolveRobots($seo, $meta),
+            'canonical_url' => SeoValue::asString($this->pick($seo, $meta, 'canonical')),
+            'openGraphTitle' => $title,
+        ]);
     }
 
     /**
@@ -102,26 +99,26 @@ final class SeoFactory
      */
     public function forPage(?string $title = null, ?string $description = null): SEOData
     {
-        $title ??= $this->siteName();
+        $title = $title ?? $this->siteName();
 
         $this->lastXCard = $this->stringOrNull('laradocs.seo.x_card') ?? 'summary_large_image';
 
         [$image, $imageMeta] = $this->resolveImage($this->stringOrNull('laradocs.seo.image'), '');
 
-        return new SEOData(
-            title: $this->suffixedTitle($title),
-            description: $description ?? $this->fallbackDescription(),
-            author: $this->stringOrNull('laradocs.seo.author'),
-            image: $image,
-            enableTitleSuffix: false,
-            imageMeta: $imageMeta,
-            twitter_username: $this->stringOrNull('laradocs.seo.x'),
-            type: 'website',
-            site_name: $this->siteName(),
-            favicon: $this->stringOrNull('laradocs.ui.brand.favicon'),
+        return new SeoData([
+            'title' => $this->suffixedTitle($title),
+            'description' => $description ?? $this->fallbackDescription(),
+            'author' => $this->stringOrNull('laradocs.seo.author'),
+            'image' => $image,
+            'enableTitleSuffix' => false,
+            'imageMeta' => $imageMeta,
+            'twitter_username' => $this->stringOrNull('laradocs.seo.x'),
+            'type' => 'website',
+            'site_name' => $this->siteName(),
+            'favicon' => $this->stringOrNull('laradocs.ui.brand.favicon'),
             // Social cards read the clean, un-suffixed title.
-            openGraphTitle: $title,
-        );
+            'openGraphTitle' => $title,
+        ]);
     }
 
     /**
@@ -183,7 +180,7 @@ final class SeoFactory
             return null;
         }
 
-        return Version::info($current)?->deprecated === true
+        return (($nullsafeVariable1 = Version::info($current)) ? $nullsafeVariable1->deprecated : null) === true
             ? 'noindex, nofollow'
             : 'noindex, follow';
     }
@@ -201,7 +198,9 @@ final class SeoFactory
         }
 
         $tags = array_values(array_filter(array_map(
-            static fn (mixed $tag): string => is_scalar($tag) ? trim((string) $tag) : '',
+            static function ($tag): string {
+                return is_scalar($tag) ? trim((string) $tag) : '';
+            },
             $tags,
         )));
 
@@ -222,7 +221,7 @@ final class SeoFactory
 
         try {
             return Carbon::parse($value);
-        } catch (Throwable) {
+        } catch (Throwable $exception) {
             return null;
         }
     }
@@ -237,9 +236,9 @@ final class SeoFactory
      * to configuration. Returns null when both are disabled.
      *
      * @param  array<int, TreeNode>  $breadcrumbs
-     * @return SchemaCollection<array-key>|null
+     * @return array<int, array<string, mixed>>|null
      */
-    private function schema(array $breadcrumbs): ?SchemaCollection
+    private function schema(array $breadcrumbs): ?array
     {
         $wantsArticle = Config::bool('laradocs.seo.schema.article', true);
         $wantsBreadcrumbs = Config::bool('laradocs.seo.schema.breadcrumbs', true);
@@ -248,18 +247,29 @@ final class SeoFactory
             return null;
         }
 
-        $schema = SchemaCollection::make();
+        $schema = [];
 
         if ($wantsArticle) {
-            $schema = $schema->addArticle();
+            $schema[] = ['@context' => 'https://schema.org', '@type' => 'Article'];
         }
 
         if ($wantsBreadcrumbs) {
             $trail = $this->breadcrumbTrail($breadcrumbs);
-
-            $schema = $schema->addBreadcrumbs(
-                static fn (BreadcrumbListSchema $b): BreadcrumbListSchema => $b->prependBreadcrumbs($trail),
-            );
+            $items = [];
+            $position = 1;
+            foreach ($trail as $name => $url) {
+                $items[] = [
+                    '@type' => 'ListItem',
+                    'position' => $position++,
+                    'name' => $name,
+                    'item' => $url,
+                ];
+            }
+            $schema[] = [
+                '@context' => 'https://schema.org',
+                '@type' => 'BreadcrumbList',
+                'itemListElement' => $items,
+            ];
         }
 
         return $schema;
@@ -307,7 +317,7 @@ final class SeoFactory
      * used as-is (dimensions unknown); otherwise a generated card is used and
      * tagged with its known size so og:image:width / og:image:height are emitted.
      *
-     * @return array{0: ?string, 1: ?ImageMeta}
+     * @return array{0: ?string, 1: ?array<string, int|string>}
      */
     private function resolveImage(?string $explicit, string $slug): array
     {
@@ -321,10 +331,11 @@ final class SeoFactory
             return [null, null];
         }
 
-        // ImageMeta leaves width/height null for a URL; set the known card size.
-        $imageMeta = new ImageMeta($generated);
-        $imageMeta->width = OgImageData::WIDTH;
-        $imageMeta->height = OgImageData::HEIGHT;
+        $imageMeta = [
+            'url' => $generated,
+            'width' => OgImageData::WIDTH,
+            'height' => OgImageData::HEIGHT,
+        ];
 
         return [$generated, $imageMeta];
     }
@@ -334,8 +345,9 @@ final class SeoFactory
      * top-level front-matter key.
      *
      * @param  array<string, mixed>  $seo
+     * @return mixed
      */
-    private function pick(array $seo, Metadata $meta, string $key): mixed
+    private function pick(array $seo, Metadata $meta, string $key)
     {
         if (array_key_exists($key, $seo)) {
             return $seo[$key];

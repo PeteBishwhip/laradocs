@@ -16,26 +16,71 @@ use Laradocs\Support\Config;
  * {@see self::forPage()} to derive sensible defaults from a document and the
  * site's configured theme (accent colour, logo, brand title).
  */
-final readonly class OgImageData
+final class OgImageData
 {
+    /**
+     * @readonly
+     * @var string
+     */
+    public $title;
+    /**
+     * @readonly
+     * @var string|null
+     */
+    public $description;
+    /**
+     * @readonly
+     * @var string|null
+     */
+    public $url;
+    /**
+     * @readonly
+     * @var string
+     */
+    public $accentColor = '#FF2D20';
+    /**
+     * @readonly
+     * @var string|null
+     */
+    public $backgroundColor;
+    /**
+     * @readonly
+     * @var string
+     */
+    public $theme = 'light';
+    /**
+     * @readonly
+     * @var string|null
+     */
+    public $logo;
+    /**
+     * @readonly
+     * @var string
+     */
+    public $siteName = 'Documentation';
     /**
      * Dimensions of a default (the-og) social card. Exposed so the SEO layer can
      * advertise og:image:width / og:image:height for the generated card.
+     * @var int
      */
-    public const int WIDTH = 1200;
+    public const WIDTH = 1200;
 
-    public const int HEIGHT = 630;
+    /**
+     * @var int
+     */
+    public const HEIGHT = 630;
 
-    public function __construct(
-        public string $title,
-        public ?string $description = null,
-        public ?string $url = null,
-        public string $accentColor = '#FF2D20',
-        public ?string $backgroundColor = null,
-        public string $theme = 'light',
-        public ?string $logo = null,
-        public string $siteName = 'Documentation',
-    ) {}
+    public function __construct(string $title, ?string $description = null, ?string $url = null, string $accentColor = '#FF2D20', ?string $backgroundColor = null, string $theme = 'light', ?string $logo = null, string $siteName = 'Documentation')
+    {
+        $this->title = $title;
+        $this->description = $description;
+        $this->url = $url;
+        $this->accentColor = $accentColor;
+        $this->backgroundColor = $backgroundColor;
+        $this->theme = $theme;
+        $this->logo = $logo;
+        $this->siteName = $siteName;
+    }
 
     /**
      * Build card data for a documentation page, lifting the description from
@@ -44,12 +89,7 @@ final readonly class OgImageData
      */
     public static function fromDocument(Document $document, ?string $url = null): self
     {
-        return new self(
-            ...self::brand(),
-            title: $document->title(),
-            description: self::descriptionFor($document),
-            url: $url,
-        );
+        return new self($document->title(), self::descriptionFor($document), $url);
     }
 
     /**
@@ -58,12 +98,7 @@ final readonly class OgImageData
      */
     public static function forPage(string $title, ?string $description = null, ?string $url = null): self
     {
-        return new self(
-            ...self::brand(),
-            title: $title,
-            description: $description,
-            url: $url,
-        );
+        return new self($title, $description, $url);
     }
 
     private static function descriptionFor(Document $document): ?string

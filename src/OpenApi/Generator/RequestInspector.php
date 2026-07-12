@@ -25,9 +25,16 @@ use Throwable;
  */
 final class RequestInspector
 {
-    public function __construct(
-        private readonly RuleMapper $mapper = new RuleMapper,
-    ) {}
+    /**
+     * @readonly
+     * @var \Laradocs\OpenApi\Generator\RuleMapper
+     */
+    private $mapper;
+    public function __construct(?RuleMapper $mapper = null)
+    {
+        $mapper = $mapper ?? new RuleMapper;
+        $this->mapper = $mapper;
+    }
 
     /**
      * @return array{properties: array<string, array<string, mixed>>, required: array<int, string>}
@@ -55,7 +62,12 @@ final class RequestInspector
             return null;
         }
 
-        return new ReflectionMethod($route->controller, $route->action);
+        $reflection = new ReflectionMethod($route->controller, $route->action);
+        if (PHP_VERSION_ID < 80100) {
+            $reflection->setAccessible(true);
+        }
+
+        return $reflection;
     }
 
     /**
@@ -97,7 +109,7 @@ final class RequestInspector
 
             /** @var array<string, mixed> */
             return $request->rules();
-        } catch (Throwable) {
+        } catch (Throwable $exception) {
             // rules() may depend on the route/container; treat as empty.
             return [];
         }

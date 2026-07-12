@@ -19,10 +19,21 @@ use Laradocs\Support\Config;
  */
 final class SearchController
 {
-    public function __construct(
-        private readonly Laradocs $laradocs,
-        private readonly SearchEngine $engine,
-    ) {}
+    /**
+     * @readonly
+     * @var \Laradocs\Laradocs
+     */
+    private $laradocs;
+    /**
+     * @readonly
+     * @var \Laradocs\Search\Contracts\SearchEngine
+     */
+    private $engine;
+    public function __construct(Laradocs $laradocs, SearchEngine $engine)
+    {
+        $this->laradocs = $laradocs;
+        $this->engine = $engine;
+    }
 
     public function __invoke(Request $request): JsonResponse
     {
@@ -44,14 +55,16 @@ final class SearchController
         );
 
         return new JsonResponse([
-            'results' => array_map(fn (array $entry): array => [
-                'slug' => $entry['slug'],
-                'title' => $entry['title'],
-                'group' => $entry['group'],
-                'breadcrumb' => $this->breadcrumb($entry['slug'], $entry['group']),
-                'url' => DocumentUrl::toSlug($entry['slug']),
-                'excerpt' => Excerpt::make($entry['content'], $query),
-            ], $results),
+            'results' => array_map(function (array $entry) use ($query): array {
+                return [
+                    'slug' => $entry['slug'],
+                    'title' => $entry['title'],
+                    'group' => $entry['group'],
+                    'breadcrumb' => $this->breadcrumb($entry['slug'], $entry['group']),
+                    'url' => DocumentUrl::toSlug($entry['slug']),
+                    'excerpt' => Excerpt::make($entry['content'], $query),
+                ];
+            }, $results),
         ]);
     }
 
@@ -69,12 +82,16 @@ final class SearchController
     {
         $segments = array_values(array_filter(
             explode('/', $slug),
-            static fn (string $segment): bool => $segment !== '',
+            static function (string $segment): bool {
+                return $segment !== '';
+            },
         ));
 
         array_pop($segments);
 
-        $crumbs = array_map(static fn (string $segment): string => Str::headline($segment), $segments);
+        $crumbs = array_map(static function (string $segment): string {
+            return Str::headline($segment);
+        }, $segments);
 
         if ($group === '') {
             return $crumbs;

@@ -55,7 +55,12 @@ final class ResponseInspector
             return null;
         }
 
-        return new ReflectionMethod($route->controller, $route->action);
+        $reflection = new ReflectionMethod($route->controller, $route->action);
+        if (PHP_VERSION_ID < 80100) {
+            $reflection->setAccessible(true);
+        }
+
+        return $reflection;
     }
 
     /**
@@ -108,7 +113,7 @@ final class ResponseInspector
     private function collectedResource(string $collection): ?string
     {
         $property = (new ReflectionClass($collection))->getProperty('collects');
-        $default = $property->getDefaultValue();
+        $default = $property->getDeclaringClass()->getDefaultProperties()[$property->getName()] ?? null;
 
         if (is_string($default) && class_exists($default)) {
             /** @var class-string $default */

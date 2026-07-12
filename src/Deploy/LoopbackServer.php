@@ -12,9 +12,21 @@ namespace Laradocs\Deploy;
 final class LoopbackServer
 {
     /**
+     * @var resource
+     */
+    private $socket;
+    /**
+     * @var int
+     */
+    private $port;
+    /**
      * @param  resource  $socket
      */
-    private function __construct(private $socket, private int $port) {}
+    private function __construct($socket, int $port)
+    {
+        $this->socket = $socket;
+        $this->port = $port;
+    }
 
     public static function start(int $port): self
     {

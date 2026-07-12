@@ -16,10 +16,19 @@ use Laradocs\Support\Config;
  */
 final class ApiClient
 {
-    public function __construct(
-        private CredentialStore $credentials,
-        private OAuthFlow $oauth,
-    ) {}
+    /**
+     * @var \Laradocs\Deploy\CredentialStore
+     */
+    private $credentials;
+    /**
+     * @var \Laradocs\Deploy\OAuthFlow
+     */
+    private $oauth;
+    public function __construct(CredentialStore $credentials, OAuthFlow $oauth)
+    {
+        $this->credentials = $credentials;
+        $this->oauth = $oauth;
+    }
 
     /**
      * @return array<int, array<string, mixed>>
@@ -33,7 +42,9 @@ final class ApiClient
         }
 
         return array_values(array_map(
-            static fn (mixed $site): array => Json::object($site),
+            static function ($site): array {
+                return Json::object($site);
+            },
             $data,
         ));
     }
@@ -63,7 +74,9 @@ final class ApiClient
         $data = Json::object($this->get("/api/v1/sites/{$slug}/files")['data'] ?? []);
 
         return array_map(
-            static fn (mixed $contents): string => Json::string($contents),
+            static function ($contents): string {
+                return Json::string($contents);
+            },
             Json::object($data['files'] ?? []),
         );
     }
@@ -90,7 +103,9 @@ final class ApiClient
      */
     private function get(string $path): array
     {
-        return $this->send($path, fn (PendingRequest $request): Response => $request->get($this->url($path)));
+        return $this->send($path, function (PendingRequest $request) use ($path): Response {
+            return $request->get($this->url($path));
+        });
     }
 
     /**
@@ -99,7 +114,9 @@ final class ApiClient
      */
     private function post(string $path, array $payload): array
     {
-        return $this->send($path, fn (PendingRequest $request): Response => $request->post($this->url($path), $payload));
+        return $this->send($path, function (PendingRequest $request) use ($path, $payload): Response {
+            return $request->post($this->url($path), $payload);
+        });
     }
 
     /**
@@ -108,7 +125,9 @@ final class ApiClient
      */
     private function patch(string $path, array $payload): array
     {
-        return $this->send($path, fn (PendingRequest $request): Response => $request->patch($this->url($path), $payload));
+        return $this->send($path, function (PendingRequest $request) use ($path, $payload): Response {
+            return $request->patch($this->url($path), $payload);
+        });
     }
 
     /**
@@ -122,7 +141,7 @@ final class ApiClient
         $response = $perform($this->authedRequest());
 
         if ($response->status() === 401) {
-            $response = $perform($this->authedRequest(forceRefresh: true));
+            $response = $perform($this->authedRequest(true));
         }
 
         if ($response->failed()) {

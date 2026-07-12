@@ -12,13 +12,21 @@ use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Tool;
 
-#[Description('Fetch the full markdown content and metadata of a documentation page by slug.')]
 class FetchPageTool extends Tool
 {
-    protected string $name = 'fetch_page';
-
-    public function __construct(private readonly Laradocs $laradocs) {}
-
+    /**
+     * @readonly
+     * @var \Laradocs\Laradocs
+     */
+    private $laradocs;
+    /**
+     * @var string
+     */
+    protected $name = 'fetch_page';
+    public function __construct(Laradocs $laradocs)
+    {
+        $this->laradocs = $laradocs;
+    }
     public function handle(Request $request): Response
     {
         $request->validate(['slug' => 'required|string']);
@@ -48,7 +56,6 @@ class FetchPageTool extends Tool
             ],
         ]);
     }
-
     /**
      * @return array<string, mixed>
      */

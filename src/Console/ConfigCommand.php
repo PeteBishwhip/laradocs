@@ -27,14 +27,16 @@ final class ConfigCommand extends Command
         $slug = $this->resolveSite();
 
         if ($slug === null) {
-            $this->components->error('No site specified. Pass --site or set LARADOCS_SITE.');
+            $this->error('No site specified. Pass --site or set LARADOCS_SITE.');
 
             return self::FAILURE;
         }
 
-        return $this->guardApi(fn (): int => $this->option('sync')
-            ? $this->sync($api, $slug)
-            : $this->readOrWrite($api, $slug));
+        return $this->guardApi(function () use ($api, $slug): int {
+            return $this->option('sync')
+                ? $this->sync($api, $slug)
+                : $this->readOrWrite($api, $slug);
+        });
     }
 
     private function readOrWrite(ApiClient $api, string $slug): int
@@ -47,7 +49,9 @@ final class ConfigCommand extends Command
 
             $this->table(
                 ['Key', 'Value'],
-                collect($config)->map(fn ($v, $k): array => [$k, (string) $v])->values()->all(),
+                collect($config)->map(function ($v, $k): array {
+                    return [$k, (string) $v];
+                })->values()->all(),
             );
 
             return self::SUCCESS;
@@ -61,7 +65,7 @@ final class ConfigCommand extends Command
         }
 
         $api->updateConfig($slug, [$key => $value]);
-        $this->components->info("Updated {$key} on {$slug}.");
+        $this->info("Updated {$key} on {$slug}.");
 
         return self::SUCCESS;
     }
@@ -82,7 +86,7 @@ final class ConfigCommand extends Command
         }
 
         if ($differences === []) {
-            $this->components->info('Local config already matches the remote site.');
+            $this->info('Local config already matches the remote site.');
 
             return self::SUCCESS;
         }
@@ -92,7 +96,7 @@ final class ConfigCommand extends Command
         }
 
         $api->updateConfig($slug, $differences);
-        $this->components->info('Pushed ' . count($differences) . ' value(s) to ' . $slug . '.');
+        $this->info('Pushed ' . count($differences) . ' value(s) to ' . $slug . '.');
 
         return self::SUCCESS;
     }
@@ -103,7 +107,9 @@ final class ConfigCommand extends Command
     private function remoteConfig(ApiClient $api, string $slug): array
     {
         return array_map(
-            static fn (mixed $value): string => Json::string($value),
+            static function ($value): string {
+                return Json::string($value);
+            },
             Json::object($api->getConfig($slug)['config'] ?? []),
         );
     }
@@ -125,7 +131,9 @@ final class ConfigCommand extends Command
 
         return array_filter(
             $candidates,
-            static fn (?string $value): bool => $value !== null && $value !== '',
+            static function (?string $value): bool {
+                return $value !== null && $value !== '';
+            },
         );
     }
 }

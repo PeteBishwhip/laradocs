@@ -14,25 +14,35 @@ namespace Laradocs\OpenApi;
  */
 final class Coerce
 {
-    public static function string(mixed $value): string
+    /**
+     * @param mixed $value
+     */
+    public static function string($value): string
     {
         return is_scalar($value) ? (string) $value : '';
     }
 
-    public static function nullableString(mixed $value): ?string
+    /**
+     * @param mixed $value
+     */
+    public static function nullableString($value): ?string
     {
         return is_scalar($value) ? (string) $value : null;
     }
 
-    public static function bool(mixed $value): bool
+    /**
+     * @param mixed $value
+     */
+    public static function bool($value): bool
     {
         return (bool) (is_scalar($value) ? $value : false);
     }
 
     /**
      * @return array<string, mixed>
+     * @param mixed $value
      */
-    public static function assoc(mixed $value): array
+    public static function assoc($value): array
     {
         if (! is_array($value)) {
             return [];
@@ -44,8 +54,9 @@ final class Coerce
 
     /**
      * @return array<int, array<string, mixed>>
+     * @param mixed $value
      */
-    public static function listOfAssoc(mixed $value): array
+    public static function listOfAssoc($value): array
     {
         if (! is_array($value)) {
             return [];
@@ -62,8 +73,9 @@ final class Coerce
 
     /**
      * @return array<int, string>
+     * @param mixed $value
      */
-    public static function stringList(mixed $value): array
+    public static function stringList($value): array
     {
         if (! is_array($value)) {
             return [];

@@ -37,7 +37,7 @@ final class LangCommand extends Command
         $locale = $this->argument('locale');
 
         if (! is_string($locale) || $locale === '') {
-            $this->components->error('Provide a locale code (e.g. php artisan laradocs:lang fr) or use --list.');
+            $this->error('Provide a locale code (e.g. php artisan laradocs:lang fr) or use --list.');
 
             return self::FAILURE;
         }
@@ -50,8 +50,8 @@ final class LangCommand extends Command
         $target = lang_path('vendor/laradocs/' . $locale . self::LANG_FILE);
 
         if ($files->exists($target) && ! $this->option('force')) {
-            $this->components->error('Translation file already exists: ' . $target);
-            $this->components->info('Use --force to overwrite.');
+            $this->error('Translation file already exists: ' . $target);
+            $this->info('Use --force to overwrite.');
 
             return self::FAILURE;
         }
@@ -64,14 +64,14 @@ final class LangCommand extends Command
         $usingBundled = $source === self::PACKAGE_LANG . '/' . $locale . self::LANG_FILE;
 
         if (! $usingBundled) {
-            $this->components->info('The file contains English strings. Translate each value to complete the ' . $locale . ' locale.');
+            $this->info('The file contains English strings. Translate each value to complete the ' . $locale . ' locale.');
         }
 
         if ($this->shouldTranslate()) {
             $this->translateStrings($target, $source);
         }
 
-        $this->components->info('File: ' . $target);
+        $this->info('File: ' . $target);
 
         return self::SUCCESS;
     }
@@ -87,7 +87,7 @@ final class LangCommand extends Command
     private function shouldTranslate(): bool
     {
         return (bool) $this->option('translate')
-            || confirm('Would you like to translate the strings now?', default: false);
+            || $this->confirm('Would you like to translate the strings now?', false);
     }
 
     private function translateStrings(string $target, string $source): void
@@ -126,11 +126,8 @@ final class LangCommand extends Command
             $key = $keys[$index];
             $original = $flat[$key];
 
-            $answer = text(
-                label: $key,
-                default: $translations[$key] ?? $original,
-                hint: ($index + 1) . '/' . $total . '  ·  Original: ' . $original . '  ·  Enter to keep, "' . self::BACK . '" to go back',
-            );
+            $this->line(($index + 1) . '/' . $total . ' · Original: ' . $original . ' · Enter "' . self::BACK . '" to go back');
+            $answer = $this->ask($key, $translations[$key] ?? $original);
 
             if ($answer === self::BACK) {
                 $index = max(0, $index - 1);
@@ -252,7 +249,10 @@ final class LangCommand extends Command
         $array[$key] = $child;
     }
 
-    private function stringify(mixed $value): string
+    /**
+     * @param mixed $value
+     */
+    private function stringify($value): string
     {
         return is_scalar($value) ? (string) $value : '';
     }
@@ -291,20 +291,24 @@ final class LangCommand extends Command
         sort($all);
 
         $rows = array_map(
-            fn (string $code): array => [
-                $code,
-                in_array($code, $bundled, true) ? 'yes' : 'no',
-                in_array($code, $published, true) ? 'yes' : 'no',
-            ],
+            function (string $code) use ($bundled, $published): array {
+                return [
+                    $code,
+                    in_array($code, $bundled, true) ? 'yes' : 'no',
+                    in_array($code, $published, true) ? 'yes' : 'no',
+                ];
+            },
             $all,
         );
 
         $this->table(['locale', 'bundled', 'published'], $rows);
 
-        $missing = array_values(array_filter($bundled, fn (string $c): bool => ! in_array($c, $published, true)));
+        $missing = array_values(array_filter($bundled, function (string $c) use ($published): bool {
+            return ! in_array($c, $published, true);
+        }));
 
         if ($missing !== []) {
-            $this->components->info('Run `php artisan laradocs:lang <locale>` to scaffold a missing locale.');
+            $this->info('Run `php artisan laradocs:lang <locale>` to scaffold a missing locale.');
         }
 
         return self::SUCCESS;

@@ -25,24 +25,33 @@ use Laradocs\OpenApi\OpenApiException;
  */
 class SpecGeneratorFactory
 {
+    /**
+     * @readonly
+     * @var \Illuminate\Routing\Router
+     */
+    private $router;
     public const MISSING_MESSAGE = 'The dedoc/scramble package is required for --driver=scramble. Install it with: composer require dedoc/scramble';
 
-    public function __construct(
-        private readonly Router $router,
-    ) {}
+    public function __construct(Router $router)
+    {
+        $this->router = $router;
+    }
 
     public function make(string $driver, GeneratorOptions $options): OpenApiSpecGenerator
     {
-        return match ($driver) {
-            'scramble' => $this->scrambleAvailable()
-                ? $this->scramble($options)
-                : throw new OpenApiException(self::MISSING_MESSAGE),
-            'auto' => $this->scrambleAvailable()
-                ? $this->scramble($options)
-                : $this->native($options),
-            // 'native' and any unrecognised driver fall back to the built-in generator.
-            default => $this->native($options),
-        };
+        switch ($driver) {
+            case 'scramble':
+                if (!$this->scrambleAvailable()) {
+                    throw new OpenApiException(self::MISSING_MESSAGE);
+                }
+                return $this->scramble($options);
+            case 'auto':
+                return $this->scrambleAvailable()
+                    ? $this->scramble($options)
+                    : $this->native($options);
+            default:
+                return $this->native($options);
+        }
     }
 
     /**
@@ -59,12 +68,12 @@ class SpecGeneratorFactory
     private function native(GeneratorOptions $options): SpecGenerator
     {
         return new SpecGenerator(
-            routes: new RouteCollector($this->router, $options->prefix, $options->middleware),
-            requests: new RequestInspector,
-            responses: new ResponseInspector,
-            title: $options->title,
-            version: $options->version,
-            serverUrl: $options->serverUrl,
+            new RouteCollector($this->router, $options->prefix, $options->middleware),
+            new RequestInspector,
+            new ResponseInspector,
+            $options->title,
+            $options->version,
+            $options->serverUrl,
         );
     }
 

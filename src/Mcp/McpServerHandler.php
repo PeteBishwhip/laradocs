@@ -15,7 +15,10 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 final class McpServerHandler
 {
-    public function handle(Request $request): Response|StreamedResponse
+    /**
+     * @return \Illuminate\Http\Response|\Symfony\Component\HttpFoundation\StreamedResponse
+     */
+    public function handle(Request $request)
     {
         $transport = new HttpTransport(
             $request,

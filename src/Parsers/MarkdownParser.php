@@ -12,14 +12,30 @@ use League\CommonMark\ConverterInterface;
 final class MarkdownParser implements DocumentParser
 {
     /**
+     * @readonly
+     * @var \League\CommonMark\ConverterInterface
+     */
+    private $converter;
+    /**
+     * @var array<int, MarkdownExtension>
+     * @readonly
+     */
+    private $markdownExtensions = [];
+    /**
+     * @var array<int, HtmlExtension>
+     * @readonly
+     */
+    private $htmlExtensions = [];
+    /**
      * @param  array<int, MarkdownExtension>  $markdownExtensions
      * @param  array<int, HtmlExtension>  $htmlExtensions
      */
-    public function __construct(
-        private readonly ConverterInterface $converter,
-        private readonly array $markdownExtensions = [],
-        private readonly array $htmlExtensions = [],
-    ) {}
+    public function __construct(ConverterInterface $converter, array $markdownExtensions = [], array $htmlExtensions = [])
+    {
+        $this->converter = $converter;
+        $this->markdownExtensions = $markdownExtensions;
+        $this->htmlExtensions = $htmlExtensions;
+    }
 
     public function parse(string $markdown): string
     {
@@ -27,7 +43,7 @@ final class MarkdownParser implements DocumentParser
             $markdown = $extension->processMarkdown($markdown);
         }
 
-        $html = $this->converter->convert($markdown)->getContent();
+        $html = $this->converter->convertToHtml($markdown);
 
         foreach ($this->htmlExtensions as $extension) {
             $html = $extension->processHtml($html);

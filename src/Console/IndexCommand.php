@@ -67,7 +67,7 @@ final class IndexCommand extends Command
         foreach (array_keys($available) as $key) {
             $key = (string) $key;
 
-            $this->components->info(sprintf('Rebuilding the search index for version %s.', $key));
+            $this->info(sprintf('Rebuilding the search index for version %s.', $key));
 
             if ($this->rebuild($laradocs, $engine, $key) !== self::SUCCESS) {
                 $failed = true;
@@ -118,7 +118,7 @@ final class IndexCommand extends Command
             return self::FAILURE;
         }
 
-        $this->components->info(sprintf(
+        $this->info(sprintf(
             'Indexed %d page(s) for search (%s engine).',
             count($index),
             $engine->name(),

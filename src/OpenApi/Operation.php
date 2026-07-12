@@ -18,24 +18,75 @@ use Illuminate\Contracts\Support\Arrayable;
 final class Operation implements Arrayable
 {
     /**
+     * @var string
+     * @readonly
+     */
+    public $method;
+    /**
+     * @readonly
+     * @var string
+     */
+    public $path;
+    /**
+     * @readonly
+     * @var string|null
+     */
+    public $operationId;
+    /**
+     * @readonly
+     * @var string|null
+     */
+    public $summary;
+    /**
+     * @readonly
+     * @var string|null
+     */
+    public $description;
+    /**
+     * @var array<int, string>
+     * @readonly
+     */
+    public $tags = [];
+    /**
+     * @var array<int, array<string, mixed>>
+     * @readonly
+     */
+    public $parameters = [];
+    /**
+     * @var array<string, mixed>
+     * @readonly
+     */
+    public $requestBody = [];
+    /**
+     * @var array<string, mixed>
+     * @readonly
+     */
+    public $responses = [];
+    /**
+     * @readonly
+     * @var bool
+     */
+    public $deprecated = false;
+    /**
      * @param  string  $method  Upper-cased HTTP verb (GET, POST, …).
      * @param  array<int, string>  $tags
      * @param  array<int, array<string, mixed>>  $parameters
      * @param  array<string, mixed>  $requestBody
      * @param  array<string, mixed>  $responses
      */
-    public function __construct(
-        public readonly string $method,
-        public readonly string $path,
-        public readonly ?string $operationId = null,
-        public readonly ?string $summary = null,
-        public readonly ?string $description = null,
-        public readonly array $tags = [],
-        public readonly array $parameters = [],
-        public readonly array $requestBody = [],
-        public readonly array $responses = [],
-        public readonly bool $deprecated = false,
-    ) {}
+    public function __construct(string $method, string $path, ?string $operationId = null, ?string $summary = null, ?string $description = null, array $tags = [], array $parameters = [], array $requestBody = [], array $responses = [], bool $deprecated = false)
+    {
+        $this->method = $method;
+        $this->path = $path;
+        $this->operationId = $operationId;
+        $this->summary = $summary;
+        $this->description = $description;
+        $this->tags = $tags;
+        $this->parameters = $parameters;
+        $this->requestBody = $requestBody;
+        $this->responses = $responses;
+        $this->deprecated = $deprecated;
+    }
 
     /**
      * @param  array<string, mixed>  $data
@@ -43,16 +94,16 @@ final class Operation implements Arrayable
     public static function fromArray(array $data): self
     {
         return new self(
-            method: Coerce::string($data['method'] ?? ''),
-            path: Coerce::string($data['path'] ?? ''),
-            operationId: Coerce::nullableString($data['operationId'] ?? null),
-            summary: Coerce::nullableString($data['summary'] ?? null),
-            description: Coerce::nullableString($data['description'] ?? null),
-            tags: array_values(Coerce::stringList($data['tags'] ?? [])),
-            parameters: Coerce::listOfAssoc($data['parameters'] ?? []),
-            requestBody: Coerce::assoc($data['requestBody'] ?? []),
-            responses: Coerce::assoc($data['responses'] ?? []),
-            deprecated: Coerce::bool($data['deprecated'] ?? false),
+            Coerce::string($data['method'] ?? ''),
+            Coerce::string($data['path'] ?? ''),
+            Coerce::nullableString($data['operationId'] ?? null),
+            Coerce::nullableString($data['summary'] ?? null),
+            Coerce::nullableString($data['description'] ?? null),
+            array_values(Coerce::stringList($data['tags'] ?? [])),
+            Coerce::listOfAssoc($data['parameters'] ?? []),
+            Coerce::assoc($data['requestBody'] ?? []),
+            Coerce::assoc($data['responses'] ?? []),
+            Coerce::bool($data['deprecated'] ?? false),
         );
     }
 

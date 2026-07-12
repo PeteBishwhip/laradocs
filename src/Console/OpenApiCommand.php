@@ -41,19 +41,19 @@ final class OpenApiCommand extends Command
         $factory = $this->laravel->make(SpecGeneratorFactory::class);
 
         $options = new GeneratorOptions(
-            title: Config::string('laradocs.openapi.generator.title', Config::string('laradocs.openapi.title', 'API')),
-            version: Config::string('laradocs.openapi.generator.version', '1.0.0'),
-            serverUrl: $this->serverUrl(),
-            description: Config::nullableString('laradocs.openapi.generator.description'),
-            security: Config::array('laradocs.openapi.generator.security', []),
-            prefix: $prefix,
-            middleware: $middleware,
+            Config::string('laradocs.openapi.generator.title', Config::string('laradocs.openapi.title', 'API')),
+            Config::string('laradocs.openapi.generator.version', '1.0.0'),
+            $this->serverUrl(),
+            Config::nullableString('laradocs.openapi.generator.description'),
+            Config::array('laradocs.openapi.generator.security', []),
+            $prefix,
+            $middleware,
         );
 
         try {
             $generator = $factory->make($driver, $options);
         } catch (OpenApiException $e) {
-            $this->components->error($e->getMessage());
+            $this->error($e->getMessage());
 
             return self::FAILURE;
         }
@@ -65,20 +65,20 @@ final class OpenApiCommand extends Command
         $paths = $spec['paths'] ?? [];
 
         if ($paths === []) {
-            $this->components->warn('No API routes matched the configured prefix/middleware filters.');
+            $this->warn('No API routes matched the configured prefix/middleware filters.');
         }
 
         $output = $this->outputPath();
 
         if ($files->exists($output) && ! $this->option('force')) {
-            $this->components->error('Spec already exists (use --force to overwrite): ' . $output);
+            $this->error('Spec already exists (use --force to overwrite): ' . $output);
 
             return self::FAILURE;
         }
 
         $builder->dump($output, $spec);
 
-        $this->components->info(sprintf('Wrote %d path(s) to %s', count($paths), $output));
+        $this->info(sprintf('Wrote %d path(s) to %s', count($paths), $output));
 
         return self::SUCCESS;
     }
@@ -139,6 +139,6 @@ final class OpenApiCommand extends Command
 
     private function isAbsolute(string $path): bool
     {
-        return str_starts_with($path, '/') || (bool) preg_match('/^[A-Za-z]:[\\\\\/]/', $path);
+        return strncmp($path, '/', strlen('/')) === 0 || (bool) preg_match('/^[A-Za-z]:[\\\\\/]/', $path);
     }
 }

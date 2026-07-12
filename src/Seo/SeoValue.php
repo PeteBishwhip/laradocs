@@ -15,8 +15,9 @@ final class SeoValue
     /**
      * Normalise a value to a non-empty string, or null. Blank strings collapse
      * to null; numbers are stringified; anything else is null.
+     * @param mixed $value
      */
-    public static function asString(mixed $value): ?string
+    public static function asString($value): ?string
     {
         if (is_string($value)) {
             return trim($value) === '' ? null : $value;
@@ -32,8 +33,9 @@ final class SeoValue
     /**
      * Interpret a front-matter value as a boolean, treating the strings "1",
      * "true", "yes" and "on" (case-insensitive) as true.
+     * @param mixed $value
      */
-    public static function truthy(mixed $value): bool
+    public static function truthy($value): bool
     {
         if (is_bool($value)) {
             return $value;

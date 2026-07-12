@@ -32,14 +32,18 @@ final class SearchIndexBuilder
         int $maxChars = 10000,
         array $exclude = [],
         array $include = [],
-        array $ranks = [],
+        array $ranks = []
     ): array {
         $entries = [];
 
         $searchable = $documents
             ->visible()
-            ->filter(fn (Document $document): bool => $document->isSearchable())
-            ->filter(fn (Document $document): bool => $this->allowed($document->slug, $exclude, $include))
+            ->filter(function (Document $document): bool {
+                return $document->isSearchable();
+            })
+            ->filter(function (Document $document) use ($exclude, $include): bool {
+                return $this->allowed($document->slug, $exclude, $include);
+            })
             ->ordered();
 
         foreach ($searchable as $document) {
@@ -63,14 +67,18 @@ final class SearchIndexBuilder
      */
     private function allowed(string $slug, array $exclude, array $include): bool
     {
-        $isExcluded = array_filter($exclude, fn (string $p): bool => fnmatch($p, $slug)) !== [];
+        $isExcluded = array_filter($exclude, function (string $p) use ($slug): bool {
+            return fnmatch($p, $slug);
+        }) !== [];
 
         if ($isExcluded) {
             return false;
         }
 
         return $include === []
-            || array_filter($include, fn (string $p): bool => fnmatch($p, $slug)) !== [];
+            || array_filter($include, function (string $p) use ($slug): bool {
+                return fnmatch($p, $slug);
+            }) !== [];
     }
 
     /**

@@ -13,13 +13,21 @@ use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Tool;
 
-#[Description('List available documentation pages, optionally filtered to a single group.')]
 class ListPagesTool extends Tool
 {
-    protected string $name = 'list_pages';
-
-    public function __construct(private readonly Laradocs $laradocs) {}
-
+    /**
+     * @readonly
+     * @var \Laradocs\Laradocs
+     */
+    private $laradocs;
+    /**
+     * @var string
+     */
+    protected $name = 'list_pages';
+    public function __construct(Laradocs $laradocs)
+    {
+        $this->laradocs = $laradocs;
+    }
     public function handle(Request $request): Response
     {
         $group = $request->get('group');
@@ -28,20 +36,23 @@ class ListPagesTool extends Tool
 
         if (is_string($group) && $group !== '') {
             $pages = $pages->filter(
-                fn (Document $doc): bool => $doc->group() === $group
+                function (Document $doc) use ($group): bool {
+                    return $doc->group() === $group;
+                }
             )->values();
         }
 
-        $mapped = $pages->map(fn (Document $doc): array => [
-            'slug' => $doc->slug,
-            'title' => $doc->title(),
-            'group' => $doc->group(),
-            'url' => DocumentUrl::toSlug($doc->slug),
-        ])->all();
+        $mapped = $pages->map(function (Document $doc): array {
+            return [
+                'slug' => $doc->slug,
+                'title' => $doc->title(),
+                'group' => $doc->group(),
+                'url' => DocumentUrl::toSlug($doc->slug),
+            ];
+        })->all();
 
         return Response::json(['pages' => $mapped]);
     }
-
     /**
      * @return array<string, mixed>
      */

@@ -12,13 +12,39 @@ namespace Laradocs\Search;
  */
 final class SearchableDocument
 {
-    public function __construct(
-        private readonly string $index,
-        private readonly string $slug = '',
-        private readonly string $title = '',
-        private readonly string $content = '',
-        private readonly string $group = '',
-    ) {}
+    /**
+     * @readonly
+     * @var string
+     */
+    private $index;
+    /**
+     * @readonly
+     * @var string
+     */
+    private $slug = '';
+    /**
+     * @readonly
+     * @var string
+     */
+    private $title = '';
+    /**
+     * @readonly
+     * @var string
+     */
+    private $content = '';
+    /**
+     * @readonly
+     * @var string
+     */
+    private $group = '';
+    public function __construct(string $index, string $slug = '', string $title = '', string $content = '', string $group = '')
+    {
+        $this->index = $index;
+        $this->slug = $slug;
+        $this->title = $title;
+        $this->content = $content;
+        $this->group = $group;
+    }
 
     public function searchableAs(): string
     {

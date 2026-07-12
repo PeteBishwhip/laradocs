@@ -20,7 +20,7 @@ final class RuleMapper
      * @param  string|array<array-key, mixed>  $rules
      * @return array{schema: array<string, mixed>, required: bool}
      */
-    public function map(string|array $rules): array
+    public function map($rules): array
     {
         $tokens = $this->tokens($rules);
 
@@ -46,7 +46,7 @@ final class RuleMapper
                     $schema['type'] = 'integer';
                     break;
                 case 'numeric':
-                    $schema['type'] ??= 'number';
+                    $schema['type'] = $schema['type'] ?? 'number';
                     break;
                 case 'boolean':
                 case 'bool':
@@ -110,7 +110,7 @@ final class RuleMapper
      * @param  string|array<array-key, mixed>  $rules
      * @return array<int, string>
      */
-    private function tokens(string|array $rules): array
+    private function tokens($rules): array
     {
         if (is_string($rules)) {
             $rules = explode('|', $rules);
@@ -136,7 +136,7 @@ final class RuleMapper
         $name = $token;
         $argument = '';
 
-        if (str_contains($token, ':')) {
+        if (strpos($token, ':') !== false) {
             [$name, $argument] = explode(':', $token, 2);
         }
 
@@ -196,6 +196,6 @@ final class RuleMapper
      */
     public function propertyName(string $field): string
     {
-        return Str::of($field)->before('.')->before('*')->toString();
+        return (string) Str::of($field)->before('.')->before('*');
     }
 }

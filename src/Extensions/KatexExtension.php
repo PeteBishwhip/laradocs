@@ -26,12 +26,33 @@ use Laradocs\Support\Html;
  */
 final class KatexExtension implements HtmlExtension, MarkdownExtension
 {
-    public function __construct(
-        private readonly string $js,
-        private readonly string $css,
-        private readonly bool $ssr = false,
-        private readonly ?string $nodeBin = null,
-    ) {}
+    /**
+     * @readonly
+     * @var string
+     */
+    private $js;
+    /**
+     * @readonly
+     * @var string
+     */
+    private $css;
+    /**
+     * @readonly
+     * @var bool
+     */
+    private $ssr = false;
+    /**
+     * @readonly
+     * @var string|null
+     */
+    private $nodeBin;
+    public function __construct(string $js, string $css, bool $ssr = false, ?string $nodeBin = null)
+    {
+        $this->js = $js;
+        $this->css = $css;
+        $this->ssr = $ssr;
+        $this->nodeBin = $nodeBin;
+    }
 
     // ── MarkdownExtension ────────────────────────────────────────────────────
 
@@ -46,7 +67,9 @@ final class KatexExtension implements HtmlExtension, MarkdownExtension
             // Single-line display math: $$expr$$ on the same line.
             $text = (string) preg_replace_callback(
                 '/\$\$(.+?)\$\$/s',
-                fn (array $m) => $this->spanPlaceholder('block', trim($m[1])),
+                function (array $m) {
+                    return $this->spanPlaceholder('block', trim($m[1]));
+                },
                 $text,
             );
 
@@ -55,7 +78,9 @@ final class KatexExtension implements HtmlExtension, MarkdownExtension
             // expression) or non-delimiter characters.
             $text = (string) preg_replace_callback(
                 '/(?<!\$)\$(?!\$)((?:\\\\.|[^$\n])+)\$(?!\$)/',
-                fn (array $m) => $this->spanPlaceholder('inline', trim($m[1])),
+                function (array $m) {
+                    return $this->spanPlaceholder('inline', trim($m[1]));
+                },
                 $text,
             );
 
@@ -169,13 +194,17 @@ final class KatexExtension implements HtmlExtension, MarkdownExtension
         // once so the expression list and the elements stay index-aligned.
         $targets = array_values(array_filter(
             $elements,
-            static fn (\DOMNode|\DOMNameSpaceNode $el): bool => $el instanceof DOMElement,
+            static function ($el): bool {
+                return $el instanceof DOMElement;
+            },
         ));
 
-        $exprs = array_map(static fn (DOMElement $el): array => [
-            'expr' => $el->getAttribute('data-expr'),
-            'display' => $el->getAttribute('data-laradocs-katex') === 'block',
-        ], $targets);
+        $exprs = array_map(static function (DOMElement $el): array {
+            return [
+                'expr' => $el->getAttribute('data-expr'),
+                'display' => $el->getAttribute('data-laradocs-katex') === 'block',
+            ];
+        }, $targets);
 
         $rendered = $this->runKatexNode($exprs);
 
@@ -222,7 +251,9 @@ final class KatexExtension implements HtmlExtension, MarkdownExtension
         }
 
         $results = json_decode($output, true);
-        $toNullable = static fn (mixed $r): ?string => is_string($r) ? $r : null;
+        $toNullable = static function ($r): ?string {
+            return is_string($r) ? $r : null;
+        };
 
         return is_array($results)
             ? array_map($toNullable, array_values($results))

@@ -19,18 +19,26 @@ use Laradocs\Support\CodeAwareReplacer;
 final class IconExtension implements MarkdownExtension
 {
     /**
+     * @readonly
+     * @var \Laradocs\Icons\IconRegistry
+     */
+    private $icons;
+    /**
      * Matches an `@icon(...)` call, capturing the inner argument string.
      * Shared with the linter so both recognise calls the same way.
      */
     public const CALL_PATTERN = '/@icon\(([^)]+)\)/';
 
-    public function __construct(
-        private readonly IconRegistry $icons,
-    ) {}
+    public function __construct(IconRegistry $icons)
+    {
+        $this->icons = $icons;
+    }
 
     public function processMarkdown(string $markdown): string
     {
-        return CodeAwareReplacer::apply($markdown, fn (string $text): string => $this->expand($text));
+        return CodeAwareReplacer::apply($markdown, function (string $text): string {
+            return $this->expand($text);
+        });
     }
 
     private function expand(string $text): string

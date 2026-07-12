@@ -14,15 +14,51 @@ namespace Laradocs\OpenApi\Generator;
 final class GeneratorOptions
 {
     /**
+     * @readonly
+     * @var string
+     */
+    public $title = 'API';
+    /**
+     * @readonly
+     * @var string
+     */
+    public $version = '1.0.0';
+    /**
+     * @readonly
+     * @var string|null
+     */
+    public $serverUrl;
+    /**
+     * @readonly
+     * @var string|null
+     */
+    public $description;
+    /**
+     * @var array<int|string, mixed>
+     * @readonly
+     */
+    public $security = [];
+    /**
+     * @readonly
+     * @var string|null
+     */
+    public $prefix = 'api';
+    /**
+     * @readonly
+     * @var string|null
+     */
+    public $middleware = 'api';
+    /**
      * @param  array<int|string, mixed>  $security
      */
-    public function __construct(
-        public readonly string $title = 'API',
-        public readonly string $version = '1.0.0',
-        public readonly ?string $serverUrl = null,
-        public readonly ?string $description = null,
-        public readonly array $security = [],
-        public readonly ?string $prefix = 'api',
-        public readonly ?string $middleware = 'api',
-    ) {}
+    public function __construct(string $title = 'API', string $version = '1.0.0', ?string $serverUrl = null, ?string $description = null, array $security = [], ?string $prefix = 'api', ?string $middleware = 'api')
+    {
+        $this->title = $title;
+        $this->version = $version;
+        $this->serverUrl = $serverUrl;
+        $this->description = $description;
+        $this->security = $security;
+        $this->prefix = $prefix;
+        $this->middleware = $middleware;
+    }
 }

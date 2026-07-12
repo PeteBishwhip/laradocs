@@ -29,25 +29,86 @@ use Laradocs\Variables\VariableRegistry;
 final class Laradocs
 {
     /**
+     * @readonly
+     * @var \Laradocs\Contracts\DocumentLoader
+     */
+    private $loader;
+    /**
+     * @readonly
+     * @var \Laradocs\Contracts\DocumentParser
+     */
+    private $parser;
+    /**
+     * @readonly
+     * @var \Laradocs\Cache\DocumentCache
+     */
+    private $cache;
+    /**
+     * @readonly
+     * @var \Laradocs\Variables\VariableRegistry
+     */
+    private $variables;
+    /**
+     * @readonly
+     * @var \Laradocs\Macros\MacroRegistry
+     */
+    private $macros;
+    /**
+     * @readonly
+     * @var \Laradocs\Support\RateLimiterConfig
+     */
+    private $rateLimiterConfig;
+    /**
+     * @readonly
+     * @var string
+     */
+    private $indexName = '_index';
+    /**
+     * @readonly
+     * @var int
+     */
+    private $searchMaxChars = 10000;
+    /**
+     * @var array<int, string>
+     * @readonly
+     */
+    private $searchExclude = [];
+    /**
+     * @var array<int, string>
+     * @readonly
+     */
+    private $searchInclude = [];
+    /**
+     * @var array<string, float>
+     * @readonly
+     */
+    private $searchRank = [];
+    /**
+     * @var array<int, DocumentContentRenderer>
+     * @readonly
+     */
+    private $contentRenderers = [];
+    /**
      * @param  array<int, string>  $searchExclude
      * @param  array<int, string>  $searchInclude
      * @param  array<string, float>  $searchRank
      * @param  array<int, DocumentContentRenderer>  $contentRenderers
      */
-    public function __construct(
-        private readonly DocumentLoader $loader,
-        private readonly DocumentParser $parser,
-        private readonly DocumentCache $cache,
-        private readonly VariableRegistry $variables,
-        private readonly MacroRegistry $macros,
-        private readonly RateLimiterConfig $rateLimiterConfig,
-        private readonly string $indexName = '_index',
-        private readonly int $searchMaxChars = 10000,
-        private readonly array $searchExclude = [],
-        private readonly array $searchInclude = [],
-        private readonly array $searchRank = [],
-        private readonly array $contentRenderers = [],
-    ) {}
+    public function __construct(DocumentLoader $loader, DocumentParser $parser, DocumentCache $cache, VariableRegistry $variables, MacroRegistry $macros, RateLimiterConfig $rateLimiterConfig, string $indexName = '_index', int $searchMaxChars = 10000, array $searchExclude = [], array $searchInclude = [], array $searchRank = [], array $contentRenderers = [])
+    {
+        $this->loader = $loader;
+        $this->parser = $parser;
+        $this->cache = $cache;
+        $this->variables = $variables;
+        $this->macros = $macros;
+        $this->rateLimiterConfig = $rateLimiterConfig;
+        $this->indexName = $indexName;
+        $this->searchMaxChars = $searchMaxChars;
+        $this->searchExclude = $searchExclude;
+        $this->searchInclude = $searchInclude;
+        $this->searchRank = $searchRank;
+        $this->contentRenderers = $contentRenderers;
+    }
 
     /**
      * Register variables for interpolation, as an array or a closure.
@@ -60,7 +121,7 @@ final class Laradocs
      *
      * @param  array<string, mixed>|Closure  $values
      */
-    public function variables(array|Closure $values): self
+    public function variables($values): self
     {
         $this->variables->register($values);
 
@@ -75,8 +136,9 @@ final class Laradocs
      * (Octane / RoadRunner). Call this exclusively from a service provider's
      * `boot()` method; use a closure via {@see variables()} for per-request
      * values instead.
+     * @param mixed $value
      */
-    public function share(string $key, mixed $value): self
+    public function share(string $key, $value): self
     {
         $this->variables->set($key, $value);
 
@@ -94,8 +156,9 @@ final class Laradocs
      *   Laradocs::rateLimit(false);             // disable
      *   Laradocs::rateLimit(120);               // 120 rpm per IP
      *   Laradocs::rateLimit(fn ($req) => ...);  // full control
+     * @param \Closure|int|false $resolver
      */
-    public function rateLimit(Closure|int|false $resolver): self
+    public function rateLimit($resolver): self
     {
         $this->rateLimiterConfig->set($resolver);
 
@@ -135,8 +198,9 @@ final class Laradocs
      * singleton persist into every subsequent request on long-lived workers
      * (Octane / RoadRunner). Call this exclusively from a service provider's
      * `boot()` method.
+     * @param \Closure|string $handler
      */
-    public function macro(string $name, Closure|string $handler): self
+    public function macro(string $name, $handler): self
     {
         $this->macros->register($name, $handler);
 
@@ -160,7 +224,9 @@ final class Laradocs
 
         return $this->cache->rememberTree(
             $documents,
-            fn (): DocumentTree => DocumentTree::fromDocuments($documents, $this->indexName)
+            function () use ($documents): DocumentTree {
+                return DocumentTree::fromDocuments($documents, $this->indexName);
+            }
         );
     }
 
@@ -199,18 +265,22 @@ final class Laradocs
 
                 // First spelling of a tag wins as the display label, so
                 // "API" and "api" collapse to one entry rather than two.
-                $buckets[$slug] ??= ['label' => $label, 'documents' => []];
+                $buckets[$slug] = $buckets[$slug] ?? ['label' => $label, 'documents' => []];
                 $buckets[$slug]['documents'][] = $document;
             }
         }
 
         return collect($buckets)
-            ->map(fn (array $bucket, string $slug): Tag => new Tag(
-                $slug,
-                $bucket['label'],
-                (new DocumentCollection($bucket['documents']))->ordered(),
-            ))
-            ->sortBy(fn (Tag $tag): string => mb_strtolower($tag->label, 'UTF-8'), SORT_NATURAL)
+            ->map(function (array $bucket, string $slug): Tag {
+                return new Tag(
+                    $slug,
+                    $bucket['label'],
+                    (new DocumentCollection($bucket['documents']))->ordered(),
+                );
+            })
+            ->sortBy(function (Tag $tag): string {
+                return mb_strtolower($tag->label, 'UTF-8');
+            }, SORT_NATURAL)
             ->values();
     }
 
@@ -222,7 +292,9 @@ final class Laradocs
     {
         $slug = Str::slug($slug);
 
-        return $this->tags()->first(fn (Tag $tag): bool => $tag->slug === $slug);
+        return $this->tags()->first(function (Tag $tag) use ($slug): bool {
+            return $tag->slug === $slug;
+        });
     }
 
     /**
@@ -248,14 +320,18 @@ final class Laradocs
 
         return $this->cache->rememberSearchIndex(
             $documents,
-            fn (): array => (new SearchIndexBuilder)->build(
-                $documents,
-                fn (Document $document): string => $this->render($document),
-                $this->searchMaxChars,
-                $this->searchExclude,
-                $this->searchInclude,
-                $this->searchRank,
-            )
+            function () use ($documents): array {
+                return (new SearchIndexBuilder)->build(
+                    $documents,
+                    function (Document $document): string {
+                        return $this->render($document);
+                    },
+                    $this->searchMaxChars,
+                    $this->searchExclude,
+                    $this->searchInclude,
+                    $this->searchRank,
+                );
+            }
         );
     }
 
@@ -269,7 +345,9 @@ final class Laradocs
 
         return $this->cache->rememberSitemap(
             $documents,
-            fn (): string => (new SitemapBuilder)->build($this->tree())
+            function (): string {
+                return (new SitemapBuilder)->build($this->tree());
+            }
         );
     }
 
@@ -285,7 +363,9 @@ final class Laradocs
         return $this->cache->rememberFeed(
             $documents,
             $format,
-            fn (): string => (new FeedBuilder)->build($documents, $format, $limit, $feedUrl, $siteTitle)
+            function () use ($documents, $format, $limit, $feedUrl, $siteTitle): string {
+                return (new FeedBuilder)->build($documents, $format, $limit, $feedUrl, $siteTitle);
+            }
         );
     }
 

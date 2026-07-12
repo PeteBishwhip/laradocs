@@ -22,11 +22,20 @@ use Laradocs\Support\Html;
  */
 final class TabsHtmlExtension implements HtmlExtension
 {
-    private int $counter = 0;
+    /**
+     * @readonly
+     * @var string
+     */
+    private $defaultGroup = 'language';
+    /**
+     * @var int
+     */
+    private $counter = 0;
 
-    public function __construct(
-        private readonly string $defaultGroup = 'language',
-    ) {}
+    public function __construct(string $defaultGroup = 'language')
+    {
+        $this->defaultGroup = $defaultGroup;
+    }
 
     public function processHtml(string $html): string
     {
@@ -64,7 +73,7 @@ final class TabsHtmlExtension implements HtmlExtension
 
         $sections = [];
         foreach (iterator_to_array($rawGroup->childNodes) as $child) {
-            if ($child instanceof DOMElement && str_contains($child->getAttribute('class'), 'laradocs-tab-raw')) {
+            if ($child instanceof DOMElement && strpos($child->getAttribute('class'), 'laradocs-tab-raw') !== false) {
                 $sections[] = [
                     'label' => $child->getAttribute('data-tab'),
                     'html' => Html::innerHtml($child),
@@ -135,13 +144,15 @@ final class TabsHtmlExtension implements HtmlExtension
         DOMDocument $dom,
         DOMElement $parent,
         array $allNodes,
-        array $tabDivs,
+        array $tabDivs
     ): void {
         $sections = array_map(
-            fn (DOMElement $el): array => [
-                'label' => $el->getAttribute('data-tab'),
-                'html' => Html::innerHtml($el),
-            ],
+            function (DOMElement $el): array {
+                return [
+                    'label' => $el->getAttribute('data-tab'),
+                    'html' => Html::innerHtml($el),
+                ];
+            },
             $tabDivs,
         );
 
@@ -161,7 +172,7 @@ final class TabsHtmlExtension implements HtmlExtension
 
     private function isCodeTabPending(DOMElement $el): bool
     {
-        return str_contains($el->getAttribute('class'), 'laradocs-code-tab-pending')
+        return strpos($el->getAttribute('class'), 'laradocs-code-tab-pending') !== false
             && $el->hasAttribute('data-tab');
     }
 

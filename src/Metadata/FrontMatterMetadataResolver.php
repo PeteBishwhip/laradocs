@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Laradocs\Metadata;
 
 use Laradocs\Contracts\MetadataResolver;
-use Spatie\YamlFrontMatter\YamlFrontMatter;
+use Symfony\Component\Yaml\Yaml;
 use Throwable;
 
 final class FrontMatterMetadataResolver implements MetadataResolver
@@ -16,13 +16,18 @@ final class FrontMatterMetadataResolver implements MetadataResolver
     public function resolve(string $raw): array
     {
         try {
-            $document = YamlFrontMatter::parse($raw);
+            if (! preg_match('/\A---\R(.*?)\R---(?:\R|\z)/s', $raw, $matches)) {
+                return [[], $raw];
+            }
 
-            /** @var array<string, mixed> $matter */
-            $matter = $document->matter();
+            $matter = Yaml::parse($matches[1]);
 
-            return [$matter, $document->body()];
-        } catch (Throwable) {
+            if (! is_array($matter)) {
+                $matter = [];
+            }
+
+            return [$matter, (string) substr($raw, strlen($matches[0]))];
+        } catch (Throwable $exception) {
             // Malformed front-matter: treat the whole file as body.
             return [[], $raw];
         }

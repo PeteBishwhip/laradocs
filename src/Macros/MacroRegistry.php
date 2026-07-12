@@ -14,7 +14,7 @@ final class MacroRegistry
     /**
      * @var array<string, Closure|string>
      */
-    private array $macros = [];
+    private $macros = [];
 
     /**
      * @param  array<string, Closure|string>  $macros
@@ -32,8 +32,9 @@ final class MacroRegistry
      * service provider's `boot()` method. Registering macros during request
      * processing causes them to accumulate across requests on long-lived
      * workers such as Laravel Octane.
+     * @param \Closure|string $handler
      */
-    public function register(string $name, Closure|string $handler): self
+    public function register(string $name, $handler): self
     {
         $this->macros[$name] = $handler;
 

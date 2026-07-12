@@ -19,14 +19,30 @@ use Illuminate\Routing\Router;
 final class RouteCollector
 {
     /**
+     * @readonly
+     * @var \Illuminate\Routing\Router
+     */
+    private $router;
+    /**
+     * @var string|null
+     * @readonly
+     */
+    private $prefix = 'api';
+    /**
+     * @var string|null
+     * @readonly
+     */
+    private $middleware = 'api';
+    /**
      * @param  string|null  $prefix  URI prefix routes must start with (null disables the filter).
      * @param  string|null  $middleware  Middleware name routes must carry (null disables the filter).
      */
-    public function __construct(
-        private readonly Router $router,
-        private readonly ?string $prefix = 'api',
-        private readonly ?string $middleware = 'api',
-    ) {}
+    public function __construct(Router $router, ?string $prefix = 'api', ?string $middleware = 'api')
+    {
+        $this->router = $router;
+        $this->prefix = $prefix;
+        $this->middleware = $middleware;
+    }
 
     /**
      * @return array<int, CollectedRoute>
@@ -50,18 +66,29 @@ final class RouteCollector
             }
 
             $collected[] = new CollectedRoute(
-                methods: $methods,
-                uri: $this->uri($route),
-                pathParameters: $this->pathParameters($route),
-                controller: $route->getControllerClass() === null
-                    ? null
-                    : ltrim($route->getControllerClass(), '\\'),
-                action: $this->action($route),
-                name: $route->getName(),
+                $methods,
+                $this->uri($route),
+                $this->pathParameters($route),
+                $this->controller($route),
+                $this->action($route),
+                $route->getName(),
             );
         }
 
         return $collected;
+    }
+
+    private function controller(Route $route): ?string
+    {
+        $action = $route->getActionName();
+
+        if ($action === 'Closure' || $action === '') {
+            return null;
+        }
+
+        $controller = explode('@', $action, 2)[0];
+
+        return $controller === '' ? null : ltrim($controller, '\\');
     }
 
     private function matches(Route $route): bool
@@ -69,7 +96,7 @@ final class RouteCollector
         if ($this->prefix !== null && $this->prefix !== '') {
             $needle = trim($this->prefix, '/');
 
-            if (! str_starts_with(trim($route->uri(), '/'), $needle)) {
+            if (strncmp(trim($route->uri(), '/'), $needle, strlen($needle)) !== 0) {
                 return false;
             }
         }
@@ -128,7 +155,7 @@ final class RouteCollector
 
     private function action(Route $route): ?string
     {
-        if ($route->getControllerClass() === null) {
+        if ($this->controller($route) === null) {
             return null;
         }
 

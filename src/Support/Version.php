@@ -48,7 +48,9 @@ final class Version
         }
 
         return array_map(
-            static fn (VersionInfo $info): string => $info->label,
+            static function (VersionInfo $info): string {
+                return $info->label;
+            },
             self::registry()->all(),
         );
     }

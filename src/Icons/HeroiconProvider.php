@@ -18,10 +18,21 @@ use Illuminate\Filesystem\Filesystem;
  */
 final class HeroiconProvider
 {
-    public function __construct(
-        private readonly string $basePath,
-        private readonly Filesystem $files,
-    ) {}
+    /**
+     * @readonly
+     * @var string
+     */
+    private $basePath;
+    /**
+     * @readonly
+     * @var \Illuminate\Filesystem\Filesystem
+     */
+    private $files;
+    public function __construct(string $basePath, Filesystem $files)
+    {
+        $this->basePath = $basePath;
+        $this->files = $files;
+    }
 
     public function __invoke(string $name, string $variant = 'outline'): string
     {
@@ -29,11 +40,17 @@ final class HeroiconProvider
             ? $variant
             : 'outline';
 
-        $size = match ($variant) {
-            'mini' => '20',
-            'micro' => '16',
-            default => '24',
-        };
+        switch ($variant) {
+            case 'mini':
+                $size = '20';
+                break;
+            case 'micro':
+                $size = '16';
+                break;
+            default:
+                $size = '24';
+                break;
+        }
 
         $path = rtrim($this->basePath, '/') . "/{$size}/{$variant}/{$name}.svg";
 

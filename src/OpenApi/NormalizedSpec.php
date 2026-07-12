@@ -21,20 +21,51 @@ use Illuminate\Contracts\Support\Arrayable;
 final class NormalizedSpec implements Arrayable
 {
     /**
+     * @readonly
+     * @var string
+     */
+    public $openApiVersion;
+    /**
+     * @var array<string, mixed>
+     * @readonly
+     */
+    public $info;
+    /**
+     * @var array<int, array<string, mixed>>
+     * @readonly
+     */
+    public $servers;
+    /**
+     * @var array<int, array<string, mixed>>
+     * @readonly
+     */
+    public $tags;
+    /**
+     * @var array<int, Operation>
+     * @readonly
+     */
+    public $operations;
+    /**
+     * @var array<string, SchemaNode>
+     * @readonly
+     */
+    public $schemas;
+    /**
      * @param  array<string, mixed>  $info
      * @param  array<int, array<string, mixed>>  $servers
      * @param  array<int, array<string, mixed>>  $tags
      * @param  array<int, Operation>  $operations
      * @param  array<string, SchemaNode>  $schemas
      */
-    public function __construct(
-        public readonly string $openApiVersion,
-        public readonly array $info,
-        public readonly array $servers,
-        public readonly array $tags,
-        public readonly array $operations,
-        public readonly array $schemas,
-    ) {}
+    public function __construct(string $openApiVersion, array $info, array $servers, array $tags, array $operations, array $schemas)
+    {
+        $this->openApiVersion = $openApiVersion;
+        $this->info = $info;
+        $this->servers = $servers;
+        $this->tags = $tags;
+        $this->operations = $operations;
+        $this->schemas = $schemas;
+    }
 
     /**
      * @return array<string, mixed>
@@ -90,15 +121,17 @@ final class NormalizedSpec implements Arrayable
         }
 
         return new self(
-            openApiVersion: Coerce::string($data['openapi'] ?? ''),
-            info: Coerce::assoc($data['info'] ?? []),
-            servers: array_values(Coerce::listOfAssoc($data['servers'] ?? [])),
-            tags: array_values(Coerce::listOfAssoc($data['tags'] ?? [])),
-            operations: array_values(array_map(
-                static fn (array $operation): Operation => Operation::fromArray($operation),
+            Coerce::string($data['openapi'] ?? ''),
+            Coerce::assoc($data['info'] ?? []),
+            array_values(Coerce::listOfAssoc($data['servers'] ?? [])),
+            array_values(Coerce::listOfAssoc($data['tags'] ?? [])),
+            array_values(array_map(
+                static function (array $operation): Operation {
+                    return Operation::fromArray($operation);
+                },
                 Coerce::listOfAssoc($data['operations'] ?? []),
             )),
-            schemas: $schemaNodes,
+            $schemaNodes,
         );
     }
 
@@ -116,11 +149,15 @@ final class NormalizedSpec implements Arrayable
             'servers' => $this->servers,
             'tags' => $this->tags,
             'operations' => array_map(
-                static fn (Operation $operation): array => $operation->toArray(),
+                static function (Operation $operation): array {
+                    return $operation->toArray();
+                },
                 $this->operations,
             ),
             'schemas' => array_map(
-                static fn (SchemaNode $schema): array => $schema->toArray(),
+                static function (SchemaNode $schema): array {
+                    return $schema->toArray();
+                },
                 $this->schemas,
             ),
         ];

@@ -11,11 +11,17 @@ use Laradocs\Support\Html;
 final class TableOfContents
 {
     /**
+     * @var array<int, Heading>
+     * @readonly
+     */
+    public $headings = [];
+    /**
      * @param  array<int, Heading>  $headings
      */
-    public function __construct(
-        public readonly array $headings = [],
-    ) {}
+    public function __construct(array $headings = [])
+    {
+        $this->headings = $headings;
+    }
 
     public static function fromHtml(string $html, int $minLevel = 2, int $maxLevel = 3): self
     {
@@ -44,9 +50,9 @@ final class TableOfContents
                 }
 
                 $headings[] = new Heading(
-                    level: (int) substr($node->nodeName, 1),
-                    id: $id,
-                    text: trim(ltrim($node->textContent, '#')),
+                    (int) substr($node->nodeName, 1),
+                    $id,
+                    trim(ltrim($node->textContent, '#')),
                 );
             }
         }

@@ -14,7 +14,14 @@ use Laradocs\Support\Config;
  */
 final class LocalDocs
 {
-    public function __construct(private Filesystem $files) {}
+    /**
+     * @var \Illuminate\Filesystem\Filesystem
+     */
+    private $files;
+    public function __construct(Filesystem $files)
+    {
+        $this->files = $files;
+    }
 
     public function path(): string
     {
@@ -66,7 +73,7 @@ final class LocalDocs
         foreach ($files as $relative => $body) {
             $relative = str_replace('\\', '/', trim((string) $relative));
 
-            if ($relative === '' || str_contains($relative, '..')) {
+            if ($relative === '' || strpos($relative, '..') !== false) {
                 continue;
             }
 
@@ -92,7 +99,9 @@ final class LocalDocs
         $extensions = Config::array('laradocs.docs.extensions', ['md', 'markdown']);
 
         return array_values(array_map(
-            static fn (mixed $ext): string => strtolower(ltrim(Json::string($ext), '.')),
+            static function ($ext): string {
+                return strtolower(ltrim(Json::string($ext), '.'));
+            },
             $extensions,
         ));
     }

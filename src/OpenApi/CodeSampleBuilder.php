@@ -59,8 +59,10 @@ final class CodeSampleBuilder
     }
 
     // ── snippet templates ─────────────────────────────────────────────────────
-
-    private function curl(string $method, string $url, mixed $body): string
+    /**
+     * @param mixed $body
+     */
+    private function curl(string $method, string $url, $body): string
     {
         $lines = ['curl -X ' . $method . ' "' . $url . '" \\'];
         $lines[] = '  -H "Authorization: Bearer ' . self::TOKEN . '" \\';
@@ -74,7 +76,10 @@ final class CodeSampleBuilder
         return implode("\n", $lines);
     }
 
-    private function php(string $method, string $url, mixed $body): string
+    /**
+     * @param mixed $body
+     */
+    private function php(string $method, string $url, $body): string
     {
         $call = strtolower($method);
         $out = "use Illuminate\\Support\\Facades\\Http;\n\n";
@@ -88,7 +93,10 @@ final class CodeSampleBuilder
         return $out . "    ->{$call}('{$url}');";
     }
 
-    private function javascript(string $method, string $url, mixed $body): string
+    /**
+     * @param mixed $body
+     */
+    private function javascript(string $method, string $url, $body): string
     {
         $out = "const response = await fetch(\"{$url}\", {\n";
         $out .= '  method: "' . $method . "\",\n";
@@ -107,7 +115,10 @@ final class CodeSampleBuilder
         return $out . "  },\n});";
     }
 
-    private function python(string $method, string $url, mixed $body): string
+    /**
+     * @param mixed $body
+     */
+    private function python(string $method, string $url, $body): string
     {
         $call = strtolower($method);
         $out = "import requests\n\n";
@@ -128,7 +139,10 @@ final class CodeSampleBuilder
         return $out . "    },\n)";
     }
 
-    private function ruby(string $method, string $url, mixed $body): string
+    /**
+     * @param mixed $body
+     */
+    private function ruby(string $method, string $url, $body): string
     {
         $class = ucfirst(strtolower($method));
         $out = "require \"net/http\"\nrequire \"json\"\nrequire \"uri\"\n\n";
@@ -151,13 +165,13 @@ final class CodeSampleBuilder
     }
 
     // ── example synthesis ─────────────────────────────────────────────────────
-
     /**
      * Synthesise a representative example value for a resolved schema node.
      *
      * @param  array<array-key, mixed>  $node
+     * @return mixed
      */
-    private function example(array $node, int $depth): mixed
+    private function example(array $node, int $depth)
     {
         if ($depth > 4) {
             return null;
@@ -169,13 +183,19 @@ final class CodeSampleBuilder
             return $node['enum'][0];
         }
 
-        return match ($this->exampleType($node)) {
-            'object' => $this->objectExample($node, $depth),
-            'array' => [$this->example(is_array($node['items'] ?? null) ? $node['items'] : [], $depth + 1)],
-            'integer', 'number' => 0,
-            'boolean' => true,
-            default => $this->stringExample($node),
-        };
+        switch ($this->exampleType($node)) {
+            case 'object':
+                return $this->objectExample($node, $depth);
+            case 'array':
+                return [$this->example(is_array($node['items'] ?? null) ? $node['items'] : [], $depth + 1)];
+            case 'integer':
+            case 'number':
+                return 0;
+            case 'boolean':
+                return true;
+            default:
+                return $this->stringExample($node);
+        }
     }
 
     /**
@@ -208,11 +228,14 @@ final class CodeSampleBuilder
             return (string) $node['type'];
         }
 
-        return match (true) {
-            ! empty($node['properties']) => 'object',
-            ! empty($node['items']) => 'array',
-            default => 'string',
-        };
+        switch (true) {
+            case ! empty($node['properties']):
+                return 'object';
+            case ! empty($node['items']):
+                return 'array';
+            default:
+                return 'string';
+        }
     }
 
     /**
@@ -238,23 +261,30 @@ final class CodeSampleBuilder
      */
     private function stringExample(array $node): string
     {
-        return match ($node['format'] ?? '') {
-            'date-time' => '2024-01-01T00:00:00Z',
-            'date' => '2024-01-01',
-            'email' => 'user@example.com',
-            'uuid' => '00000000-0000-0000-0000-000000000000',
-            'uri', 'url' => 'https://example.com',
-            default => 'string',
-        };
+        switch ($node['format'] ?? '') {
+            case 'date-time':
+                return '2024-01-01T00:00:00Z';
+            case 'date':
+                return '2024-01-01';
+            case 'email':
+                return 'user@example.com';
+            case 'uuid':
+                return '00000000-0000-0000-0000-000000000000';
+            case 'uri':
+            case 'url':
+                return 'https://example.com';
+            default:
+                return 'string';
+        }
     }
 
     // ── literal rendering ─────────────────────────────────────────────────────
-
     /**
      * Render a value as a literal in the target language's object/dict/hash/JSON
      * syntax, indented from the given base depth (two spaces per level).
+     * @param mixed $value
      */
-    private function render(mixed $value, string $style, int $indent): string
+    private function render($value, string $style, int $indent): string
     {
         if (is_array($value)) {
             return $this->renderArray($value, $style, $indent);
@@ -275,7 +305,9 @@ final class CodeSampleBuilder
         $inner = str_repeat('  ', $indent + 1);
 
         if ($this->isList($value)) {
-            $items = array_map(fn ($v): string => $inner . $this->render($v, $style, $indent + 1), $value);
+            $items = array_map(function ($v) use ($inner, $style, $indent): string {
+                return $inner . $this->render($v, $style, $indent + 1);
+            }, $value);
 
             return "[\n" . implode(",\n", $items) . "\n" . $pad . ']';
         }
@@ -296,15 +328,20 @@ final class CodeSampleBuilder
      * Render a scalar (or null) as a literal in the target language.
      *
      * @param  array{open: string, close: string, arrow: string, true: string, false: string, null: string, key: callable(string): string, str: callable(string): string}  $s
+     * @param mixed $value
      */
-    private function renderScalar(mixed $value, array $s): string
+    private function renderScalar($value, array $s): string
     {
-        return match (true) {
-            is_bool($value) => $value ? $s['true'] : $s['false'],
-            $value === null => $s['null'],
-            is_int($value) || is_float($value) => (string) $value,
-            default => $s['str'](is_scalar($value) ? (string) $value : ''),
-        };
+        switch (true) {
+            case is_bool($value):
+                return $value ? $s['true'] : $s['false'];
+            case $value === null:
+                return $s['null'];
+            case is_int($value) || is_float($value):
+                return (string) $value;
+            default:
+                return $s['str'](is_scalar($value) ? (string) $value : '');
+        }
     }
 
     /**
@@ -312,7 +349,23 @@ final class CodeSampleBuilder
      */
     private function isList(array $value): bool
     {
-        return $value === [] ? false : array_is_list($value);
+        $arrayIsListFunction = function (array $array): bool {
+            if (function_exists('array_is_list')) {
+                return array_is_list($array);
+            }
+            if ($array === []) {
+                return true;
+            }
+            $current_key = 0;
+            foreach ($array as $key => $noop) {
+                if ($key !== $current_key) {
+                    return false;
+                }
+                ++$current_key;
+            }
+            return true;
+        };
+        return $value === [] ? false : $arrayIsListFunction($value);
     }
 
     /**
@@ -320,33 +373,53 @@ final class CodeSampleBuilder
      */
     private function style(string $style): array
     {
-        return match ($style) {
-            'php' => [
-                'open' => '[', 'close' => ']', 'arrow' => ' => ',
-                'true' => 'true', 'false' => 'false', 'null' => 'null',
-                'key' => fn (string $k): string => $this->phpString($k),
-                'str' => fn (string $v): string => $this->phpString($v),
-            ],
-            'python' => [
-                'open' => '{', 'close' => '}', 'arrow' => ': ',
-                'true' => 'True', 'false' => 'False', 'null' => 'None',
-                'key' => fn (string $k): string => $this->doubleQuoted($k),
-                'str' => fn (string $v): string => $this->doubleQuoted($v),
-            ],
-            'ruby' => [
-                'open' => '{', 'close' => '}', 'arrow' => ' => ',
-                'true' => 'true', 'false' => 'false', 'null' => 'nil',
-                // Ruby interpolates "#{...}" in double-quoted strings, so neutralise it too.
-                'key' => fn (string $k): string => $this->doubleQuoted($k, ['#{' => '\\#{']),
-                'str' => fn (string $v): string => $this->doubleQuoted($v, ['#{' => '\\#{']),
-            ],
-            default => [ // json (also valid JavaScript object-literal syntax)
-                'open' => '{', 'close' => '}', 'arrow' => ': ',
-                'true' => 'true', 'false' => 'false', 'null' => 'null',
-                'key' => fn (string $k): string => $this->jsonString($k),
-                'str' => fn (string $v): string => $this->jsonString($v),
-            ],
-        };
+        switch ($style) {
+            case 'php':
+                return [
+                    'open' => '[', 'close' => ']', 'arrow' => ' => ',
+                    'true' => 'true', 'false' => 'false', 'null' => 'null',
+                    'key' => function (string $k): string {
+                        return $this->phpString($k);
+                    },
+                    'str' => function (string $v): string {
+                        return $this->phpString($v);
+                    },
+                ];
+            case 'python':
+                return [
+                    'open' => '{', 'close' => '}', 'arrow' => ': ',
+                    'true' => 'True', 'false' => 'False', 'null' => 'None',
+                    'key' => function (string $k): string {
+                        return $this->doubleQuoted($k);
+                    },
+                    'str' => function (string $v): string {
+                        return $this->doubleQuoted($v);
+                    },
+                ];
+            case 'ruby':
+                return [
+                    'open' => '{', 'close' => '}', 'arrow' => ' => ',
+                    'true' => 'true', 'false' => 'false', 'null' => 'nil',
+                    // Ruby interpolates "#{...}" in double-quoted strings, so neutralise it too.
+                    'key' => function (string $k): string {
+                        return $this->doubleQuoted($k, ['#{' => '\\#{']);
+                    },
+                    'str' => function (string $v): string {
+                        return $this->doubleQuoted($v, ['#{' => '\\#{']);
+                    },
+                ];
+            default:
+                return [ // json (also valid JavaScript object-literal syntax)
+                    'open' => '{', 'close' => '}', 'arrow' => ': ',
+                    'true' => 'true', 'false' => 'false', 'null' => 'null',
+                    'key' => function (string $k): string {
+                        return $this->jsonString($k);
+                    },
+                    'str' => function (string $v): string {
+                        return $this->jsonString($v);
+                    },
+                ];
+        }
     }
 
     /**

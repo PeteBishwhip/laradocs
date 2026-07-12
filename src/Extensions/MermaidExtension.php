@@ -20,7 +20,15 @@ use Laradocs\Support\Html;
  */
 final class MermaidExtension implements HtmlExtension
 {
-    public function __construct(private readonly string $src) {}
+    /**
+     * @readonly
+     * @var string
+     */
+    private $src;
+    public function __construct(string $src)
+    {
+        $this->src = $src;
+    }
 
     public function processHtml(string $html): string
     {

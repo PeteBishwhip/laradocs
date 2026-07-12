@@ -19,11 +19,27 @@ use Override;
  */
 final class Tag implements Arrayable
 {
-    public function __construct(
-        public readonly string $slug,
-        public readonly string $label,
-        public readonly DocumentCollection $documents,
-    ) {}
+    /**
+     * @readonly
+     * @var string
+     */
+    public $slug;
+    /**
+     * @readonly
+     * @var string
+     */
+    public $label;
+    /**
+     * @readonly
+     * @var \Laradocs\Documents\DocumentCollection
+     */
+    public $documents;
+    public function __construct(string $slug, string $label, DocumentCollection $documents)
+    {
+        $this->slug = $slug;
+        $this->label = $label;
+        $this->documents = $documents;
+    }
 
     /**
      * How many documents carry this tag.
@@ -36,7 +52,6 @@ final class Tag implements Arrayable
     /**
      * @return array<string, mixed>
      */
-    #[Override]
     public function toArray(): array
     {
         return [
@@ -44,10 +59,12 @@ final class Tag implements Arrayable
             'label' => $this->label,
             'count' => $this->count(),
             'documents' => array_map(
-                fn (Document $doc): array => [
-                    'slug' => $doc->slug,
-                    'title' => $doc->title(),
-                ],
+                function (Document $doc): array {
+                    return [
+                        'slug' => $doc->slug,
+                        'title' => $doc->title(),
+                    ];
+                },
                 $this->documents->all()
             ),
         ];

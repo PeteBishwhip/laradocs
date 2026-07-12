@@ -24,11 +24,17 @@ use Laradocs\Support\ValueCaster;
  */
 final class BladeComponentExtension implements MarkdownExtension
 {
+    /**
+     * @readonly
+     * @var \Laradocs\Macros\MacroRegistry
+     */
+    private $macros;
     private const PREFIX = 'x-';
 
-    public function __construct(
-        private readonly MacroRegistry $macros,
-    ) {}
+    public function __construct(MacroRegistry $macros)
+    {
+        $this->macros = $macros;
+    }
 
     public function processMarkdown(string $markdown): string
     {
@@ -97,16 +103,16 @@ final class BladeComponentExtension implements MarkdownExtension
 
             if ($closeStart === null) {
                 // No matching close — treat the opening tag as literal text.
-                return [substr($text, $lt, $tag['end'] - $lt), $tag['end']];
+                return [(string) substr($text, $lt, $tag['end'] - $lt), $tag['end']];
             }
 
-            $slot = substr($text, $tag['end'], $closeStart - $tag['end']);
+            $slot = (string) substr($text, $tag['end'], $closeStart - $tag['end']);
             $end = $closeStart + strlen($this->closeTag($tag['name']));
         }
 
         if (! $this->macros->has($tag['name'])) {
             // Not whitelisted — pass the original source through untouched.
-            return [substr($text, $lt, $end - $lt), $end];
+            return [(string) substr($text, $lt, $end - $lt), $end];
         }
 
         $arguments = $tag['attributes'];
@@ -135,7 +141,7 @@ final class BladeComponentExtension implements MarkdownExtension
             $i++;
         }
 
-        $name = substr($text, $nameStart, $i - $nameStart);
+        $name = (string) substr($text, $nameStart, $i - $nameStart);
 
         if ($name === '' || ! $this->isBoundary($text, $i)) {
             return null;
@@ -165,12 +171,12 @@ final class BladeComponentExtension implements MarkdownExtension
             return null;
         }
 
-        $rawAttributes = rtrim(substr($text, $attrStart, $i - $attrStart));
+        $rawAttributes = rtrim((string) substr($text, $attrStart, $i - $attrStart));
         $selfClosing = false;
 
-        if (str_ends_with($rawAttributes, '/')) {
+        if (substr_compare($rawAttributes, '/', -strlen('/')) === 0) {
             $selfClosing = true;
-            $rawAttributes = substr($rawAttributes, 0, -1);
+            $rawAttributes = (string) substr($rawAttributes, 0, -1);
         }
 
         return [
@@ -210,10 +216,10 @@ final class BladeComponentExtension implements MarkdownExtension
             // A leading ':' marks a "bound" attribute. Blade would evaluate it
             // as a PHP expression; we never do that — we unwrap any quotes and
             // cast the literal so `:open="true"` / `:count="3"` behave sensibly.
-            $bound = str_starts_with($name, ':');
+            $bound = strncmp($name, ':', strlen(':')) === 0;
 
             if ($bound) {
-                $name = substr($name, 1);
+                $name = (string) substr($name, 1);
             }
 
             [$rawValue, $offset] = $this->readAttributeValue($raw, $offset);
@@ -284,7 +290,7 @@ final class BladeComponentExtension implements MarkdownExtension
             $closing = strpos($raw, $first, $i + 1);
             $stop = $closing === false ? $length : $closing + 1;
 
-            return [substr($raw, $i, $stop - $i), $stop];
+            return [(string) substr($raw, $i, $stop - $i), $stop];
         }
 
         $end = $i;
@@ -293,7 +299,7 @@ final class BladeComponentExtension implements MarkdownExtension
             $end++;
         }
 
-        return [substr($raw, $i, $end - $i), $end];
+        return [(string) substr($raw, $i, $end - $i), $end];
     }
 
     private function skipSpaces(string $text, int $offset): int

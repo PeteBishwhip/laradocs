@@ -15,14 +15,14 @@ final class VariableRegistry
      *
      * @var array<string, mixed>
      */
-    private array $items = [];
+    private $items = [];
 
     /**
      * Deferred providers resolved each time variables are read.
      *
      * @var array<int, Closure>
      */
-    private array $deferred = [];
+    private $deferred = [];
 
     /**
      * @param  array<string, mixed>  $items
@@ -41,8 +41,9 @@ final class VariableRegistry
      * subsequent requests on long-lived workers such as Laravel Octane.
      * Use a deferred closure via {@see register()} when you need per-request
      * values evaluated at read time instead.
+     * @param mixed $value
      */
-    public function set(string $key, mixed $value): self
+    public function set(string $key, $value): self
     {
         $this->items[$key] = $value;
 
@@ -60,7 +61,7 @@ final class VariableRegistry
      *
      * @param  array<string, mixed>|Closure  $values
      */
-    public function register(array|Closure $values): self
+    public function register($values): self
     {
         if ($values instanceof Closure) {
             $this->deferred[] = $values;
@@ -76,7 +77,11 @@ final class VariableRegistry
         return Arr::has($this->all(), $key);
     }
 
-    public function get(string $key, mixed $default = null): mixed
+    /**
+     * @param mixed $default
+     * @return mixed
+     */
+    public function get(string $key, $default = null)
     {
         return data_get($this->all(), $key, $default);
     }
@@ -105,7 +110,7 @@ final class VariableRegistry
      */
     private function resolveValues(array $values): array
     {
-        return array_map(function (mixed $value): mixed {
+        return array_map(function ($value) {
             return $value instanceof Closure
                 ? Container::getInstance()->call($value)
                 : $value;

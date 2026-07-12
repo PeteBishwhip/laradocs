@@ -21,7 +21,7 @@ final class CodeBlockExtension implements HtmlExtension
             foreach (iterator_to_array($body->getElementsByTagName('pre')) as $pre) {
                 // Mermaid diagrams own their own chrome — they should not get a
                 // language label or copy button.
-                if (str_contains($pre->getAttribute('class'), 'laradocs-mermaid-source')) {
+                if (strpos($pre->getAttribute('class'), 'laradocs-mermaid-source') !== false) {
                     continue;
                 }
 
@@ -76,8 +76,8 @@ final class CodeBlockExtension implements HtmlExtension
         }
 
         foreach (explode(' ', $code->getAttribute('class')) as $class) {
-            if (str_starts_with($class, 'language-')) {
-                return substr($class, strlen('language-'));
+            if (strncmp($class, 'language-', strlen('language-')) === 0) {
+                return (string) substr($class, strlen('language-'));
             }
         }
 

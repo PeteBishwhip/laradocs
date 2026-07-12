@@ -18,21 +18,62 @@ use Override;
 final class Document implements Arrayable
 {
     /**
+     * @readonly
+     * @var string
+     */
+    public $path;
+    /**
+     * @readonly
+     * @var string
+     */
+    public $relativePath;
+    /**
+     * @readonly
+     * @var string
+     */
+    public $slug;
+    /**
+     * @readonly
+     * @var \Laradocs\Metadata\Metadata
+     */
+    public $metadata;
+    /**
+     * @readonly
+     * @var string
+     */
+    public $markdown;
+    /**
+     * @readonly
+     * @var string|null
+     */
+    public $html;
+    /**
+     * @readonly
+     * @var int
+     */
+    public $modifiedAt = 0;
+    /**
+     * @var string|null
+     * @readonly
+     */
+    public $locale;
+    /**
      * @param  string|null  $locale  The content locale this page is written in,
      *                               derived from a `page.fr.md` suffix or a
      *                               `fr/page.md` directory. Null when content
      *                               localisation is not in play.
      */
-    public function __construct(
-        public readonly string $path,
-        public readonly string $relativePath,
-        public readonly string $slug,
-        public readonly Metadata $metadata,
-        public readonly string $markdown,
-        public readonly ?string $html = null,
-        public readonly int $modifiedAt = 0,
-        public readonly ?string $locale = null,
-    ) {}
+    public function __construct(string $path, string $relativePath, string $slug, Metadata $metadata, string $markdown, ?string $html = null, int $modifiedAt = 0, ?string $locale = null)
+    {
+        $this->path = $path;
+        $this->relativePath = $relativePath;
+        $this->slug = $slug;
+        $this->metadata = $metadata;
+        $this->markdown = $markdown;
+        $this->html = $html;
+        $this->modifiedAt = $modifiedAt;
+        $this->locale = $locale;
+    }
 
     /**
      * Return a copy of this document with rendered HTML attached.
@@ -121,7 +162,6 @@ final class Document implements Arrayable
     /**
      * @return array<string, mixed>
      */
-    #[Override]
     public function toArray(): array
     {
         return [

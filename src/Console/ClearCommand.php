@@ -26,7 +26,7 @@ final class ClearCommand extends Command
             $this->error('  ' . $e->getMessage());
         }
 
-        $this->components->info('Documentation cache cleared.');
+        $this->info('Documentation cache cleared.');
 
         return self::SUCCESS;
     }

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Laradocs\OpenApi\Generator\Attributes;
 
-use Attribute;
 use Laradocs\OpenApi\Generator\AttributeReader;
 
 /**
@@ -25,17 +24,42 @@ use Laradocs\OpenApi\Generator\AttributeReader;
  * Every argument is optional; only the ones provided override the inferred
  * value. {@see AttributeReader} reads it.
  */
-#[Attribute(Attribute::TARGET_METHOD)]
 final class ApiOperation
 {
     /**
+     * @readonly
+     * @var string|null
+     */
+    public $summary;
+    /**
+     * @readonly
+     * @var string|null
+     */
+    public $description;
+    /**
+     * @readonly
+     * @var string|null
+     */
+    public $operationId;
+    /**
+     * @var array<int, string>
+     * @readonly
+     */
+    public $tags = [];
+    /**
+     * @readonly
+     * @var bool
+     */
+    public $deprecated = false;
+    /**
      * @param  array<int, string>  $tags  Tags to file the operation under (replaces the inferred controller-derived tag).
      */
-    public function __construct(
-        public readonly ?string $summary = null,
-        public readonly ?string $description = null,
-        public readonly ?string $operationId = null,
-        public readonly array $tags = [],
-        public readonly bool $deprecated = false,
-    ) {}
+    public function __construct(?string $summary = null, ?string $description = null, ?string $operationId = null, array $tags = [], bool $deprecated = false)
+    {
+        $this->summary = $summary;
+        $this->description = $description;
+        $this->operationId = $operationId;
+        $this->tags = $tags;
+        $this->deprecated = $deprecated;
+    }
 }

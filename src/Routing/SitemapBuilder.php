@@ -25,7 +25,7 @@ final class SitemapBuilder
         $urls = [];
 
         if ($tree->rootDocument !== null && $this->includes($tree->rootDocument)) {
-            $urls[] = $this->urlFor($tree->rootDocument, depth: 0);
+            $urls[] = $this->urlFor($tree->rootDocument, 0);
         }
 
         $this->collect($tree->navigation(), $urls);
@@ -154,12 +154,16 @@ final class SitemapBuilder
             return max(0.0, min(1.0, (float) $explicit));
         }
 
-        return match (true) {
-            $depth <= 0 => 1.0,
-            $depth === 1 => 0.8,
-            $depth === 2 => 0.6,
-            default => 0.4,
-        };
+        switch (true) {
+            case $depth <= 0:
+                return 1.0;
+            case $depth === 1:
+                return 0.8;
+            case $depth === 2:
+                return 0.6;
+            default:
+                return 0.4;
+        }
     }
 
     /**

@@ -16,15 +16,46 @@ namespace Laradocs\OpenApi\Generator;
 final class CollectedRoute
 {
     /**
+     * @var array<int, string>
+     * @readonly
+     */
+    public $methods;
+    /**
+     * @readonly
+     * @var string
+     */
+    public $uri;
+    /**
+     * @var array<int, string>
+     * @readonly
+     */
+    public $pathParameters;
+    /**
+     * @readonly
+     * @var string|null
+     */
+    public $controller;
+    /**
+     * @readonly
+     * @var string|null
+     */
+    public $action;
+    /**
+     * @readonly
+     * @var string|null
+     */
+    public $name;
+    /**
      * @param  array<int, string>  $methods  Upper-cased HTTP verbs (HEAD/OPTIONS stripped).
      * @param  array<int, string>  $pathParameters  Names of `{param}` placeholders in the URI.
      */
-    public function __construct(
-        public readonly array $methods,
-        public readonly string $uri,
-        public readonly array $pathParameters,
-        public readonly ?string $controller = null,
-        public readonly ?string $action = null,
-        public readonly ?string $name = null,
-    ) {}
+    public function __construct(array $methods, string $uri, array $pathParameters, ?string $controller = null, ?string $action = null, ?string $name = null)
+    {
+        $this->methods = $methods;
+        $this->uri = $uri;
+        $this->pathParameters = $pathParameters;
+        $this->controller = $controller;
+        $this->action = $action;
+        $this->name = $name;
+    }
 }

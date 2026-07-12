@@ -9,9 +9,15 @@ use Laradocs\Laradocs;
 
 final class SitemapController
 {
-    public function __construct(
-        private readonly Laradocs $laradocs,
-    ) {}
+    /**
+     * @readonly
+     * @var \Laradocs\Laradocs
+     */
+    private $laradocs;
+    public function __construct(Laradocs $laradocs)
+    {
+        $this->laradocs = $laradocs;
+    }
 
     public function __invoke(): Response
     {

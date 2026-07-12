@@ -17,12 +17,23 @@ use Illuminate\Contracts\Support\Arrayable;
 final class SchemaNode implements Arrayable
 {
     /**
+     * @readonly
+     * @var string
+     */
+    public $name;
+    /**
+     * @var array<string, mixed>
+     * @readonly
+     */
+    public $definition;
+    /**
      * @param  array<string, mixed>  $definition
      */
-    public function __construct(
-        public readonly string $name,
-        public readonly array $definition,
-    ) {}
+    public function __construct(string $name, array $definition)
+    {
+        $this->name = $name;
+        $this->definition = $definition;
+    }
 
     /**
      * @param  array<string, mixed>  $data
@@ -30,8 +41,8 @@ final class SchemaNode implements Arrayable
     public static function fromArray(array $data): self
     {
         return new self(
-            name: Coerce::string($data['name'] ?? ''),
-            definition: Coerce::assoc($data['definition'] ?? []),
+            Coerce::string($data['name'] ?? ''),
+            Coerce::assoc($data['definition'] ?? []),
         );
     }
 

@@ -13,19 +13,16 @@ use Laravel\Mcp\Server\Attributes\Instructions;
 use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Tool;
 
-#[Name('laradocs')]
-#[Instructions('Access and search documentation managed by Laradocs. Use search_docs to find pages matching a query, list_pages to enumerate all available pages (optionally filtered to a group), and fetch_page to retrieve the full markdown and metadata of a specific page by its slug.')]
 class LaradocsMcpServer extends Server
 {
     /**
      * @var array<int, class-string<Tool>>
      */
-    protected array $tools = [
+    protected $tools = [
         SearchDocsTool::class,
         ListPagesTool::class,
         FetchPageTool::class,
     ];
-
     protected function boot(): void
     {
         // petebishwhip/laradocs is always installed when this server runs, so

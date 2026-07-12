@@ -14,11 +14,27 @@ use Laradocs\Support\ValueCaster;
  */
 final class IconReference
 {
-    public function __construct(
-        public readonly string $name,
-        public readonly string $variant,
-        public readonly ?string $set,
-    ) {}
+    /**
+     * @readonly
+     * @var string
+     */
+    public $name;
+    /**
+     * @readonly
+     * @var string
+     */
+    public $variant;
+    /**
+     * @readonly
+     * @var string|null
+     */
+    public $set;
+    public function __construct(string $name, string $variant, ?string $set)
+    {
+        $this->name = $name;
+        $this->variant = $variant;
+        $this->set = $set;
+    }
 
     /**
      * Parse the inside of an `@icon(...)` call: a positional name followed by

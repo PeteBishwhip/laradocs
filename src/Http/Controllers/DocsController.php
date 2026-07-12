@@ -14,16 +14,30 @@ use Laradocs\Support\Config;
 use Laradocs\Support\Navigation;
 use Laradocs\Support\Version;
 use Laradocs\Toc\TableOfContents;
-use RalphJSmit\Laravel\SEO\Support\SEOData;
+use Laradocs\Seo\SeoData;
 
 final class DocsController
 {
-    public function __construct(
-        private readonly Laradocs $laradocs,
-        private readonly SeoFactory $seo,
-    ) {}
+    /**
+     * @readonly
+     * @var \Laradocs\Laradocs
+     */
+    private $laradocs;
+    /**
+     * @readonly
+     * @var \Laradocs\Seo\SeoFactory
+     */
+    private $seo;
+    public function __construct(Laradocs $laradocs, SeoFactory $seo)
+    {
+        $this->laradocs = $laradocs;
+        $this->seo = $seo;
+    }
 
-    public function index(): View|RedirectResponse
+    /**
+     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
+     */
+    public function index()
     {
         $document = $this->laradocs->home();
 
@@ -43,7 +57,10 @@ final class DocsController
         return $this->view($document);
     }
 
-    public function show(string $path): View|RedirectResponse
+    /**
+     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
+     */
+    public function show(string $path)
     {
         $slug = trim($path, '/');
 
@@ -54,8 +71,8 @@ final class DocsController
         // empty slug, which falls through to the version's landing page.
         $version = Version::current();
 
-        if ($version !== null && str_starts_with($slug . '/', $version . '/')) {
-            $slug = ltrim(substr($slug, strlen($version)), '/');
+        if ($version !== null && strncmp($slug . '/', $version . '/', strlen($version . '/')) === 0) {
+            $slug = ltrim((string) substr($slug, strlen($version)), '/');
         }
 
         if ($slug === '') {
@@ -114,12 +131,12 @@ final class DocsController
     private function seoEnabled(): bool
     {
         return Config::bool('laradocs.seo.enabled', true)
-            && class_exists(SEOData::class);
+            && class_exists(SeoData::class);
     }
 
     private function resolveRedirect(string $target): string
     {
-        if (str_starts_with($target, 'http://') || str_starts_with($target, 'https://')) {
+        if (strncmp($target, 'http://', strlen('http://')) === 0 || strncmp($target, 'https://', strlen('https://')) === 0) {
             return $target;
         }
 

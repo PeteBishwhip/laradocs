@@ -11,9 +11,15 @@ use Laradocs\Routing\DocumentUrl;
 
 final class ApiTreeController
 {
-    public function __construct(
-        private readonly Laradocs $laradocs,
-    ) {}
+    /**
+     * @readonly
+     * @var \Laradocs\Laradocs
+     */
+    private $laradocs;
+    public function __construct(Laradocs $laradocs)
+    {
+        $this->laradocs = $laradocs;
+    }
 
     public function __invoke(): JsonResponse
     {
@@ -23,7 +29,7 @@ final class ApiTreeController
         $body = [
             'jsonapi' => ['version' => '1.0'],
             'links' => ['self' => DocumentUrl::apiTree()],
-            'data' => array_map($this->serializeNode(...), $roots),
+            'data' => array_map(\Closure::fromCallable([$this, 'serializeNode']), $roots),
         ];
 
         if ($included !== []) {
@@ -50,7 +56,9 @@ final class ApiTreeController
             'relationships' => [
                 'children' => [
                     'data' => array_map(
-                        fn (TreeNode $child): array => ['type' => 'node', 'id' => $child->slug],
+                        function (TreeNode $child): array {
+                            return ['type' => 'node', 'id' => $child->slug];
+                        },
                         $node->children,
                     ),
                 ],

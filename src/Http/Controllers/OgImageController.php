@@ -26,14 +26,28 @@ use Laradocs\Support\Version;
  * that declares its own image is redirected to it: front-matter trumps
  * generation, here as well as in the meta tags.
  */
-final readonly class OgImageController
+final class OgImageController
 {
-    public function __construct(
-        private Laradocs $laradocs,
-        private SeoFactory $seo,
-    ) {}
+    /**
+     * @readonly
+     * @var \Laradocs\Laradocs
+     */
+    private $laradocs;
+    /**
+     * @readonly
+     * @var \Laradocs\Seo\SeoFactory
+     */
+    private $seo;
+    public function __construct(Laradocs $laradocs, SeoFactory $seo)
+    {
+        $this->laradocs = $laradocs;
+        $this->seo = $seo;
+    }
 
-    public function __invoke(?string $path = null): Response|RedirectResponse
+    /**
+     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
+     */
+    public function __invoke(?string $path = null)
     {
         if (! OgImage::enabled()) {
             abort(404);
@@ -54,7 +68,9 @@ final readonly class OgImageController
                 DocumentUrl::index(),
             );
 
-        $bytes = $this->remember($document, fn (): string => app(OgImageGenerator::class)->generate($data));
+        $bytes = $this->remember($document, function () use ($data): string {
+            return app(OgImageGenerator::class)->generate($data);
+        });
 
         return new Response($bytes, 200, [
             'Content-Type' => 'image/png',
@@ -73,8 +89,8 @@ final readonly class OgImageController
 
         $version = Version::current();
 
-        if ($version !== null && str_starts_with($slug . '/', $version . '/')) {
-            $slug = ltrim(substr($slug, strlen($version)), '/');
+        if ($version !== null && strncmp($slug . '/', $version . '/', strlen($version . '/')) === 0) {
+            $slug = ltrim((string) substr($slug, strlen($version)), '/');
         }
 
         if ($slug === '') {

@@ -52,7 +52,12 @@ final class AttributeReader
             return null;
         }
 
-        return new ReflectionMethod($route->controller, $route->action);
+        $reflection = new ReflectionMethod($route->controller, $route->action);
+        if (PHP_VERSION_ID < 80100) {
+            $reflection->setAccessible(true);
+        }
+
+        return $reflection;
     }
 
     /**
@@ -75,14 +80,14 @@ final class AttributeReader
             $line = rtrim($line, '*/ ');
             $line = trim($line);
 
-            if (str_starts_with($line, '@deprecated')) {
+            if (strncmp($line, '@deprecated', strlen('@deprecated')) === 0) {
                 $deprecated = true;
 
                 continue;
             }
 
             // Skip every other annotation tag and the bare delimiter lines.
-            if ($line === '' || str_starts_with($line, '@')) {
+            if ($line === '' || strncmp($line, '@', strlen('@')) === 0) {
                 continue;
             }
 
@@ -113,7 +118,7 @@ final class AttributeReader
      */
     private function fromAttribute(ReflectionMethod $method): array
     {
-        $attributes = $method->getAttributes(ApiOperation::class);
+        $attributes = method_exists($method, 'getAttributes') ? $method->getAttributes(ApiOperation::class) : [];
 
         if ($attributes === []) {
             return [];
@@ -137,7 +142,9 @@ final class AttributeReader
 
         $tags = array_values(array_filter(
             $operation->tags,
-            static fn (string $tag): bool => $tag !== '',
+            static function (string $tag): bool {
+                return $tag !== '';
+            },
         ));
 
         if ($tags !== []) {
