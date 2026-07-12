@@ -1,4 +1,4 @@
-# Laradocs
+# Laradocs for PHP 7.3 / Laravel 8
 
 [![tests](https://github.com/PeteBishwhip/laradocs/actions/workflows/tests.yml/badge.svg)](https://github.com/PeteBishwhip/laradocs/actions/workflows/tests.yml)
 [![quality](https://github.com/PeteBishwhip/laradocs/actions/workflows/quality.yml/badge.svg)](https://github.com/PeteBishwhip/laradocs/actions/workflows/quality.yml)
@@ -11,7 +11,7 @@ codebase. Write markdown, commit it next to the code it describes, and Laradocs
 serves a polished docs site at `/docs` (or wherever you like).
 
 ```bash
-composer require petebishwhip/laradocs
+composer require artmanclassic/laradocs-php7.3
 php artisan laradocs:install
 ```
 
@@ -21,9 +21,9 @@ Then open `/docs`.
 
 | | Minimum | Notes |
 |---|---|---|
-| PHP | 8.3 | 8.4 and 8.5 fully supported |
-| Laravel | 11.14 | 12 and 13 fully supported |
-| dedoc/scramble | 0.13 | Optional — only needed for the `scramble` OpenAPI driver |
+| PHP | 7.3 | Production code is syntax-compatible with PHP 7.3 |
+| Laravel | 8.0 | Tested with Laravel 8.83 / Testbench 6 |
+| Composer | 2.0 | Composer 2 dependency resolution is supported |
 
 ## Features
 
@@ -43,7 +43,7 @@ Then open `/docs`.
   canonical URLs and JSON-LD for every page, with per-page front-matter overrides.
 - 🗺️ **Sitemap** — an auto-generated `sitemap.xml` at `{prefix}/sitemap.xml`,
   cached and invalidated alongside the rest of the docs cache.
-- ✅ **Fully tested** — Pest + Testbench, 100% coverage gate, PHPStan & Psalm max, Pint.
+- ✅ **Laravel 8 compatibility coverage** — Pest 1 + Testbench 6 smoke, routing, publishing, loader and rendering tests.
 
 ## Quick start
 
@@ -84,9 +84,13 @@ LARADOCS_ENABLED=true
 ```php
 use Laradocs\Facades\Laradocs;
 
-Laradocs::variables(fn () => ['version' => '1.0.0']);
+Laradocs::variables(function () {
+    return ['version' => '1.0.0'];
+});
 Laradocs::share('app_name', config('app.name'));
-Laradocs::macro('tweet', fn (array $args) => "<a href=\"...\">@{$args['user']}</a>");
+Laradocs::macro('tweet', function (array $args) {
+    return "<a href=\"...\">@{$args['user']}</a>";
+});
 ```
 
 ## Artisan commands

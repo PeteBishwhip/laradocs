@@ -11,7 +11,7 @@ order: 2
 Require the package with Composer:
 
 ```bash
-composer require petebishwhip/laradocs
+composer require artmanclassic/laradocs-php7.3
 ```
 
 Run the installer to publish the config file and scaffold a starter page:
