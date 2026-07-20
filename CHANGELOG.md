@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- The **cURL** request code sample now escapes apostrophes in the JSON `-d`
+  body, so example values containing a `'` (e.g. `O'Brien`) no longer
+  terminate the shell single-quoted string early.
+- `OperationSlugger::resolve()` no longer lets a locale-only operation collide
+  with a canonical operation's slug; the locale-only operation now gets a
+  disambiguating suffix instead of silently shadowing the canonical page.
+
 ## [1.0.0] - 2026-07-03
 
 Laradocs' first stable release. The public API surface (`Laradocs\Laradocs`,
