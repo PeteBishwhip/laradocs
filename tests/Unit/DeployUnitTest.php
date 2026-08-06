@@ -309,6 +309,51 @@ it('reports a refresh failure', function () {
     expect(fn () => (new OAuthFlow)->refresh('rt'))->toThrow(RuntimeException::class);
 });
 
+it('asks for the four default scopes', function () {
+    $flow = new class extends OAuthFlow
+    {
+        public function parameter(): string
+        {
+            return $this->scopeParameter();
+        }
+    };
+
+    expect($flow->parameter())->toBe('deploy docs:read config:read config:write');
+});
+
+it('lets a subclass widen the scopes, in the authorize url and the refresh alike', function () {
+    // A consumer needing a scope this package does not list used to have no way
+    // in: the list was a private constant read from a private authorizeUrl().
+    // Both halves matter — widening only the authorize URL would hand back a
+    // narrower token on the first hourly refresh.
+    config(['laradocs.deploy.url' => 'https://widen.test', 'laradocs.deploy.client_id' => 'cid']);
+
+    Http::fake(['https://widen.test/oauth/token' => Http::response(['access_token' => 'new'])]);
+
+    $flow = new class extends OAuthFlow
+    {
+        protected function scopes(): array
+        {
+            return [...parent::scopes(), 'sites:write', 'user:read'];
+        }
+
+        public function parameter(): string
+        {
+            return $this->scopeParameter();
+        }
+    };
+
+    $widened = 'deploy docs:read config:read config:write sites:write user:read';
+
+    // The authorize URL is built from the same accessor, so covering it here
+    // covers both call sites without prising open a private method for a test.
+    expect($flow->parameter())->toBe($widened);
+
+    $flow->refresh('rt');
+
+    Http::assertSent(fn ($request) => $request['scope'] === $widened);
+});
+
 it('completes login end to end over a real loopback socket', function () {
     $port = freePort();
     config([

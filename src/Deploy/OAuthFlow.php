@@ -14,7 +14,33 @@ use Laradocs\Support\Config;
  */
 class OAuthFlow
 {
-    private const SCOPES = 'deploy docs:read config:read config:write';
+    /**
+     * The scopes this flow asks for.
+     *
+     * A method rather than a constant so a subclass can widen it. The scope list
+     * has to reach *both* the authorize URL and `refresh()`, and a private
+     * constant put it out of reach of either — a caller that needed a scope this
+     * package does not list had to reimplement the whole PKCE flow to get it,
+     * because every helper here is private.
+     *
+     * Overriding this covers the refresh too, which matters: sending the narrow
+     * list on an hourly refresh would quietly hand back a narrower token than the
+     * one that was granted.
+     *
+     * @return list<string>
+     */
+    protected function scopes(): array
+    {
+        return ['deploy', 'docs:read', 'config:read', 'config:write'];
+    }
+
+    /**
+     * The scope list as the wire format wants it: space-delimited.
+     */
+    final protected function scopeParameter(): string
+    {
+        return implode(' ', $this->scopes());
+    }
 
     /**
      * Run the interactive login. $onPrompt receives the authorize URL so the
@@ -53,7 +79,7 @@ class OAuthFlow
             'grant_type' => 'refresh_token',
             'refresh_token' => $refreshToken,
             'client_id' => $this->clientId(),
-            'scope' => self::SCOPES,
+            'scope' => $this->scopeParameter(),
         ]);
 
         if ($response->failed()) {
@@ -171,7 +197,7 @@ class OAuthFlow
             'client_id' => $this->clientId(),
             'redirect_uri' => $this->redirectUri(),
             'response_type' => 'code',
-            'scope' => self::SCOPES,
+            'scope' => $this->scopeParameter(),
             'state' => $state,
             'code_challenge' => $challenge,
             'code_challenge_method' => 'S256',
