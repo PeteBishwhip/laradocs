@@ -715,8 +715,8 @@ body.laradocs {
   margin-bottom: .35rem;
 }
 .laradocs-pager .next { text-align: right; }
-.laradocs-pager .prev::before { content: "← "; color: var(--dc-muted); }
-.laradocs-pager .next::after { content: " →"; color: var(--dc-muted); }
+.laradocs-pager .prev span::before { content: "← "; }
+.laradocs-pager .next span::after { content: " →"; }
 
 .laradocs-page-meta {
   display: flex; flex-wrap: wrap; align-items: center; gap: 1rem;
