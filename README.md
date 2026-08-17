@@ -43,6 +43,9 @@ Then open `/docs`.
   canonical URLs and JSON-LD for every page, with per-page front-matter overrides.
 - 🗺️ **Sitemap** — an auto-generated `sitemap.xml` at `{prefix}/sitemap.xml`,
   cached and invalidated alongside the rest of the docs cache.
+- 🤖 **llms.txt** — an [llmstxt.org](https://llmstxt.org) index at
+  `{prefix}/llms.txt` so language models can map every page in one request,
+  optionally served from `/llms.txt` as well.
 - ✅ **Fully tested** — Pest + Testbench, 100% coverage gate, PHPStan & Psalm max, Pint.
 
 ## Quick start

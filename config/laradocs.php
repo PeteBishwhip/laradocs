@@ -980,6 +980,34 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | llms.txt
+    |--------------------------------------------------------------------------
+    |
+    | Controls the llmstxt.org index served at {prefix}/llms.txt: a plain-text
+    | map of your documentation, one link per page, for language models and any
+    | other tool that reads docs without executing JavaScript. It is built from
+    | the same document tree as the sidebar and the sitemap, and cached and
+    | invalidated alongside them.
+    |
+    | The convention points at the domain root, so opt in to serve it there too:
+    |   LARADOCS_LLMS_ROOT=true
+    |
+    | See docs/seo/llms.md for a full guide.
+    |
+    */
+
+    'llms' => [
+        'enabled' => (bool) env('LARADOCS_LLMS', true),
+
+        // Additionally serve the same body from the domain root, at /llms.txt,
+        // which is where the convention says to look. Off by default: your
+        // application may already publish one describing the whole product, of
+        // which the docs are only a part.
+        'root' => (bool) env('LARADOCS_LLMS_ROOT', false),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Deploy
     |--------------------------------------------------------------------------
     |

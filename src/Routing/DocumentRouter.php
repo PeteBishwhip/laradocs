@@ -13,6 +13,7 @@ use Laradocs\Http\Controllers\ApiVersionsController;
 use Laradocs\Http\Controllers\AssetController;
 use Laradocs\Http\Controllers\DocsController;
 use Laradocs\Http\Controllers\FeedController;
+use Laradocs\Http\Controllers\LlmsTxtController;
 use Laradocs\Http\Controllers\LocaleConsentController;
 use Laradocs\Http\Controllers\McpController;
 use Laradocs\Http\Controllers\OgImageController;
@@ -75,10 +76,37 @@ final class DocumentRouter
             $router->get('robots.txt', RobotsController::class)->name('robots');
         });
 
-        $router->group($attributes, function (Registrar $router): void {
+        $llms = Config::bool('laradocs.llms.enabled', true);
+
+        // The llms.txt convention points at the domain root, but a docs package
+        // has no business claiming a path outside its own prefix unasked: the
+        // host app may already serve /llms.txt describing the whole product.
+        // Opting in registers the same controller at the root as well.
+        if ($llms && Config::bool('laradocs.llms.root', false)) {
+            $rootAttributes = $attributes;
+            unset($rootAttributes['prefix']);
+
+            $router->group($rootAttributes, function (Registrar $router): void {
+                $router->get('llms.txt', LlmsTxtController::class)
+                    ->withoutMiddleware(SetDocsVersion::class)
+                    ->name('llms.root');
+            });
+        }
+
+        $router->group($attributes, function (Registrar $router) use ($llms): void {
             $router->get('/', [DocsController::class, 'index'])->name('index');
             $router->get('sitemap.xml', SitemapController::class)->name('sitemap');
             $router->get('feed.xml', FeedController::class)->name('feed');
+
+            // llms.txt describes the site as a whole, so it is version-
+            // agnostic: SetDocsVersion is dropped for the same reason as the
+            // asset route below, whose unversioned-URL policy would otherwise
+            // 301-redirect a path that carries no version segment.
+            if ($llms) {
+                $router->get('llms.txt', LlmsTxtController::class)
+                    ->withoutMiddleware(SetDocsVersion::class)
+                    ->name('llms');
+            }
             // Bundled assets (laradocs.js / laradocs.css) are served by file
             // name and carry no version segment. SetDocsVersion is dropped so
             // its unversioned-URL policy cannot 301-redirect the asset to a

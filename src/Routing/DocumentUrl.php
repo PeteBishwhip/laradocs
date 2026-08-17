@@ -202,6 +202,16 @@ final class DocumentUrl
         return route(self::prefix() . 'feed');
     }
 
+    /**
+     * URL to the llms.txt index inside the docs prefix. Always the prefixed
+     * route, never the opt-in root one, so the address is stable whether or not
+     * `llms.root` is enabled.
+     */
+    public static function llmsTxt(): string
+    {
+        return route(self::prefix() . 'llms');
+    }
+
     public static function apiTree(): string
     {
         return route(self::prefix() . 'api.tree');

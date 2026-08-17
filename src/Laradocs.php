@@ -17,6 +17,7 @@ use Laradocs\Documents\DocumentTree;
 use Laradocs\Documents\Tag;
 use Laradocs\Macros\MacroRegistry;
 use Laradocs\Routing\FeedBuilder;
+use Laradocs\Routing\LlmsTxtBuilder;
 use Laradocs\Routing\SitemapBuilder;
 use Laradocs\Search\SearchIndexBuilder;
 use Laradocs\Support\Locale;
@@ -270,6 +271,21 @@ final class Laradocs
         return $this->cache->rememberSitemap(
             $documents,
             fn (): string => (new SitemapBuilder)->build($this->tree())
+        );
+    }
+
+    /**
+     * The rendered, cached llms.txt index: an llmstxt.org-style plain-text map
+     * of every visible, non-redirected page, in tree order. Busts automatically
+     * when any document changes.
+     */
+    public function llmsTxt(): string
+    {
+        $documents = $this->all();
+
+        return $this->cache->rememberLlmsTxt(
+            $documents,
+            fn (): string => (new LlmsTxtBuilder)->build($this->tree())
         );
     }
 
