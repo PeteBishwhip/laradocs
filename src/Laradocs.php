@@ -8,6 +8,7 @@ use Closure;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Laradocs\Cache\DocumentCache;
+use Laradocs\Concerns\BuildsSiteArtifacts;
 use Laradocs\Contracts\DocumentContentRenderer;
 use Laradocs\Contracts\DocumentLoader;
 use Laradocs\Contracts\DocumentParser;
@@ -16,10 +17,6 @@ use Laradocs\Documents\DocumentCollection;
 use Laradocs\Documents\DocumentTree;
 use Laradocs\Documents\Tag;
 use Laradocs\Macros\MacroRegistry;
-use Laradocs\Routing\FeedBuilder;
-use Laradocs\Routing\LlmsTxtBuilder;
-use Laradocs\Routing\SitemapBuilder;
-use Laradocs\Search\SearchIndexBuilder;
 use Laradocs\Support\Locale;
 use Laradocs\Support\RateLimiterConfig;
 use Laradocs\Variables\VariableRegistry;
@@ -29,6 +26,8 @@ use Laradocs\Variables\VariableRegistry;
  */
 final class Laradocs
 {
+    use BuildsSiteArtifacts;
+
     /**
      * @param  array<int, string>  $searchExclude
      * @param  array<int, string>  $searchInclude
@@ -235,74 +234,6 @@ final class Laradocs
             ?? $this->all()->visible()->ordered()->first();
 
         return $document === null ? null : $document->withHtml($this->render($document));
-    }
-
-    /**
-     * The pre-rendered, cached full-text search index: one entry per visible,
-     * searchable page. Busts automatically when any document changes.
-     *
-     * @return array<int, array{slug: string, title: string, group: string, content: string, rank: float}>
-     */
-    public function searchIndex(): array
-    {
-        $documents = $this->all();
-
-        return $this->cache->rememberSearchIndex(
-            $documents,
-            fn (): array => (new SearchIndexBuilder)->build(
-                $documents,
-                fn (Document $document): string => $this->render($document),
-                $this->searchMaxChars,
-                $this->searchExclude,
-                $this->searchInclude,
-                $this->searchRank,
-            )
-        );
-    }
-
-    /**
-     * The rendered, cached sitemap XML listing every visible, non-redirected
-     * page in tree order. Busts automatically when any document changes.
-     */
-    public function sitemap(): string
-    {
-        $documents = $this->all();
-
-        return $this->cache->rememberSitemap(
-            $documents,
-            fn (): string => (new SitemapBuilder)->build($this->tree())
-        );
-    }
-
-    /**
-     * The rendered, cached llms.txt index: an llmstxt.org-style plain-text map
-     * of every visible, non-redirected page, in tree order. Busts automatically
-     * when any document changes.
-     */
-    public function llmsTxt(): string
-    {
-        $documents = $this->all();
-
-        return $this->cache->rememberLlmsTxt(
-            $documents,
-            fn (): string => (new LlmsTxtBuilder)->build($this->tree())
-        );
-    }
-
-    /**
-     * The rendered, cached feed XML (RSS 2.0 or Atom 1.0) listing the N
-     * most-recently-updated visible, non-redirected pages. Busts automatically
-     * when any document changes.
-     */
-    public function feed(string $format, int $limit, string $feedUrl, string $siteTitle): string
-    {
-        $documents = $this->all();
-
-        return $this->cache->rememberFeed(
-            $documents,
-            $format,
-            fn (): string => (new FeedBuilder)->build($documents, $format, $limit, $feedUrl, $siteTitle)
-        );
     }
 
     /**

@@ -5,7 +5,6 @@ use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Contracts\Routing\Registrar;
 use Laradocs\Cache\DocumentCache;
 use Laradocs\Routing\DocumentRouter;
-use Laradocs\Routing\DocumentUrl;
 
 it('serves llms.txt with a plain-text content type', function () {
     $this->makeDocs(['a.md' => "---\ntitle: A\n---\nbody\n"]);
@@ -227,10 +226,10 @@ it('drops a section heading whose only page is redirected', function () {
         ->and($body)->not->toContain('## Gone');
 });
 
-it('exposes the llms.txt URL through DocumentUrl', function () {
+it('registers the route under the package name prefix', function () {
     $this->makeDocs(['a.md' => "---\ntitle: A\n---\nbody\n"]);
 
-    expect(DocumentUrl::llmsTxt())->toBe(url('/docs/llms.txt'));
+    expect(route('laradocs.llms'))->toBe(url('/docs/llms.txt'));
 });
 
 it('caches llms.txt and busts it when documents change', function () {
