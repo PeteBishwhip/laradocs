@@ -46,6 +46,15 @@ final class DocumentRouter
     ];
 
     /**
+     * Forces SetDocsVersion to activate the default version in place rather
+     * than consulting the `versions.unversioned` policy — see the `:render`
+     * doc block on {@see SetDocsVersion}. Used by fixed-path artifact routes
+     * that carry no `{path}` to resolve a version from and can't sensibly
+     * redirect.
+     */
+    private const RENDER_DEFAULT_VERSION = SetDocsVersion::class . ':render';
+
+    /**
      * Register the docs index and catch-all show routes using the package's
      * configured prefix, domain, middleware and route-name prefix.
      *
@@ -104,11 +113,11 @@ final class DocumentRouter
             // in place instead of consulting the policy.
             $router->get('sitemap.xml', SitemapController::class)
                 ->withoutMiddleware(SetDocsVersion::class)
-                ->middleware(SetDocsVersion::class . ':render')
+                ->middleware(self::RENDER_DEFAULT_VERSION)
                 ->name('sitemap');
             $router->get('feed.xml', FeedController::class)
                 ->withoutMiddleware(SetDocsVersion::class)
-                ->middleware(SetDocsVersion::class . ':render')
+                ->middleware(self::RENDER_DEFAULT_VERSION)
                 ->name('feed');
 
             // llms.txt describes the site as a whole, so it is version-
@@ -143,7 +152,7 @@ final class DocumentRouter
             // than 301-redirecting the palette's fetch() to an HTML page.
             $router->get('_laradocs/search', SearchController::class)
                 ->withoutMiddleware(SetDocsVersion::class)
-                ->middleware(SetDocsVersion::class . ':render')
+                ->middleware(self::RENDER_DEFAULT_VERSION)
                 ->name('search');
             // Lets a consent banner's JS persist (or drop) the locale cookie the
             // instant the visitor's decision changes, via fetch() — no full-page
@@ -160,7 +169,7 @@ final class DocumentRouter
                 // below is untouched since it already carries one.
                 $router->get('_laradocs/og', OgImageController::class)
                     ->withoutMiddleware(SetDocsVersion::class)
-                    ->middleware(SetDocsVersion::class . ':render')
+                    ->middleware(self::RENDER_DEFAULT_VERSION)
                     ->name('og.index');
                 $router->get('_laradocs/og/{path}', OgImageController::class)
                     ->where('path', '.+')
@@ -172,12 +181,12 @@ final class DocumentRouter
             $router->get('_laradocs/api/tree', ApiTreeController::class)
                 ->middleware(ThrottleApiRequests::class)
                 ->withoutMiddleware(SetDocsVersion::class)
-                ->middleware(SetDocsVersion::class . ':render')
+                ->middleware(self::RENDER_DEFAULT_VERSION)
                 ->name('api.tree');
             $router->get('_laradocs/api/search', ApiSearchController::class)
                 ->middleware(ThrottleApiRequests::class)
                 ->withoutMiddleware(SetDocsVersion::class)
-                ->middleware(SetDocsVersion::class . ':render')
+                ->middleware(self::RENDER_DEFAULT_VERSION)
                 ->name('api.search');
             // The versions endpoint lists every version, so it is version-
             // agnostic: SetDocsVersion is dropped to stop its unversioned-URL
@@ -212,12 +221,12 @@ final class DocumentRouter
                 // the default version's tags rather than 301-redirecting.
                 $router->get($index, [TagController::class, 'index'])
                     ->withoutMiddleware(SetDocsVersion::class)
-                    ->middleware(SetDocsVersion::class . ':render')
+                    ->middleware(self::RENDER_DEFAULT_VERSION)
                     ->name('tags.index');
                 $router->get($prefix . '/{tag}', [TagController::class, 'show'])
                     ->where('tag', '[^/]+')
                     ->withoutMiddleware(SetDocsVersion::class)
-                    ->middleware(SetDocsVersion::class . ':render')
+                    ->middleware(self::RENDER_DEFAULT_VERSION)
                     ->name('tags.show');
             }
 
