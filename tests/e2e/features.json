@@ -5,6 +5,7 @@
   "search-api": { "spec": "search-api.spec.ts" },
   "tree-api": { "spec": "tree-api.spec.ts" },
   "sitemap": { "spec": "sitemap.spec.ts" },
+  "llms": { "spec": "llms.spec.ts" },
   "theme-toggle": { "spec": "theme-toggle.spec.ts" },
   "mobile-nav": { "spec": "mobile-nav.spec.ts" },
   "toc": { "spec": "toc.spec.ts" },

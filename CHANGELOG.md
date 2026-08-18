@@ -11,6 +11,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **`llms.txt`**: an [llmstxt.org](https://llmstxt.org)-compliant index of your
+  documentation, served at `{prefix}/llms.txt`. One H1 for the site, an optional
+  description blockquote, then one `- [Title](url): description` bullet per page
+  grouped by navigation section, all in sidebar order. Descriptions come from
+  front-matter, falling back to the same auto-excerpt used for meta
+  descriptions. Hidden pages, redirects and non-default versions are excluded on
+  the same rules as `sitemap.xml`, which the two builders now share. Cached and
+  invalidated with the rest of the docs cache, warmed by `laradocs:cache`.
+  Configure with `llms.enabled` (`LARADOCS_LLMS`, default `true`); set
+  `LARADOCS_LLMS_ROOT=true` to additionally serve it from `/llms.txt` at the
+  domain root. Also available programmatically as `Laradocs::llmsTxt()`.
+
 ### Fixed
 - The **cURL** request code sample now escapes apostrophes in the JSON `-d`
   body, so example values containing a `'` (e.g. `O'Brien`) no longer

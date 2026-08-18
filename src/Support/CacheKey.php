@@ -48,6 +48,11 @@ final class CacheKey
         return self::make('sitemap', $signature);
     }
 
+    public static function llmsTxt(string $signature): string
+    {
+        return self::make('llms', $signature);
+    }
+
     public static function feed(string $signature, string $format): string
     {
         return self::make('feed', $format, $signature);
