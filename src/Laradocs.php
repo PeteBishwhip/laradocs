@@ -17,6 +17,7 @@ use Laradocs\Documents\DocumentCollection;
 use Laradocs\Documents\DocumentTree;
 use Laradocs\Documents\Tag;
 use Laradocs\Macros\MacroRegistry;
+use Laradocs\Search\SearchIndexBuilder;
 use Laradocs\Support\Locale;
 use Laradocs\Support\RateLimiterConfig;
 use Laradocs\Variables\VariableRegistry;
@@ -234,6 +235,29 @@ final class Laradocs
             ?? $this->all()->visible()->ordered()->first();
 
         return $document === null ? null : $document->withHtml($this->render($document));
+    }
+
+    /**
+     * The pre-rendered, cached full-text search index: one entry per visible,
+     * searchable page. Busts automatically when any document changes.
+     *
+     * @return array<int, array{slug: string, title: string, group: string, content: string, rank: float}>
+     */
+    public function searchIndex(): array
+    {
+        $documents = $this->all();
+
+        return $this->cache->rememberSearchIndex(
+            $documents,
+            fn (): array => (new SearchIndexBuilder)->build(
+                $documents,
+                fn (Document $document): string => $this->render($document),
+                $this->searchMaxChars,
+                $this->searchExclude,
+                $this->searchInclude,
+                $this->searchRank,
+            )
+        );
     }
 
     /**
