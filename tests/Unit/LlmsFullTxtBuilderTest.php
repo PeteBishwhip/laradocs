@@ -84,6 +84,36 @@ it('introduces each page with a heading naming it and linking its canonical URL'
     expect($body)->toMatch('/## \[Intro\]\(\S+\)\n\nBody text\.\n/');
 });
 
+it('leads the corpus with the docs index page', function () {
+    config()->set('laradocs.versions.enabled', false);
+
+    $tree = DocumentTree::fromDocuments(new DocumentCollection([
+        makeDocument('intro', ['title' => 'Intro'], "Intro body.\n"),
+        makeDocument('', ['title' => 'Home'], "Home body.\n"),
+    ]));
+
+    $body = (new LlmsFullTxtBuilder)->build($tree);
+
+    // The docs landing page belongs to no section, so it is emitted first —
+    // ahead of every page it introduces, matching llms.txt's leading list.
+    expect($body)->toContain('Home body.')
+        ->and(strpos($body, 'Home body.'))->toBeLessThan(strpos($body, 'Intro body.'));
+});
+
+it('excludes the docs index page when it is hidden', function () {
+    config()->set('laradocs.versions.enabled', false);
+
+    $tree = DocumentTree::fromDocuments(new DocumentCollection([
+        makeDocument('', ['title' => 'Home', 'hidden' => true], "Home body.\n"),
+        makeDocument('intro', ['title' => 'Intro'], "Intro body.\n"),
+    ]));
+
+    $body = (new LlmsFullTxtBuilder)->build($tree);
+
+    expect($body)->toContain('Intro body.')
+        ->and($body)->not->toContain('Home body.');
+});
+
 it('escapes square brackets in a title so the heading label survives', function () {
     config()->set('laradocs.versions.enabled', false);
 

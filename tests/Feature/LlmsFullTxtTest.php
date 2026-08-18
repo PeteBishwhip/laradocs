@@ -17,12 +17,17 @@ use Laradocs\Variables\VariableRegistry;
  * Re-registering on the real "docs" prefix would add the new route *after*
  * the catch-all show route already bound there at boot (when `full` was
  * still off), and the catch-all — registered first — would win. A fresh
- * prefix avoids that ordering hazard. Route *names* that already existed at
- * boot (e.g. "laradocs.show") keep resolving to their original, boot-time
- * route regardless — Laravel's named-route lookup table isn't refreshed by
- * a later registration — so page links generated during these tests still
- * point at the real "docs" prefix even though llms-full.txt itself is served
- * from the throwaway one.
+ * prefix avoids that ordering hazard.
+ *
+ * Which of the two registrations then owns a shared route *name* such as
+ * "laradocs.show" is deliberately not relied upon — it differs across the
+ * supported framework range, so the prefix a generated page link resolves to
+ * is not stable across the CI matrix. Assertions on page URLs here are
+ * therefore structural; the exact URL construction is pinned by
+ * LlmsFullTxtBuilderTest, which builds against one unambiguous registration.
+ *
+ * The llms-full.txt route name itself is unaffected: `full` is off at boot,
+ * so only this helper ever registers "laradocs.llms.full".
  *
  * @return string the prefix requests should be made against
  */
@@ -67,9 +72,15 @@ it('carries each page\'s content instead of a link to it', function () {
 
     $body = $this->get("/{$prefix}/llms-full.txt")->getContent();
 
-    // Page links are generated via the "laradocs.show" route name, which
-    // still resolves to the real "docs" prefix bound at boot.
-    expect($body)->toContain('## [A](' . url('/docs/a') . ")\n\n")
+    // Asserted structurally rather than against a literal URL: this suite
+    // registers the package routes a second time (see enableLlmsFull), and
+    // which registration then owns the shared "laradocs.show" route name
+    // differs by framework version, so the prefix a page link resolves to is
+    // not stable across the CI matrix. What matters here is the entry shape —
+    // an H2 naming the page and linking its absolute canonical URL, then the
+    // page's content. LlmsFullTxtBuilderTest pins the exact URL construction
+    // against a single, unambiguous registration.
+    expect($body)->toMatch('/^## \[A\]\(https?:\/\/[^\s)]+\/a\)\n\n/m')
         ->and($body)->toContain('The full body of page A.');
 });
 
