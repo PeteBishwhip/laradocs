@@ -21,6 +21,7 @@ final class CacheCommand extends Command
         $laradocs->tree();
         $laradocs->sitemap();
         $laradocs->llmsTxt();
+        $laradocs->llmsFullTxt();
 
         $documents->each(fn (Document $document) => $laradocs->render($document));
 

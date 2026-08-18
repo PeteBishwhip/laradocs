@@ -23,6 +23,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Configure with `llms.enabled` (`LARADOCS_LLMS`, default `true`); set
   `LARADOCS_LLMS_ROOT=true` to additionally serve it from `/llms.txt` at the
   domain root. Also available programmatically as `Laradocs::llmsTxt()`.
+- **`llms-full.txt`**: an opt-in companion to `llms.txt`, served at
+  `{prefix}/llms-full.txt`, carrying the entire documentation corpus in one
+  response instead of a list of links. Same pages, same ordering and the same
+  hidden/redirect/version rules as `llms.txt`; each entry carries the page's
+  markdown — passed through variable, macro and Blade-component interpolation
+  but never the HTML renderer — instead of a link to it. A page backed by an
+  OpenAPI spec is reduced to a link-and-description stub, since its content is
+  generated at render time rather than authored as markdown. Truncates at a
+  document boundary, with a notice, once the body would exceed
+  `llms.full_max_bytes`. Cached and invalidated with the rest of the docs
+  cache, warmed by `laradocs:cache`. Configure with `llms.full`
+  (`LARADOCS_LLMS_FULL`, default `false`) and `llms.full_max_bytes`
+  (`LARADOCS_LLMS_FULL_MAX_BYTES`, default `5000000`; `0` disables the cap).
+  Also available programmatically as `Laradocs::llmsFullTxt()`.
 
 ### Fixed
 - The **cURL** request code sample now escapes apostrophes in the JSON `-d`

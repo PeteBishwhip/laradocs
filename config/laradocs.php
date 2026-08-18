@@ -992,6 +992,20 @@ return [
     | The convention points at the domain root, so opt in to serve it there too:
     |   LARADOCS_LLMS_ROOT=true
     |
+    | "full"           Additionally serve {prefix}/llms-full.txt: the entire
+    |                  documentation corpus in one response instead of a list
+    |                  of links, so a model can load the whole site without
+    |                  fetching a page at a time. Off by default — a mid-size
+    |                  site's corpus runs to megabytes. Each page's markdown is
+    |                  passed through variable, macro and Blade-component
+    |                  interpolation (the same substitutions the HTML renderer
+    |                  performs) but not the HTML renderer itself, so the
+    |                  corpus stays plain text.
+    | "full_max_bytes" Truncates llms-full.txt at a document boundary once the
+    |                  body would exceed this many bytes, appending a notice
+    |                  rather than serving a silently partial file. Set to 0 to
+    |                  disable the cap.
+    |
     | See docs/seo/llms.md for a full guide.
     |
     */
@@ -1004,6 +1018,12 @@ return [
         // application may already publish one describing the whole product, of
         // which the docs are only a part.
         'root' => (bool) env('LARADOCS_LLMS_ROOT', false),
+
+        // Serve {prefix}/llms-full.txt, the whole corpus in one response.
+        'full' => (bool) env('LARADOCS_LLMS_FULL', false),
+
+        // Byte ceiling for llms-full.txt before it is truncated. 0 disables it.
+        'full_max_bytes' => (int) env('LARADOCS_LLMS_FULL_MAX_BYTES', 5_000_000),
     ],
 
     /*

@@ -90,6 +90,18 @@ final class DocumentCache
     }
 
     /**
+     * Cache the rendered llms-full.txt corpus, keyed by the combined document
+     * mtimes so it busts whenever any file changes. Stored as a string, which
+     * is unaffected by `cache.serializable_classes`.
+     *
+     * @param  Closure(): string  $build
+     */
+    public function rememberLlmsFullTxt(DocumentCollection $documents, Closure $build): string
+    {
+        return $this->remember(CacheKey::llmsFullTxt($this->signature($documents)), $build);
+    }
+
+    /**
      * Cache the rendered feed XML (RSS or Atom), keyed by format + combined
      * document mtimes so it busts whenever any file changes.
      *

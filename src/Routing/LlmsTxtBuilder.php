@@ -53,9 +53,11 @@ final class LlmsTxtBuilder
     }
 
     /**
-     * The required H1 plus the optional description blockquote.
+     * The required H1 plus the optional description blockquote. Public so
+     * {@see LlmsFullTxtBuilder} can open its corpus with the same header
+     * rather than reimplementing the site-name/description fallback chains.
      */
-    private function header(): string
+    public function header(): string
     {
         $header = '# ' . $this->siteName() . "\n";
         $description = $this->siteDescription();
