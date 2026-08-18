@@ -26,6 +26,15 @@ use Symfony\Component\HttpFoundation\Response;
  *     policy: "redirect" 301s to the default version's URL, "render" activates
  *     the default version silently in place.
  *
+ * A route registered with the `:render` parameter (`SetDocsVersion::class .
+ * ':render'`) skips step 5's config lookup and always activates the default
+ * version in place, regardless of the `versions.unversioned` policy. This is
+ * for fixed-path artifact routes — sitemap.xml, feed.xml, the search and tag
+ * endpoints — that carry no path segment to resolve a version from and can't
+ * sensibly redirect (there is no HTML page for a crawler or a fetch() call to
+ * follow); they still need a version active so the content they build from
+ * ({@see Version::docsPath()}) resolves to something.
+ *
  * The resolved handle is recorded in `laradocs._current_version`, which the
  * loader (via {@see Version::docsPath()}), CacheKey, DocumentUrl and
  * DocsController all read to scope content, cache keys and URLs. The base
@@ -38,7 +47,7 @@ final class SetDocsVersion
     /**
      * @param  Closure(Request): Response  $next
      */
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next, ?string $unversioned = null): Response
     {
         $versions = Version::available();
 
@@ -46,7 +55,7 @@ final class SetDocsVersion
             return $next($request);
         }
 
-        return $this->resolveVersion($request, $next, $versions);
+        return $this->resolveVersion($request, $next, $versions, $unversioned);
     }
 
     /**
@@ -56,7 +65,7 @@ final class SetDocsVersion
      * @param  array<string, string>  $versions
      * @param  Closure(Request): Response  $next
      */
-    private function resolveVersion(Request $request, Closure $next, array $versions): Response
+    private function resolveVersion(Request $request, Closure $next, array $versions, ?string $unversioned): Response
     {
         $registry = Version::registry();
         $path = ltrim((string) $request->route('path'), '/');
@@ -84,10 +93,12 @@ final class SetDocsVersion
             }
         }
 
-        // Unrecognised or absent segment: apply the unversioned policy.
+        // Unrecognised or absent segment: apply the unversioned policy, unless
+        // the route forced one via the `:render` middleware parameter.
         $default = Version::default() ?? (string) array_key_first($versions);
+        $policy = $unversioned ?? Config::string('laradocs.versions.unversioned', 'redirect');
 
-        return Config::string('laradocs.versions.unversioned', 'redirect') === 'redirect'
+        return $policy === 'redirect'
             ? $this->redirect($default, $path)
             : $this->activate($request, $next, $default);
     }

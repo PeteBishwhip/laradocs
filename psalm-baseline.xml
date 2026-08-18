@@ -774,10 +774,22 @@
       <code><![CDATA[$attributes['domain']]]></code>
     </MixedAssignment>
     <MixedMethodCall>
+      <code><![CDATA[middleware]]></code>
+      <code><![CDATA[middleware]]></code>
       <code><![CDATA[name]]></code>
       <code><![CDATA[name]]></code>
       <code><![CDATA[name]]></code>
       <code><![CDATA[name]]></code>
+      <code><![CDATA[name]]></code>
+      <code><![CDATA[name]]></code>
+      <code><![CDATA[name]]></code>
+      <code><![CDATA[name]]></code>
+      <code><![CDATA[name]]></code>
+      <code><![CDATA[name]]></code>
+      <code><![CDATA[name]]></code>
+      <code><![CDATA[withoutMiddleware]]></code>
+      <code><![CDATA[withoutMiddleware]]></code>
+      <code><![CDATA[withoutMiddleware]]></code>
       <code><![CDATA[withoutMiddleware]]></code>
       <code><![CDATA[withoutMiddleware]]></code>
     </MixedMethodCall>
