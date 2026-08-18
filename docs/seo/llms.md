@@ -1,6 +1,6 @@
 ---
 title: llms.txt
-description: An auto-generated llms.txt that maps your documentation for language models.
+description: An auto-generated llms.txt (and optional llms-full.txt) that maps your documentation for language models.
 order: 3
 ---
 
@@ -115,11 +115,66 @@ LARADOCS_LLMS_ROOT=true
 The root route serves the same cached body as `{prefix}/llms.txt`, which stays
 registered either way.
 
+## llms-full.txt: the whole corpus in one request
+
+`llms.txt` tells a model where to look; `llms-full.txt` removes the second
+request. Opt in and Laradocs additionally serves:
+
+```
+GET {prefix}/llms-full.txt
+```
+
+Same header, same pages, same inclusion rules as `llms.txt` — but each entry
+carries the page's content instead of a link to it, so a model can load the
+whole site into context without fetching a page at a time:
+
+```
+# Acme Docs
+
+> Everything you need to build on Acme.
+
+## [Getting Started](https://acme.test/docs/guide/getting-started)
+
+Install the package with Composer, then...
+
+## [Configuration](https://acme.test/docs/guide/configuration)
+
+Every option lives in config/laradocs.php...
+```
+
+Turn it on with:
+
+```dotenv
+LARADOCS_LLMS_FULL=true
+```
+
+**What each page's content is.** The page's markdown, passed through variable
+interpolation (`{{ product }}`), macro expansion (`@docs('name')`) and
+Blade-component tags (`<x-callout>`) — the same substitutions the HTML renderer
+performs — but never the HTML renderer itself, so the corpus stays plain text.
+Icon shorthand (`@icon('name')`) and inline version blocks
+(`:::version-since[2.0]`) are left as their raw authoring syntax rather than
+expanded, since both would otherwise inject HTML markup into a plain-text file.
+A page backed by an [OpenAPI spec](/docs/content/openapi) carries no markdown of its
+own — its content is generated from the spec at render time — so it is reduced
+to a link and its description rather than an empty entry.
+
+**Size.** A large documentation site's corpus can run to megabytes. Once the
+body would exceed `llms.full_max_bytes`, Laradocs stops at the last complete
+page that fits and appends a notice, so a consumer knows it is holding a
+partial site rather than a silently truncated one:
+
+```dotenv
+LARADOCS_LLMS_FULL_MAX_BYTES=5000000
+```
+
+Set it to `0` to disable the cap entirely.
+
 ## Caching
 
-`llms.txt` is cached like every other generated artifact, keyed by the combined
-modification times of your documents, so it rebuilds itself the moment any page
-changes and never goes stale. It is warmed by:
+Both files are cached like every other generated artifact, keyed by the
+combined modification times of your documents, so they rebuild themselves the
+moment any page changes and never go stale. They are warmed by:
 
 ```bash
 php artisan laradocs:cache
@@ -137,29 +192,33 @@ php artisan laradocs:clear
 |---|---|---|
 | `llms.enabled` | `LARADOCS_LLMS` | `true` |
 | `llms.root` | `LARADOCS_LLMS_ROOT` | `false` |
+| `llms.full` | `LARADOCS_LLMS_FULL` | `false` |
+| `llms.full_max_bytes` | `LARADOCS_LLMS_FULL_MAX_BYTES` | `5000000` |
 
-Turn the whole surface off and the route is never registered:
+Turn the whole surface off and neither route is registered:
 
 ```dotenv
 LARADOCS_LLMS=false
 ```
 
-The route also inherits the master docs switch: with `LARADOCS_ENABLED=false` it
-returns a 404, unlike [robots.txt](/docs/seo/robots), which stays available to
-tell crawlers to stay away.
+Both routes also inherit the master docs switch: with `LARADOCS_ENABLED=false`
+they return a 404, unlike [robots.txt](/docs/seo/robots), which stays available
+to tell crawlers to stay away.
 
 ## Building it yourself
 
-The rendered file is available from the `Laradocs` service, so you can serve it
-from your own route, write it to disk at deploy time, or post-process it:
+Both rendered files are available from the `Laradocs` service, so you can serve
+them from your own route, write them to disk at deploy time, or post-process
+them:
 
 ```php
 use Laradocs\Laradocs;
 
-$body = app(Laradocs::class)->llmsTxt();
+$index = app(Laradocs::class)->llmsTxt();
+$corpus = app(Laradocs::class)->llmsFullTxt();
 ```
 
-The return value is the complete file as a string, cached exactly as the route
+Each return value is the complete file as a string, cached exactly as its route
 serves it.
 
 ## Related

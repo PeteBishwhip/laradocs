@@ -13,6 +13,7 @@ use Laradocs\Http\Controllers\ApiVersionsController;
 use Laradocs\Http\Controllers\AssetController;
 use Laradocs\Http\Controllers\DocsController;
 use Laradocs\Http\Controllers\FeedController;
+use Laradocs\Http\Controllers\LlmsFullTxtController;
 use Laradocs\Http\Controllers\LlmsTxtController;
 use Laradocs\Http\Controllers\LocaleConsentController;
 use Laradocs\Http\Controllers\McpController;
@@ -106,6 +107,15 @@ final class DocumentRouter
                 $router->get('llms.txt', LlmsTxtController::class)
                     ->withoutMiddleware(SetDocsVersion::class)
                     ->name('llms');
+
+                // The full corpus is version-agnostic for the same reason as
+                // llms.txt above, and additionally gated on llms.full since a
+                // mid-size site's corpus runs to megabytes.
+                if (Config::bool('laradocs.llms.full', false)) {
+                    $router->get('llms-full.txt', LlmsFullTxtController::class)
+                        ->withoutMiddleware(SetDocsVersion::class)
+                        ->name('llms.full');
+                }
             }
             // Bundled assets (laradocs.js / laradocs.css) are served by file
             // name and carry no version segment. SetDocsVersion is dropped so

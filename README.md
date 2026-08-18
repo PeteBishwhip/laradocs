@@ -46,6 +46,8 @@ Then open `/docs`.
 - 🤖 **llms.txt** — an [llmstxt.org](https://llmstxt.org) index at
   `{prefix}/llms.txt` so language models can map every page in one request,
   optionally served from `/llms.txt` as well.
+- 📚 **llms-full.txt** — opt-in companion at `{prefix}/llms-full.txt` carrying
+  the entire documentation corpus in one response instead of links.
 - ✅ **Fully tested** — Pest + Testbench, 100% coverage gate, PHPStan & Psalm max, Pint.
 
 ## Quick start
