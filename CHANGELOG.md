@@ -45,6 +45,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `OperationSlugger::resolve()` no longer lets a locale-only operation collide
   with a canonical operation's slug; the locale-only operation now gets a
   disambiguating suffix instead of silently shadowing the canonical page.
+- With multi-version docs enabled, `sitemap.xml`, `feed.xml`, the search and
+  tag endpoints, both JSON APIs and the OG image index no longer 301-redirect
+  to the default version's docs page. These fixed-path routes carry no version
+  segment for `SetDocsVersion` to resolve, so they fell through to the
+  `versions.unversioned` policy (`redirect` by default) exactly like the bare
+  docs root — the difference is a crawler or `fetch()` call hitting them has no
+  use for that redirect. They now force the default version active in place
+  instead.
 
 ## [1.0.0] - 2026-07-03
 

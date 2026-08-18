@@ -96,8 +96,20 @@ final class DocumentRouter
 
         $router->group($attributes, function (Registrar $router) use ($llms): void {
             $router->get('/', [DocsController::class, 'index'])->name('index');
-            $router->get('sitemap.xml', SitemapController::class)->name('sitemap');
-            $router->get('feed.xml', FeedController::class)->name('feed');
+            // sitemap.xml and feed.xml carry no version segment, so the
+            // unversioned-URL policy would otherwise 301 them to an HTML docs
+            // page — see the `:render` doc block on SetDocsVersion. They still
+            // need a version active to build their content from, so the
+            // middleware is kept but forced to activate the default version
+            // in place instead of consulting the policy.
+            $router->get('sitemap.xml', SitemapController::class)
+                ->withoutMiddleware(SetDocsVersion::class)
+                ->middleware(SetDocsVersion::class . ':render')
+                ->name('sitemap');
+            $router->get('feed.xml', FeedController::class)
+                ->withoutMiddleware(SetDocsVersion::class)
+                ->middleware(SetDocsVersion::class . ':render')
+                ->name('feed');
 
             // llms.txt describes the site as a whole, so it is version-
             // agnostic: SetDocsVersion is dropped for the same reason as the
@@ -126,7 +138,13 @@ final class DocumentRouter
                 ->where('file', '[\w.\-]+')
                 ->withoutMiddleware(SetDocsVersion::class)
                 ->name('asset');
-            $router->get('_laradocs/search', SearchController::class)->name('search');
+            // The search endpoint carries no version segment either, same
+            // reasoning as sitemap.xml above: force the default version rather
+            // than 301-redirecting the palette's fetch() to an HTML page.
+            $router->get('_laradocs/search', SearchController::class)
+                ->withoutMiddleware(SetDocsVersion::class)
+                ->middleware(SetDocsVersion::class . ':render')
+                ->name('search');
             // Lets a consent banner's JS persist (or drop) the locale cookie the
             // instant the visitor's decision changes, via fetch() — no full-page
             // navigation required. SetDocsVersion is dropped for the same reason
@@ -137,16 +155,29 @@ final class DocumentRouter
                 ->name('consent');
 
             if (Config::bool('laradocs.seo.og_image.enabled', true)) {
-                $router->get('_laradocs/og', OgImageController::class)->name('og.index');
+                // The index card has no {path} to resolve a version from,
+                // same reasoning as sitemap.xml above; the {path} variant
+                // below is untouched since it already carries one.
+                $router->get('_laradocs/og', OgImageController::class)
+                    ->withoutMiddleware(SetDocsVersion::class)
+                    ->middleware(SetDocsVersion::class . ':render')
+                    ->name('og.index');
                 $router->get('_laradocs/og/{path}', OgImageController::class)
                     ->where('path', '.+')
                     ->name('og');
             }
+            // Both JSON APIs carry no version segment either, same reasoning
+            // as sitemap.xml above: force the default version rather than
+            // 301-redirecting a documented integration surface to an HTML page.
             $router->get('_laradocs/api/tree', ApiTreeController::class)
                 ->middleware(ThrottleApiRequests::class)
+                ->withoutMiddleware(SetDocsVersion::class)
+                ->middleware(SetDocsVersion::class . ':render')
                 ->name('api.tree');
             $router->get('_laradocs/api/search', ApiSearchController::class)
                 ->middleware(ThrottleApiRequests::class)
+                ->withoutMiddleware(SetDocsVersion::class)
+                ->middleware(SetDocsVersion::class . ':render')
                 ->name('api.search');
             // The versions endpoint lists every version, so it is version-
             // agnostic: SetDocsVersion is dropped to stop its unversioned-URL
@@ -176,9 +207,17 @@ final class DocumentRouter
                 $index = trim(Config::string('laradocs.tags.index', 'tags'), '/');
                 $prefix = trim(Config::string('laradocs.tags.prefix', 'tag'), '/');
 
-                $router->get($index, [TagController::class, 'index'])->name('tags.index');
+                // Tag pages list version-scoped content but, like sitemap.xml
+                // above, carry no version segment of their own: they render
+                // the default version's tags rather than 301-redirecting.
+                $router->get($index, [TagController::class, 'index'])
+                    ->withoutMiddleware(SetDocsVersion::class)
+                    ->middleware(SetDocsVersion::class . ':render')
+                    ->name('tags.index');
                 $router->get($prefix . '/{tag}', [TagController::class, 'show'])
                     ->where('tag', '[^/]+')
+                    ->withoutMiddleware(SetDocsVersion::class)
+                    ->middleware(SetDocsVersion::class . ':render')
                     ->name('tags.show');
             }
 
