@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Laradocs\Media;
 
+use finfo;
 use Illuminate\Contracts\Filesystem\Filesystem as Disk;
 use Illuminate\Support\Facades\Storage;
 use Laradocs\Documents\Document;
@@ -116,7 +117,8 @@ final class MediaSource
      */
     public function isServable(string $path): bool
     {
-        $extension = strtolower(pathinfo(parse_url($path, PHP_URL_PATH) ?? $path, PATHINFO_EXTENSION));
+        $withoutQuery = parse_url($path, PHP_URL_PATH);
+        $extension = strtolower(pathinfo(is_string($withoutQuery) ? $withoutQuery : $path, PATHINFO_EXTENSION));
 
         if ($extension === '') {
             return false;
@@ -162,13 +164,29 @@ final class MediaSource
      */
     public function mimeType(string $path): ?string
     {
-        if ($this->strategy() === self::DISK) {
-            $mime = $this->disk()->mimeType($path);
-
-            return $mime === false ? null : $mime;
+        if ($this->strategy() !== self::DISK) {
+            return MimeTypes::getDefault()->guessMimeType($this->absolute($path));
         }
 
-        return MimeTypes::getDefault()->guessMimeType($this->absolute($path));
+        // Only the contract is assumed, so the type is read from the first few
+        // kilobytes rather than through an adapter-only helper. That also keeps
+        // a large file from being pulled into memory to identify it.
+        $stream = $this->disk()->readStream($path);
+
+        if (! is_resource($stream)) {
+            return null;
+        }
+
+        $head = fread($stream, 4096);
+        fclose($stream);
+
+        if ($head === false || $head === '') {
+            return null;
+        }
+
+        $mime = (new finfo(FILEINFO_MIME_TYPE))->buffer($head);
+
+        return $mime === false ? null : $mime;
     }
 
     /**

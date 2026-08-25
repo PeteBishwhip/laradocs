@@ -6,6 +6,7 @@ namespace Laradocs\Http\Controllers;
 
 use Laradocs\Media\MediaSource;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Serves the images, video and other files that sit beside the markdown.
@@ -51,12 +52,39 @@ final class MediaController
         $headers = ['Cache-Control' => 'public, max-age=0, must-revalidate'];
 
         if ($this->source->strategy() === MediaSource::DISK) {
-            return $this->source->disk()->response($resolved, null, $headers);
+            return $this->stream($resolved, $mime, $headers);
         }
 
         return response()
             ->file($this->source->absolute($resolved), $headers)
             ->setAutoLastModified()
             ->setAutoEtag();
+    }
+
+    /**
+     * Stream a disk-backed file through the filesystem contract, so a custom
+     * disk that is not one of Laravel's adapters still works.
+     *
+     * @param  array<string, string>  $headers
+     */
+    private function stream(string $path, ?string $mime, array $headers): StreamedResponse
+    {
+        $disk = $this->source->disk();
+
+        return response()->stream(
+            function () use ($disk, $path): void {
+                $stream = $disk->readStream($path);
+
+                if (is_resource($stream)) {
+                    fpassthru($stream);
+                    fclose($stream);
+                }
+            },
+            200,
+            $headers + [
+                'Content-Type' => $mime ?? 'application/octet-stream',
+                'Content-Length' => (string) $disk->size($path),
+            ],
+        );
     }
 }

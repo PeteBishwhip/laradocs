@@ -215,3 +215,101 @@ it('refuses an unsigned request when signing is on', function () {
 
     $this->get(html_entity_decode($matches[1]))->assertOk();
 });
+
+it('streams a disk-backed file', function () {
+    withoutSigning();
+
+    Storage::fake('media');
+    Storage::disk('media')->put('img/diagram.png', pixel());
+
+    config()->set('laradocs.media.source', MediaSource::DISK);
+    config()->set('laradocs.media.disk', 'media');
+
+    $this->makeDocs(['guide.md' => "---\ntitle: Guide\n---\n"]);
+
+    $response = $this->get('/docs/_media/img/diagram.png');
+
+    expect($response->streamedContent())->toBe(pixel())
+        ->and($response->headers->get('content-type'))->toBe('image/png');
+});
+
+it('reports the media type of a disk-backed file from its contents', function () {
+    Storage::fake('media');
+    Storage::disk('media')->put('img/diagram.png', pixel());
+    Storage::disk('media')->put('img/empty.png', '');
+
+    config()->set('laradocs.media.source', MediaSource::DISK);
+    config()->set('laradocs.media.disk', 'media');
+
+    $source = app(MediaSource::class);
+
+    expect($source->mimeType('img/diagram.png'))->toBe('image/png')
+        ->and($source->mimeType('img/empty.png'))->toBeNull()
+        ->and($source->mimeType('img/missing.png'))->toBeNull();
+});
+
+it('leaves an element without a source alone', function () {
+    config()->set('laradocs.media.source', MediaSource::RELATIVE);
+
+    $this->makeDocs([
+        'guide.md' => "---\ntitle: Guide\n---\n\n<img alt=\"No source\">\n",
+    ]);
+
+    expect((string) app(Laradocs::class)->find('guide')?->html)->toContain('alt="No source"');
+});
+
+it('resolves nothing for sources that point outside the docs', function () {
+    config()->set('laradocs.media.source', MediaSource::RELATIVE);
+
+    $this->makeDocs(['guide.md' => "---\ntitle: Guide\n---\n"]);
+
+    $source = app(MediaSource::class);
+
+    expect($source->resolve(''))->toBeNull()
+        ->and($source->resolve('   '))->toBeNull()
+        ->and($source->resolve('#anchor'))->toBeNull()
+        ->and($source->resolve('//example.com/a.png'))->toBeNull()
+        ->and($source->resolve('data:image/png;base64,AA'))->toBeNull()
+        ->and($source->resolve('../../outside.png'))->toBeNull()
+        ->and($source->resolve('./'))->toBeNull()
+        ->and($source->resolve('notes'))->toBeNull()
+        ->and($source->resolve('missing.png'))->toBeNull();
+});
+
+it('normalises redundant segments in a source', function () {
+    config()->set('laradocs.media.source', MediaSource::RELATIVE);
+
+    $this->makeDocs([
+        'guide.md' => "---\ntitle: Guide\n---\n",
+        'img/diagram.png' => pixel(),
+    ]);
+
+    $source = app(MediaSource::class);
+
+    expect($source->resolve('img/./diagram.png'))->toBe('img/diagram.png')
+        ->and($source->resolve('img//diagram.png'))->toBe('img/diagram.png');
+
+    // A document is only servable through the docs routes, never here.
+    expect($source->exists('guide.md'))->toBeFalse();
+});
+
+it('reads an unknown source strategy as public', function () {
+    config()->set('laradocs.media.source', 'nonsense');
+
+    expect(app(MediaSource::class)->strategy())->toBe(MediaSource::PUBLIC)
+        ->and(app(MediaSource::class)->enabled())->toBeFalse();
+});
+
+it('allows nothing for an empty media type', function () {
+    expect(app(MediaSource::class)->allows(''))->toBeFalse()
+        ->and(app(MediaSource::class)->allows('image/png; charset=binary'))->toBeTrue();
+});
+
+it('leaves rendered html alone while the source is public', function () {
+    $this->makeDocs([
+        'guide.md' => "---\ntitle: Guide\n---\n\n![A](a.png)\n",
+        'a.png' => pixel(),
+    ]);
+
+    expect((string) app(Laradocs::class)->find('guide')?->html)->toContain('src="a.png"');
+});
