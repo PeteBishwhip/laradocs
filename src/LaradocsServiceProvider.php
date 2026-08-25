@@ -197,7 +197,7 @@ final class LaradocsServiceProvider extends ServiceProvider
         $defaults = Config::array('laradocs.metadata.default');
 
         return new FilesystemLoader(
-            new Filesystem,
+            $app->make(Filesystem::class),
             $app->make(MetadataResolver::class),
             $app->make(SlugResolver::class),
             fn (): string => Version::docsPath(),
