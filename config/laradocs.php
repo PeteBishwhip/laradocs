@@ -784,8 +784,7 @@ return [
     | once rendered. "source" says where they actually live:
     |
     |   "public"    Sources are left exactly as authored, because they already
-    |               point at something public. The default: existing sites keep
-    |               behaving as they always have.
+    |               point at something public.
     |   "relative"  The file sits beside the markdown, inside the docs path.
     |   "disk"      The file lives on the filesystem disk named in "disk".
     |
