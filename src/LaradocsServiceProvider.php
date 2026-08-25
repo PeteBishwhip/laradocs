@@ -33,6 +33,7 @@ use Laradocs\Console\VersionsCommand;
 use Laradocs\Contracts\DocumentContentRenderer;
 use Laradocs\Contracts\DocumentLoader;
 use Laradocs\Contracts\DocumentParser;
+use Laradocs\Contracts\DocumentVisibility;
 use Laradocs\Contracts\MetadataResolver;
 use Laradocs\Contracts\OgImageGenerator;
 use Laradocs\Icons\HeroiconProvider;
@@ -40,6 +41,7 @@ use Laradocs\Icons\IconRegistry;
 use Laradocs\Loaders\CompositeDocumentLoader;
 use Laradocs\Loaders\FilesystemLoader;
 use Laradocs\Loaders\OpenApiLoader;
+use Laradocs\Loaders\VisibilityLoader;
 use Laradocs\Macros\MacroRegistry;
 use Laradocs\Metadata\FrontMatterMetadataResolver;
 use Laradocs\OpenApi\OpenApiContentRenderer;
@@ -155,20 +157,23 @@ final class LaradocsServiceProvider extends ServiceProvider
             );
         });
 
-        $this->app->bind(DocumentLoader::class, function (Application $app): DocumentLoader {
+        // Scoped rather than bound: laradocs asks its loader for every document
+        // several times while rendering a page, and a visibility rule should be
+        // consulted once per request rather than once per read.
+        $this->app->scoped(DocumentLoader::class, function (Application $app): DocumentLoader {
             $filesystem = $this->makeFilesystemLoader($app);
 
             // The OpenAPI integration only participates when it is switched on
             // *and* the optional cebe library is installed; otherwise the
             // behaviour is byte-for-byte the original filesystem loader.
             if (Config::bool('laradocs.openapi.enabled', false) && class_exists(Reader::class)) {
-                return new CompositeDocumentLoader([
+                return $this->withVisibility(new CompositeDocumentLoader([
                     $filesystem,
                     $this->makeOpenApiLoader($app),
-                ]);
+                ]), $app);
             }
 
-            return $filesystem;
+            return $this->withVisibility($filesystem, $app);
         });
 
         $this->app->bind(DocumentCache::class, function (Application $app): DocumentCache {
@@ -181,6 +186,21 @@ final class LaradocsServiceProvider extends ServiceProvider
                 Config::nullableInt('laradocs.cache.ttl'),
             );
         });
+    }
+
+    /**
+     * Wrap a loader in the configured visibility rule, when there is one.
+     *
+     * Nothing is bound by default, so a site that does not need one pays
+     * nothing: no wrapper, no calls, no change in behaviour. The wrapping
+     * happens here rather than through a container extender because an extender
+     * that resolves DocumentLoader would call itself.
+     */
+    private function withVisibility(DocumentLoader $loader, Application $app): DocumentLoader
+    {
+        return $app->bound(DocumentVisibility::class)
+            ? new VisibilityLoader($loader, $app->make(DocumentVisibility::class))
+            : $loader;
     }
 
     /**
