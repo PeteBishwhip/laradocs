@@ -776,6 +776,62 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Media
+    |--------------------------------------------------------------------------
+    |
+    | Markdown is written next to the files it points at — ![](diagram.png) —
+    | but the docs directory is not public, so those sources resolve to nothing
+    | once rendered. "source" says where they actually live:
+    |
+    |   "public"    Sources are left exactly as authored, because they already
+    |               point at something public. The default: existing sites keep
+    |               behaving as they always have.
+    |   "relative"  The file sits beside the markdown, inside the docs path.
+    |   "disk"      The file lives on the filesystem disk named in "disk".
+    |
+    | Anything but "public" registers <prefix>/_media/<path> and rewrites the
+    | sources in rendered pages to point at it.
+    |
+    | "types"   What may be served, in the notation the "mimetypes" validation
+    |           rule uses: an exact type, or a group such as image/*. A path is
+    |           judged first by what its extension maps to, and again by what
+    |           the file actually contains, so a script renamed to .png is
+    |           refused. Markdown falls outside every default, and a path that
+    |           climbs out of the source is refused, so neither the documents
+    |           nor anything above them is reachable.
+    |
+    | "signed"  Sign those URLs, so a copied link stops working on another site.
+    |           On by default once media is served from here, because a
+    |           signature without a "ttl" is deterministic: the URL stays the
+    |           same between renders, so browsers and CDNs cache it as they
+    |           would any other image.
+    |
+    |           Setting "ttl" (minutes) puts an expiry in the URL, which changes
+    |           it on every render — hotlinks then go stale, at the cost of
+    |           re-downloading media that would otherwise have been cached.
+    |
+    |           Signatures are computed over the full URL, so an app whose
+    |           APP_URL or proxy headers do not match what visitors actually
+    |           request will reject its own media. Turn this off if that is
+    |           easier than fixing it.
+    |
+    |           A signature travels with the URL: it stops a link working
+    |           somewhere else, it does not tell one reader from another.
+    |
+    */
+
+    'media' => [
+        'source' => env('LARADOCS_MEDIA_SOURCE', 'public'),
+        'disk' => env('LARADOCS_MEDIA_DISK'),
+
+        'types' => ['image/*', 'video/*', 'audio/*', 'application/pdf'],
+
+        'signed' => (bool) env('LARADOCS_MEDIA_SIGNED', true),
+        'ttl' => env('LARADOCS_MEDIA_TTL'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Caching
     |--------------------------------------------------------------------------
     |
