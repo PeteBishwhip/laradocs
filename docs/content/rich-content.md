@@ -72,9 +72,27 @@ Route::get('/docs', function () {
 ```
 ````
 
-Code without a language renders as plain `<pre>` with no header chrome.
-Tilde fences (`~~~`) are recognised the same as backtick fences. Inline
-`` `code` `` keeps a soft background and hairline border so it stands
+Which renders as:
+
+```php
+Route::get('/docs', function () {
+    return view('laradocs::layout');
+});
+```
+
+Code without a language still gets the header, labelled `code`:
+
+```
+No language, so the label falls back to "code".
+```
+
+Tilde fences (`~~~`) are recognised the same as backtick fences:
+
+~~~php
+$fence = 'opened with tildes, rendered identically';
+~~~
+
+Inline `` `code` `` keeps a soft background and hairline border so it stands
 out without shouting.
 
 ## Images
@@ -127,6 +145,20 @@ curl https://example.com/api/users
 ```
 `````
 
+Which renders as:
+
+```php tab:PHP
+$response = Http::get('/api/users');
+```
+
+```javascript tab:JavaScript
+const response = await fetch('/api/users');
+```
+
+```bash tab:cURL
+curl https://example.com/api/users
+```
+
 The language label and copy button are preserved inside each panel. An untagged code
 block between two tagged ones breaks the group — each run of consecutive tagged blocks
 forms its own tab group.
@@ -154,6 +186,24 @@ into your project's `vendor/` directory.
 :::
 ````
 
+Which renders as:
+
+::: tabs
+--- Composer
+
+Run `composer require` to add the package:
+
+```bash
+composer require example/package
+```
+
+--- Manual
+
+Download the ZIP from the [releases page](https://example.com/releases) and extract it
+into your project's `vendor/` directory.
+
+:::
+
 Content inside each panel is full Markdown — callouts, images, nested code blocks and
 all other Laradocs extensions work as normal.
 
@@ -179,6 +229,24 @@ Python SDK content.
 
 :::
 ```
+
+The group below is `language`, the same group the code tabs earlier on this page
+use. Switch it to cURL and scroll back up: that group has followed along.
+
+::: tabs group="language"
+--- PHP
+
+Server-side, using the HTTP client.
+
+--- JavaScript
+
+In the browser, using `fetch`.
+
+--- cURL
+
+From a shell, for a quick check.
+
+:::
 
 Change the default group for code tabs via config:
 
@@ -208,6 +276,15 @@ graph TD;
     B -- No --> D[Render document];
 ```
 ````
+
+Which renders as:
+
+```mermaid
+graph TD;
+    A[Request] --> B{Cached?};
+    B -- Yes --> C[Serve from cache];
+    B -- No --> D[Render document];
+```
 
 [mermaid.js](https://mermaid.js.org) is imported lazily and only on pages
 that contain a diagram, so pages without one pay nothing. The diagram
@@ -247,6 +324,16 @@ A single-line shorthand also works:
 This identity $$e^{i\pi} + 1 = 0$$ is block-display math.
 ```
 
+Which renders as:
+
+The famous equation $E = mc^2$ changed physics, and the quadratic formula
+
+$$
+\frac{-b \pm \sqrt{b^2 - 4ac}}{2a}
+$$
+
+sets it out in display form.
+
 Before KaTeX loads the raw expression is shown in monospace; once loaded
 KaTeX renders it synchronously so there is no perceptible layout shift.
 When JavaScript is disabled the raw LaTeX source remains readable.
@@ -262,12 +349,23 @@ Disable the feature with `parser.extensions.katex => false`.
 
 ## Footnotes
 
+A `[^label]` reference pairs with a `[^label]:` definition anywhere in the
+document. Definitions are collected and numbered in source order:
+
 ```markdown
 Markdown supports footnotes[^1] — the link jumps to the definition at
 the bottom of the page.
 
 [^1]: Like this one.
 ```
+
+Which renders as:
+
+Markdown supports footnotes[^1] — the link jumps to the definition at
+the bottom of the page.
+
+[^1]: Like this one. Note that it appears at the foot of this page rather than
+here, with a backlink to the reference.
 
 ## Attribute lists
 
