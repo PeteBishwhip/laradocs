@@ -72,9 +72,27 @@ Route::get('/docs', function () {
 ```
 ````
 
-Code without a language renders as plain `<pre>` with no header chrome.
-Tilde fences (`~~~`) are recognised the same as backtick fences. Inline
-`` `code` `` keeps a soft background and hairline border so it stands
+Which renders as:
+
+```php
+Route::get('/docs', function () {
+    return view('laradocs::layout');
+});
+```
+
+Code without a language still gets the header, labelled `code`:
+
+```
+No language, so the label falls back to "code".
+```
+
+Tilde fences (`~~~`) are recognised the same as backtick fences:
+
+~~~php
+$fence = 'opened with tildes, rendered identically';
+~~~
+
+Inline `` `code` `` keeps a soft background and hairline border so it stands
 out without shouting.
 
 ## Images
