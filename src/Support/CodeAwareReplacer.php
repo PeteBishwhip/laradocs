@@ -60,13 +60,22 @@ final class CodeAwareReplacer
      * is the right primitive for multi-line constructs (e.g. a block component
      * whose opening and closing tags sit on different lines).
      *
+     * An `$except` predicate receives each opening fence line and may keep that
+     * block unmasked — for a transform that must operate on fenced blocks
+     * itself, while still being shielded from the ones nested inside a longer
+     * fence.
+     *
+     * @param  ?Closure(string): bool  $except
      * @return array{0: string, 1: Closure(string): string}
      */
-    public static function protect(string $markdown): array
+    public static function protect(string $markdown, ?Closure $except = null): array
     {
         $placeholders = [];
+        // \x1F rather than \x00: NUL is in PHP's default trim charlist, so a
+        // caller that trims masked text would shear the delimiter off and leave
+        // the placeholder unrestorable.
         $token = static function (string $code) use (&$placeholders): string {
-            $key = "\x00laradocs-code-" . count($placeholders) . "\x00";
+            $key = "\x1Flaradocs-code-" . count($placeholders) . "\x1F";
             $placeholders[$key] = $code;
 
             return $key;
@@ -76,10 +85,12 @@ final class CodeAwareReplacer
         $output = [];
         $fence = null;
         $buffer = [];
+        $keep = false;
 
         foreach ($lines as $line) {
             if ($fence === null && preg_match('/^\s{0,3}(`{3,}|~{3,})/', $line, $m) === 1) {
                 $fence = $m[1];
+                $keep = $except instanceof Closure && $except($line);
                 $buffer = [$line];
 
                 continue;
@@ -91,9 +102,11 @@ final class CodeAwareReplacer
                 $closer = '/^\s{0,3}' . $fence[0] . '{' . strlen($fence) . ',}\s*$/';
 
                 if (preg_match($closer, $line) === 1) {
-                    $output[] = $token(implode("\n", $buffer));
+                    $block = implode("\n", $buffer);
+                    $output[] = $keep ? $block : $token($block);
                     $fence = null;
                     $buffer = [];
+                    $keep = false;
                 }
 
                 continue;
@@ -105,7 +118,8 @@ final class CodeAwareReplacer
         // An unterminated fence leaves the rest of the document untouched, just
         // as apply() never invokes its callback once inside an open fence.
         if ($fence !== null) {
-            $output[] = $token(implode("\n", $buffer));
+            $block = implode("\n", $buffer);
+            $output[] = $keep ? $block : $token($block);
         }
 
         $restore = static fn (string $text): string => strtr($text, $placeholders);

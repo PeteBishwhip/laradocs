@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Laradocs\Extensions;
 
 use Laradocs\Contracts\MarkdownExtension;
+use Laradocs\Support\CodeAwareReplacer;
 
 /**
  * Pre-processes two tab syntaxes before CommonMark runs:
@@ -20,12 +21,25 @@ use Laradocs\Contracts\MarkdownExtension;
  */
 final class TabsMarkdownExtension implements MarkdownExtension
 {
+    /**
+     * An opening fence whose info string carries a `tab:Label` token.
+     */
+    private const TAB_INFO = '/^\s{0,3}(?:`{3,}|~{3,})[^\n]*\btab:\S/';
+
     public function processMarkdown(string $markdown): string
     {
+        // Mask every fenced block except the tab-tagged ones this transforms,
+        // so a fence nested inside a longer one — how the docs show the syntax
+        // itself — stays literal instead of being rewritten in place.
+        [$markdown, $restore] = CodeAwareReplacer::protect(
+            $markdown,
+            static fn (string $opener): bool => preg_match(self::TAB_INFO, $opener) === 1,
+        );
+
         $markdown = $this->transformCodeTabBlocks($markdown);
         $markdown = $this->transformContentTabs($markdown);
 
-        return $markdown;
+        return $restore($markdown);
     }
 
     /**

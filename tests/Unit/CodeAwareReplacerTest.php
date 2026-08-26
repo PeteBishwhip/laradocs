@@ -26,3 +26,29 @@ it('handles tilde fences', function () use ($upper) {
 
     expect(CodeAwareReplacer::apply($input, $upper))->toBe("A\n~~~\ncode\n~~~\nB");
 });
+
+it('keeps a placeholder restorable after the caller trims it', function () {
+    [$masked, $restore] = CodeAwareReplacer::protect("```php\necho 1;\n```");
+
+    expect($restore(trim($masked)))->toBe("```php\necho 1;\n```");
+});
+
+it('leaves a block unmasked when the except predicate accepts its opener', function () {
+    $input = "````\n```php tab:PHP\necho 1;\n```\n````";
+
+    [$masked] = CodeAwareReplacer::protect(
+        $input,
+        static fn (string $opener): bool => str_contains($opener, 'tab:'),
+    );
+
+    // The outer fence is masked whole, so the tab-tagged fence nested in it is
+    // never offered to the predicate in the first place.
+    expect($masked)->not->toContain('tab:PHP');
+
+    [$masked] = CodeAwareReplacer::protect(
+        "```php tab:PHP\necho 1;\n```",
+        static fn (string $opener): bool => str_contains($opener, 'tab:'),
+    );
+
+    expect($masked)->toContain('tab:PHP');
+});
