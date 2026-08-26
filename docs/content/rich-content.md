@@ -306,6 +306,16 @@ A single-line shorthand also works:
 This identity $$e^{i\pi} + 1 = 0$$ is block-display math.
 ```
 
+Which renders as:
+
+The famous equation $E = mc^2$ changed physics, and the quadratic formula
+
+$$
+\frac{-b \pm \sqrt{b^2 - 4ac}}{2a}
+$$
+
+sets it out in display form.
+
 Before KaTeX loads the raw expression is shown in monospace; once loaded
 KaTeX renders it synchronously so there is no perceptible layout shift.
 When JavaScript is disabled the raw LaTeX source remains readable.
@@ -321,12 +331,23 @@ Disable the feature with `parser.extensions.katex => false`.
 
 ## Footnotes
 
+A `[^label]` reference pairs with a `[^label]:` definition anywhere in the
+document. Definitions are collected and numbered in source order:
+
 ```markdown
 Markdown supports footnotes[^1] — the link jumps to the definition at
 the bottom of the page.
 
 [^1]: Like this one.
 ```
+
+Which renders as:
+
+Markdown supports footnotes[^1] — the link jumps to the definition at
+the bottom of the page.
+
+[^1]: Like this one. Note that it appears at the foot of this page rather than
+here, with a backlink to the reference.
 
 ## Attribute lists
 
