@@ -22,8 +22,11 @@ The rules below apply whenever you touch this application, skill or no skill:
 - Nested folders become nested navigation sections, and directory depth maps to
   URL depth: `docs/guide/routing.md` is served at `/docs/guide/routing`.
 - `_index.md` is a section landing page: `docs/guide/_index.md` →
-`/docs/guide`, and the root `docs/_index.md` → `/docs` (the docs home). The
+  `/docs/guide`, and the root `docs/_index.md` → `/docs` (the docs home). The
   index filename is configurable via `laradocs.docs.index` (default `_index`).
+- **Never put closures in `config/laradocs.php`** — they break `config:cache`.
+  Register dynamic variables and macros through the `Laradocs` facade in a
+  service provider's `boot()` method instead.
 - Customise the UI by publishing what you need
   (`php artisan vendor:publish --tag=laradocs-views`), never by editing files
   under `vendor/`.
