@@ -17,6 +17,7 @@ use Laradocs\Http\Controllers\LlmsFullTxtController;
 use Laradocs\Http\Controllers\LlmsTxtController;
 use Laradocs\Http\Controllers\LocaleConsentController;
 use Laradocs\Http\Controllers\McpController;
+use Laradocs\Http\Controllers\MediaController;
 use Laradocs\Http\Controllers\OgImageController;
 use Laradocs\Http\Controllers\RobotsController;
 use Laradocs\Http\Controllers\SearchController;
@@ -25,6 +26,7 @@ use Laradocs\Http\Controllers\TagController;
 use Laradocs\Http\Middleware\EnsureDocsEnabled;
 use Laradocs\Http\Middleware\EnsureMcpAuthenticated;
 use Laradocs\Http\Middleware\EnsureMcpEnabled;
+use Laradocs\Http\Middleware\EnsureMediaSignature;
 use Laradocs\Http\Middleware\SetDocsLocale;
 use Laradocs\Http\Middleware\SetDocsVersion;
 use Laradocs\Http\Middleware\ThrottleApiRequests;
@@ -147,6 +149,16 @@ final class DocumentRouter
                 ->where('file', '[\w.\-]+')
                 ->withoutMiddleware(SetDocsVersion::class)
                 ->name('asset');
+            // Files that sit beside the markdown: images, video, downloads.
+            // Registered before the catch-all so a media path is never mistaken
+            // for a document slug, and without SetDocsVersion for the same
+            // reason as the assets above. `media.signed` adds the signature
+            // check that stops the URL working anywhere but here.
+            $router->get('_media/{path}', MediaController::class)
+                ->where('path', '.*')
+                ->withoutMiddleware(SetDocsVersion::class)
+                ->middleware(EnsureMediaSignature::class)
+                ->name('media');
             // The search endpoint carries no version segment either, same
             // reasoning as sitemap.xml above: force the default version rather
             // than 301-redirecting the palette's fetch() to an HTML page.

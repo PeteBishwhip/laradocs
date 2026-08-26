@@ -43,6 +43,8 @@ use Laradocs\Loaders\FilesystemLoader;
 use Laradocs\Loaders\OpenApiLoader;
 use Laradocs\Loaders\VisibilityLoader;
 use Laradocs\Macros\MacroRegistry;
+use Laradocs\Media\MediaRewriter;
+use Laradocs\Media\MediaSource;
 use Laradocs\Metadata\FrontMatterMetadataResolver;
 use Laradocs\OpenApi\OpenApiContentRenderer;
 use Laradocs\OpenApi\OpenApiParser;
@@ -145,6 +147,8 @@ final class LaradocsServiceProvider extends ServiceProvider
         // The authoritative version list: discovers, sorts and resolves
         // documentation versions once per request for every consumer.
         $this->app->singleton(VersionRegistry::class);
+        $this->app->singleton(MediaSource::class);
+        $this->app->singleton(MediaRewriter::class);
     }
 
     private function registerPipeline(): void
@@ -310,6 +314,7 @@ final class LaradocsServiceProvider extends ServiceProvider
                 $searchInclude,
                 $searchRank,
                 $this->makeContentRenderers($app),
+                $app->make(MediaRewriter::class),
             );
         });
     }
