@@ -479,3 +479,25 @@ it('falls back gracefully when tabs extension is disabled', function () {
     config()->set('laradocs.parser.extensions.tabs', true);
     app()->forgetInstance(DocumentParser::class);
 });
+
+it('leaves code-tab syntax literal inside a longer fence', function () {
+    $md = "`````markdown\n```php tab:PHP\necho 1;\n```\n`````";
+
+    $html = render($md);
+
+    expect($html)
+        ->toContain('tab:PHP')
+        ->not->toContain('laradocs-code-tab-pending')
+        ->not->toContain('data-tabs-group');
+});
+
+it('leaves content-tab syntax literal inside a longer fence', function () {
+    $md = "`````markdown\n::: tabs\n--- PHP\n\nhello\n\n:::\n`````";
+
+    $html = render($md);
+
+    expect($html)
+        ->toContain('::: tabs')
+        ->not->toContain('laradocs-tab-group')
+        ->not->toContain('role="tablist"');
+});
