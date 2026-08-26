@@ -127,6 +127,20 @@ curl https://example.com/api/users
 ```
 `````
 
+Which renders as:
+
+```php tab:PHP
+$response = Http::get('/api/users');
+```
+
+```javascript tab:JavaScript
+const response = await fetch('/api/users');
+```
+
+```bash tab:cURL
+curl https://example.com/api/users
+```
+
 The language label and copy button are preserved inside each panel. An untagged code
 block between two tagged ones breaks the group — each run of consecutive tagged blocks
 forms its own tab group.
@@ -154,6 +168,24 @@ into your project's `vendor/` directory.
 :::
 ````
 
+Which renders as:
+
+::: tabs
+--- Composer
+
+Run `composer require` to add the package:
+
+```bash
+composer require example/package
+```
+
+--- Manual
+
+Download the ZIP from the [releases page](https://example.com/releases) and extract it
+into your project's `vendor/` directory.
+
+:::
+
 Content inside each panel is full Markdown — callouts, images, nested code blocks and
 all other Laradocs extensions work as normal.
 
@@ -179,6 +211,24 @@ Python SDK content.
 
 :::
 ```
+
+The group below is `language`, the same group the code tabs earlier on this page
+use. Switch it to cURL and scroll back up: that group has followed along.
+
+::: tabs group="language"
+--- PHP
+
+Server-side, using the HTTP client.
+
+--- JavaScript
+
+In the browser, using `fetch`.
+
+--- cURL
+
+From a shell, for a quick check.
+
+:::
 
 Change the default group for code tabs via config:
 
@@ -208,6 +258,15 @@ graph TD;
     B -- No --> D[Render document];
 ```
 ````
+
+Which renders as:
+
+```mermaid
+graph TD;
+    A[Request] --> B{Cached?};
+    B -- Yes --> C[Serve from cache];
+    B -- No --> D[Render document];
+```
 
 [mermaid.js](https://mermaid.js.org) is imported lazily and only on pages
 that contain a diagram, so pages without one pay nothing. The diagram
