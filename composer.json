@@ -70,6 +70,9 @@
         }
     },
     "extra": {
+        "branch-alias": {
+            "dev-main": "1.1.x-dev"
+        },
         "laravel": {
             "providers": [
                 "Laradocs\\LaradocsServiceProvider"
