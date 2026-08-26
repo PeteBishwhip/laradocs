@@ -16,6 +16,7 @@ use Laradocs\Documents\Document;
 use Laradocs\Documents\DocumentCollection;
 use Laradocs\Documents\DocumentTree;
 use Laradocs\Documents\Tag;
+use Laradocs\Loaders\VisibilityLoader;
 use Laradocs\Macros\MacroRegistry;
 use Laradocs\Media\MediaRewriter;
 use Laradocs\Search\SearchIndexBuilder;
@@ -144,6 +145,25 @@ final class Laradocs
         $this->macros->register($name, $handler);
 
         return $this;
+    }
+
+    /**
+     * Read every document, whatever the configured visibility rule says.
+     *
+     * For work that is not being done on a reader's behalf — warming caches,
+     * a console command, an export. Without a rule bound this simply runs the
+     * callback.
+     *
+     * @template T
+     *
+     * @param  Closure(): T  $callback
+     * @return T
+     */
+    public function withoutVisibility(Closure $callback): mixed
+    {
+        return $this->loader instanceof VisibilityLoader
+            ? $this->loader->withoutFiltering($callback)
+            : $callback();
     }
 
     /**
