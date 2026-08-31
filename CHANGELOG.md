@@ -12,6 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Links between documents** now resolve to the routes that serve them. A
+  cross-reference written the markdown way — `[Usage](usage.md)`,
+  `[Intro](../guide/intro.md)` — used to render as a link to a file the docs
+  routes never serve, and 404. Each one is now pointed at the target's slug.
+  The path resolves against the page it was written on, so links on a section
+  index resolve against the file rather than the URL. Absolute URLs, `mailto:`
+  addresses, root-relative paths, bare fragments and paths that climb out of
+  the docs directory are left exactly as authored.
 - **`llms.txt`**: an [llmstxt.org](https://llmstxt.org)-compliant index of your
   documentation, served at `{prefix}/llms.txt`. One H1 for the site, an optional
   description blockquote, then one `- [Title](url): description` bullet per page

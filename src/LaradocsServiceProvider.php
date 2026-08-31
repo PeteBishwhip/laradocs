@@ -50,6 +50,7 @@ use Laradocs\OpenApi\OpenApiContentRenderer;
 use Laradocs\OpenApi\OpenApiParser;
 use Laradocs\Parsers\MarkdownParser;
 use Laradocs\Parsers\MarkdownPipelineFactory;
+use Laradocs\Routing\DocumentLinkRewriter;
 use Laradocs\Routing\DocumentRouter;
 use Laradocs\Routing\SlugResolver;
 use Laradocs\Search\Contracts\SearchEngine;
@@ -149,6 +150,7 @@ final class LaradocsServiceProvider extends ServiceProvider
         $this->app->singleton(VersionRegistry::class);
         $this->app->singleton(MediaSource::class);
         $this->app->singleton(MediaRewriter::class);
+        $this->app->singleton(DocumentLinkRewriter::class);
     }
 
     private function registerPipeline(): void
@@ -315,6 +317,7 @@ final class LaradocsServiceProvider extends ServiceProvider
                 $searchRank,
                 $this->makeContentRenderers($app),
                 $app->make(MediaRewriter::class),
+                $app->make(DocumentLinkRewriter::class),
             );
         });
     }
