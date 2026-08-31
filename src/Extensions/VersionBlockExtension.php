@@ -97,13 +97,20 @@ final class VersionBlockExtension implements MarkdownExtension
     /**
      * Wrap inner Markdown in a Type-6 HTML block. The blank lines around the
      * content keep CommonMark parsing it as Markdown rather than raw HTML.
+     *
+     * The spec is escaped before it lands in the attribute: PATTERN captures it
+     * as `[^\]]+`, which admits a double quote, and the parser is configured
+     * with `html_input => allow`, so an unescaped spec would let
+     * `:::version-since[1.0" onmouseover="…]` close the attribute and add an
+     * event handler of its own. $type needs no escaping — the pattern only ever
+     * matches one of three literal alternatives.
      */
     private function wrap(string $type, string $spec, string $inner, bool $hidden): string
     {
         return sprintf(
             '<div class="version-block" data-version-%s="%s"%s>%s%s%s</div>',
             $type,
-            $spec,
+            htmlspecialchars($spec, ENT_QUOTES, 'UTF-8'),
             $hidden ? ' hidden' : '',
             "\n\n",
             $inner,
