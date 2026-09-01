@@ -3,9 +3,11 @@
 declare(strict_types=1);
 
 use Laradocs\Contracts\DocumentParser;
+use Laradocs\Extensions\VersionBlockExtension;
 use Laradocs\Laradocs;
 use Laradocs\Routing\SlugResolver;
 use Laradocs\Support\CodeAwareReplacer;
+use Laradocs\Support\Html;
 use Laradocs\Support\Url;
 
 it('escapes interpolated variable values to prevent stored XSS', function () {
@@ -79,4 +81,43 @@ it('only embeds genuine youtube/vimeo hosts', function () {
 
     expect($parser->parse('[a](https://www.youtube.com/watch?v=abc123)'))
         ->toContain('youtube-nocookie.com/embed/abc123');
+});
+
+it('strips the control characters browsers ignore before checking the scheme', function () {
+    // Browsers drop tab/LF/CR anywhere in a URL and leading C0 controls, so a
+    // scheme check that only looks at the raw string can be walked past.
+    expect(Url::safe("jav\tascript:alert(1)"))->toBe('#')
+        ->and(Url::safe("jav\nascript:alert(1)"))->toBe('#')
+        ->and(Url::safe("jav\rascript:alert(1)"))->toBe('#')
+        ->and(Url::safe("java\0script:alert(1)"))->toBe('#')
+        ->and(Url::safe("\x01javascript:alert(1)"))->toBe('#')
+        ->and(Url::safe("\x02\x03javascript:alert(1)"))->toBe('#')
+        ->and(Url::safe("\x0Bjavascript:alert(1)"))->toBe('#');
+});
+
+it('leaves legitimate URLs untouched while normalising', function () {
+    expect(Url::safe('https://example.com/a?b=c&d=e'))->toBe('https://example.com/a?b=c&d=e')
+        ->and(Url::safe('tel:+3112345678'))->toBe('tel:+3112345678')
+        ->and(Url::safe('../relative/page'))->toBe('../relative/page');
+});
+
+it('escapes the version-block spec so it cannot break out of its attribute', function () {
+    $extension = new VersionBlockExtension;
+
+    // PATTERN captures the spec as [^\]]+, which admits a double quote.
+    $out = $extension->processMarkdown(
+        ":::version-since[1.0\" onmouseover=\"alert(1)]\nBody.\n:::"
+    );
+
+    expect($out)->not->toContain('onmouseover="alert(1)"')
+        ->and($out)->toContain('data-version-since="1.0&quot; onmouseover=&quot;alert(1)"');
+
+    // The word still appears, inert, inside the attribute's value — what
+    // matters is that the browser does not see it as an attribute of its own
+    // once the parser (html_input => allow) has passed the block through.
+    $div = Html::load(app(DocumentParser::class)->parse($out))
+        ->getElementsByTagName('div')->item(0);
+
+    expect($div?->hasAttribute('onmouseover'))->toBeFalse()
+        ->and($div?->getAttribute('data-version-since'))->toBe('1.0" onmouseover="alert(1)');
 });
