@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-09-01
+
 ### Added
 - **Links between documents** now resolve to the routes that serve them. A
   cross-reference written the markdown way — `[Usage](usage.md)`,
@@ -20,6 +22,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   index resolve against the file rather than the URL. Absolute URLs, `mailto:`
   addresses, root-relative paths, bare fragments and paths that climb out of
   the docs directory are left exactly as authored.
+
+### Security
+- A `:::version-since` / `:::version-until` / `:::version-only` block's spec
+  is now HTML-escaped before it lands in the rendered `data-version-*`
+  attribute. The spec was captured by a pattern that admits a double quote, so
+  `:::version-since[1.0" onmouseover="…]` could close the attribute early and
+  add an event handler of its own.
+- `Url::safe()` now strips the control characters browsers ignore (tab, LF, CR
+  anywhere in the value; the remaining C0 controls and DEL from its ends)
+  before checking the scheme, closing an XSS bypass where `jav<TAB>ascript:` or
+  a leading control character slipped past the scheme check as "relative" and
+  was reassembled into a working `javascript:` URL by the browser.
+
+## [1.1.0] - 2026-08-26
+
+### Added
+- **Media sources**: markdown images, video and downloads can now live beside
+  the markdown that references them, instead of already being public.
+  `media.source` (`LARADOCS_MEDIA_SOURCE`) picks how a source is resolved —
+  `public` (left exactly as authored, the default), `relative` (beside the
+  markdown, inside `docs.path`) or `disk` (a named Laravel filesystem disk via
+  `media.disk`) — and anything but `public` registers `<prefix>/_media/<path>`
+  and rewrites sources to it. A relative source is resolved against the page
+  that wrote it, and a path that names a file which isn't there is left
+  untouched. Restricted to `media.types` (image/video/audio/PDF by default),
+  checked against both the extension and the file's actual content, with
+  optional signed, expiring URLs via `media.signed` and `media.ttl`. See the
+  new "Media" guide.
+- **Document visibility**: bind a `DocumentVisibility` rule and laradocs asks
+  it which documents the current reader may see. The rule wraps the document
+  loader, so it covers everywhere a document can be reached — the navigation
+  tree, pager and command palette, search and the search index, `sitemap.xml`,
+  the feeds, `llms.txt`/`llms-full.txt`, the tag pages and the MCP tools, and a
+  direct hit on the page's URL, which now 404s rather than rendering. Nothing
+  is bound by default, so a site that doesn't need it pays nothing. See the
+  new "Visibility" guide.
+- Split the Laravel Boost AI guidelines into a dedicated `laradocs-development`
+  skill that points at the docs shipped inside the installed package instead
+  of duplicating their content inline, so guidance stays in sync with the
+  exact version installed.
+
+### Fixed
+- The `Filesystem` used to read documents from disk is now resolved from the
+  container instead of always being `new Filesystem`, so an application that
+  has bound its own (e.g. one that follows symlinks) is honoured when loading
+  docs.
+- Tabs no longer rewrite a fenced code block that only exists to *show* the
+  tab/tabs syntax — nesting one inside a longer fence (as the rich-content
+  docs do) now renders it literally instead of transforming it in place.
+
+## [1.0.2] - 2026-08-18
+
+### Added
 - **`llms.txt`**: an [llmstxt.org](https://llmstxt.org)-compliant index of your
   documentation, served at `{prefix}/llms.txt`. One H1 for the site, an optional
   description blockquote, then one `- [Title](url): description` bullet per page
@@ -46,13 +101,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`LARADOCS_LLMS_FULL_MAX_BYTES`, default `5000000`; `0` disables the cap).
   Also available programmatically as `Laradocs::llmsFullTxt()`.
 
+### Changed
+- `OAuthFlow::scopes()` is now `protected` instead of a private constant, so a
+  subclass authenticating against a different authorization server can widen
+  the requested scopes — covering both the initial authorize URL and the
+  hourly token refresh, since widening only one would quietly trade a good
+  token for a lesser one on the next refresh.
+
 ### Fixed
-- The **cURL** request code sample now escapes apostrophes in the JSON `-d`
-  body, so example values containing a `'` (e.g. `O'Brien`) no longer
-  terminate the shell single-quoted string early.
-- `OperationSlugger::resolve()` no longer lets a locale-only operation collide
-  with a canonical operation's slug; the locale-only operation now gets a
-  disambiguating suffix instead of silently shadowing the canonical page.
 - With multi-version docs enabled, `sitemap.xml`, `feed.xml`, the search and
   tag endpoints, both JSON APIs and the OG image index no longer 301-redirect
   to the default version's docs page. These fixed-path routes carry no version
@@ -61,6 +117,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   docs root — the difference is a crawler or `fetch()` call hitting them has no
   use for that redirect. They now force the default version active in place
   instead.
+- Aligned the prev/next pager arrows with their labels for a consistent layout.
+
+## [1.0.1] - 2026-07-22
+
+### Fixed
+- The **cURL** request code sample now escapes apostrophes in the JSON `-d`
+  body, so example values containing a `'` (e.g. `O'Brien`) no longer
+  terminate the shell single-quoted string early.
+- `OperationSlugger::resolve()` no longer lets a locale-only operation collide
+  with a canonical operation's slug; the locale-only operation now gets a
+  disambiguating suffix instead of silently shadowing the canonical page.
 
 ## [1.0.0] - 2026-07-03
 
