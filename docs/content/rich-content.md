@@ -22,6 +22,31 @@ default styling. GFM tables and task lists also work:
 - [ ] Pending
 ```
 
+## Links between documents
+
+Cross-references are written as paths to the file, the way markdown is meant to
+be written — so the docs directory stays navigable in an editor and on a
+repository host:
+
+```markdown
+See [Getting started](getting-started.md) and [Routing](../navigation/routing.md).
+```
+
+Rendered, each one points at the slug the target document is published under.
+The path resolves against the page it was written on, so a link on a section
+index (`guide/_index.md`, served at `/docs/guide`) resolves against the file
+rather than the URL, and a `..` that climbs past the docs root is refused and
+left as authored.
+
+Only relative links carrying a document extension are rewritten. Absolute URLs,
+`mailto:` addresses, root-relative paths, bare `#fragments` and links that
+already point at a slug are left exactly as you wrote them. A `#fragment` or
+`?query` on a document link is kept:
+
+```markdown
+[Tickets](usage.md#tickets)
+```
+
 ## Callouts
 
 GitHub-style alerts produce coloured blocks with a matching icon:

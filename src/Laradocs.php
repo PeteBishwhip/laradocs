@@ -19,6 +19,7 @@ use Laradocs\Documents\Tag;
 use Laradocs\Loaders\VisibilityLoader;
 use Laradocs\Macros\MacroRegistry;
 use Laradocs\Media\MediaRewriter;
+use Laradocs\Routing\DocumentLinkRewriter;
 use Laradocs\Search\SearchIndexBuilder;
 use Laradocs\Support\Locale;
 use Laradocs\Support\RateLimiterConfig;
@@ -51,6 +52,7 @@ final class Laradocs
         private readonly array $searchRank = [],
         private readonly array $contentRenderers = [],
         private readonly ?MediaRewriter $media = null,
+        private readonly ?DocumentLinkRewriter $links = null,
     ) {}
 
     /**
@@ -285,10 +287,10 @@ final class Laradocs
     /**
      * Render (and cache) a document's markdown to HTML.
      *
-     * Media sources are pointed at the media route on the way out of the cache
-     * rather than inside it: the document is known here, so a relative source
-     * resolves against the page that wrote it, and a signed URL never becomes
-     * part of a cache entry every reader shares.
+     * Media sources and links between documents are resolved on the way out of
+     * the cache rather than inside it: the document is known here, so a relative
+     * path resolves against the page that wrote it, and a signed media URL never
+     * becomes part of a cache entry every reader shares.
      */
     public function render(Document $document): string
     {
@@ -305,7 +307,9 @@ final class Laradocs
             }
         );
 
-        return $this->media?->rewrite($html, $document) ?? $html;
+        $html = $this->media?->rewrite($html, $document) ?? $html;
+
+        return $this->links?->rewrite($html, $document) ?? $html;
     }
 
     /**
