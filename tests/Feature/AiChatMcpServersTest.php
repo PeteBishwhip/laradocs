@@ -3,12 +3,14 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Laradocs\Ai\ChatRequest;
 use Laradocs\Ai\ChatService;
 use Laradocs\Ai\McpServers;
 use Laravel\Mcp\Client;
 use Laravel\Mcp\Client\Primitives\Tool;
+use Monolog\Handler\NullHandler;
+use Monolog\Handler\TestHandler;
+use Monolog\Logger;
 
 /**
  * User-supplied MCP servers: reaching one, filtering what it advertises, and
@@ -50,6 +52,29 @@ function fakeMcpServer(array $tools): void
 }
 
 /**
+ * An McpServers wired to a logger whose records the test can read back,
+ * rather than to the application's. Mocking the Log facade would break the
+ * moment anything else in the request logged (a PHP deprecation, say).
+ *
+ * @return array{McpServers, TestHandler}
+ */
+function mcpServersWithLog(): array
+{
+    $handler = new TestHandler;
+
+    return [new McpServers(new Logger('testing', [$handler])), $handler];
+}
+
+/**
+ * An McpServers whose logging goes nowhere, for the tests that assert on the
+ * tools it returns rather than on what it wrote.
+ */
+function mcpServers(): McpServers
+{
+    return new McpServers(new Logger('testing', [new NullHandler]));
+}
+
+/**
  * @return array<string, mixed>
  */
 function fakeMcpTool(string $name): array
@@ -73,7 +98,7 @@ it('advertises every tool a configured server offers', function (): void {
         ],
     ]);
 
-    $tools = (new McpServers)->tools();
+    $tools = mcpServers()->tools();
 
     expect(array_map(fn (object $tool): string => $tool->name, $tools))
         ->toBe(['lookup_invoice', 'refund']);
@@ -89,7 +114,7 @@ it('narrows a server to the tools named in only', function (): void {
         'billing' => ['url' => 'https://mcp.test/mcp', 'only' => ['refund'], 'except' => ['refund']],
     ]);
 
-    expect(array_map(fn (object $tool): string => $tool->name, (new McpServers)->tools()))
+    expect(array_map(fn (object $tool): string => $tool->name, mcpServers()->tools()))
         ->toBe(['refund']);
 });
 
@@ -100,31 +125,29 @@ it('drops the tools named in except', function (): void {
         'billing' => ['url' => 'https://mcp.test/mcp', 'except' => ['refund']],
     ]);
 
-    expect(array_map(fn (object $tool): string => $tool->name, (new McpServers)->tools()))
+    expect(array_map(fn (object $tool): string => $tool->name, mcpServers()->tools()))
         ->toBe(['lookup_invoice']);
 });
 
 it('logs and skips a server that declares neither a url nor a command', function (): void {
-    Log::shouldReceive('warning')
-        ->once()
-        ->withArgs(fn (string $message): bool => str_contains($message, '[billing]')
-            && str_contains($message, 'neither a "url" nor a "command"'));
-
     config()->set('laradocs.ai.mcp.servers', ['billing' => ['token' => 'a-secret']]);
 
-    expect((new McpServers)->tools())->toBe([]);
+    [$servers, $log] = mcpServersWithLog();
+
+    expect($servers->tools())->toBe([])
+        ->and($log->hasWarningThatContains('[billing]'))->toBeTrue()
+        ->and($log->hasWarningThatContains('neither a "url" nor a "command"'))->toBeTrue();
 });
 
 it('logs and skips a server it cannot reach', function (): void {
     Http::fake(['https://mcp.test/*' => Http::response('nope', 500)]);
 
-    Log::shouldReceive('warning')
-        ->once()
-        ->withArgs(fn (string $message): bool => str_contains($message, '[billing]'));
-
     config()->set('laradocs.ai.mcp.servers', ['billing' => ['url' => 'https://mcp.test/mcp']]);
 
-    expect((new McpServers)->tools())->toBe([]);
+    [$servers, $log] = mcpServersWithLog();
+
+    expect($servers->tools())->toBe([])
+        ->and($log->hasWarningThatContains('[billing]'))->toBeTrue();
 });
 
 it('still answers from the servers that did respond', function (): void {
@@ -145,15 +168,17 @@ it('still answers from the servers that did respond', function (): void {
             ->push('', 202),
     ]);
 
-    Log::shouldReceive('warning')->once();
-
     config()->set('laradocs.ai.mcp.servers', [
         'broken' => ['url' => 'https://broken.test/mcp'],
         'billing' => ['url' => 'https://mcp.test/mcp'],
     ]);
 
-    expect(array_map(fn (object $tool): string => $tool->name, (new McpServers)->tools()))
-        ->toBe(['lookup_invoice']);
+    [$servers, $log] = mcpServersWithLog();
+
+    expect(array_map(fn (object $tool): string => $tool->name, $servers->tools()))
+        ->toBe(['lookup_invoice'])
+        ->and($log->hasWarningThatContains('[broken]'))->toBeTrue()
+        ->and($log->hasWarningThatContains('[billing]'))->toBeFalse();
 });
 
 it('ignores an only or except list that is not a list', function (): void {
@@ -163,14 +188,14 @@ it('ignores an only or except list that is not a list', function (): void {
         'billing' => ['url' => 'https://mcp.test/mcp', 'only' => 'refund', 'except' => 'refund'],
     ]);
 
-    expect(array_map(fn (object $tool): string => $tool->name, (new McpServers)->tools()))
+    expect(array_map(fn (object $tool): string => $tool->name, mcpServers()->tools()))
         ->toBe(['lookup_invoice', 'refund']);
 });
 
 it('ignores a server definition that is not a definition', function (): void {
     config()->set('laradocs.ai.mcp.servers', ['billing' => 'https://mcp.test/mcp']);
 
-    expect((new McpServers)->tools())->toBe([]);
+    expect(mcpServers()->tools())->toBe([]);
 });
 
 it('builds a local server from a command and its arguments', function (): void {
@@ -182,9 +207,10 @@ it('builds a local server from a command and its arguments', function (): void {
         'local' => ['command' => 'php', 'args' => ['-r', 'exit(1);', 42], 'timeout' => 0.25],
     ]);
 
-    Log::shouldReceive('warning')->once();
+    [$servers, $log] = mcpServersWithLog();
 
-    expect((new McpServers)->tools())->toBe([]);
+    expect($servers->tools())->toBe([])
+        ->and($log->hasWarningThatContains('[local]'))->toBeTrue();
 });
 
 it('hands a configured server\'s tools to the assistant alongside its own', function (): void {

@@ -3,8 +3,6 @@
 declare(strict_types=1);
 
 use Illuminate\Auth\GenericUser;
-use Illuminate\Contracts\Auth\Authenticatable;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Laradocs\Ai\ChatExchange;
 use Laradocs\Ai\ChatService;
@@ -273,20 +271,7 @@ it('hands the authenticated reader to the registered callbacks', function (): vo
     $user = new GenericUser(['id' => 1, 'name' => 'Ada']);
 
     config()->set('laradocs.ai.auth.guard', 'web');
-    Auth::shouldReceive('guard')->with('web')->andReturn(new class($user)
-    {
-        public function __construct(private Authenticatable $user) {}
-
-        public function check(): bool
-        {
-            return true;
-        }
-
-        public function user(): Authenticatable
-        {
-            return $this->user;
-        }
-    });
+    $this->actingAs($user, 'web');
 
     DocsAgent::fake(['Hello Ada.']);
 

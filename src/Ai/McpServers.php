@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Laradocs\Ai;
 
-use Illuminate\Support\Facades\Log;
 use Laradocs\Support\Config;
 use Laravel\Mcp\Client;
 use Laravel\Mcp\Client\Primitives\Tool;
+use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
@@ -24,10 +24,14 @@ use Throwable;
  * cannot be reached or that answers with nonsense is logged and skipped. The
  * reader still gets an answer from the tools that did come back, which is a
  * better failure than a 500 on every question because someone else's server
- * is down.
+ * is down. The logger is injected rather than reached for through the facade
+ * so a test can read back what was written without standing a mock in front
+ * of everything else that logs.
  */
 final class McpServers
 {
+    public function __construct(private readonly LoggerInterface $logger) {}
+
     /**
      * The tools advertised by every configured server, in config order.
      *
@@ -70,14 +74,14 @@ final class McpServers
             $client = $this->client($definition);
 
             if ($client === null) {
-                Log::warning('Laradocs skipped the AI chat MCP server [' . $name . ']: it declares neither a "url" nor a "command".');
+                $this->logger->warning('Laradocs skipped the AI chat MCP server [' . $name . ']: it declares neither a "url" nor a "command".');
 
                 return [];
             }
 
             return $this->filter(array_values($client->connect()->tools()->all()), $definition);
         } catch (Throwable $e) {
-            Log::warning('Laradocs could not read tools from the AI chat MCP server [' . $name . ']: ' . $e->getMessage());
+            $this->logger->warning('Laradocs could not read tools from the AI chat MCP server [' . $name . ']: ' . $e->getMessage());
 
             return [];
         }
