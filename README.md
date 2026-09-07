@@ -48,6 +48,11 @@ Then open `/docs`.
   optionally served from `/llms.txt` as well.
 - 📚 **llms-full.txt** — opt-in companion at `{prefix}/llms-full.txt` carrying
   the entire documentation corpus in one response instead of links.
+- 💬 **AI chat**: an opt-in assistant that answers from your pages, built on the
+  [Laravel AI SDK](https://laravel.com/docs/ai-sdk) so any provider it supports
+  answers with your own key. Respects your visibility rules, streams its answer
+  into an embeddable widget, calls your own MCP servers, and hands every
+  exchange to a callback so you can meter the tokens.
 - ✅ **Fully tested** — Pest + Testbench, 100% coverage gate, PHPStan & Psalm max, Pint.
 
 ## Quick start
@@ -92,6 +97,11 @@ use Laradocs\Facades\Laradocs;
 Laradocs::variables(fn () => ['version' => '1.0.0']);
 Laradocs::share('app_name', config('app.name'));
 Laradocs::macro('tweet', fn (array $args) => "<a href=\"...\">@{$args['user']}</a>");
+
+// AI chat hooks.
+Laradocs::onChat(fn (ChatExchange $exchange) => AiUsage::record($exchange));
+Laradocs::chatContext(fn (ChatRequest $request) => "The reader is on the {$request->user?->plan} plan.");
+Laradocs::chatAuthorize(fn (Request $request) => $request->user()?->hasVerifiedEmail());
 ```
 
 ## Artisan commands
@@ -192,6 +202,8 @@ are themselves built with Laradocs. Highlights:
   [Rich content](https://laradocs.dev/docs/features/rich-content)
 - [Customising the UI](https://laradocs.dev/docs/customising-the-ui) ·
   [Customising stubs](https://laradocs.dev/docs/customising-stubs)
+- [AI chat](https://laradocs.dev/docs/integrations/ai-chat) ·
+  [MCP server](https://laradocs.dev/docs/integrations/mcp)
 - [Migration guide: 0.x → 1.0](https://laradocs.dev/docs/migration-guide)
 
 The source for those pages lives in [`docs/`](docs); browse there or serve a

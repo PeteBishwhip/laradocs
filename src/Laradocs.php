@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace Laradocs;
 
 use Closure;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Laradocs\Ai\ChatExchange;
+use Laradocs\Ai\ChatRegistry;
+use Laradocs\Ai\ChatRequest;
 use Laradocs\Cache\DocumentCache;
 use Laradocs\Concerns\BuildsSiteArtifacts;
 use Laradocs\Contracts\DocumentContentRenderer;
@@ -45,6 +49,7 @@ final class Laradocs
         private readonly VariableRegistry $variables,
         private readonly MacroRegistry $macros,
         private readonly RateLimiterConfig $rateLimiterConfig,
+        private readonly ChatRegistry $chat,
         private readonly string $indexName = '_index',
         private readonly int $searchMaxChars = 10000,
         private readonly array $searchExclude = [],
@@ -130,6 +135,115 @@ final class Laradocs
     public function cookiesEnabled(?Closure $resolver): self
     {
         Locale::setCookieResolver($resolver);
+
+        return $this;
+    }
+
+    /**
+     * Register a callback that runs once the AI chat has answered.
+     *
+     * This is where a deployment meters what the assistant costs and keeps
+     * what it said. The callback receives a
+     * {@see ChatExchange}: the question, the answer, the token
+     * usage, the provider and model that produced it, the tools it called, and
+     * the reader it answered. Register as many as you need; each is called in
+     * turn, streamed answers included, and the return value is ignored.
+     *
+     *   Laradocs::onChat(function (ChatExchange $exchange): void {
+     *       AiUsage::create([
+     *           'user_id' => $exchange->user()?->getAuthIdentifier(),
+     *           'question' => $exchange->question(),
+     *           'tokens' => $exchange->usage->total(),
+     *           'model' => $exchange->model,
+     *       ]);
+     *   });
+     *
+     * A callback that throws is reported and the rest still run: by this point
+     * the answer has already been produced and, for a streamed answer, already
+     * reached the reader.
+     *
+     * **Boot-time only.** Registrations mutate a singleton and persist into
+     * every subsequent request on long-lived workers (Octane / RoadRunner).
+     *
+     * @param  Closure(ChatExchange): mixed  $handler
+     */
+    public function onChat(Closure $handler): self
+    {
+        $this->chat->onChat($handler);
+
+        return $this;
+    }
+
+    /**
+     * Append context to the AI chat's instructions, per request.
+     *
+     * Use it to tell the assistant something about the reader that the
+     * documentation cannot know: their plan, their tenant, which features they
+     * have switched on. The callback receives a
+     * {@see ChatRequest} and may return a string, or anything
+     * iterable of strings; each becomes a line of context.
+     *
+     *   Laradocs::chatContext(fn (ChatRequest $request) => $request->user
+     *       ? 'The reader is on the ' . $request->user->plan . ' plan.'
+     *       : null);
+     *
+     * Callbacks are invoked per request, so they may safely read per-request
+     * state, but the registration itself is **boot-time only**.
+     *
+     * @param  Closure(ChatRequest): mixed  $resolver
+     */
+    public function chatContext(Closure $resolver): self
+    {
+        $this->chat->context($resolver);
+
+        return $this;
+    }
+
+    /**
+     * Hand the AI chat extra tools, per request.
+     *
+     * For tools the config cannot describe: a Laravel AI SDK tool of your own,
+     * one of your MCP server's tools, another agent. The callback receives a
+     * {@see ChatRequest} and returns a tool or anything
+     * iterable of tools, which join the documentation tools rather than
+     * replacing them.
+     *
+     *   Laradocs::chatTools(fn (ChatRequest $request) => $request->user
+     *       ? [new LookUpSubscription($request->user)]
+     *       : []);
+     *
+     * Callbacks are invoked per request; the registration is **boot-time
+     * only**.
+     *
+     * @param  Closure(ChatRequest): mixed  $resolver
+     */
+    public function chatTools(Closure $resolver): self
+    {
+        $this->chat->tools($resolver);
+
+        return $this;
+    }
+
+    /**
+     * Decide who may talk to the AI chat, for the cases a guard and a Gate
+     * ability cannot express.
+     *
+     * The callback receives the HTTP request and returns whether to allow it.
+     * It is consulted after the configured `laradocs.ai.auth` guard and gate,
+     * so it narrows access rather than widening it, and a false answer is a
+     * 403.
+     *
+     *   Laradocs::chatAuthorize(fn (Request $request) => $request->user()?->hasVerifiedEmail());
+     *
+     * Pass null to clear a previously registered callback.
+     *
+     * **Boot-time only.**
+     *
+     * @param  (Closure(Request): mixed)|null  $callback
+     */
+    public function chatAuthorize(?Closure $callback): self
+    {
+        $this->chat->authorize($callback);
 
         return $this;
     }

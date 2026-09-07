@@ -224,6 +224,20 @@ See [Caching](/docs/advanced/caching).
 
 See [Variables](/docs/content/variables) and [Macros](/docs/content/macros).
 
+## AI chat
+
+The assistant is off until both the flag and the Laravel AI SDK are in place:
+
+```env
+LARADOCS_AI=true
+LARADOCS_AI_PROVIDER=anthropic
+LARADOCS_AI_MODEL=claude-sonnet-5
+LARADOCS_AI_RATE_LIMIT=10
+```
+
+Every setting, plus who may ask, which tools the assistant may call and how to
+record what it costs, is covered in [AI Chat](/docs/integrations/ai-chat).
+
 ## Disabling docs in production
 
 ```dotenv

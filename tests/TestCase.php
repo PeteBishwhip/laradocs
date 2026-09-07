@@ -7,6 +7,7 @@ namespace Laradocs\Tests;
 use Dedoc\Scramble\ScrambleServiceProvider;
 use Illuminate\Filesystem\Filesystem;
 use Laradocs\LaradocsServiceProvider;
+use Laravel\Ai\AiServiceProvider;
 use Laravel\Mcp\Server\McpServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 use RalphJSmit\Laravel\SEO\LaravelSEOServiceProvider;
@@ -47,6 +48,15 @@ abstract class TestCase extends Orchestra
         // this in a real application.
         if (class_exists(McpServiceProvider::class)) {
             $providers[] = McpServiceProvider::class;
+        }
+
+        // laravel/ai is optional too (it needs Laravel 12 or newer, so the
+        // Laravel 11 test matrix legs run without it). Register its provider
+        // when it is there so the AI chat tests have a provider config and an
+        // AiManager to fake; auto-discovery handles this in a real
+        // application.
+        if (class_exists(AiServiceProvider::class)) {
+            $providers[] = AiServiceProvider::class;
         }
 
         // dedoc/scramble is likewise optional. Its provider must be registered

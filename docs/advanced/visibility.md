@@ -54,6 +54,8 @@ than sitting somewhere further along:
 - search results and the search index
 - `sitemap.xml`, the feeds, `llms.txt` and `llms-full.txt`
 - the tag pages and the MCP tools
+- the [AI chat](/docs/integrations/ai-chat), which reads through those tools, so
+  a hidden page cannot be quoted, linked or mentioned in an answer
 - a direct hit on the page's URL, which 404s rather than rendering
 
 That last one is why the rule belongs at the loader. Filtering the navigation

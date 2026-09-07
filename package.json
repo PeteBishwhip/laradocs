@@ -2,13 +2,13 @@
   "name": "laradocs",
   "private": true,
   "type": "module",
-  "description": "Test harness for the bundled palette JS. The package itself ships no Node build step — `resources/dist/laradocs.js` is hand-authored and committed.",
+  "description": "Test harness for the bundled JS. The package itself ships no Node build step: the files under resources/dist are hand-authored and committed.",
   "engines": {
     "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
   },
   "scripts": {
     "build": "sponsorkit",
-    "test": "node --test --test-reporter=spec tests/js/palette.test.mjs tests/js/version.test.mjs",
+    "test": "node --test --test-reporter=spec tests/js/palette.test.mjs tests/js/version.test.mjs tests/js/ai-chat.test.mjs",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui"
   },

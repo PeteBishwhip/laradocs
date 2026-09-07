@@ -155,6 +155,14 @@ final class DocumentUrl
     }
 
     /**
+     * URL of the AI chat endpoint the widget posts to.
+     */
+    public static function aiChat(): string
+    {
+        return route(self::prefix() . 'ai.chat');
+    }
+
+    /**
      * URL to the global tag index (e.g. /docs/tags).
      */
     public static function tags(): string

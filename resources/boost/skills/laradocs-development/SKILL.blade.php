@@ -34,6 +34,8 @@ Start here for the task at hand:
 | SEO, sitemap, robots, llms.txt | `docs/seo/` |
 | Search engines and ranking | `docs/navigation/search.md` |
 | Caching, versioning, locales, Octane, visibility | `docs/advanced/` |
+| The AI chat assistant and its widget | `docs/integrations/ai-chat.md` |
+| Exposing the docs as an MCP server | `docs/integrations/mcp.md` |
 | The facade and HTTP API | `docs/http-api/php.md` |
 | Deploying | `docs/deployment/` |
 | Upgrading a major version | `docs/migration-guide.md` |

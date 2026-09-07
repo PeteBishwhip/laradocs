@@ -49,3 +49,5 @@ default:
 | `laravel/scout` | Full-text search powered by Meilisearch, Typesense, or Algolia — see [Search](/docs/guide/search) |
 | `simonhamp/the-og` | Automatic Open Graph / social card image generation — see [Open Graph images](/docs/guide/seo#open-graph-images) |
 | `nyholm/psr7` | PSR-17 HTTP factory required by the Meilisearch SDK when using Scout — see [Search](/docs/guide/search#laravel-scout) |
+| `laravel/mcp` | The MCP server endpoint, and the documentation tools the AI chat reads through: see [MCP](/docs/integrations/mcp) and [AI Chat](/docs/integrations/ai-chat) |
+| `laravel/ai` | The AI chat assistant. Requires Laravel 12 or newer: see [AI Chat](/docs/integrations/ai-chat) |
