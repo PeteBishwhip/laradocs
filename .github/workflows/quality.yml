@@ -79,6 +79,7 @@ jobs:
       - run: composer install --prefer-dist --no-interaction
       # laravel/mcp is an optional (suggested) dependency; install it so PHPStan
       # can resolve the MCP classes and analyse the feature at level max.
+      # laravel/ai comes in through require-dev, so the AI chat is analysed too.
       - run: composer require "laravel/mcp:^0.8" --no-interaction --no-progress
       - run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G
 

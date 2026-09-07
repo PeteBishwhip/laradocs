@@ -1,3 +1,4 @@
+@use('Laradocs\Ai\ChatService')
 @use('Laradocs\Routing\DocumentUrl')
 @use('Laradocs\Support\Version')
 @php
@@ -18,6 +19,10 @@
     $title = $brand['title'] ?? 'Documentation';
     $tagline = $brand['tagline'] ?? null;
     $loadWebfonts = (bool) config('laradocs.ui.webfonts', true);
+
+    // The assistant's widget ships its own stylesheet and script, loaded only
+    // when it has something to render.
+    $aiWidget = app(ChatService::class)->available() && config('laradocs.ai.widget.enabled', true);
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}"@if($defaultTheme !== 'auto') data-theme="{{ $defaultTheme }}"@endif>
@@ -63,6 +68,7 @@
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
     @endif
     <link rel="stylesheet" href="{{ DocumentUrl::asset('laradocs.css') }}">
+    @if($aiWidget)<link rel="stylesheet" href="{{ DocumentUrl::asset('laradocs-ai.css') }}">@endif
     @if($accent || $contentWidth || $fontSans || $fontMono || $fontDisplay)
         <style>
             :root {
@@ -194,7 +200,12 @@
         @include('laradocs::partials.footer', ['footer' => $footer, 'title' => $title])
     @endif
 
+    @if($aiWidget)
+        @include('laradocs::partials.ai-chat')
+    @endif
+
     <script src="{{ DocumentUrl::asset('laradocs.js') }}"></script>
+    @if($aiWidget)<script src="{{ DocumentUrl::asset('laradocs-ai.js') }}"></script>@endif
     @stack('scripts')
 </body>
 </html>

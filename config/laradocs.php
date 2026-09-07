@@ -1035,6 +1035,139 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | AI Chat
+    |--------------------------------------------------------------------------
+    |
+    | An answer-from-your-docs chat assistant built on the Laravel AI SDK
+    | (laravel/ai). Every provider that SDK supports is available here, using
+    | the credentials already in your own config/ai.php. Laradocs never asks
+    | for a key of its own, so bringing your own provider and token is the
+    | only arrangement there is.
+    |
+    | Disabled by default, and it needs both the flag below and laravel/ai
+    | installed before a single route appears:
+    |
+    |     composer require laravel/ai
+    |     LARADOCS_AI=true
+    |
+    | The assistant answers from the documents the reader is allowed to read.
+    | It goes through the same loader every other read path uses, so a bound
+    | DocumentVisibility rule filters what the assistant can see exactly as it
+    | filters the navigation, search and the MCP tools: a restricted page is
+    | invisible to the assistant unless the reader has the authority to see
+    | it. See the "Visibility" guide.
+    |
+    | "provider"  Which laravel/ai provider answers. Null uses that package's
+    |             own `ai.default`. A string names one provider; an array is a
+    |             failover chain, either a plain list of provider names or a
+    |             provider => model map:
+    |               'provider' => ['anthropic' => 'claude-sonnet-5', 'openai' => null],
+    | "model"     Model within the provider. Null uses the provider default.
+    | "timeout"   Seconds a single answer may take before it is abandoned.
+    | "instructions"
+    |             Replaces the built-in system prompt outright. Leave it null
+    |             to keep that prompt and append to it instead, with
+    |             `Laradocs::chatContext(fn () => ...)` from a provider.
+    | "history"   How many prior messages the client may replay into a request.
+    |             Older messages are dropped and the newest kept, so a long
+    |             thread cannot grow a prompt without bound.
+    | "max_chars" Longest question the endpoint accepts, in characters. Longer
+    |             ones are rejected as a validation error rather than billed.
+    | "stream"    Stream the answer back a token at a time over server-sent
+    |             events. Turn it off to receive one JSON response instead,
+    |             which is what buffering proxies and PHP-FPM setups without
+    |             output flushing need.
+    | "rate_limit"
+    |             Requests per minute per IP for the chat endpoint. An answer
+    |             costs real money, so this is deliberately much tighter than
+    |             the JSON API's limit. Set it to 0 to lift the limit.
+    |
+    | "auth"      Who may talk to the assistant. Open by default, matching the
+    |             docs themselves.
+    |   "guard"   Any Laravel auth guard name. Set it and an unauthenticated
+    |             request is refused with a 401 rather than answered.
+    |   "gate"    A Gate ability checked for the resolved user. A refused
+    |             request gets a 403.
+    |             For anything those two cannot express, register a callback
+    |             with `Laradocs::chatAuthorize(fn (Request $r) => ...)`; it is
+    |             consulted after both of them.
+    |
+    | "mcp"       Tools the assistant may call.
+    |   "laradocs"
+    |             Hand the assistant Laradocs' own MCP tools: search_docs,
+    |             list_pages and fetch_page. On by default whenever laravel/mcp
+    |             is installed, because without them the assistant has no way
+    |             to read a page and can only answer from its own training.
+    |             The `mcp` endpoint above is a separate, independent switch;
+    |             these tools are called in process and never over HTTP.
+    |   "servers" Additional MCP servers of your own, each one's tools handed
+    |             to the assistant alongside the built-ins. Requires
+    |             laravel/mcp. Keys name the server. A server that cannot be
+    |             reached is logged and skipped rather than failing the answer.
+    |
+    |               'servers' => [
+    |                   'billing' => [
+    |                       'url' => env('BILLING_MCP_URL'),
+    |                       'token' => env('BILLING_MCP_TOKEN'),
+    |                       'headers' => ['X-Tenant' => 'acme'],
+    |                       'timeout' => 30,
+    |                       'only' => ['lookup_invoice'],
+    |                       'except' => [],
+    |                   ],
+    |                   'local' => [
+    |                       'command' => 'npx',
+    |                       'args' => ['-y', '@acme/mcp-server'],
+    |                   ],
+    |               ],
+    |
+    |             "only" and "except" filter the server's advertised tools by
+    |             name, and "only" wins when both are given. Everything is
+    |             advertised when neither is.
+    |
+    | "widget"    The chat panel rendered on your docs pages. It is available
+    |             anywhere else in your application too, as
+    |             `<x-laradocs::ai-chat />`, which brings its own stylesheet
+    |             and script along so it works off a docs page.
+    |   "enabled"  Render the launcher and panel on docs pages.
+    |   "position" Which corner the launcher sits in: right | left.
+    |   "greeting" Opening message. Null uses the translated default.
+    |
+    | See docs/integrations/ai-chat.md for the full guide.
+    |
+    */
+
+    'ai' => [
+        'enabled' => (bool) env('LARADOCS_AI', false),
+
+        'provider' => env('LARADOCS_AI_PROVIDER'),
+        'model' => env('LARADOCS_AI_MODEL'),
+        'timeout' => (int) env('LARADOCS_AI_TIMEOUT', 60),
+
+        'instructions' => null,
+
+        'history' => (int) env('LARADOCS_AI_HISTORY', 10),
+        'max_chars' => (int) env('LARADOCS_AI_MAX_CHARS', 2000),
+        'stream' => (bool) env('LARADOCS_AI_STREAM', true),
+        'rate_limit' => (int) env('LARADOCS_AI_RATE_LIMIT', 10),
+
+        'auth' => [
+            'guard' => env('LARADOCS_AI_AUTH_GUARD'),
+            'gate' => env('LARADOCS_AI_GATE'),
+        ],
+
+        'mcp' => [
+            'laradocs' => (bool) env('LARADOCS_AI_MCP', true),
+            'servers' => [],
+        ],
+
+        'widget' => [
+            'enabled' => (bool) env('LARADOCS_AI_WIDGET', true),
+            'position' => env('LARADOCS_AI_WIDGET_POSITION', 'right'),
+            'greeting' => env('LARADOCS_AI_GREETING'),
+        ],
+    ],
+    /*
+    |--------------------------------------------------------------------------
     | llms.txt
     |--------------------------------------------------------------------------
     |

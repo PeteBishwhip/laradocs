@@ -1,0 +1,250 @@
+/* Laradocs AI chat widget.
+ *
+ * Ships separately from laradocs.css because the widget is droppable into
+ * pages this package does not own, where the theme's global rules would be an
+ * unwelcome guest. Everything here is scoped under .laradocs-ai.
+ *
+ * Colours read the theme's tokens when they are present and fall back to
+ * their own otherwise, so the widget matches the docs on a docs page and
+ * still looks deliberate anywhere else.
+ */
+
+.laradocs-ai {
+  --lai-bg:       var(--dc-paper, #ffffff);
+  --lai-elev:     var(--dc-bg-elev, #fafafa);
+  --lai-fg:       var(--dc-fg, #0a0a0a);
+  --lai-muted:    var(--dc-muted, #525252);
+  --lai-rule:     var(--dc-rule, rgba(10, 10, 10, .1));
+  --lai-accent:   var(--dc-accent, #ff2d20);
+  --lai-accent-fg: var(--dc-accent-fg, #ffffff);
+  --lai-code-bg:  var(--dc-code-bg, #f5f5f5);
+  --lai-radius:   var(--dc-radius-lg, 10px);
+  --lai-shadow:   0 24px 60px -20px rgba(10, 10, 10, .28);
+  --lai-font:     var(--dc-font, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif);
+  --lai-mono:     var(--dc-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+
+  position: fixed;
+  bottom: 1.25rem;
+  z-index: 60;
+  font-family: var(--lai-font);
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--lai-fg);
+}
+.laradocs-ai[data-position="right"] { right: 1.25rem; }
+.laradocs-ai[data-position="left"] { left: 1.25rem; }
+
+@media (prefers-color-scheme: dark) {
+  .laradocs-ai {
+    --lai-bg:      var(--dc-paper, #0f0f0f);
+    --lai-elev:    var(--dc-bg-elev, #171717);
+    --lai-fg:      var(--dc-fg, #fafafa);
+    --lai-muted:   var(--dc-muted, #a3a3a3);
+    --lai-rule:    var(--dc-rule, rgba(250, 250, 250, .12));
+    --lai-code-bg: var(--dc-code-bg, #1c1c1c);
+    --lai-shadow:  0 24px 60px -20px rgba(0, 0, 0, .7);
+  }
+}
+
+.laradocs-ai *, .laradocs-ai *::before, .laradocs-ai *::after { box-sizing: border-box; }
+
+.laradocs-ai-sr {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* launcher */
+.laradocs-ai-launcher {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .625rem 1rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--lai-accent);
+  color: var(--lai-accent-fg);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--lai-shadow);
+  transition: transform .15s ease, opacity .15s ease;
+}
+.laradocs-ai-launcher:hover { transform: translateY(-1px); }
+.laradocs-ai-launcher svg { width: 18px; height: 18px; }
+.laradocs-ai.is-open .laradocs-ai-launcher { opacity: 0; pointer-events: none; }
+
+/* panel */
+.laradocs-ai-panel {
+  display: flex;
+  flex-direction: column;
+  width: min(24rem, calc(100vw - 2.5rem));
+  height: min(34rem, calc(100vh - 6rem));
+  background: var(--lai-bg);
+  border: 1px solid var(--lai-rule);
+  border-radius: var(--lai-radius);
+  box-shadow: var(--lai-shadow);
+  overflow: hidden;
+}
+.laradocs-ai-panel[hidden] { display: none !important; }
+
+.laradocs-ai-head {
+  display: flex;
+  align-items: center;
+  gap: .25rem;
+  padding: .625rem .75rem;
+  border-bottom: 1px solid var(--lai-rule);
+  background: var(--lai-elev);
+}
+.laradocs-ai-title { flex: 1; font-weight: 600; }
+.laradocs-ai-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem; height: 1.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--lai-muted);
+  cursor: pointer;
+}
+.laradocs-ai-icon:hover { background: var(--lai-rule); color: var(--lai-fg); }
+.laradocs-ai-icon svg { width: 15px; height: 15px; }
+
+/* thread */
+.laradocs-ai-thread {
+  flex: 1;
+  overflow-y: auto;
+  padding: .875rem;
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+  overscroll-behavior: contain;
+}
+.laradocs-ai-message { display: flex; }
+.laradocs-ai-message.is-user { justify-content: flex-end; }
+.laradocs-ai-bubble {
+  max-width: 90%;
+  padding: .5rem .75rem;
+  border-radius: var(--lai-radius);
+  background: var(--lai-elev);
+  border: 1px solid var(--lai-rule);
+  overflow-wrap: anywhere;
+}
+.laradocs-ai-message.is-user .laradocs-ai-bubble {
+  background: var(--lai-accent);
+  border-color: transparent;
+  color: var(--lai-accent-fg);
+}
+.laradocs-ai-message.is-error .laradocs-ai-bubble {
+  border-color: color-mix(in srgb, #dc2626 40%, transparent);
+  color: #dc2626;
+}
+.laradocs-ai-bubble > *:first-child { margin-top: 0; }
+.laradocs-ai-bubble > *:last-child { margin-bottom: 0; }
+.laradocs-ai-bubble p { margin: 0 0 .5rem; }
+.laradocs-ai-bubble ul, .laradocs-ai-bubble ol { margin: 0 0 .5rem; padding-left: 1.15rem; }
+.laradocs-ai-bubble li { margin: .15rem 0; }
+.laradocs-ai-bubble a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.laradocs-ai-message.is-assistant .laradocs-ai-bubble a { color: var(--lai-accent); }
+.laradocs-ai-bubble code {
+  font-family: var(--lai-mono);
+  font-size: .86em;
+  padding: .1em .35em;
+  border-radius: 4px;
+  background: var(--lai-code-bg);
+}
+.laradocs-ai-bubble pre {
+  margin: 0 0 .5rem;
+  padding: .625rem .75rem;
+  border-radius: 6px;
+  background: var(--lai-code-bg);
+  overflow-x: auto;
+}
+.laradocs-ai-bubble pre code { padding: 0; background: none; font-size: .82em; }
+
+/* the assistant thinking, and the tools it reaches for while it does */
+.laradocs-ai-status {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  color: var(--lai-muted);
+  font-size: .82rem;
+}
+.laradocs-ai-dots { display: inline-flex; gap: 3px; }
+.laradocs-ai-dots i {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: laradocs-ai-blink 1.2s infinite ease-in-out;
+}
+.laradocs-ai-dots i:nth-child(2) { animation-delay: .18s; }
+.laradocs-ai-dots i:nth-child(3) { animation-delay: .36s; }
+@keyframes laradocs-ai-blink {
+  0%, 60%, 100% { opacity: .25; }
+  30% { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .laradocs-ai-dots i { animation: none; opacity: .6; }
+  .laradocs-ai-launcher { transition: none; }
+}
+
+.laradocs-ai-disclaimer {
+  margin: 0;
+  padding: 0 .875rem .5rem;
+  color: var(--lai-muted);
+  font-size: .72rem;
+}
+
+/* composer */
+.laradocs-ai-form {
+  display: flex;
+  align-items: flex-end;
+  gap: .5rem;
+  padding: .625rem .75rem .75rem;
+  border-top: 1px solid var(--lai-rule);
+}
+.laradocs-ai-form textarea {
+  flex: 1;
+  max-height: 8rem;
+  padding: .5rem .625rem;
+  border: 1px solid var(--lai-rule);
+  border-radius: 8px;
+  background: var(--lai-bg);
+  color: inherit;
+  font: inherit;
+  resize: none;
+}
+.laradocs-ai-form textarea:focus {
+  outline: 2px solid var(--lai-accent);
+  outline-offset: -1px;
+}
+.laradocs-ai-send {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.125rem; height: 2.125rem;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 8px;
+  background: var(--lai-accent);
+  color: var(--lai-accent-fg);
+  cursor: pointer;
+}
+.laradocs-ai-send svg { width: 15px; height: 15px; }
+.laradocs-ai-send[disabled] { opacity: .45; cursor: not-allowed; }
+
+@media (max-width: 40rem) {
+  .laradocs-ai { bottom: .75rem; }
+  .laradocs-ai[data-position="right"] { right: .75rem; }
+  .laradocs-ai[data-position="left"] { left: .75rem; }
+  .laradocs-ai-panel {
+    width: calc(100vw - 1.5rem);
+    height: min(30rem, calc(100vh - 4.5rem));
+  }
+}

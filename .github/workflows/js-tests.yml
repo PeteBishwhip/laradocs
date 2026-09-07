@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'resources/dist/laradocs.js'
+      - 'resources/dist/laradocs-ai.js'
       - 'tests/js/**'
       - 'package.json'
       - '.github/workflows/js-tests.yml'
@@ -12,6 +13,7 @@ on:
     branches: [main]
     paths:
       - 'resources/dist/laradocs.js'
+      - 'resources/dist/laradocs-ai.js'
       - 'tests/js/**'
       - 'package.json'
       - '.github/workflows/js-tests.yml'
@@ -40,5 +42,5 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Run palette tests
+      - name: Run the bundled JS tests
         run: npm test

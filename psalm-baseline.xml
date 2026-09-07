@@ -1,5 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <files psalm-version="6.16.1@f1f5de594dc76faf8784e02d3dc4716c91c6f6ac">
+  <file src="src/Ai/ChatRegistry.php">
+    <MixedAssignment>
+      <code><![CDATA[$item]]></code>
+      <code><![CDATA[$resolved]]></code>
+      <code><![CDATA[$tool]]></code>
+      <code><![CDATA[$tools[]]]></code>
+      <code><![CDATA[$tools[]]]></code>
+    </MixedAssignment>
+  </file>
+  <file src="src/Ai/ChatService.php">
+    <MixedAssignment>
+      <code><![CDATA[$model]]></code>
+      <code><![CDATA[$tool]]></code>
+      <code><![CDATA[$tools[]]]></code>
+    </MixedAssignment>
+  </file>
+  <file src="src/Ai/DocsAgent.php">
+    <LessSpecificImplementedReturnType>
+      <code><![CDATA[list<mixed>]]></code>
+    </LessSpecificImplementedReturnType>
+  </file>
+  <file src="src/Ai/McpServers.php">
+    <MixedAssignment>
+      <code><![CDATA[$command]]></code>
+      <code><![CDATA[$item]]></code>
+      <code><![CDATA[$timeout]]></code>
+      <code><![CDATA[$token]]></code>
+      <code><![CDATA[$url]]></code>
+      <code><![CDATA[$value]]></code>
+    </MixedAssignment>
+  </file>
   <file src="src/Cache/DocumentCache.php">
     <MixedAssignment>
       <code><![CDATA[$cached]]></code>
@@ -776,6 +807,7 @@
     <MixedMethodCall>
       <code><![CDATA[middleware]]></code>
       <code><![CDATA[middleware]]></code>
+      <code><![CDATA[name]]></code>
       <code><![CDATA[name]]></code>
       <code><![CDATA[name]]></code>
       <code><![CDATA[name]]></code>

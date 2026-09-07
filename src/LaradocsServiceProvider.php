@@ -13,8 +13,11 @@ use Illuminate\Contracts\Routing\Registrar;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\Console\AboutCommand;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Laradocs\Ai\ChatRegistry;
+use Laradocs\Ai\ChatService;
 use Laradocs\Cache\DocumentCache;
 use Laradocs\Console\CacheCommand;
 use Laradocs\Console\CheckCommand;
@@ -96,7 +99,9 @@ final class LaradocsServiceProvider extends ServiceProvider
         $this->loadViewsFrom(self::VIEWS, 'laradocs');
         $this->loadTranslationsFrom(self::LANG, 'laradocs');
         $this->registerRoutes();
+        $this->registerComponents();
         $this->bootRateLimiting();
+        $this->bootAiRateLimiting();
         $this->bootOctaneSafety();
         $this->registerDefaultMacros();
 
@@ -137,6 +142,11 @@ final class LaradocsServiceProvider extends ServiceProvider
 
             return $registry;
         });
+
+        // The AI chat's registration surface: exchange handlers, context and
+        // tool resolvers, and the authorizer. A singleton because everything
+        // in it is registered once, from a provider's boot().
+        $this->app->singleton(ChatRegistry::class);
 
         $this->app->singleton(SlugResolver::class, fn (): SlugResolver => new SlugResolver(
             Config::string('laradocs.routing.strategy', 'both'),
@@ -310,6 +320,7 @@ final class LaradocsServiceProvider extends ServiceProvider
                 $app->make(VariableRegistry::class),
                 $app->make(MacroRegistry::class),
                 $app->make(RateLimiterConfig::class),
+                $app->make(ChatRegistry::class),
                 Config::string('laradocs.docs.index', '_index'),
                 Config::int('laradocs.search.max_chars', 10000),
                 $searchExclude,
@@ -397,6 +408,22 @@ final class LaradocsServiceProvider extends ServiceProvider
         });
     }
 
+    /**
+     * The chat endpoint's own limiter, kept separate from `laradocs-api`
+     * because an answer costs real money: the JSON API's limit is about load,
+     * this one is about a bill. A configured 0 lifts it entirely.
+     */
+    private function bootAiRateLimiting(): void
+    {
+        RateLimiter::for('laradocs-ai', function (Request $request): Limit {
+            $perMinute = Config::int('laradocs.ai.rate_limit', 10);
+
+            return $perMinute <= 0
+                ? Limit::none()
+                : Limit::perMinute($perMinute)->by($request->ip());
+        });
+    }
+
     private function registerSearch(): void
     {
         $this->app->singleton(SearchManager::class, function (Application $app): SearchManager {
@@ -442,6 +469,17 @@ final class LaradocsServiceProvider extends ServiceProvider
         }
 
         return true;
+    }
+
+    /**
+     * Expose the package's anonymous Blade components under the `laradocs`
+     * prefix, so the AI chat widget can be dropped anywhere in the host
+     * application with `<x-laradocs::ai-chat />` rather than only on a docs
+     * page.
+     */
+    private function registerComponents(): void
+    {
+        Blade::anonymousComponentNamespace('laradocs::components', 'laradocs');
     }
 
     private function registerRoutes(): void
@@ -564,6 +602,7 @@ final class LaradocsServiceProvider extends ServiceProvider
             'Search Driver' => Config::string('laradocs.search.driver'),
             'Theme' => Config::string('laradocs.ui.theme'),
             'Banner' => Config::bool('laradocs.ui.banner.enabled') ? Config::string('laradocs.ui.banner.type', 'info') : 'disabled',
+            'AI Chat' => $this->app->make(ChatService::class)->available() ? 'enabled' : 'disabled',
         ]);
     }
 }

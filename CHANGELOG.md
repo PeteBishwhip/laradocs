@@ -11,6 +11,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **AI chat.** An opt-in assistant that answers questions from your
+  documentation, built on the [Laravel AI SDK](https://laravel.com/docs/ai-sdk)
+  so every provider that SDK supports answers with your own credentials.
+  Laradocs never asks for an API key of its own. Off until both
+  `LARADOCS_AI=true` and `laravel/ai` are in place, so a site that does not
+  want it registers no route and renders no markup.
+  - Answers are read out of your pages through Laradocs' own MCP tools rather
+    than recalled from training, and those tools go through the same document
+    loader as the navigation, search and the sitemap. A bound
+    `DocumentVisibility` rule therefore governs the assistant with no further
+    work: a restricted page is invisible to it, not merely omitted from the
+    answer.
+  - An embeddable widget streams the answer into a chat panel on every docs
+    page, scoped to the version and language the reader is on, and is available
+    anywhere else in the application as `<x-laradocs::ai-chat />` with its own
+    stylesheet and script so it restyles nothing around it.
+  - `POST {prefix}/_laradocs/ai/chat` is a documented endpoint in its own
+    right: server-sent events by default, one JSON body when
+    `LARADOCS_AI_STREAM=false` or the client asks, stateless (the client
+    replays the thread), and behind its own rate limiter because an answer
+    costs real money.
+  - Access is as open as the docs pages by default, and narrowed by an auth
+    guard, a Gate ability, or a `Laradocs::chatAuthorize()` callback.
+  - `Laradocs::onChat()` hands every finished exchange (question, answer, token
+    usage, provider, model, tools called and reader) to your own callbacks, so
+    token accounting and transcript storage are yours to define; streamed
+    answers included.
+  - `Laradocs::chatContext()` appends per-request context about the reader to
+    the assistant's instructions, and `Laradocs::chatTools()` hands it tools
+    the config cannot describe.
+  - Additional MCP servers of your own, HTTP or stdio, can be configured under
+    `ai.mcp.servers` with per-server tool allow and deny lists. One that cannot
+    be reached is logged and skipped rather than failing the answer.
+  - Provider, model, timeout, instructions, history depth, question length,
+    streaming, rate limit, tools and widget are all configurable, and
+    `ai.provider` accepts an array for a provider failover chain.
+  - See [AI Chat](https://laradocs.dev/docs/integrations/ai-chat) for the full
+    guide.
+
 ## [1.1.1] - 2026-09-01
 
 ### Added

@@ -43,6 +43,25 @@ return [
         'close' => 'close',
     ],
 
+    'ai' => [
+        'title' => 'Ask the docs',
+        'label' => 'Documentation assistant',
+        'launcher' => 'Ask the docs',
+        'open' => 'Open the documentation assistant',
+        'close' => 'Close',
+        'reset' => 'Start a new conversation',
+        'send' => 'Send',
+        'placeholder' => 'Ask a question about the docs...',
+        'greeting' => 'Ask me anything about this documentation and I will answer from the pages themselves.',
+        'disclaimer' => 'Answers come from the documentation and can still be wrong. Check the pages linked.',
+        'thinking' => 'Reading the documentation...',
+        'searching' => 'Searching the documentation...',
+        'error' => 'Something went wrong. Please try again.',
+        'rate_limited' => 'That is a lot of questions at once. Please wait a moment and try again.',
+        'unauthorised' => 'You are not allowed to use the documentation assistant.',
+        'unavailable' => 'The documentation assistant is not available right now.',
+    ],
+
     'theme' => [
         'toggle' => 'Toggle theme',
     ],

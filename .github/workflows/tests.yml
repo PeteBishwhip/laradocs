@@ -64,6 +64,11 @@ jobs:
       - name: Install dependencies
         run: |
           composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
+          # The Laravel AI SDK requires Laravel 12 or newer, so it cannot be
+          # resolved on the 11.x legs. Drop it there; the AI chat tests skip
+          # themselves without it, which is what exercises the package-absent
+          # paths.
+          if [ "${{ matrix.laravel }}" = "11.*" ]; then composer remove --dev laravel/ai --no-update; fi
           composer update --${{ matrix.stability }} --prefer-dist --no-interaction
 
       - name: Install Scramble

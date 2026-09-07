@@ -7,6 +7,7 @@ namespace Laradocs\Routing;
 use Illuminate\Contracts\Routing\Registrar;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Laradocs\Http\Controllers\AiChatController;
 use Laradocs\Http\Controllers\ApiSearchController;
 use Laradocs\Http\Controllers\ApiTreeController;
 use Laradocs\Http\Controllers\ApiVersionsController;
@@ -23,6 +24,8 @@ use Laradocs\Http\Controllers\RobotsController;
 use Laradocs\Http\Controllers\SearchController;
 use Laradocs\Http\Controllers\SitemapController;
 use Laradocs\Http\Controllers\TagController;
+use Laradocs\Http\Middleware\EnsureAiAuthorised;
+use Laradocs\Http\Middleware\EnsureAiEnabled;
 use Laradocs\Http\Middleware\EnsureDocsEnabled;
 use Laradocs\Http\Middleware\EnsureMcpAuthenticated;
 use Laradocs\Http\Middleware\EnsureMcpEnabled;
@@ -207,6 +210,29 @@ final class DocumentRouter
                 ->middleware(ThrottleApiRequests::class)
                 ->withoutMiddleware(SetDocsVersion::class)
                 ->name('api.versions');
+
+            // POST the reader's question, get an answer back, streamed as
+            // server-sent events by default. Registered whatever the AI chat
+            // config says so route:cache captures it; EnsureAiEnabled 404s the
+            // request when the assistant is off or laravel/ai is missing.
+            //
+            // SetDocsVersion is dropped rather than forced to the default the
+            // way the search endpoint above forces it: a streamed answer is
+            // generated while the response is being sent, long after the
+            // middleware's restore has run, so the controller owns version
+            // activation for the whole request instead. The widget sends the
+            // version it is reading as a payload field.
+            //
+            // `laradocs-ai` is its own limiter rather than the shared API one:
+            // see the note on it in the service provider.
+            $router->post('_laradocs/ai/chat', AiChatController::class)
+                ->withoutMiddleware(SetDocsVersion::class)
+                ->middleware([
+                    EnsureAiEnabled::class,
+                    EnsureAiAuthorised::class,
+                    'throttle:laradocs-ai',
+                ])
+                ->name('ai.chat');
 
             // POST /mcp → MCP JSON-RPC server. GET /mcp falls through to the
             // catch-all below, which renders mcp.md as a normal doc page when
