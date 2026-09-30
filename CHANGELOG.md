@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-09-30
+
 ### Fixed
 - **MCP server on laravel/mcp v1.0.** `HttpTransport`'s second constructor
   argument changed in v1.0 — it was a required `string $sessionId` and is now
@@ -19,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ?Closure, string given`. The transport is now built from the shape of the
   installed constructor, so both `^0.9` and `^1.0` work and neither needs a
   version constraint bump on your side.
+
+## [1.2.0] - 2026-09-07
 
 ### Added
 - **AI chat.** An opt-in assistant that answers questions from your
@@ -463,6 +467,12 @@ covers and the SemVer guarantees it carries going forward.
 - Publishable config, views and assets; `php artisan about` integration.
 
 [Unreleased]: https://github.com/petebishwhip/laradocs/compare/v1.0.0...HEAD
+[1.2.1]: https://github.com/petebishwhip/laradocs/compare/v1.2.0...v1.2.1
+[1.2.0]: https://github.com/petebishwhip/laradocs/compare/v1.1.1...v1.2.0
+[1.1.1]: https://github.com/petebishwhip/laradocs/compare/v1.1.0...v1.1.1
+[1.1.0]: https://github.com/petebishwhip/laradocs/compare/v1.0.2...v1.1.0
+[1.0.2]: https://github.com/petebishwhip/laradocs/compare/v1.0.1...v1.0.2
+[1.0.1]: https://github.com/petebishwhip/laradocs/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/petebishwhip/laradocs/compare/v0.6.1...v1.0.0
 [0.6.1]: https://github.com/petebishwhip/laradocs/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/petebishwhip/laradocs/compare/v0.5.3...v0.6.0
