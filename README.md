@@ -224,6 +224,30 @@ the project actively maintained.
 The image above is regenerated daily by the [`Scheduler`](.github/workflows/scheduler.yml)
 workflow via [sponsorkit](https://github.com/antfu/sponsorkit).
 
+## Friends of Laradocs
+
+<p align="center">
+  <a href="https://inertiaui.com">
+    <img src="./inertiaui.svg" alt="Inertia UI" width="200" />
+  </a>
+</p>
+
+<p align="center"><em>Tables, forms, and modals for Laravel + Inertia.js apps.</em></p>
+
+[**Inertia UI**](https://inertiaui.com) is a set of packages by
+[Pascal Baljet](https://github.com/pascalbaljet) that lets you define the
+interactive parts of an Inertia app in PHP, with matching Vue and React
+components:
+
+- [**Inertia Table**](https://inertiaui.com/inertia-table) — a query builder for
+  sorting, filtering, exports, saved views and bulk actions.
+- [**Inertia Forms**](https://inertiaui.com/inertia-forms) — 30+ field types with
+  validation, uploads, model binding and multi-step workflows.
+- [**Inertia Modal**](https://inertiaui.com/inertia-modal/docs/introduction) —
+  open any Inertia page in a modal or slideover without reworking your routes.
+
+Not affiliated with Laradocs — just good work worth pointing at.
+
 ## Contributing & Security
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
