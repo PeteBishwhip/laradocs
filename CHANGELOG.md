@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **MCP server on laravel/mcp v1.0.** `HttpTransport`'s second constructor
+  argument changed in v1.0 — it was a required `string $sessionId` and is now
+  `?Closure $handler` — so every `POST {prefix}/mcp` request failed with
+  `HttpTransport::__construct(): Argument #2 ($handler) must be of type
+  ?Closure, string given`. The transport is now built from the shape of the
+  installed constructor, so both `^0.9` and `^1.0` work and neither needs a
+  version constraint bump on your side.
+
 ### Added
 - **AI chat.** An opt-in assistant that answers questions from your
   documentation, built on the [Laravel AI SDK](https://laravel.com/docs/ai-sdk)
