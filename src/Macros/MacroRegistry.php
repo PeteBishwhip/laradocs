@@ -83,6 +83,20 @@ final class MacroRegistry
         /** @var ViewFactory $factory */
         $factory = Container::getInstance()->make(ViewFactory::class);
 
-        return $factory->make($handler, $arguments + ['arguments' => $arguments])->render();
+        // Only string keys can become Blade variables — the view's own
+        // extract() skips numeric ones — so narrowing to them here loses
+        // nothing and gives the factory the array<string, mixed> it declares.
+        $data = ['arguments' => $arguments];
+
+        foreach ($arguments as $key => $value) {
+            if (is_string($key)) {
+                $data[$key] = $value;
+            }
+        }
+
+        // The view name comes from user configuration, so it cannot be known
+        // to be a registered view at analysis time.
+        /** @var view-string $handler */
+        return $factory->make($handler, $data)->render();
     }
 }
