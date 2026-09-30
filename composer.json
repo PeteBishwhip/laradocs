@@ -26,21 +26,21 @@
         "spatie/yaml-front-matter": "^2.0"
     },
     "require-dev": {
-        "larastan/larastan": "^2.9 || ^3.0",
+        "larastan/larastan": "~3.12.2",
         "laravel/ai": "^0.11",
         "laravel/mcp": "^0.9 || ^1.0",
-        "laravel/pint": "^1.18",
+        "laravel/pint": "~1.32.1",
         "laravel/scout": "^11.2",
         "meilisearch/meilisearch-php": "^1.0",
         "nyholm/psr7": "^1.5",
         "orchestra/testbench": "^9.0 || ^10.0 || ^11.0",
         "orchestra/workbench": "^9.0 || ^10.0 || ^11.0",
-        "pestphp/pest": "^3.0 || ^4.0",
-        "pestphp/pest-plugin-laravel": "^3.0 || ^4.0",
-        "phpstan/phpstan": "^1.11 || ^2.0",
-        "rector/rector": "^1.2 || ^2.0",
+        "pestphp/pest": "~4.7.8",
+        "pestphp/pest-plugin-laravel": "~4.1.0",
+        "phpstan/phpstan": "~2.2.16",
+        "rector/rector": "~2.6.7",
         "simonhamp/the-og": "^0.8",
-        "vimeo/psalm": "^6.16"
+        "vimeo/psalm": "~6.19.1"
     },
     "suggest": {
         "dedoc/scramble": "Generate your OpenAPI spec with Scramble instead of the built-in native generator. Requires ^0.13 for Laravel 13 support. Select with laradocs.openapi.generator.driver=scramble (or leave it on auto) after installing.",
