@@ -21,6 +21,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ?Closure, string given`. The transport is now built from the shape of the
   installed constructor, so both `^0.9` and `^1.0` work and neither needs a
   version constraint bump on your side.
+- **AI chat MCP servers on laravel/mcp v1.0.** A server configured under
+  `ai.mcp.servers` advertised no tools at all on v1: the client now opens with
+  the `discover` handshake the 2026-07-28 protocol introduced, and falls back
+  to `initialize` only when the server answers that with a JSON-RPC error.
+  `laravel/mcp` is now declared as `^0.9 || ^1.0`, so the existing
+  prefer-lowest / prefer-stable CI matrix exercises both lines.
 
 ## [1.2.0] - 2026-09-07
 

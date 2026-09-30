@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Laradocs\Ai\ChatRequest;
 use Laradocs\Ai\ChatService;
@@ -26,29 +27,69 @@ beforeEach(function (): void {
 });
 
 /**
- * The three responses an HTTP MCP server gives while a client connects and
- * lists its tools: the initialize result, an accepted notification, and the
- * tool listing.
+ * A stand-in for an HTTP MCP server, answering by JSON-RPC method rather than
+ * in a fixed order.
+ *
+ * laravel/mcp v1 opens with a "discover" call (the handshake the 2026-07-28
+ * protocol uses) and falls back to "initialize" when the server answers that
+ * with a JSON-RPC error. A server speaking an older protocol replies
+ * METHOD_NOT_FOUND, which is what this does, so the same fake serves both the
+ * modern client and the v0.9 client that never sends "discover" at all.
  *
  * @param  array<int, array<string, mixed>>  $tools
  */
-function fakeMcpServer(array $tools): void
+function legacyMcpServer(array $tools): Closure
 {
-    Http::fake([
-        'https://mcp.test/*' => Http::sequence()
-            ->push([
+    return function (Request $request) use ($tools) {
+        $payload = json_decode($request->body(), true);
+        $method = is_array($payload) ? ($payload['method'] ?? null) : null;
+        $id = is_array($payload) ? ($payload['id'] ?? null) : null;
+
+        // Notifications carry no id and expect no body.
+        if ($id === null) {
+            return Http::response('', 202);
+        }
+
+        return match ($method) {
+            // Answered the way a pre-2026-07-28 server does, which is what
+            // sends the client down its legacy handshake.
+            'discover' => Http::response([
                 'jsonrpc' => '2.0',
-                'id' => 1,
+                'id' => $id,
+                'error' => ['code' => -32601, 'message' => 'Method not found'],
+            ]),
+
+            'initialize' => Http::response([
+                'jsonrpc' => '2.0',
+                'id' => $id,
                 'result' => [
                     'protocolVersion' => '2025-06-18',
                     'capabilities' => ['tools' => []],
                     'serverInfo' => ['name' => 'billing', 'version' => '1.0.0'],
                 ],
-            ])
-            ->push('', 202)
-            ->push(['jsonrpc' => '2.0', 'id' => 2, 'result' => ['tools' => $tools]])
-            ->push('', 202),
-    ]);
+            ]),
+
+            'tools/list' => Http::response([
+                'jsonrpc' => '2.0',
+                'id' => $id,
+                'result' => ['tools' => $tools],
+            ]),
+
+            default => Http::response([
+                'jsonrpc' => '2.0',
+                'id' => $id,
+                'error' => ['code' => -32601, 'message' => 'Method not found'],
+            ]),
+        };
+    };
+}
+
+/**
+ * @param  array<int, array<string, mixed>>  $tools
+ */
+function fakeMcpServer(array $tools): void
+{
+    Http::fake(['https://mcp.test/*' => legacyMcpServer($tools)]);
 }
 
 /**
@@ -153,19 +194,7 @@ it('logs and skips a server it cannot reach', function (): void {
 it('still answers from the servers that did respond', function (): void {
     Http::fake([
         'https://broken.test/*' => Http::response('nope', 500),
-        'https://mcp.test/*' => Http::sequence()
-            ->push([
-                'jsonrpc' => '2.0',
-                'id' => 1,
-                'result' => [
-                    'protocolVersion' => '2025-06-18',
-                    'capabilities' => ['tools' => []],
-                    'serverInfo' => ['name' => 'billing', 'version' => '1.0.0'],
-                ],
-            ])
-            ->push('', 202)
-            ->push(['jsonrpc' => '2.0', 'id' => 2, 'result' => ['tools' => [fakeMcpTool('lookup_invoice')]]])
-            ->push('', 202),
+        'https://mcp.test/*' => legacyMcpServer([fakeMcpTool('lookup_invoice')]),
     ]);
 
     config()->set('laradocs.ai.mcp.servers', [
