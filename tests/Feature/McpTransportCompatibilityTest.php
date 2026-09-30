@@ -28,6 +28,30 @@ it('builds a transport against whichever laravel/mcp is installed', function () 
     expect($make->invoke(new McpServerHandler, $request))->toBeInstanceOf(HttpTransport::class);
 });
 
+it('builds both argument shapes, whichever version is installed', function () {
+    $request = Request::create('/docs/mcp', 'POST');
+    $request->headers->set('MCP-Session-Id', 'session-abc');
+
+    $handler = new McpServerHandler;
+    $reflection = new ReflectionClass($handler);
+    $flag = $reflection->getProperty('transportTakesSessionId');
+    $build = $reflection->getMethod('transportArguments');
+
+    $original = $flag->getValue();
+
+    try {
+        // v0.9: the session id rides along as the second argument.
+        $flag->setValue(null, true);
+        expect($build->invoke($handler, $request))->toBe([$request, 'session-abc']);
+
+        // v1.0: the transport keeps the session itself.
+        $flag->setValue(null, false);
+        expect($build->invoke($handler, $request))->toBe([$request]);
+    } finally {
+        $flag->setValue(null, $original);
+    }
+});
+
 it('passes the session id only when the installed transport accepts one', function () {
     $parameters = (new ReflectionClass(HttpTransport::class))->getConstructor()?->getParameters() ?? [];
     $takesSessionId = ($parameters[1] ?? null)?->getName() === 'sessionId';

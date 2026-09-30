@@ -44,16 +44,31 @@ final class McpServerHandler
      */
     private function makeTransport(Request $request): HttpTransport
     {
+        // Instantiated reflectively because the constructor's shape is only
+        // known at runtime: a literal `new` would be a static-analysis error
+        // against whichever of the two signatures is not installed.
+        return (new ReflectionClass(HttpTransport::class))
+            ->newInstanceArgs($this->transportArguments($request));
+    }
+
+    /**
+     * The constructor arguments for the installed transport.
+     *
+     * Separated from the instantiation so both shapes can be exercised on
+     * whichever version happens to be installed: building the v0.9 argument
+     * list under v1 is harmless, whereas constructing with it is a TypeError.
+     *
+     * @return array<int, mixed>
+     */
+    private function transportArguments(Request $request): array
+    {
         $arguments = [$request];
 
         if ($this->transportTakesSessionId()) {
             $arguments[] = (string) $request->header('MCP-Session-Id');
         }
 
-        // Instantiated reflectively because the constructor's shape is only
-        // known at runtime: a literal `new` would be a static-analysis error
-        // against whichever of the two signatures is not installed.
-        return (new ReflectionClass(HttpTransport::class))->newInstanceArgs($arguments);
+        return $arguments;
     }
 
     private function transportTakesSessionId(): bool
