@@ -40,7 +40,7 @@
         "phpstan/phpstan": "~2.2.16",
         "rector/rector": "~2.6.7",
         "simonhamp/the-og": "^0.8",
-        "vimeo/psalm": "~6.19.1"
+        "vimeo/psalm": "~6.20.1"
     },
     "suggest": {
         "dedoc/scramble": "Generate your OpenAPI spec with Scramble instead of the built-in native generator. Requires ^0.13 for Laravel 13 support. Select with laradocs.openapi.generator.driver=scramble (or leave it on auto) after installing.",
