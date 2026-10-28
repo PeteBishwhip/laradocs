@@ -37,7 +37,7 @@
         "orchestra/workbench": "^9.0 || ^10.0 || ^11.0",
         "pestphp/pest": "~4.7.8",
         "pestphp/pest-plugin-laravel": "~4.1.0",
-        "phpstan/phpstan": "~2.2.16",
+        "phpstan/phpstan": "~2.3.2",
         "rector/rector": "~2.6.7",
         "simonhamp/the-og": "^0.8",
         "vimeo/psalm": "~6.19.1"
