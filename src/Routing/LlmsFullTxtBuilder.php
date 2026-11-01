@@ -111,7 +111,11 @@ final class LlmsFullTxtBuilder
         return "\n## {$heading}\n\n" . $this->content($document) . "\n";
     }
 
-    private function content(Document $document): string
+    /**
+     * A page's body as the corpus carries it: interpolated markdown, never HTML.
+     * Also what the per-page `.md` route serves.
+     */
+    public function content(Document $document): string
     {
         if ($this->isOpenApi($document)) {
             return $this->openApiStub($document);
