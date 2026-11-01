@@ -1216,6 +1216,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Markdown pages
+    |--------------------------------------------------------------------------
+    |
+    | Serves each page's markdown, interpolated as llms-full.txt renders it, at
+    | {prefix}/{version}/{slug}.md as text/markdown, so a page can be read raw,
+    | fetched with curl, or linked to directly. Section landing pages resolve
+    | too: {prefix}/guide.md serves guide/_index.md. Hidden and redirecting
+    | pages return 404. Off by default so existing installs get no new route.
+    |
+    */
+
+    'markdown' => [
+        'enabled' => (bool) env('LARADOCS_MARKDOWN', false),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Deploy
     |--------------------------------------------------------------------------
     |

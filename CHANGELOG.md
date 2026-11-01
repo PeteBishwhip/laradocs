@@ -11,6 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Per-page Markdown.** Opt in with `LARADOCS_MARKDOWN=true` to serve each
+  page's Markdown at `{prefix}/{version}/{slug}.md` as `text/markdown`, with the
+  same variable and macro interpolation as `llms-full.txt`. Section landing
+  pages resolve through their `_index.md`. Hidden and redirecting pages return
+  404. Off by default, so existing installs get no new route.
+
 ## [1.2.1] - 2026-09-30
 
 ### Fixed

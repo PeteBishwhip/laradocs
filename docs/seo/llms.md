@@ -186,6 +186,23 @@ and dropped by:
 php artisan laradocs:clear
 ```
 
+## Per-page Markdown
+
+Opt in and each page is also served as raw Markdown, with the same variable and
+macro interpolation `llms-full.txt` applies:
+
+```dotenv
+LARADOCS_MARKDOWN=true
+```
+
+```
+GET {prefix}/{version}/{slug}.md        text/markdown
+GET {prefix}/guide.md                  the guide section's _index.md
+```
+
+Hidden and redirecting pages return a 404, and the body is cached like the
+HTML. With the option off, no `.md` route is registered at all.
+
 ## Configuration
 
 | Option | Env | Default |

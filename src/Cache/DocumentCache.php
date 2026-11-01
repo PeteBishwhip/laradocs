@@ -102,6 +102,16 @@ final class DocumentCache
     }
 
     /**
+     * Cache a page's Markdown body, keyed by file path + mtime like its HTML.
+     *
+     * @param  Closure(): string  $render
+     */
+    public function rememberMarkdown(Document $document, Closure $render): string
+    {
+        return $this->remember(CacheKey::markdown($document), $render);
+    }
+
+    /**
      * Cache the rendered feed XML (RSS or Atom), keyed by format + combined
      * document mtimes so it busts whenever any file changes.
      *

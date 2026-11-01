@@ -17,6 +17,7 @@ use Laradocs\Http\Controllers\FeedController;
 use Laradocs\Http\Controllers\LlmsFullTxtController;
 use Laradocs\Http\Controllers\LlmsTxtController;
 use Laradocs\Http\Controllers\LocaleConsentController;
+use Laradocs\Http\Controllers\MarkdownController;
 use Laradocs\Http\Controllers\McpController;
 use Laradocs\Http\Controllers\MediaController;
 use Laradocs\Http\Controllers\OgImageController;
@@ -266,6 +267,16 @@ final class DocumentRouter
                     ->withoutMiddleware(SetDocsVersion::class)
                     ->middleware(self::RENDER_DEFAULT_VERSION)
                     ->name('tags.show');
+            }
+
+            // Each page's Markdown at {slug}.md. Opt-in, so the route only exists
+            // when enabled. Its URI differs from the catch-all's `{path}`: routes
+            // are keyed by URI, so a same-URI route would silently replace the
+            // catch-all. Registered ahead of it so the suffix never reaches it.
+            if (Config::bool('laradocs.markdown.enabled', false)) {
+                $router->get('{path}.md', MarkdownController::class)
+                    ->where('path', '.*')
+                    ->name('markdown');
             }
 
             $router->get('/{path}', [DocsController::class, 'show'])

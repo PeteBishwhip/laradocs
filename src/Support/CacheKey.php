@@ -58,6 +58,11 @@ final class CacheKey
         return self::make('llms-full', $signature);
     }
 
+    public static function markdown(Document $document): string
+    {
+        return self::make('md', hash('sha256', $document->path), (string) $document->modifiedAt);
+    }
+
     public static function feed(string $signature, string $format): string
     {
         return self::make('feed', $format, $signature);

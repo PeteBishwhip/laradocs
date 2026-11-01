@@ -24,6 +24,7 @@ use Laradocs\Loaders\VisibilityLoader;
 use Laradocs\Macros\MacroRegistry;
 use Laradocs\Media\MediaRewriter;
 use Laradocs\Routing\DocumentLinkRewriter;
+use Laradocs\Routing\LlmsFullTxtBuilder;
 use Laradocs\Search\SearchIndexBuilder;
 use Laradocs\Support\Locale;
 use Laradocs\Support\RateLimiterConfig;
@@ -424,6 +425,25 @@ final class Laradocs
         $html = $this->media?->rewrite($html, $document) ?? $html;
 
         return $this->links?->rewrite($html, $document) ?? $html;
+    }
+
+    /**
+     * A page's Markdown body as llms-full.txt carries it, cached per document.
+     * Null when no visible page has the slug, or when the page is hidden or
+     * redirects elsewhere: neither has a body of its own to serve.
+     */
+    public function markdown(string $slug): ?string
+    {
+        $document = $this->loader->find($slug);
+
+        if ($document === null || $document->isHidden() || $document->redirect() !== null) {
+            return null;
+        }
+
+        return $this->cache->rememberMarkdown(
+            $document,
+            fn (): string => (new LlmsFullTxtBuilder($this->llmsFullTxtExtensions()))->content($document)
+        );
     }
 
     /**
