@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Sidebar hidden behind the header when a banner is shown.** On desktop the
+  sidebar is pinned with `position: fixed` just below the sticky header, but
+  the global banner and the outdated-version banner sit above the header and
+  push it down until they scroll away, so the header covered the top of the
+  sidebar. `laradocs.js` now keeps a `--dc-banner-offset` custom property in
+  sync with the visible banner height, and the desktop sidebar, mobile drawer
+  and mobile backdrop are offset by it.
+
 ## [1.2.1] - 2026-09-30
 
 ### Fixed
