@@ -44,11 +44,6 @@ php artisan vendor:publish --tag=ai-config
 ANTHROPIC_API_KEY=sk-ant-...
 ```
 
-> [!NOTE]
-> The Laravel AI SDK requires Laravel 12 or newer. Laradocs itself still
-> supports Laravel 11, so on Laravel 11 every other feature works as before
-> and the AI chat is simply unavailable.
-
 Keep `laravel/mcp` installed too. The assistant reads your pages through
 Laradocs' own MCP tools, and without them it has no way to open a page:
 

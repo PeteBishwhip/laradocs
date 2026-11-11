@@ -30,6 +30,7 @@ use Laradocs\Http\Middleware\EnsureDocsEnabled;
 use Laradocs\Http\Middleware\EnsureMcpAuthenticated;
 use Laradocs\Http\Middleware\EnsureMcpEnabled;
 use Laradocs\Http\Middleware\EnsureMediaSignature;
+use Laradocs\Http\Middleware\SetDefaultDocsVersion;
 use Laradocs\Http\Middleware\SetDocsLocale;
 use Laradocs\Http\Middleware\SetDocsVersion;
 use Laradocs\Http\Middleware\ThrottleApiRequests;
@@ -51,13 +52,12 @@ final class DocumentRouter
     ];
 
     /**
-     * Forces SetDocsVersion to activate the default version in place rather
-     * than consulting the `versions.unversioned` policy — see the `:render`
-     * doc block on {@see SetDocsVersion}. Used by fixed-path artifact routes
-     * that carry no `{path}` to resolve a version from and can't sensibly
-     * redirect.
+     * Activates the default version in place rather than consulting the
+     * `versions.unversioned` policy — see {@see SetDefaultDocsVersion}. Used by
+     * fixed-path artifact routes that carry no `{path}` to resolve a version
+     * from and can't sensibly redirect.
      */
-    private const RENDER_DEFAULT_VERSION = SetDocsVersion::class . ':render';
+    private const RENDER_DEFAULT_VERSION = SetDefaultDocsVersion::class;
 
     /**
      * Register the docs index and catch-all show routes using the package's
@@ -112,10 +112,9 @@ final class DocumentRouter
             $router->get('/', [DocsController::class, 'index'])->name('index');
             // sitemap.xml and feed.xml carry no version segment, so the
             // unversioned-URL policy would otherwise 301 them to an HTML docs
-            // page — see the `:render` doc block on SetDocsVersion. They still
-            // need a version active to build their content from, so the
-            // middleware is kept but forced to activate the default version
-            // in place instead of consulting the policy.
+            // page. They still need a version active to build their content
+            // from, so SetDocsVersion is swapped for SetDefaultDocsVersion,
+            // which activates the default version in place instead.
             $router->get('sitemap.xml', SitemapController::class)
                 ->withoutMiddleware(SetDocsVersion::class)
                 ->middleware(self::RENDER_DEFAULT_VERSION)

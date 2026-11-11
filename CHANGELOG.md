@@ -11,7 +11,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+- **Laravel 11 support.** Laravel 11 is past its security support window and
+  every 11.x release now has open security advisories, so Composer refuses to
+  install it. Laradocs now requires Laravel 12 or 13; stay on the current
+  release if you can't upgrade yet.
+
 ### Fixed
+- **Versioned sitemap, feed, search and tree endpoints on Laravel 13.42+.**
+  These routes swapped the group's `SetDocsVersion` for
+  `SetDocsVersion::class . ':render'` via `withoutMiddleware()`. Laravel 13.42
+  started excluding parameterised variants of an excluded middleware too, so
+  the replacement was stripped and the endpoints returned every version's
+  pages. They now use a dedicated `SetDefaultDocsVersion` middleware.
 - **Sidebar hidden behind the header when a banner is shown.** On desktop the
   sidebar is pinned with `position: fixed` just below the sticky header, but
   the global banner and the outdated-version banner sit above the header and
