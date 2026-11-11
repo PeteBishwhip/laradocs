@@ -14,6 +14,10 @@
   --dc-rule-strong:   rgba(10, 10, 10, .14);
   --dc-sidebar-bg:    #ffffff;
   --dc-tabs-h:        0px;
+  /* Visible height of any banner above the sticky header. Kept in sync by
+     laradocs.js so fixed elements (sidebar, backdrop) start below the header
+     instead of underneath it while a banner is on screen. */
+  --dc-banner-offset: 0px;
   --dc-accent:        #ff2d20;
   --dc-accent-fg:     #ffffff;
   --dc-accent-soft:   color-mix(in srgb, var(--dc-accent) 8%, transparent);
@@ -397,7 +401,7 @@ body.laradocs {
 
 .laradocs-backdrop {
   display: none;
-  position: fixed; inset: var(--dc-header-h) 0 0 0;
+  position: fixed; inset: calc(var(--dc-header-h) + var(--dc-banner-offset)) 0 0 0;
   background: rgba(0, 0, 0, .35);
   z-index: 6;
   opacity: 0;
@@ -553,9 +557,9 @@ body.laradocs {
 @media (min-width: 1025px) {
   .laradocs-sidebar {
     position: fixed;
-    top: calc(var(--dc-header-h) + var(--dc-tabs-h));
+    top: calc(var(--dc-header-h) + var(--dc-tabs-h) + var(--dc-banner-offset));
     left: max(0px, calc((100vw - var(--dc-sidebar-w) - var(--dc-content-w) - var(--dc-toc-w) - 6rem) / 2));
-    height: calc(100vh - var(--dc-header-h) - var(--dc-tabs-h));
+    height: calc(100vh - var(--dc-header-h) - var(--dc-tabs-h) - var(--dc-banner-offset));
     z-index: 3;
   }
   .laradocs-shell {
@@ -566,7 +570,7 @@ body.laradocs {
 @media (max-width: 1024px) {
   .laradocs-sidebar {
     position: fixed;
-    top: var(--dc-header-h);
+    top: calc(var(--dc-header-h) + var(--dc-banner-offset));
     left: 0;
     bottom: 0;
     z-index: 7;

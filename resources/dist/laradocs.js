@@ -262,6 +262,41 @@
     update();
   }
 
+  // Banners (the global banner and the outdated-version banner) sit above the
+  // sticky header and scroll away with the page. Fixed elements are positioned
+  // from the top of the viewport, so expose how much banner is still visible —
+  // which is exactly how far the header currently sits from the top — as
+  // --dc-banner-offset. Without this the header covers the top of the sidebar
+  // until the banner has scrolled out of view.
+  function initBannerOffset() {
+    var header = document.querySelector('.laradocs-header');
+    if (!header || !document.querySelector('.laradocs-banner')) return;
+    var root = document.documentElement;
+    var current = null;
+    var rafId = null;
+    function update() {
+      rafId = null;
+      var offset = Math.max(0, Math.round(header.getBoundingClientRect().top));
+      if (offset === current) return;
+      current = offset;
+      root.style.setProperty('--dc-banner-offset', offset + 'px');
+    }
+    function schedule() {
+      if (rafId === null) rafId = requestAnimationFrame(update);
+    }
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
+    // A banner can change height without a scroll: its text wraps differently,
+    // or the outdated-version banner is dismissed.
+    if ('ResizeObserver' in window) {
+      var observer = new ResizeObserver(schedule);
+      document.querySelectorAll('.laradocs-banner').forEach(function (banner) {
+        observer.observe(banner);
+      });
+    }
+    update();
+  }
+
   function initProgress() {
     var bar = document.querySelector('.laradocs-progress');
     if (!bar) return;
@@ -794,6 +829,7 @@
     initMobileNav();
     initScrollSpy();
     initProgress();
+    initBannerOffset();
     initZoom();
     initSidebarIndex();
     initSidebarCollapse();

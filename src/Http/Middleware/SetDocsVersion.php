@@ -26,9 +26,9 @@ use Symfony\Component\HttpFoundation\Response;
  *     policy: "redirect" 301s to the default version's URL, "render" activates
  *     the default version silently in place.
  *
- * A route registered with the `:render` parameter (`SetDocsVersion::class .
- * ':render'`) skips step 5's config lookup and always activates the default
- * version in place, regardless of the `versions.unversioned` policy. This is
+ * Called with the `render` parameter (which {@see SetDefaultDocsVersion} does)
+ * it skips step 5's config lookup and always activates the default version in
+ * place, regardless of the `versions.unversioned` policy. This is
  * for fixed-path artifact routes — sitemap.xml, feed.xml, the search and tag
  * endpoints — that carry no path segment to resolve a version from and can't
  * sensibly redirect (there is no HTML page for a crawler or a fetch() call to

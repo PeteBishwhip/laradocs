@@ -19,8 +19,8 @@
     "require": {
         "php": "^8.3",
         "devizzent/cebe-php-openapi": "^1.1",
-        "illuminate/contracts": "^11.14 || ^12.0 || ^13.0",
-        "illuminate/support": "^11.14 || ^12.0 || ^13.0",
+        "illuminate/contracts": "^12.0 || ^13.0",
+        "illuminate/support": "^12.0 || ^13.0",
         "league/commonmark": "^2.4",
         "ralphjsmit/laravel-seo": "^1.8",
         "spatie/yaml-front-matter": "^2.0"
@@ -33,8 +33,8 @@
         "laravel/scout": "^11.2",
         "meilisearch/meilisearch-php": "^1.0",
         "nyholm/psr7": "^1.5",
-        "orchestra/testbench": "^9.0 || ^10.0 || ^11.0",
-        "orchestra/workbench": "^9.0 || ^10.0 || ^11.0",
+        "orchestra/testbench": "^10.0 || ^11.0",
+        "orchestra/workbench": "^10.0 || ^11.0",
         "pestphp/pest": "~4.7.8",
         "pestphp/pest-plugin-laravel": "~4.1.0",
         "phpstan/phpstan": "~2.2.16",

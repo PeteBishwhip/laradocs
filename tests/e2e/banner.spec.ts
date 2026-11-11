@@ -45,4 +45,58 @@ test.describe('global banner (banner project)', () => {
       .innerHTML();
     expect(innerHtml).toContain(BANNER_MESSAGE);
   });
+
+  /**
+   * On desktop the sidebar is `position: fixed` just below the sticky header
+   * (and section tabs). The banner sits above the header and scrolls away, so
+   * the sidebar must be offset by however much banner is still on screen —
+   * otherwise the header covers the top of the sidebar until the banner has
+   * scrolled out of view.
+   */
+  test('keeps the sidebar below the header while the banner is on screen', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.goto('/docs/advanced/localisation');
+
+    const banner = page.locator('.laradocs-banner-alert');
+    const header = page.locator('.laradocs-header');
+    const sidebar = page.locator('aside.laradocs-sidebar');
+    await expect(banner).toBeVisible();
+    await expect(sidebar).toBeVisible();
+
+    // The lowest sticky bar is the section tabs when present, else the header.
+    const tabs = page.locator('.laradocs-tabs');
+    const lowestBar = (await tabs.count()) > 0 ? tabs : header;
+
+    const expectSidebarBelowBars = async () => {
+      await expect
+        .poll(async () => {
+          const bars = await lowestBar.boundingBox();
+          const nav = await sidebar.boundingBox();
+          return Math.round(nav!.y - (bars!.y + bars!.height));
+        })
+        .toBeGreaterThanOrEqual(-1);
+    };
+
+    // At the top of the page the banner pushes the header down.
+    const bannerBox = await banner.boundingBox();
+    expect(bannerBox!.height).toBeGreaterThan(0);
+    await expectSidebarBelowBars();
+
+    // Part-way through the banner: the offset shrinks with it.
+    await page.evaluate((y) => window.scrollTo(0, y), Math.floor(bannerBox!.height / 2));
+    await expectSidebarBelowBars();
+
+    // Once the banner has scrolled away, the sidebar returns flush to the bars.
+    await page.evaluate(() => window.scrollTo(0, 600));
+    await expectSidebarBelowBars();
+    await expect
+      .poll(async () => {
+        const bars = await lowestBar.boundingBox();
+        const nav = await sidebar.boundingBox();
+        return Math.abs(Math.round(nav!.y - (bars!.y + bars!.height)));
+      })
+      .toBeLessThanOrEqual(1);
+  });
 });
